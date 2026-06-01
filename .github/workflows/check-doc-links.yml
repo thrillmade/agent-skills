@@ -30,7 +30,7 @@ jobs:
         # Version pinned to the logmind that originally ran `logmind init`
         # in this repo, so CI behavior matches what the maintainer tested
         # locally. Bump after running `logmind init` against a new release.
-        run: pip install "logmind==0.6.9"
+        run: pip install "logmind==0.6.11"
 
       - name: Check markdown link integrity
         run: logmind check-links
