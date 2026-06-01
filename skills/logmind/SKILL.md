@@ -236,6 +236,27 @@ body changed. **If `doctor` reports an `AGENTS.md` stale row, your repo's
 embedded logmind instructions are older than what the installed logmind
 would write — re-run `logmind init` to refresh in place.**
 
+### Derived-doc freshness check (v0.5.13+ / v0.6.9+)
+
+Both derived docs now have CI-friendly fail-fast modes — exit non-zero
+when the on-disk file differs from a fresh regen, so CI fails the build
+before the auto-fix step (or pre-commit hooks can guard pushes).
+
+```bash
+# v0.5.13+:
+logmind timeline --write docs/timeline.md --check
+# v0.6.9+ (symmetric with timeline):
+logmind file-structure --write docs/file-structure.md --check
+
+#   → exit 0 + "✓ … is up to date"   if current
+#   → exit 1 + "✗ … is stale — re-run …" if regen would change the file
+#   → exit 2 + "requires --write"     if --write is missing
+```
+
+The shipped `regen-timeline.yml` GH Action uses these to gate every PR,
+and (when `LOGMIND_AUTO_REGEN_PAT` secret is set) auto-regenerates and
+pushes the fix back to the PR branch before failing the check.
+
 ## Parallel-PR merges: timeline + file-structure merge driver (v0.3.0+)
 
 Two PRs that both run `logmind log` no longer textually conflict on
@@ -268,6 +289,79 @@ The merge driver invokes `logmind file-structure --write <path>`
 command, you should not run it by hand in the normal flow — it exists
 for the merge driver and as an escape hatch (corrupted file, externally
 modified tree).
+
+## Authoring skills locally (v0.6.0+ — `logmind skill …`)
+
+logmind ships a CLI surface for authoring skills *in your own project*
+(under `.claude/skills/<name>/SKILL.md`). The surface is deliberately
+human-gated — logmind never auto-creates or auto-PRs a skill on your
+behalf. Use this for project-specific skills; promote to a public
+catalog like agent-skills via the new-skill issue gate when ready.
+
+```bash
+logmind skill new <name>                # scaffold .claude/skills/<name>/SKILL.md
+logmind skill test <name>               # frontmatter + structural validation
+logmind skill bench <name>              # per-call token-cost measurement
+logmind skill audit                     # author's-side staleness read
+logmind skill suggest --since 30d       # pattern-detect candidate skills
+```
+
+### `logmind skill bench <name>` (v0.6.3+) — measure the cost
+
+Reports exactly what a skill costs when loaded: bytes, estimated tokens,
+status bucket, per-section breakdown, and trim suggestions when over
+budget. Every load of `SKILL.md` puts the whole file into the agent's
+context, so the budget matters.
+
+- **tight**: ≤ 2000 bytes (~500 tokens) — focused, well-trimmed
+- **typical**: ≤ 6000 bytes (~1500 tokens) — most skills land here
+- **verbose**: ≤ 8000 bytes (~2000 tokens) — past budget, suggestions emitted
+- **over-budget**: > 8000 bytes — past hard cap, split recommended
+
+Pair with `clud-bug usage --health` (which reports loads vs. citations
+on real PR reviews) to know whether a skill EARNS its budget — bench
+says what it COSTS, usage says what it RETURNS.
+
+### `logmind skill audit` (v0.6.4+) — author's-side staleness read
+
+One-shot table for every `.claude/skills/<name>/SKILL.md` with bytes,
+decision-log mention count, last-touched (via `git log -1 --format=%cs`),
+and a deterministic status:
+
+- **ghost**: `decision_count == 0` AND `bytes > 2000` — loaded into every
+  context but author never iterates; candidate for archive after
+  usage-side confirmation.
+- **aging**: last-modified > 90 days — was useful, hasn't been touched
+  in a quarter.
+- **active**: otherwise.
+
+```bash
+logmind skill audit          # human-readable, sorted by name
+logmind skill audit --json   # machine-readable, status enriched
+```
+
+Pairs with `bench` (cost) and `clud-bug usage --health` (effectiveness)
+for the complete skill-lifecycle picture.
+
+### `logmind skill suggest` (v0.6.5+) — pattern-detect candidate skills
+
+Scans recent decision-log entries for tokens that appear across many
+distinct decisions — a heuristic signal that "we keep talking about X,
+maybe X should have its own skill." Output is a pre-filled GH-issue
+draft matching agent-skills's `new-skill.yml` template. The human reads,
+decides, opens (or discards).
+
+```bash
+logmind skill suggest                       # last 30d, ≥3 decisions, top 5
+logmind skill suggest --since 7d --top 10
+logmind skill suggest --min-decisions 5     # tighter signal
+logmind skill suggest --write-drafts /tmp/proposals/
+logmind skill suggest --json                # machine-readable
+```
+
+**Never auto-PR. Never auto-create a skill.** This is intentional — the
+pragmatic SkDD design (2026-05-30) gates skill lifecycle on humans, not
+agents. `suggest` proposes; the human disposes.
 
 ## Upgrading: `logmind init` prints the changelog
 
@@ -317,6 +411,23 @@ pip install logmind
 logmind init               # scaffolds docs/, AGENTS.md, GH Actions, .gitignore block, merge drivers + post-merge hook (v0.3.0+)
 logmind doctor             # confirm clean install
 ```
+
+**Unified SkDD install (v0.6.8+)**: one command bootstraps logmind AND clud-bug
+together via the `--with-skdd` flag:
+
+```bash
+pip install logmind
+logmind init --with-skdd   # subprocesses to `npx clud-bug init` after logmind setup
+```
+
+Behavior:
+- Default (no flag): logmind init unchanged — Python-only install.
+- With `--with-skdd` + `npx` on PATH: subprocesses to `npx --yes clud-bug@latest init` after logmind setup completes. Streams output (not silenced).
+- With `--with-skdd` + no `npx`: emits a clear warning with the recovery command, exit code 0 (logmind side succeeded).
+- Subprocess failure (non-zero, OSError, 5-minute timeout): warning surfaced; logmind init still succeeds — clud-bug is an additive layer.
+- **Anti-loop guarantee**: `--with-skdd` only goes one level deep. `logmind init --with-skdd` invokes `npx clud-bug init` (NOT `clud-bug init --with-skdd`), and v0.6.33's mirror in clud-bug does the reverse. No mutual recursion.
+
+The flag name describes the BUNDLE TARGET (the SkDD toolchain), not a specific tool — so as the toolchain grows beyond logmind + clud-bug, the same flag stays.
 
 ## Don'ts
 
