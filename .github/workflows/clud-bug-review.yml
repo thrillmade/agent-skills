@@ -841,7 +841,7 @@ jobs:
           THREADS_COUNT: ${{ needs.paths-check.outputs.threads_count }}
         run: |
           set -euo pipefail
-          BODY=$(printf '%s\n' "$STRUCTURED" | npx --yes clud-bug@0.6.31 render --stdin)
+          BODY=$(printf '%s\n' "$STRUCTURED" | npx --yes clud-bug@0.6.32 render --stdin)
           CALIBRATION="<!-- clud-bug-calibration: turns_estimated=$TURNS_ESTIMATED, max_turns=$MAX_TURNS, files=$FILES_COUNT, lines_added=$LINES_ADDED, lines_deleted=$LINES_DELETED, threads=$THREADS_COUNT -->"
           gh pr comment "$PR_NUMBER" --body "$BODY
 
@@ -873,7 +873,7 @@ jobs:
           if [ ! -f .claude/skills/.clud-bug.json ]; then
             echo '{"version": 1}' > .claude/skills/.clud-bug.json
           fi
-          printf '%s\n' "$STRUCTURED" | npx --yes clud-bug@0.6.31 update-skill-usage --stdin
+          printf '%s\n' "$STRUCTURED" | npx --yes clud-bug@0.6.32 update-skill-usage --stdin
           echo "::notice title=skill-usage::recorded review delta to ephemeral .clud-bug.json (v0.6.30 will add cross-review aggregation)"
 
       - name: Upload skill-usage artifact
@@ -985,7 +985,7 @@ jobs:
       # Letting the action's own failure fail the check is louder and right.
       - name: Strict mode — fail check on critical findings
         if: success()
-        uses: thrillmade/clud-bug/.github/actions/strict-mode-gate@v0.6.31
+        uses: thrillmade/clud-bug/.github/actions/strict-mode-gate@v0.6.32
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           # v0.6.22 / 0.0.O: the summary is now posted by the workflow
