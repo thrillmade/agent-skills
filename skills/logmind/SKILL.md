@@ -307,6 +307,9 @@ Common deltas you'll see if you're upgrading across a stretch:
   `git.auto_rebase: true` in `.logmind/config.yml`. Narrow scope: only
   fires when the gap between your branch and `origin/<default>` is
   exactly `docs/timeline.md`. Always uses `--force-with-lease`.
+- **v0.6.8**: `logmind init --with-skdd` bootstraps the full SkDD
+  toolchain (logmind + clud-bug) in one command. Without the flag,
+  `logmind init` is unchanged.
 
 ## Setup (one-time, per project)
 
@@ -317,6 +320,34 @@ pip install logmind
 logmind init               # scaffolds docs/, AGENTS.md, GH Actions, .gitignore block, merge drivers + post-merge hook (v0.3.0+)
 logmind doctor             # confirm clean install
 ```
+
+### Full SkDD toolchain in one command (v0.6.8+)
+
+If your project uses the SkDD toolchain (logmind + clud-bug), use
+`--with-skdd` to bootstrap both tools in a single step:
+
+```bash
+pip install logmind
+logmind init --with-skdd   # runs logmind init, then npx --yes clud-bug@latest init
+logmind doctor             # confirm clean install
+```
+
+Behavior details:
+
+- **No flag**: `logmind init` runs as always — Python-only, no change.
+- **`--with-skdd` + `npx` on PATH**: after logmind setup completes,
+  subprocesses to `npx --yes clud-bug@latest init` and streams its
+  output to you (not silenced).
+- **`--with-skdd` + no `npx`**: emits a clear warning with the manual
+  recovery command (`npx --yes clud-bug@latest init`); exits 0. Logmind
+  init itself still succeeds.
+- **Subprocess failure** (non-zero exit or OSError): warning is surfaced
+  but logmind init still succeeds — clud-bug is an additive layer.
+
+The flag targets the bundle (the SkDD toolchain), not a specific tool,
+so it stays stable as the toolchain grows. There is no mutual recursion:
+`logmind init --with-skdd` calls `npx clud-bug init` (without
+`--with-skdd`), going only one level deep.
 
 ## Don'ts
 
