@@ -269,6 +269,37 @@ command, you should not run it by hand in the normal flow — it exists
 for the merge driver and as an escape hatch (corrupted file, externally
 modified tree).
 
+## CI gates: `--check` flag for derived docs (v0.5.13+ / v0.6.9+)
+
+Both derived-doc commands support a `--check` flag for use in CI and
+pre-commit gates. `--check` does **not** write anything — it exits
+non-zero when the on-disk file differs from a fresh regeneration, so
+the build fails before any auto-fix step runs.
+
+### `logmind timeline --check` (v0.5.13+)
+
+```bash
+logmind timeline --write docs/timeline.md --check
+#   → exit 0 + "✓ up to date"  if current
+#   → exit 1 + "✗ stale — re-run …" if regen would change the file
+#   → exit 2 + "requires --write" if --write is missing
+```
+
+### `logmind file-structure --check` (v0.6.9+)
+
+```bash
+logmind file-structure --write docs/file-structure.md --check
+#   → exit 0 + "✓ up to date"  if current
+#   → exit 1 + "✗ stale — re-run …" if regen would change the file
+#   → exit 2 + "requires --write" if --write is missing
+```
+
+Both flags are symmetric: require `--write` to specify the target path,
+exit 0/1/2 with the same semantics, and are CI-pluggable (non-zero on
+stale). Use them instead of the older `--write` + `git diff --quiet`
+pattern in `regen-timeline.yml` or similar workflow templates (though
+the old pattern still works).
+
 ## Upgrading: `logmind init` prints the changelog
 
 When you run `pip install --upgrade logmind && logmind init` in an
@@ -307,6 +338,9 @@ Common deltas you'll see if you're upgrading across a stretch:
   `git.auto_rebase: true` in `.logmind/config.yml`. Narrow scope: only
   fires when the gap between your branch and `origin/<default>` is
   exactly `docs/timeline.md`. Always uses `--force-with-lease`.
+- **v0.6.9**: `logmind file-structure --check` added (mirrors
+  `logmind timeline --check` from v0.5.13). Both derived-doc commands
+  now support CI-gate `--check` with exit 0/1/2 semantics.
 
 ## Setup (one-time, per project)
 
@@ -342,6 +376,11 @@ logmind doctor             # confirm clean install
   If the gap between branches includes code files, `docs/file-structure.md`,
   or any file other than `docs/timeline.md`, auto-rebase will refuse and
   emit a heads-up — handle the rebase manually.
+- **Don't use `--write` + `git diff --quiet` to check derived-doc staleness
+  in CI when `--check` is available.** Prefer `logmind timeline --check`
+  (v0.5.13+) and `logmind file-structure --check` (v0.6.9+) — they give
+  cleaner exit codes (0/1/2) and explicit stale messages without touching
+  the working tree.
 - Don't log every tiny edit. The 20-line rule is a guideline; use judgement.
 - Don't write the decision after the fact in past tense for trivial code.
 - Don't reword a decision someone else already logged — link or extend it.
