@@ -78,6 +78,11 @@ command, and you do NOT need to run `logmind timeline --write` separately:
 7. **`git commit`** with message `logmind: <decision>`.
 8. **`git push`** to remote (configurable via `auto_push` in
    `.logmind/config.yml`).
+9. **(v0.6.10+) Auto-refreshes stale hooks** — if the on-disk
+   `.git/hooks/post-merge` or `post-rewrite` body differs from what the
+   current binary would write, `logmind log` rewrites the hook in place.
+   Self-healing: upgrading the binary then running `logmind log` once is
+   sufficient to refresh local hooks.
 
 ## `logmind log` IS the commit primitive (no manual git after it)
 
@@ -235,6 +240,22 @@ auto-healed by `logmind init` itself in v0.2.5+, even when no template
 body changed. **If `doctor` reports an `AGENTS.md` stale row, your repo's
 embedded logmind instructions are older than what the installed logmind
 would write — re-run `logmind init` to refresh in place.**
+
+### Hook-version drift detection (v0.6.10+)
+
+Starting in v0.6.10, installed hooks embed a `# logmind-hook-version: <X.Y.Z>`
+marker. `logmind doctor` extracts this marker and compares it to the running
+binary's version:
+
+- **`current`** — hook matches binary; no action needed.
+- **`stale`** — hook version differs from binary (e.g. local binary was
+  upgraded but hook was written by an older version, or vice versa).
+- **`markerless`** — hook predates v0.6.10 and has no marker.
+
+Both `stale` and `markerless` are aggregated into the overall drift signal —
+`logmind doctor` exits non-zero when either is present. **Self-healing**: the
+next `logmind log` after a binary upgrade automatically rewrites the hook if
+the body differs. One-command fix: `pip install --upgrade logmind && logmind log`.
 
 ### Derived-doc freshness check (v0.5.13+ / v0.6.9+)
 
@@ -401,6 +422,9 @@ Common deltas you'll see if you're upgrading across a stretch:
   `git.auto_rebase: true` in `.logmind/config.yml`. Narrow scope: only
   fires when the gap between your branch and `origin/<default>` is
   exactly `docs/timeline.md`. Always uses `--force-with-lease`.
+- **v0.6.10**: Hooks embed a version marker; `logmind doctor` detects
+  hook-version drift (`stale` / `markerless`) and exits non-zero.
+  `logmind log` self-heals stale hooks on first run after binary upgrade.
 
 ## Setup (one-time, per project)
 
@@ -453,6 +477,10 @@ The flag name describes the BUNDLE TARGET (the SkDD toolchain), not a specific t
   If the gap between branches includes code files, `docs/file-structure.md`,
   or any file other than `docs/timeline.md`, auto-rebase will refuse and
   emit a heads-up — handle the rebase manually.
+- **Don't ignore `logmind doctor` hook-version drift warnings (v0.6.10+).**
+  A `stale` or `markerless` hook row means the on-disk hook was written by
+  a different binary version. Self-heal with
+  `pip install --upgrade logmind && logmind log` (runs once, rewrites hook).
 - Don't log every tiny edit. The 20-line rule is a guideline; use judgement.
 - Don't write the decision after the fact in past tense for trivial code.
 - Don't reword a decision someone else already logged — link or extend it.
