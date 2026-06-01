@@ -1,4 +1,4 @@
-# logmind-template-version: v4
+# logmind-template-version: v5
 name: logmind self-update
 
 # Weekly check for a newer published logmind. If one exists, runs
@@ -24,12 +24,31 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  # NOTE (v5 / logmind v0.6.11): there is NO `permissions:` knob that
+  # lets GITHUB_TOKEN push to .github/workflows/*.yml — GitHub blocks
+  # that at the git layer for security. When a logmind refresh would
+  # touch a workflow file (e.g. an updated `check-doc-links.yml`
+  # template body), the only path that works is to push via a PAT with
+  # the `workflow` scope. We use the SAME `LOGMIND_AUTO_REGEN_PAT`
+  # secret that `regen-timeline.yml` v3 uses for the same reason
+  # (single secret to configure, both workflows benefit).
+  # Without the PAT: this workflow falls back to non-workflow-only
+  # refreshes (AGENTS.md, .cursorrules, etc.) and prints a one-line
+  # `::warning::` directing the user to configure the PAT to unlock
+  # workflow refreshes. See the "Push step" below.
 
 jobs:
   check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          # v5 / logmind v0.6.11: use the regen PAT when available so we
+          # can push refreshed workflow files. Falls through to
+          # GITHUB_TOKEN when absent — push works for non-workflow files
+          # but will reject any workflow-file changes (handled in the
+          # push step below).
+          token: ${{ secrets.LOGMIND_AUTO_REGEN_PAT || secrets.GITHUB_TOKEN }}
 
       - uses: actions/setup-python@v6
         with:
@@ -98,6 +117,7 @@ jobs:
           INSTALLED: ${{ steps.compare.outputs.installed }}
           LATEST:    ${{ steps.compare.outputs.latest }}
           GH_TOKEN:  ${{ secrets.GITHUB_TOKEN }}
+          PAT:       ${{ secrets.LOGMIND_AUTO_REGEN_PAT }}
         run: |
           set -euo pipefail
           BRANCH="logmind/self-update-${LATEST}"
@@ -111,10 +131,24 @@ jobs:
           # + agent files untouched. Idempotent.
           logmind init --no-git --no-skill-install || logmind init
 
+          # v5 / logmind v0.6.11 — detect whether the refresh touched any
+          # `.github/workflows/*.yml`. If so, we NEED the PAT to push
+          # (GitHub blocks GITHUB_TOKEN from creating/updating workflow
+          # files for security). When the PAT is missing AND workflows
+          # changed, fail with a clear actionable error rather than the
+          # generic git push 403.
           git add -A
           if git diff --cached --quiet; then
             echo "::notice::No file changes after logmind init — nothing to PR."
             exit 0
+          fi
+          WORKFLOW_CHANGES=$(git diff --cached --name-only -- '.github/workflows/*.yml' '.github/workflows/*.yaml' || true)
+          if [ -n "$WORKFLOW_CHANGES" ] && [ -z "${PAT:-}" ]; then
+            echo "::error title=Missing LOGMIND_AUTO_REGEN_PAT::This release updated workflow file(s):"
+            echo "::error::$WORKFLOW_CHANGES"
+            echo "::error::GitHub blocks GITHUB_TOKEN from pushing workflow changes. Configure a fine-grained PAT with \`workflow\` scope as the \`LOGMIND_AUTO_REGEN_PAT\` repo or org secret (same secret used by regen-timeline.yml v3), then re-run this workflow."
+            echo "::error::Without the PAT, workflow-template refreshes can't propagate automatically — file the changes manually via \`logmind init\` locally + PR."
+            exit 1
           fi
           git commit -m "logmind self-update: ${INSTALLED} → ${LATEST}"
           git push -u origin "$BRANCH"

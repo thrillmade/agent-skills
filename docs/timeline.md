@@ -13,10 +13,10 @@ PR's CI run, so this file is always coherent with current `main`.
 ---
 
 
-## 2026-06 (6 decisions)
+## 2026-06 (7 decisions)
 
-- **2026-06-01** — chore: refresh logmind v0.6.9 → v0.6.11 *(chore/logmind-v0.6.11)* — [decisions-branches/chore__logmind-v0.6.11.md](decisions-branches/chore__logmind-v0.6.11.md)
-- *... 4 more decisions ...*
+- **2026-06-01** — chore: refresh logmind-self-update.yml to v5 (bootstrap PAT-based workflow push) *(chore/refresh-self-update-v5)* — [decisions-branches/chore__refresh-self-update-v5.md](decisions-branches/chore__refresh-self-update-v5.md)
+- *... 5 more decisions ...*
 - **2026-06-01** — chore: propagate clud-bug v0.6.30 (cross-review aggregation reads workflow artifacts) *(chore/clud-bug-v0.6.30)* — [decisions-branches/chore__clud-bug-v0.6.30.md](decisions-branches/chore__clud-bug-v0.6.30.md)
 
 ## 2026-05 (39 decisions)
