@@ -15,6 +15,7 @@ PR's CI run, so this file is always coherent with current `main`.
 
 ## 2026-06
 
+- **2026-06-01** — chore: propagate clud-bug v0.6.31 (hotfix) *(chore/clud-bug-v0.6.31)* — [decisions-branches/chore__clud-bug-v0.6.31.md](decisions-branches/chore__clud-bug-v0.6.31.md)
 - **2026-06-01** — chore: propagate clud-bug v0.6.30 (cross-review aggregation reads workflow artifacts) *(chore/clud-bug-v0.6.30)* — [decisions-branches/chore__clud-bug-v0.6.30.md](decisions-branches/chore__clud-bug-v0.6.30.md)
 
 ## 2026-05 (39 decisions)
