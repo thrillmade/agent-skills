@@ -79,6 +79,12 @@ command, and you do NOT need to run `logmind timeline --write` separately:
 8. **`git push`** to remote (configurable via `auto_push` in
    `.logmind/config.yml`).
 
+**v0.6.13+: `logmind log` is READ-ONLY with respect to template files.**
+It no longer rewrites `AGENTS.md` or per-agent stub files when templates
+are stale. Instead it emits a one-line warning and directs you to
+`logmind self-update`. This prevents piggyback template-refresh commits
+from appearing on your feature branch.
+
 ## `logmind log` IS the commit primitive (no manual git after it)
 
 `logmind log` defaults to `--stage all` (since v0.2.7): every change in
@@ -234,7 +240,8 @@ templates / pins / instructions might have drifted. Stale-pin drift is
 auto-healed by `logmind init` itself in v0.2.5+, even when no template
 body changed. **If `doctor` reports an `AGENTS.md` stale row, your repo's
 embedded logmind instructions are older than what the installed logmind
-would write — re-run `logmind init` to refresh in place.**
+would write — run `logmind self-update` (v0.6.13+) or re-run
+`logmind init` to refresh in place.**
 
 ### Derived-doc freshness check (v0.5.13+ / v0.6.9+)
 
@@ -276,7 +283,10 @@ Two PRs that both run `logmind log` no longer textually conflict on
   the full post-merge working tree. Belt + suspenders: the driver runs
   per-file mid-merge before the other branch's `docs/decisions-branches/`
   files are checked out, so its output can miss decisions; the hook
-  sweeps any incomplete regen at end-of-merge.
+  sweeps any incomplete regen at end-of-merge. **(v0.6.13+) The hook
+  detects orphan branches** (e.g. after `gh pr merge --delete-branch` +
+  `git fetch --prune`) and skips regen entirely rather than blocking the
+  follow-up `git checkout main`.
 
 `logmind doctor` reports three new rows for these (v0.3.0+):
 `.gitattributes (merge driver)`, `git config (merge driver)`, and
@@ -289,6 +299,28 @@ The merge driver invokes `logmind file-structure --write <path>`
 command, you should not run it by hand in the normal flow — it exists
 for the merge driver and as an escape hatch (corrupted file, externally
 modified tree).
+
+## Template-refresh: `logmind self-update` (v0.6.13+)
+
+When `logmind log` detects that `AGENTS.md` or per-agent stub files are
+stale relative to the installed templates, it emits a one-line warning:
+
+```
+⚠ Template drift detected — run `logmind self-update` to refresh.
+```
+
+**No files are mutated by `logmind log`.** Apply the refresh explicitly
+when you're ready:
+
+```bash
+logmind self-update    # rewrites AGENTS.md + per-agent stubs to current templates
+                       # + refreshes local hooks
+```
+
+Other maintenance commands (`init`, `rebase`, `search`, `agents update`)
+still apply template refresh as part of their normal operation. Only
+`logmind log` is strictly read-only with respect to templates — preventing
+piggyback template commits from landing on your feature branch.
 
 ## Authoring skills locally (v0.6.0+ — `logmind skill …`)
 
@@ -401,6 +433,9 @@ Common deltas you'll see if you're upgrading across a stretch:
   `git.auto_rebase: true` in `.logmind/config.yml`. Narrow scope: only
   fires when the gap between your branch and `origin/<default>` is
   exactly `docs/timeline.md`. Always uses `--force-with-lease`.
+- **v0.6.13**: `logmind log` no longer mutates template files — drift is
+  surfaced as a warning; run `logmind self-update` to apply refresh
+  explicitly. New `logmind self-update` command added.
 
 ## Setup (one-time, per project)
 
@@ -453,6 +488,10 @@ The flag name describes the BUNDLE TARGET (the SkDD toolchain), not a specific t
   If the gap between branches includes code files, `docs/file-structure.md`,
   or any file other than `docs/timeline.md`, auto-rebase will refuse and
   emit a heads-up — handle the rebase manually.
+- **Don't expect `logmind log` to refresh templates (v0.6.13+).** If you
+  see a "Template drift detected" warning after `logmind log`, run
+  `logmind self-update` separately — never as part of the same decision
+  commit flow.
 - Don't log every tiny edit. The 20-line rule is a guideline; use judgement.
 - Don't write the decision after the fact in past tense for trivial code.
 - Don't reword a decision someone else already logged — link or extend it.
