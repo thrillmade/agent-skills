@@ -1,4 +1,4 @@
-# logmind-template-version: v6
+# logmind-template-version: v7
 name: logmind self-update
 
 # Weekly check for a newer published logmind. If one exists, runs
@@ -88,11 +88,31 @@ jobs:
               || echo "")
           fi
 
-          LATEST=$(pip index versions logmind 2>/dev/null | grep -oE 'logmind \([0-9]+\.[0-9]+\.[0-9]+\)' | head -1 | sed 's/logmind (\(.*\))/\1/') || true
-          if [ -z "$LATEST" ]; then
-            # Fallback: PyPI JSON API
-            LATEST=$(curl -fsSL https://pypi.org/pypi/logmind/json | python3 -c "import json,sys; print(json.load(sys.stdin)['info']['version'])")
-          fi
+          # v7 / logmind v0.6.14 — CDN-aware retry. The PyPI JSON API + simple
+          # index propagate via a CDN that lags 30-60s behind a publish event.
+          # Cron-triggered self-update workflows can fire during the gap and
+          # see a stale "latest", silently no-op'ing. Three attempts with 0s
+          # / 30s / 60s backoff cover the typical CDN tail; if all three
+          # report the same version, accept it (legitimate no-op).
+          fetch_latest() {
+            local v
+            v=$(pip index versions logmind 2>/dev/null | grep -oE 'logmind \([0-9]+\.[0-9]+\.[0-9]+\)' | head -1 | sed 's/logmind (\(.*\))/\1/') || true
+            if [ -z "$v" ]; then
+              v=$(curl -fsSL https://pypi.org/pypi/logmind/json 2>/dev/null | python3 -c "import json,sys; print(json.load(sys.stdin)['info']['version'])" 2>/dev/null) || true
+            fi
+            echo "$v"
+          }
+          LATEST=$(fetch_latest)
+          for delay in 30 60; do
+            if [ -n "$LATEST" ] && [ "$LATEST" != "$INSTALLED" ]; then
+              break  # found a newer version on attempt 1 or 2
+            fi
+            sleep "$delay"
+            CANDIDATE=$(fetch_latest)
+            if [ -n "$CANDIDATE" ]; then
+              LATEST="$CANDIDATE"
+            fi
+          done
 
           echo "installed=$INSTALLED" >> "$GITHUB_OUTPUT"
           echo "latest=$LATEST"       >> "$GITHUB_OUTPUT"
@@ -151,7 +171,15 @@ jobs:
             echo "::notice::OR: skip this release by running \`logmind init\` locally and opening a PR manually."
             exit 0
           fi
-          git commit -m "logmind self-update: ${INSTALLED} → ${LATEST}"
+          # v7 / logmind v0.6.14 — `[skip-logmind]` title prefix. These are
+          # bot-generated propagation PRs (pin-bump + template-body refresh)
+          # owned by the workflow itself; they're NOT decision commits.
+          # Without the prefix, consumer-repo `check-decisions.yml` fails
+          # because the diff exceeds the threshold AND no decision file is
+          # present. The prefix lets consumer-repo check-decisions skip via
+          # its existing maintainer-override path. Bot-PR semantics align
+          # with consumer-repo gates without manual title editing rituals.
+          git commit -m "[skip-logmind] logmind self-update: ${INSTALLED} → ${LATEST}"
           git push -u origin "$BRANCH"
           # v6 / logmind v0.6.13 — `gh pr create` uses PAT too when available.
           # Per-repo "Allow GitHub Actions to create and approve pull
@@ -161,7 +189,7 @@ jobs:
           # this step too eliminates the second per-repo setup checkbox.
           PR_TOKEN="${PAT:-${GH_TOKEN}}"
           GH_TOKEN="$PR_TOKEN" gh pr create \
-            --title "logmind self-update: ${INSTALLED} → ${LATEST}" \
+            --title "[skip-logmind] logmind self-update: ${INSTALLED} → ${LATEST}" \
             --body "Automated upgrade from logmind ${INSTALLED} → ${LATEST}.
 
           Refresh mode (v0.2.1+) only touched workflow templates whose \`# logmind-template-version:\` marker is stale; \`docs/\`, \`.logmind/config.yml\`, and agent files were left alone.

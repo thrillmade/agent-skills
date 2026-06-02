@@ -65,7 +65,7 @@ jobs:
         # Version pinned to the logmind that originally ran `logmind init`
         # in this repo, so CI behavior matches what the maintainer tested
         # locally. Bump after running `logmind init` against a new release.
-        run: pip install "logmind==0.6.13"
+        run: pip install "logmind==0.6.14"
 
       - name: Regenerate derived docs
         run: |
