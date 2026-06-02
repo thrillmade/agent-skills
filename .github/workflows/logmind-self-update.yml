@@ -1,4 +1,4 @@
-# logmind-template-version: v5
+# logmind-template-version: v6
 name: logmind self-update
 
 # Weekly check for a newer published logmind. If one exists, runs
@@ -131,12 +131,12 @@ jobs:
           # + agent files untouched. Idempotent.
           logmind init --no-git --no-skill-install || logmind init
 
-          # v5 / logmind v0.6.11 — detect whether the refresh touched any
-          # `.github/workflows/*.yml`. If so, we NEED the PAT to push
-          # (GitHub blocks GITHUB_TOKEN from creating/updating workflow
-          # files for security). When the PAT is missing AND workflows
-          # changed, fail with a clear actionable error rather than the
-          # generic git push 403.
+          # v6 / logmind v0.6.13 — SMART WORKFLOW-SKIP. Decouples pin-bump
+          # releases (no PAT needed) from template-body releases (PAT
+          # needed). If the refresh touched a workflow file AND no PAT is
+          # configured → skip the release with a clear `::notice::`
+          # instead of failing. Pin-bump-only releases (no workflow body
+          # change) propagate normally via GITHUB_TOKEN.
           git add -A
           if git diff --cached --quiet; then
             echo "::notice::No file changes after logmind init — nothing to PR."
@@ -144,15 +144,23 @@ jobs:
           fi
           WORKFLOW_CHANGES=$(git diff --cached --name-only -- '.github/workflows/*.yml' '.github/workflows/*.yaml' || true)
           if [ -n "$WORKFLOW_CHANGES" ] && [ -z "${PAT:-}" ]; then
-            echo "::error title=Missing LOGMIND_AUTO_REGEN_PAT::This release updated workflow file(s):"
-            echo "::error::$WORKFLOW_CHANGES"
-            echo "::error::GitHub blocks GITHUB_TOKEN from pushing workflow changes. Configure a fine-grained PAT with \`workflow\` scope as the \`LOGMIND_AUTO_REGEN_PAT\` repo or org secret (same secret used by regen-timeline.yml v3), then re-run this workflow."
-            echo "::error::Without the PAT, workflow-template refreshes can't propagate automatically — file the changes manually via \`logmind init\` locally + PR."
-            exit 1
+            echo "::notice title=Skipping workflow-touching release::This release would update workflow file(s):"
+            echo "::notice::$WORKFLOW_CHANGES"
+            echo "::notice::No \`LOGMIND_AUTO_REGEN_PAT\` is configured, so this run will skip (pin-bump-only releases would propagate normally without the PAT)."
+            echo "::notice::To enable: configure a fine-grained PAT with Contents:write + Workflows:write + Pull-requests:write as the \`LOGMIND_AUTO_REGEN_PAT\` repo or org secret (same secret used by regen-timeline.yml v3)."
+            echo "::notice::OR: skip this release by running \`logmind init\` locally and opening a PR manually."
+            exit 0
           fi
           git commit -m "logmind self-update: ${INSTALLED} → ${LATEST}"
           git push -u origin "$BRANCH"
-          gh pr create \
+          # v6 / logmind v0.6.13 — `gh pr create` uses PAT too when available.
+          # Per-repo "Allow GitHub Actions to create and approve pull
+          # requests" setting blocks GITHUB_TOKEN from opening PRs on
+          # some org/repo configs (2/5 thrillmade consumers hit this
+          # during the v0.6.12 self-heal validation). Using the PAT for
+          # this step too eliminates the second per-repo setup checkbox.
+          PR_TOKEN="${PAT:-${GH_TOKEN}}"
+          GH_TOKEN="$PR_TOKEN" gh pr create \
             --title "logmind self-update: ${INSTALLED} → ${LATEST}" \
             --body "Automated upgrade from logmind ${INSTALLED} → ${LATEST}.
 
