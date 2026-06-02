@@ -236,6 +236,17 @@ body changed. **If `doctor` reports an `AGENTS.md` stale row, your repo's
 embedded logmind instructions are older than what the installed logmind
 would write — re-run `logmind init` to refresh in place.**
 
+### PATH-resolution probe (v0.6.16+)
+
+`logmind doctor` now also checks for version drift between the currently-
+running logmind process and the `logmind` binary resolved via your shell's
+`PATH`. If they differ (e.g. a pyenv shim resolves to an older version),
+doctor surfaces the conflict as `stale` showing both versions + the
+conflicting path, and exits non-zero (`Stack status: DRIFT`). This guards
+against silent hook-body mismatch where `logmind doctor` reports `current`
+but `logmind init` is actually writing stale hook bodies from an older
+install.
+
 ### Derived-doc freshness check (v0.5.13+ / v0.6.9+)
 
 Both derived docs now have CI-friendly fail-fast modes — exit non-zero
@@ -289,6 +300,33 @@ The merge driver invokes `logmind file-structure --write <path>`
 command, you should not run it by hand in the normal flow — it exists
 for the merge driver and as an escape hatch (corrupted file, externally
 modified tree).
+
+## commit-msg hook: enforcement for substantive commits (v0.6.16+)
+
+`logmind init` now installs a `commit-msg` hook (alongside `post-merge`
+and `post-rewrite`) that fires whenever you run `git commit` directly.
+It warns when **both** of the following are true:
+
+1. The commit message's first line does NOT start with an exempt prefix
+   (`logmind:`, `Revert `, `Merge `, `Bump version`, `chore(release):`,
+   `fixup!`, `squash!`).
+2. The staged diff exceeds 20 lines across code-bearing extensions
+   (`.py .go .ts .tsx .js .jsx .sh .yaml .yml .toml .rs .rb`).
+
+**Default: WARN** (prints a warning but allows the commit). **STRICT
+mode** (exits 1, rejecting the commit) is enabled via `.logmind/config.yml`:
+
+```yaml
+commit_msg_hook:
+  strict: true
+```
+
+The hook reads this setting at runtime — flip without re-installing.
+Bypass for intentional overrides: `git commit --no-verify`.
+
+**For agents: use `logmind log` for all substantive commits.** The hook
+is a safety net, not a substitute — `logmind log` bundles reasoning +
+code + push in one step, which the hook cannot replicate.
 
 ## Authoring skills locally (v0.6.0+ — `logmind skill …`)
 
@@ -401,6 +439,12 @@ Common deltas you'll see if you're upgrading across a stretch:
   `git.auto_rebase: true` in `.logmind/config.yml`. Narrow scope: only
   fires when the gap between your branch and `origin/<default>` is
   exactly `docs/timeline.md`. Always uses `--force-with-lease`.
+- **v0.6.16**: `logmind init` installs a `commit-msg` hook that warns
+  (or blocks in strict mode) raw `git commit` on substantive code
+  changes. `logmind doctor` gains a PATH-resolution probe that exits
+  non-zero when the shell-resolved binary version differs from the
+  running version. AGENTS.md templates bumped to v6/v8 with
+  strengthened "DO NOT run raw git" framing.
 
 ## Setup (one-time, per project)
 
@@ -408,7 +452,7 @@ If the project doesn't yet have logmind:
 
 ```bash
 pip install logmind
-logmind init               # scaffolds docs/, AGENTS.md, GH Actions, .gitignore block, merge drivers + post-merge hook (v0.3.0+)
+logmind init               # scaffolds docs/, AGENTS.md, GH Actions, .gitignore block, merge drivers + post-merge hook (v0.3.0+), commit-msg hook (v0.6.16+)
 logmind doctor             # confirm clean install
 ```
 
@@ -436,6 +480,8 @@ The flag name describes the BUNDLE TARGET (the SkDD toolchain), not a specific t
   all three in one step. Running them manually either bypasses the
   logging entirely or splits the work across separate commits, both of
   which lose the value of having the reasoning attached to the code.
+  The `commit-msg` hook (v0.6.16+) will warn (or reject in strict mode)
+  substantive raw `git commit` calls as an additional guard.
 - **Don't run `git add` BEFORE `logmind log` either.** Default
   `--stage all` already sweeps the working tree; pre-staging is
   redundant. (Exception: if you're using `--stage scoped` and have
@@ -453,6 +499,11 @@ The flag name describes the BUNDLE TARGET (the SkDD toolchain), not a specific t
   If the gap between branches includes code files, `docs/file-structure.md`,
   or any file other than `docs/timeline.md`, auto-rebase will refuse and
   emit a heads-up — handle the rebase manually.
+- **Don't ignore `logmind doctor` PATH-conflict warnings (v0.6.16+).** If
+  doctor exits non-zero with `Stack status: DRIFT` due to a PATH-resolution
+  mismatch, the shell-resolved `logmind` binary is a different version than
+  the running process — hooks written by one version may not match what the
+  other expects. Fix the PATH / pyenv config before continuing.
 - Don't log every tiny edit. The 20-line rule is a guideline; use judgement.
 - Don't write the decision after the fact in past tense for trivial code.
 - Don't reword a decision someone else already logged — link or extend it.
