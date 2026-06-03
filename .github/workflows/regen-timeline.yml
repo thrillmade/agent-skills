@@ -57,15 +57,15 @@ jobs:
           # Falls through to GITHUB_TOKEN when absent (still allows checkout).
           token: ${{ secrets.LOGMIND_AUTO_REGEN_PAT || secrets.GITHUB_TOKEN }}
 
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-
       - name: Install logmind
-        # Version pinned to the logmind that originally ran `logmind init`
-        # in this repo, so CI behavior matches what the maintainer tested
-        # locally. Bump after running `logmind init` against a new release.
-        run: pip install "logmind==0.6.16"
+        # logmind ships as a single Go binary since v1.0. The install.sh
+        # script fetches the latest signed release, verifies SHA256, and
+        # drops the binary in $HOME/.local/bin. No version pin — the v1.x
+        # binary stays backward-compatible across the line and CI tracks
+        # the latest stable.
+        run: |
+          curl -fsSL https://logmind.dev/install.sh | bash
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Regenerate derived docs
         run: |

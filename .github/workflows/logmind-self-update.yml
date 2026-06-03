@@ -145,7 +145,17 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -b "$BRANCH"
 
-          pip install --upgrade "logmind==${LATEST}"
+          # v1.0 cutover: logmind is now a Go binary distributed via brew /
+          # install.sh, not a Python wheel on PyPI. The version-detection
+          # block above no longer finds a `pip install` pin in
+          # regen-timeline.yml after the v1 migration, so this self-update
+          # workflow soft-skips by design. Brew users get upgrades via
+          # `brew upgrade thrillmade/tap/logmind`; curl-installed users
+          # re-run install.sh (always grabs latest stable). When/if
+          # PyPI-based self-update is replaced with a release-feed-based
+          # equivalent, this step gets the new install command.
+          curl -fsSL https://logmind.dev/install.sh | bash
+          export PATH="$HOME/.local/bin:$PATH"
           # Refresh mode (v0.2.1+) rewrites stale workflow templates by
           # `# logmind-template-version:` marker, leaves docs/ + .logmind/
           # + agent files untouched. Idempotent.
