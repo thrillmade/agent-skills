@@ -368,9 +368,10 @@ agents. `suggest` proposes; the human disposes.
 When you run `brew upgrade thrillmade/tap/logmind && logmind init` (or
 re-run `curl -fsSL https://logmind.dev/install.sh | bash`) in an
 already-initialized repo (v0.2.10+), refresh-mode detects the prior
-pinned version from `regen-timeline.yml` and prints **every CHANGELOG
-section between that version and the currently installed
-`__version__`** inline:
+installed version (via the existing binary's `--version` in v1.x;
+previously via `regen-timeline.yml`'s pip-pin in v0.x) and prints
+**every CHANGELOG section between that version and the now-installed
+binary's reported version** inline:
 
 ```
 📋 What's new in logmind since v0.2.6 (currently installed: v0.2.10):
