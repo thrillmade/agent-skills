@@ -64,7 +64,8 @@ jobs:
         # binary stays backward-compatible across the line and CI tracks
         # the latest stable.
         run: |
-          curl -fsSL https://logmind.dev/install.sh | bash
+          # logmind.dev/install.sh CDN routing is a v1.x follow-up; pin to GitHub raw until that ships.
+          curl -fsSL https://raw.githubusercontent.com/thrillmade/logmind/main/installer/install.sh | bash
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Regenerate derived docs

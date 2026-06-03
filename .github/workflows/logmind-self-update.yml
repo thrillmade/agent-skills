@@ -154,7 +154,8 @@ jobs:
           # re-run install.sh (always grabs latest stable). When/if
           # PyPI-based self-update is replaced with a release-feed-based
           # equivalent, this step gets the new install command.
-          curl -fsSL https://logmind.dev/install.sh | bash
+          # logmind.dev/install.sh CDN routing is a v1.x follow-up; pin to GitHub raw until that ships.
+          curl -fsSL https://raw.githubusercontent.com/thrillmade/logmind/main/installer/install.sh | bash
           export PATH="$HOME/.local/bin:$PATH"
           # Refresh mode (v0.2.1+) rewrites stale workflow templates by
           # `# logmind-template-version:` marker, leaves docs/ + .logmind/
