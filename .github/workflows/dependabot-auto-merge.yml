@@ -1,0 +1,20 @@
+name: Dependabot auto-merge
+
+# Auto-approve + squash-merge Dependabot patch/minor PRs once required CI passes.
+# Major bumps are left for human review. See §8.1 for org-level rationale.
+#
+# Calls the reusable workflow at thrillmade/.github.
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    if: github.actor == 'dependabot[bot]'
+    uses: thrillmade/.github/.github/workflows/dependabot-auto-merge.yml@main
+    secrets: inherit
