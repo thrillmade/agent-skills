@@ -365,7 +365,8 @@ agents. `suggest` proposes; the human disposes.
 
 ## Upgrading: `logmind init` prints the changelog
 
-When you run `pip install --upgrade logmind && logmind init` in an
+When you run `brew upgrade thrillmade/tap/logmind && logmind init` (or
+re-run `curl -fsSL https://logmind.dev/install.sh | bash`) in an
 already-initialized repo (v0.2.10+), refresh-mode detects the prior
 pinned version from `regen-timeline.yml` and prints **every CHANGELOG
 section between that version and the currently installed
@@ -407,7 +408,7 @@ Common deltas you'll see if you're upgrading across a stretch:
 If the project doesn't yet have logmind:
 
 ```bash
-pip install logmind
+brew install thrillmade/tap/logmind   # macOS + Linux; or: curl -fsSL https://logmind.dev/install.sh | bash
 logmind init               # scaffolds docs/, AGENTS.md, GH Actions, .gitignore block, merge drivers + post-merge hook (v0.3.0+)
 logmind doctor             # confirm clean install
 ```
@@ -416,7 +417,7 @@ logmind doctor             # confirm clean install
 together via the `--with-skdd` flag:
 
 ```bash
-pip install logmind
+brew install thrillmade/tap/logmind   # or: curl -fsSL https://logmind.dev/install.sh | bash
 logmind init --with-skdd   # subprocesses to `npx clud-bug init` after logmind setup
 ```
 

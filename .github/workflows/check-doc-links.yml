@@ -22,15 +22,19 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-
       - name: Install logmind
-        # Version pinned to the logmind that originally ran `logmind init`
-        # in this repo, so CI behavior matches what the maintainer tested
-        # locally. Bump after running `logmind init` against a new release.
-        run: pip install "logmind==0.6.16"
+        # logmind ships as a single Go binary since v1.0. The install.sh
+        # script fetches the latest signed release, verifies SHA256, and
+        # drops the binary in $HOME/.local/bin. No version pin — the v1.x
+        # binary stays backward-compatible across the line and CI tracks
+        # the latest stable.
+        run: |
+          # logmind install — pinned to v1.0.0 tag (immutable), per the
+          # security review on PR #110. Bumping to v1.x.y is a deliberate
+          # change on each consumer repo, not a silent main-tracks-latest drift.
+          # logmind.dev/install.sh CDN routing is a v1.x follow-up; pin to GitHub raw until that ships.
+          curl -fsSL https://raw.githubusercontent.com/thrillmade/logmind/v1.0.0/installer/install.sh | bash
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Check markdown link integrity
         run: logmind check-links
