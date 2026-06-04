@@ -879,11 +879,11 @@ jobs:
       - name: Upload skill-usage artifact
         if: success() && steps.clud-bug-review.outputs.structured_output != ''
         continue-on-error: true
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: clud-bug-skill-usage-pr-${{ github.event.pull_request.number }}
           path: .claude/skills/.clud-bug.json
-          # v0.6.31 hotfix: actions/upload-artifact@v4 excludes hidden
+          # v0.6.31 hotfix: actions/upload-artifact@v7 excludes hidden
           # files by default. .clud-bug.json + .claude/ are both
           # dot-prefixed, so v0.6.29-v0.6.30 silently uploaded zero
           # artifacts org-wide. Must opt in explicitly.
