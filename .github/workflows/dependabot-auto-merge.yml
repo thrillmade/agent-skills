@@ -16,5 +16,6 @@ permissions:
 jobs:
   auto-merge:
     if: github.actor == 'dependabot[bot]'
-    uses: thrillmade/.github/.github/workflows/dependabot-auto-merge.yml@main
+    # Pinned to thrillmade/.github commit e4dfd7e for supply-chain immutability (per clud-bug-review on PR #112). Bump via dependabot or manual edit.
+    uses: thrillmade/.github/.github/workflows/dependabot-auto-merge.yml@e4dfd7ea66a4917ea85b7880c0e700628ced409f
     secrets: inherit
