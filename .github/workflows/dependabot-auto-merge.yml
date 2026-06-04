@@ -1,0 +1,21 @@
+name: Dependabot auto-merge
+
+# Auto-approve + squash-merge Dependabot patch/minor PRs once required CI passes.
+# Major bumps are left for human review. See §8.1 for org-level rationale.
+#
+# Calls the reusable workflow at thrillmade/.github.
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    if: github.actor == 'dependabot[bot]'
+    # Pinned to thrillmade/.github commit e4dfd7e for supply-chain immutability (per clud-bug-review on PR #112). Bump via dependabot or manual edit.
+    uses: thrillmade/.github/.github/workflows/dependabot-auto-merge.yml@e4dfd7ea66a4917ea85b7880c0e700628ced409f
+    secrets: inherit
