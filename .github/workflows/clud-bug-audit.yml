@@ -89,7 +89,7 @@ jobs:
           git push -u origin "$BRANCH"
           echo "stub_written=true" >> "$GITHUB_OUTPUT"
 
-      - uses: anthropics/claude-code-action@v1.0.133
+      - uses: anthropics/claude-code-action@v1.0.140
         if: steps.prep.outputs.stub_written == 'true'
         env:
           AUDIT_DATE: ${{ steps.prep.outputs.date }}
