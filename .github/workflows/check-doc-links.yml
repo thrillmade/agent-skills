@@ -22,7 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: thrillmade/setup-logmind@v1.0.1
+      - uses: thrillmade/setup-logmind@v1.0.0
 
       - name: Check markdown link integrity
         run: logmind check-links
