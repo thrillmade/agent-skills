@@ -1,7 +1,7 @@
 name: Dependabot auto-merge
 
-# Auto-approve + squash-merge Dependabot patch/minor PRs once required CI passes.
-# Major bumps are left for human review. See §8.1 for org-level rationale.
+# Auto-approve + squash-merge Dependabot PRs once required CI passes.
+# Patch/minor/major all eligible — CI gates breakage. See §8.1 for org-level rationale.
 #
 # Calls the reusable workflow at thrillmade/.github.
 
@@ -16,8 +16,8 @@ permissions:
 jobs:
   auto-merge:
     if: github.actor == 'dependabot[bot]'
-    # Pinned to thrillmade/.github commit b208d22 for supply-chain immutability (per clud-bug-review on PR #112). Bump via dependabot or manual edit.
-    uses: thrillmade/.github/.github/workflows/dependabot-auto-merge.yml@b208d22652d2585efb106e99e543113a113b101f
+    # Pinned to thrillmade/.github commit 6e1f9df for supply-chain immutability (per clud-bug-review on PR #112). Bump via dependabot or manual edit.
+    uses: thrillmade/.github/.github/workflows/dependabot-auto-merge.yml@6e1f9dfd2695396d5ae2b14af9a84ca132784a94
     secrets:
       orchestrator-app-id: ${{ secrets.THRILLMADE_ORCHESTRATOR_APP_ID }}
       orchestrator-private-key: ${{ secrets.THRILLMADE_ORCHESTRATOR_PRIVATE_KEY }}
