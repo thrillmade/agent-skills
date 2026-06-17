@@ -138,7 +138,7 @@ jobs:
       # `logmind init` (the refresh) runs against the same binary
       # version consumer repos will see after this workflow lands its
       # PR. The action's version tracks the LATEST step output.
-      - uses: thrillmade/setup-logmind@v1.0.0
+      - uses: thrillmade/setup-logmind@v1.0.1
         if: steps.compare.outputs.skip == 'false'
         with:
           version: ${{ steps.compare.outputs.latest }}

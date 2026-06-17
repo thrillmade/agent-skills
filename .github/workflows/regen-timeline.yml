@@ -57,7 +57,7 @@ jobs:
           # Falls through to GITHUB_TOKEN when absent (still allows checkout).
           token: ${{ secrets.LOGMIND_AUTO_REGEN_PAT || secrets.GITHUB_TOKEN }}
 
-      - uses: thrillmade/setup-logmind@v1.0.0
+      - uses: thrillmade/setup-logmind@v1.0.1
 
       - name: Regenerate derived docs
         run: |
