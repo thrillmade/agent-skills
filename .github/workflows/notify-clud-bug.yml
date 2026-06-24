@@ -53,7 +53,7 @@ jobs:
     outputs:
       skills: ${{ steps.resolve.outputs.skills }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           # fetch-depth: 0 = full history. Required because a push with
           # N>2 commits has `$BEFORE` outside a fetch-depth:2 shallow
@@ -131,7 +131,7 @@ jobs:
         skill: ${{ fromJson(needs.detect.outputs.skills) }}
     steps:
       - name: Checkout agent-skills
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Verify source SKILL.md exists
         run: test -f "skills/${{ matrix.skill }}/SKILL.md"
@@ -147,7 +147,7 @@ jobs:
           echo "branch=skills-refresh/${{ matrix.skill }}-${SHORT}" >> "$GITHUB_OUTPUT"
 
       - name: Checkout thrillmade/clud-bug
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: thrillmade/clud-bug
           path: clud-bug
