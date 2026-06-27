@@ -4,7 +4,7 @@ description: Template for a "review like me" skill - captures one maintainer's r
 kind: rule
 review_mode: shared
 applies_to:
-  author: REPLACE_WITH_YOUR_GH_LOGIN
+  author: _REPLACE_ME_
 ---
 
 # Conventions: <YOUR NAME>
@@ -17,7 +17,9 @@ go through the org defaults without my personal preferences applied.
 ## How to use this template
 
 1. **Rename the directory**: `.claude/skills/conventions-<your-gh-login>/SKILL.md`
-2. **Set `applies_to.author`** to your GitHub login (replace `REPLACE_WITH_YOUR_GH_LOGIN`)
+2. **Set `applies_to.author`** to your GitHub login (replace `_REPLACE_ME_`).
+   The placeholder fails the SPEC slug check on purpose — if you forget
+   this step, the skill won't load and the bot's log will tell you why.
 3. **Fill in the sections below** with YOUR actual preferences
 4. **Commit + push** — the bot picks up the skill on its next review of your PR
 
@@ -55,13 +57,13 @@ Higher-level patterns the bot should respect. Examples:
 - One concept per file; files <300 LOC
 - Comments explain WHY, not WHAT (skip comments that restate the code)
 
-## How I phrase findings
+## How I want findings formatted
 
-Tone guidance for when the bot generates review prose on your PRs
-(layers on top of the org `voice-<your-org>` if installed).
-Examples:
+Structural rules for how the bot composes findings on your PRs.
+(Tone — the prose register the bot uses when writing — belongs in
+a separate `voice-<your-gh-login>` skill, not here.) Examples:
 
-- Direct, no preamble — lead with the issue
-- Cite the specific line + quote the offending snippet
-- Suggest a concrete fix, not just "consider X"
-- No emoji decoration; the severity icons are the only emoji
+- Always cite the specific line + quote the offending snippet
+- Always include a concrete suggested fix, not just "consider X"
+- Never bundle multiple unrelated issues into one finding
+- One finding per file region; merge near-identical findings
