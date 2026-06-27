@@ -25,6 +25,7 @@ agent-skills
 │   ├── chroma-harmonization
 │   ├── clud-bug-collaboration
 │   ├── component-sizing
+│   ├── conventions-template
 │   ├── critical-issues-only
 │   ├── design-token-naming
 │   ├── dtcg-format
