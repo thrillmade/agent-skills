@@ -1,0 +1,27 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "async": true,
+            "asyncRewake": true,
+            "timeout": 180,
+            "command": "# clud-bug-local-review v2 — clud-bug commit review on the session subscription\nev=$(cat 2>/dev/null)\nif [ -n \"$ev\" ]; then case \"$ev\" in *'git commit'*|*'logmind log'*) ;; *) exit 0 ;; esac; fi\nsha=$(git rev-parse HEAD 2>/dev/null) || exit 0\ngitdir=$(git rev-parse --git-dir 2>/dev/null) || exit 0\nmarker=\"$gitdir/clud-bug-last-commit-review\"\n[ \"$(cat \"$marker\" 2>/dev/null)\" = \"$sha\" ] && exit 0\nrecipe=$(npx clud-bug@0.7.0-rc.18 review-prompt --trigger commit 2>/dev/null) || exit 0\n[ -n \"$recipe\" ] || exit 0\nprintf '%s' \"$sha\" > \"$marker\" 2>/dev/null || true\nprintf '%s\\n\\n%s\\n' \"clud-bug commit review (max mode — on this session's subscription): a commit was just made. Follow this recipe now — review that commit against the skills it names and surface any findings.\" \"$recipe\"\nexit 2",
+            "if": "Bash(git commit *)"
+          },
+          {
+            "type": "command",
+            "async": true,
+            "asyncRewake": true,
+            "timeout": 180,
+            "command": "# clud-bug-local-review v2 — clud-bug commit review on the session subscription\nev=$(cat 2>/dev/null)\nif [ -n \"$ev\" ]; then case \"$ev\" in *'git commit'*|*'logmind log'*) ;; *) exit 0 ;; esac; fi\nsha=$(git rev-parse HEAD 2>/dev/null) || exit 0\ngitdir=$(git rev-parse --git-dir 2>/dev/null) || exit 0\nmarker=\"$gitdir/clud-bug-last-commit-review\"\n[ \"$(cat \"$marker\" 2>/dev/null)\" = \"$sha\" ] && exit 0\nrecipe=$(npx clud-bug@0.7.0-rc.18 review-prompt --trigger commit 2>/dev/null) || exit 0\n[ -n \"$recipe\" ] || exit 0\nprintf '%s' \"$sha\" > \"$marker\" 2>/dev/null || true\nprintf '%s\\n\\n%s\\n' \"clud-bug commit review (max mode — on this session's subscription): a commit was just made. Follow this recipe now — review that commit against the skills it names and surface any findings.\" \"$recipe\"\nexit 2",
+            "if": "Bash(logmind log *)"
+          }
+        ]
+      }
+    ]
+  }
+}

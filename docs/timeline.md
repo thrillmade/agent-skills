@@ -13,10 +13,10 @@ PR's CI run, so this file is always coherent with current `main`.
 ---
 
 
-## 2026-06 (8 decisions)
+## 2026-06 (9 decisions)
 
-- **2026-06-27** — Wave 4e.4 — conventions-template skill (review like me) *(feat/conventions-template)* — [decisions-branches/feat__conventions-template.md](decisions-branches/feat__conventions-template.md)
-- *... 6 more decisions ...*
+- **2026-06-29** — max mode: init --local-only — /clud-bug-review slash command + commit hook (F4 rollout) *(f4-maxmode)* — [decisions-branches/f4-maxmode.md](decisions-branches/f4-maxmode.md)
+- *... 7 more decisions ...*
 - **2026-06-01** — chore: propagate clud-bug v0.6.30 (cross-review aggregation reads workflow artifacts) *(chore/clud-bug-v0.6.30)* — [decisions-branches/chore__clud-bug-v0.6.30.md](decisions-branches/chore__clud-bug-v0.6.30.md)
 
 ## 2026-05 (39 decisions)
