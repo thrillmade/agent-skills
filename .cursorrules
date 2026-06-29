@@ -19,5 +19,5 @@ For agent invocations of the `clud-bug` CLI, prefer `CLUD_BUG_QUIET=1`
 (or pass `--quiet`) — suppresses progress chatter and emits a single
 `ok <key-value>` summary line per command.
 
-_Installed at clud-bug v0.7.0-rc.18._
+_Installed at clud-bug v0.7.0-rc.20._
 <!-- clud-bug-end -->
