@@ -35,25 +35,12 @@ context months later is not.
 
 ## How to log
 
-### CLI (preferred)
-
 ```bash
 logmind log "Use PostgreSQL for primary database" \
   -r "Need ACID compliance and complex joins" \
   -a "MongoDB" -a "SQLite" \
   -i "Connection pooling required" \
   -i "Schema migrations needed"
-```
-
-### Python
-
-```python
-from logmind import log
-
-log("Use PostgreSQL for primary database",
-    reasoning="Need ACID compliance and complex joins",
-    alternatives=["MongoDB", "SQLite"],
-    implications=["Connection pooling required", "Schema migrations needed"])
 ```
 
 ## What `logmind log` does automatically
@@ -164,11 +151,13 @@ heads-up naming the disqualifying files — no action is taken.
 
 Before starting non-trivial work, read in order:
 
-1. **`docs/timeline.md`** — auto-generated chronological overview across
-   every branch; start here. **Since v0.5.4 the on-disk format is
-   brief** (per month: header with decision count + first + last entry
-   + elision line). Use `logmind timeline --full` for the legacy
-   per-decision listing.
+1. **`docs/timeline.md`** — auto-generated overview across every branch;
+   start here. **Since v2.0 it is the single canonical timeline**: a
+   deterministic, source-derived UNION of decision entries across all
+   branches, each branch led by its one-sentence **headline** (see
+   [Branch summaries](#branch-summaries-headline) below). There is one
+   timeline format — the old brief/full distinction is gone (`--full` is
+   accepted but inert, kept only for backward compatibility).
 2. **`docs/decisions.md`** — direct-on-main decisions in detail (20 most
    recent).
 3. **`docs/decisions-branches/<your-branch>.md`** if present — decisions
@@ -190,6 +179,24 @@ logmind show --json --all          # JSON across main + archive sources
 
 logmind search "postgres"          # full-text across both files
 ```
+
+## Branch summaries (headline)
+
+On a feature branch, set a one-sentence, plain-English summary of what the
+**whole branch** does — its "headline." The canonical timeline shows this
+line for the branch, and it's the first thing the next agent reads.
+
+```bash
+logmind headline "Add JWT session auth with refresh-token rotation"
+
+# or bundle it into a decision commit:
+logmind log "Wire refresh-token rotation" -r "..." -H "Add JWT session auth with refresh-token rotation"
+```
+
+Refine it as the branch grows — the entry's key stays stable, so re-running
+`logmind headline` just rewrites the visible sentence. It's a no-op on the
+default branch (which logs to `docs/decisions.md` directly). `logmind doctor
+--fix` backfills a headline for any branch file that's missing one.
 
 ## Agent-invocation mode: `LOGMIND_QUIET=1` (v0.5.1+)
 
@@ -423,7 +430,7 @@ logmind init --with-skdd   # subprocesses to `npx clud-bug init` after logmind s
 ```
 
 Behavior:
-- Default (no flag): logmind init unchanged — Python-only install.
+- Default (no flag): logmind init unchanged — logmind only (no clud-bug).
 - With `--with-skdd` + `npx` on PATH: subprocesses to `npx --yes clud-bug@latest init` after logmind setup completes. Streams output (not silenced).
 - With `--with-skdd` + no `npx`: emits a clear warning with the recovery command, exit code 0 (logmind side succeeded).
 - Subprocess failure (non-zero, OSError, 5-minute timeout): warning surfaced; logmind init still succeeds — clud-bug is an additive layer.
