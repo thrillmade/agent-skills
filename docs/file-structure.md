@@ -35,6 +35,7 @@ agent-skills
 │   ├── line-height-grid
 │   ├── logmind
 │   ├── oklch-color-space
+│   ├── orchestrating-agent-delegation
 │   ├── palette-relationships
 │   ├── pii-and-compliance
 │   ├── respect-existing-conventions
