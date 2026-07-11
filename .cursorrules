@@ -3,12 +3,21 @@ See [AGENTS.md](AGENTS.md) for project-specific AI agent instructions, including
 the decision-logging requirement (logmind) and required reading.
 
 <!-- clud-bug-start -->
-<!-- clud-bug-block-version: v3-app -->
+<!-- clud-bug-block-version: v2 -->
 ## clud-bug — Claude PR review
 
-**PR reviews:** automated via the `clud-bug[bot]` GitHub App (installed at the thrillmade org). No per-repo workflow needed. See <https://github.com/thrillmade/clud-bug-app> for the App source and the `.claude/skills/.clud-bug.json` manifest for skill selection.
+This repo uses [clud-bug](https://cludbug.dev) for automatic PR reviews.
+Full collaboration rules — fix-push flow, skill structure, comment format,
+strict-mode mechanics, workflow-edit constraint — live in the bundled
+[`clud-bug-collaboration` skill](skills/clud-bug-collaboration/SKILL.md).
+Read that skill before pushing fixes addressing prior review threads.
 
-Collaboration rules — fix-push flow, skill structure, comment format — live in the bundled [`clud-bug-collaboration` skill](skills/clud-bug-collaboration/SKILL.md). Read that skill before pushing fixes addressing prior review threads.
+Strict mode is **on** in this repo (workflow check fails on critical findings). Toggle via `.claude/skills/.clud-bug.json`
+(read from PR **base ref**, so PRs can't disable strict-mode on themselves).
 
-For agent invocations of the `clud-bug` CLI, prefer `CLUD_BUG_QUIET=1` (or pass `--quiet`) — suppresses progress chatter and emits a single `ok <key-value>` summary line per command.
+For agent invocations of the `clud-bug` CLI, prefer `CLUD_BUG_QUIET=1`
+(or pass `--quiet`) — suppresses progress chatter and emits a single
+`ok <key-value>` summary line per command.
+
+_Installed at clud-bug v0.7.0-rc.20._
 <!-- clud-bug-end -->

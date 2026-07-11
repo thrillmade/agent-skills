@@ -21,12 +21,19 @@
       "source": "clud-bug-baseline",
       "kind": "baseline",
       "description": "(baseline)"
+    },
+    {
+      "slug": "clud-bug-collaboration",
+      "name": "clud-bug-collaboration",
+      "source": "clud-bug-baseline",
+      "kind": "baseline",
+      "description": "(baseline)"
     }
   ],
   "excludedBaselines": [
     "clud-bug-collaboration"
   ],
-  "lastUpdateVersion": "0.6.32",
-  "lastUpdate": "2026-06-01T14:17:34.303Z",
+  "lastUpdateVersion": "0.7.0-rc.20",
+  "lastUpdate": "2026-06-29T22:08:09.958Z",
   "strictMode": true
 }

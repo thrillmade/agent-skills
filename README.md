@@ -20,6 +20,14 @@ These skills run inside any agent that loads skills.sh — Claude Code, Cursor, 
 | [`test-discipline`](skills/test-discipline/SKILL.md) | Flag the test-edit patterns that hollow out a suite over time: deleted assertions without replacement, mocks that hide the thing being tested, snapshot churn, `.skip`/`.only` left in the diff, time-dependent assertions without frozen time, assertions on internal state instead of observable behavior. |
 | [`skillforge`](skills/skillforge/SKILL.md) ✨ | Create or update a reusable agent skill. Use when you notice a repeated pattern, when a workflow should be persisted for future sessions, or when asked to forge/create/scaffold a new skill. **Vendored from [zakelfassi/skills-driven-development](https://github.com/zakelfassi/skills-driven-development) with attribution** — the canonical SkDD meta-skill (the skill that creates skills). MIT, Zak El Fassi. |
 
+## Personalisation templates
+
+These are **copy-and-edit starting points**, not skills you install as-is. Each ships with placeholder frontmatter that fails the SPEC slug check on purpose — copy the directory into your repo, customize, and the bot's log tells you if you forgot to replace a placeholder.
+
+| Template | Purpose |
+|---|---|
+| [`conventions-template`](skills/conventions-template/SKILL.md) | Scaffold for a "review like me" skill — captures one maintainer's review conventions (what they flag, what they ignore, structural preferences). Copy into `.claude/skills/conventions-<your-gh-login>/SKILL.md`, set the `applies_to.author` frontmatter to your login (per SPEC v0.5.1), customize the body, and clud-bug applies your conventions ONLY to PRs you open. Layers on top of org-wide review-discipline skills. |
+
 ## Install
 
 Pick a single skill:
