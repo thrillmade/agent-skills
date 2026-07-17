@@ -31,7 +31,11 @@ the station's own skill to actually run it.
 
 ## Lens order
 
-Run in this order; do not reorder.
+Run the lenses in this order **within a review session**. (In clud-bug's pipeline the
+code lens and the design lenses are two *orthogonal, independently gated passes* —
+protocol SPEC §12.2 — so this ordering governs how a reviewer or orchestrator sequences
+the work and prioritizes findings, not a cross-pass scheduling constraint; the
+elite-bar-last placement is this dispatcher's guidance.)
 
 1. **Code + markup lens — `web-interface-guidelines-review`.** The opinionated rule set
    (WIG, Material 3, Radix) plus token-driven contrast/typography/spacing rules: APCA-preferred
@@ -69,7 +73,7 @@ spacing math: `oklch-color-space`, `apca-contrast`, `wcag-contrast`,
 | PR touches UI code, **no** visual surface change (routing, state wiring, refactor) | Code lens only; the rendered lenses stay silent. |
 | PR changes a visual surface (component, layout, styles, theme) | Code lens **and** rendered lenses, with `designing-elite-ui` running last after the objective lenses; the rendered pass is browser-driven — screenshots light + dark, states exercised — per `orchestrating-elite-agent-qa` (**REQUIRED BACKGROUND** for orchestrating that gate). |
 | Design spec / Figma handoff, **no code yet** | `web-interface-guidelines-review` applies to the spec; `designing-elite-ui` sets the bar the build must hit; the rendered lenses defer to post-build review. |
-| clud-bug-installed repo | The 4 dedicated design lenses (`design-system-consistency`, `frontend-a11y`, `visual-polish`, `designing-elite-ui`) are `kind: design` / `review_mode: dedicated` — they run as the dedicated design-critic pass, not inline with the code review. |
+| clud-bug-installed repo | The 4 dedicated design lenses (`design-system-consistency`, `frontend-a11y`, `visual-polish`, `designing-elite-ui`) are `kind: design` / `review_mode: dedicated` — they run as the separate **design pass** (protocol SPEC §12), never inline with the code review, and **only when the repo opts in**: `design.enabled: true` in `.clud-bug.json`, at least one design skill applies to the diff, and the trigger is a PR review (§12.3). Installation alone never fires the pass. |
 
 ## System-specific layers
 
