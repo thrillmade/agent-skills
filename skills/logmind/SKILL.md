@@ -94,6 +94,21 @@ Unrelated working-tree changes stay unstaged. Use when:
 Rare for automated agents — they should be working on one task at a
 time and want the single-commit shape.
 
+## Enforcement: raw `git commit` is blocked
+
+A substantive commit that bypasses `logmind log` is **blocked**, not just
+discouraged. Two layers enforce it: the git `commit-msg` hook, and (inside
+Claude Code) a PreToolUse hook that intercepts the `git commit` Bash call
+before it runs. Use `logmind log` in place of `git add` + `git commit` +
+`git push`.
+
+Escape hatches, for genuinely no-decision commits (typo fixes, dependency
+bumps):
+- Add `[skip-logmind]` to the commit subject.
+- Set `LOGMIND_ALLOW_GIT_COMMIT=1` for one command.
+- `git.enforce_commits: false` in `.logmind/config.yml` disables
+  enforcement for the whole repo.
+
 ## Branch-aware routing (automatic)
 
 On a feature branch the entry lands in
@@ -166,6 +181,15 @@ Before starting non-trivial work, read in order:
    the on-disk tree is capped at depth 2 by default.** For a deeper
    view, run `logmind file-structure --max-depth N` (or
    `logmind tree --max-depth 0` for fully unbounded).
+5. **The canonical spec file, if configured** (v2.0+, SPEC §16) — the
+   project's forward-looking intended contract: the WHERE-TO beside the
+   timeline's WHY and the file tree's WHAT. Check
+   `.logmind/config.yml`'s `context.spec_file` (a nonzero
+   `logmind config get context.spec_file` exit means "not configured" —
+   not an error); it also arrives automatically, first, in
+   `logmind context`. **Build toward it — don't assume it already
+   describes the code.** Refine it via an ordinary PR when intent
+   changes, like any other doc; nothing regenerates it.
 
 ```bash
 logmind show                       # recent decisions on the current branch
@@ -197,6 +221,14 @@ Refine it as the branch grows — the entry's key stays stable, so re-running
 `logmind headline` just rewrites the visible sentence. It's a no-op on the
 default branch (which logs to `docs/decisions.md` directly). `logmind doctor
 --fix` backfills a headline for any branch file that's missing one.
+
+## The pulse: read the advisories after `logmind log`
+
+After a successful commit, `logmind log` may print advisories to stderr —
+a stale component (workflow/hook/AGENTS.md drift; run `logmind doctor
+--fix`) or spec staleness (the spec file hasn't been touched in 20+
+decisions; worth a review). These never block the commit that already
+landed — act on them anyway.
 
 ## Agent-invocation mode: `LOGMIND_QUIET=1` (v0.5.1+)
 
