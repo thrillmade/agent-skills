@@ -1,7 +1,7 @@
 ---
 name: component-sizing
 description: |
-  Use when picking a button / input / chip / badge height, or proposing a component-height ladder for a density mode. Names UDTS's curated 5-rung height ladders per density — balanced (4/8 grid) at 24, 32, 40, 48, 56; dense (2/4 grid) at 24, 28, 36, 44, 52; spacious (4/16 grid) at 32, 48, 64, 80, 96. Also names the curated icon-size ladder (12, 16, 24, 32, 40, 48), the font-size pairing per rung, the rule for which rungs are interactive (≥ 24 CSS px WCAG 2.5.8 floor — but interactive rungs start at the `sm` 32 px tier; `xs` 24 px is non-interactive only), and why heights and icon sizes are curated, not formula-derived.
+  SUPERSEDED by `component-sizing-principles` (L0) + `udts-component-sizing-ladders` (L2, incubating) — see SKILL-UNIFICATION-SPEC.md at the repo root; kept unchanged during the tokenomics migration window, new work should load the successors. Use when picking a button / input / chip / badge height, or proposing a component-height ladder for a density mode. Names UDTS's curated 5-rung height ladders per density — balanced (4/8 grid) at 24, 32, 40, 48, 56; dense (2/4 grid) at 24, 28, 36, 44, 52; spacious (4/16 grid) at 32, 48, 64, 80, 96. Also names the curated icon-size ladder (12, 16, 24, 32, 40, 48), the font-size pairing per rung, the rule for which rungs are interactive (≥ 24 CSS px WCAG 2.5.8 floor — but interactive rungs start at the `sm` 32 px tier; `xs` 24 px is non-interactive only), and why heights and icon sizes are curated, not formula-derived.
 ---
 
 # Component sizing

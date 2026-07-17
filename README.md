@@ -20,6 +20,74 @@ These skills run inside any agent that loads skills.sh — Claude Code, Cursor, 
 | [`test-discipline`](skills/test-discipline/SKILL.md) | Flag the test-edit patterns that hollow out a suite over time: deleted assertions without replacement, mocks that hide the thing being tested, snapshot churn, `.skip`/`.only` left in the diff, time-dependent assertions without frozen time, assertions on internal state instead of observable behavior. |
 | [`skillforge`](skills/skillforge/SKILL.md) ✨ | Create or update a reusable agent skill. Use when you notice a repeated pattern, when a workflow should be persisted for future sessions, or when asked to forge/create/scaffold a new skill. **Vendored from [zakelfassi/skills-driven-development](https://github.com/zakelfassi/skills-driven-development) with attribution** — the canonical SkDD meta-skill (the skill that creates skills). MIT, Zak El Fassi. |
 
+## Design & design-system skills — three layers
+
+The design catalog is organized in three layers (locked in [SKILL-UNIFICATION-SPEC.md](SKILL-UNIFICATION-SPEC.md)):
+
+- **L0 — universal primitives.** Math, standards, and principles any design system can build on. No product opinions.
+- **L1 — purpose dispatchers.** Thin entry points that route an agent (or a human landing cold) to the right L0 primitives and L2 stances for a given mode of work. Start here.
+- **L2 — system stances (`udts-*`).** UDTS's opinionated instantiations of the L0 principles. Incubating in `thrillmade/tokenomics`; published here as stubs until stable.
+
+### L1 — start here
+
+| Skill | Purpose |
+|---|---|
+| [`designing-a-design-system`](skills/designing-a-design-system/SKILL.md) | Dispatcher for **building or extending** a design system — routes through naming → color → non-color families → format/versioning → the elite bar → testing, in build order. |
+| [`reviewing-design-work`](skills/reviewing-design-work/SKILL.md) | Dispatcher for **reviewing or critiquing** design output — ordered lenses (code rules → rendered-surface lenses → the opinion bar) with routing rules for when the browser-driven design-critic pass fires. |
+| [`consuming-a-design-system`](skills/consuming-a-design-system/SKILL.md) | Dispatcher for **using** a design system in a product — token discipline, composition rules, DTCG install patterns, SemVer-aware upgrades, extend-vs-fork. |
+
+### L0 — universal primitives
+
+| Skill | Purpose |
+|---|---|
+| [`oklch-color-space`](skills/oklch-color-space/SKILL.md) | OKLCH primitive ranges, hue-angle naming, gamut mapping, and APCACH inverse composition — generate colors *from* a contrast target instead of pick-then-check. |
+| [`apca-contrast`](skills/apca-contrast/SKILL.md) | The APCA Lc target table and the APCA-primary / WCAG-cross-check contrast stance. |
+| [`wcag-contrast`](skills/wcag-contrast/SKILL.md) | WCAG 2.2 AA rules as the legal baseline cross-check — 4.5:1 / 3:1, point-based size thresholds, focus appearance. |
+| [`chroma-harmonization`](skills/chroma-harmonization/SKILL.md) | Per-stop cross-hue chroma caps so multi-hue palettes read equally saturated at every stop. |
+| [`palette-relationships`](skills/palette-relationships/SKILL.md) | Hue-angle math for monochromatic → tetradic palette relationships and when each fits the brief. |
+| [`type-scale`](skills/type-scale/SKILL.md) | Modular type-scale ratios, the stops-up/stops-down convention, and integer-px rounding rules. |
+| [`line-height-grid`](skills/line-height-grid/SKILL.md) | Two-track line-height (`lh-ui` / `lh-prose`) snapped to the spacing grid. |
+| [`spacing-system`](skills/spacing-system/SKILL.md) | The two-unit (minor + major) spacing primitive model, ladder derivation, and the WCAG 2.5.8 24 px interactive floor. |
+| [`component-sizing-principles`](skills/component-sizing-principles/SKILL.md) | Why control-height and icon ladders are curated, not formula-derived; rung pairing; the WCAG 2.5.8 floor. |
+| [`token-naming-conventions`](skills/token-naming-conventions/SKILL.md) | Universal token-naming principles — prefix-loaded, class-derivable names; physical primitive names; theme/density never in the name. |
+| [`dtcg-format`](skills/dtcg-format/SKILL.md) | W3C DTCG interchange format — reserved keys, aliases, group inheritance, composites, namespaced extensions. |
+| [`semver-design-tokens`](skills/semver-design-tokens/SKILL.md) | SemVer for token releases computed from the resolved-value diff, with snapshot and deprecation discipline. |
+
+### L0 — design-critic lenses (pair with clud-bug's dedicated design review)
+
+| Skill | Purpose |
+|---|---|
+| [`designing-elite-ui`](skills/designing-elite-ui/SKILL.md) | The elite/Figma-grade visual STANDARD a build designs to and a critic measures against — one-axis color roles, APCA-gated contrast, stable canvas + floating chrome, light and dark both primary. |
+| [`design-system-consistency`](skills/design-system-consistency/SKILL.md) | Flag rendered UI drifting from the system's tokens, scale, and color discipline — judges the screenshot, not just the code. |
+| [`frontend-a11y`](skills/frontend-a11y/SKILL.md) | Accessibility on the rendered surface — contrast ratios, focus visibility, tap targets, semantics, motion. |
+| [`visual-polish`](skills/visual-polish/SKILL.md) | The "fine but not elite" lens — alignment, optical centering, spacing rhythm, state coverage, theme parity. |
+| [`orchestrating-elite-agent-qa`](skills/orchestrating-elite-agent-qa/SKILL.md) | The multi-agent QA pipeline that enforces the bar — adversarial reviewer panels, the browser-driving design-critic gate, fresh-case realistic QA. |
+| [`web-interface-guidelines-review`](skills/web-interface-guidelines-review/SKILL.md) | The code+markup review lens — WIG/Material/Radix rules plus token discipline, the APCA-primary contrast stance, focus contract, and the 24 px floor. Fires first in `reviewing-design-work`. |
+
+### L2 — UDTS stances (incubating stubs)
+
+Parity markers: each names a `udts-*` skill being authored in `thrillmade/tokenomics` and PR'd here once the UDTS spec stabilizes. Don't load these as guidance yet.
+
+| Stub | Will hold |
+|---|---|
+| [`udts-token-model`](skills/udts-token-model/SKILL.md) | UDTS's token taxonomy and resolution model. |
+| [`udts-naming-convention`](skills/udts-naming-convention/SKILL.md) | UDTS's concrete naming convention (instantiates `token-naming-conventions`). |
+| [`udts-dtcg-extensions`](skills/udts-dtcg-extensions/SKILL.md) | UDTS's namespaced DTCG extension schema (extends `dtcg-format`). |
+| [`udts-spacing-defaults`](skills/udts-spacing-defaults/SKILL.md) | UDTS's density-mode unit choices (instantiates `spacing-system`). |
+| [`udts-component-sizing-ladders`](skills/udts-component-sizing-ladders/SKILL.md) | UDTS's per-density height + icon ladders (instantiates `component-sizing-principles`). |
+| [`udts-semver-defaults`](skills/udts-semver-defaults/SKILL.md) | UDTS's SemVer policy choices (instantiates `semver-design-tokens`). |
+| [`udts-review`](skills/udts-review/SKILL.md) | UDTS's system-specific review lens (composes with `reviewing-design-work`). |
+| [`udts-linter-rules`](skills/udts-linter-rules/SKILL.md) | UDTS's machine-enforceable linter rules. |
+
+### Deprecated (migration window)
+
+| Skill | Superseded by |
+|---|---|
+| [`design-token-naming`](skills/design-token-naming/SKILL.md) | `token-naming-conventions` (L0) + `udts-naming-convention` (L2). Kept unchanged until tokenomics migrates. |
+| [`component-sizing`](skills/component-sizing/SKILL.md) | `component-sizing-principles` (L0) + `udts-component-sizing-ladders` (L2). Kept unchanged until tokenomics migrates. |
+
+Also design-adjacent, listed in the main table above: [`brand-voice-review`](skills/brand-voice-review/SKILL.md) (microcopy voice for user-facing strings).
+
 ## Personalisation templates
 
 These are **copy-and-edit starting points**, not skills you install as-is. Each ships with placeholder frontmatter that fails the SPEC slug check on purpose — copy the directory into your repo, customize, and the bot's log tells you if you forgot to replace a placeholder.
