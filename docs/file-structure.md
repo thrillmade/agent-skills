@@ -53,7 +53,8 @@ agent-skills
 ├── AGENTS.md
 ├── CLAUDE.md
 ├── LICENSE
-└── README.md
+├── README.md
+└── SKILL-UNIFICATION-SPEC.md
 ```
 
 _Truncated at depth 2 (logmind v0.5.0+ default). For a deeper view, run
