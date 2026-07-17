@@ -2,3 +2,7 @@
 .logmind/cache/
 .logmind/.lock
 # <<< logmind <<<
+
+# python
+__pycache__/
+*.pyc

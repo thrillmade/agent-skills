@@ -1,0 +1,52 @@
+name: "Census: Gap"
+description: Skills missing from the catalog that agents encounter repeatedly
+title: "[Gap] "
+labels: ["census", "gap"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Skill Census: Gap Verdict
+
+        A **gap** is a reusable pattern agents need repeatedly but the catalog
+        doesn't yet offer. Gap verdicts nominate missing skills for proposal.
+        Evidence standards: cite real instances (PRs, Slack threads, code
+        reviews where an agent wished the skill existed), not speculation.
+  - type: input
+    id: subject
+    attributes:
+      label: Skill or repo this concerns
+      description: The skill that's missing, or the repo where the need was observed
+      placeholder: "e.g., detect-circular-dependencies, or thrillmade/myrepo"
+    validations:
+      required: true
+  - type: textarea
+    id: grounds
+    attributes:
+      label: Evidence (quote census data, issue numbers, or recurring cases — verdicts without grounds get closed)
+      description: |
+        Link issues, PRs, or Slack threads where agents or humans said
+        "we need a skill for X". Point to the pattern—the real thing,
+        not a hypothetical.
+      placeholder: |
+        - thrillmade/myrepo issue #42: "we keep forgetting to check for circular deps"
+        - Slack thread 2026-05-15: user asking for automated cycle detection
+        - Three PRs in the past month missed the same pattern
+    validations:
+      required: true
+  - type: dropdown
+    id: confidence
+    attributes:
+      label: Confidence
+      description: How certain is this a real, recurring pattern?
+      options:
+        - high (3+ confirmed instances, across multiple repos or users)
+        - medium (1-2 instances, clear need, but limited observation)
+        - low (speculative; useful if it lands, but not yet proven)
+      default: 0
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        Filed by the weekly census or by hand — either way the editor decides; see [skills/curating-a-skill-catalog/SKILL.md](https://github.com/thrillmade/agent-skills/tree/main/skills/curating-a-skill-catalog).

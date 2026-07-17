@@ -1,0 +1,54 @@
+name: "Census: Revise"
+description: Skills that need updates, bug fixes, or clarifications
+title: "[Revise] "
+labels: ["census", "revise"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Skill Census: Revise Verdict
+
+        A **revise** verdict flags a skill that is correctly placed but needs
+        updates: bug fixes, clearer documentation, trigger refinement, or
+        content drift. Evidence standards: quote specific parts of the skill
+        that are incorrect, confusing, or out of date.
+  - type: input
+    id: subject
+    attributes:
+      label: Skill or repo this concerns
+      description: The skill needing revision
+      placeholder: "e.g., my-skill, or thrillmade/myrepo"
+    validations:
+      required: true
+  - type: textarea
+    id: grounds
+    attributes:
+      label: Evidence (quote census data, issue numbers, or recurring cases — verdicts without grounds get closed)
+      description: |
+        Point to the specific section that needs work. Quote the current
+        frontmatter, description, or body text. Explain what's wrong: is it
+        out of date? Contradictory? Confusing? Does it conflict with how
+        agents actually use the skill?
+      placeholder: |
+        - Frontmatter description says "flag PII" but the skill also catches unrelated patterns
+        - Trigger example in line 42 no longer matches the codebase
+        - Multiple users report the skill conflicts with X, needs a note about precedence
+        - Body section "When to use" contradicts the trigger in "When not to use"
+    validations:
+      required: true
+  - type: dropdown
+    id: confidence
+    attributes:
+      label: Confidence
+      description: How clear is the revision need?
+      options:
+        - high (bug or clear error, breaks usage)
+        - medium (needs polish or clarification)
+        - low (minor rewording, documentation nit)
+      default: 0
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        Filed by the weekly census or by hand — either way the editor decides; see [skills/curating-a-skill-catalog/SKILL.md](https://github.com/thrillmade/agent-skills/tree/main/skills/curating-a-skill-catalog).

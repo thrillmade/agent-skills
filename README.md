@@ -19,6 +19,7 @@ These skills run inside any agent that loads skills.sh — Claude Code, Cursor, 
 | [`pii-and-compliance`](skills/pii-and-compliance/SKILL.md) | Catch PII and auth material leaking into logs, error traces, analytics events, URLs, or third-party SDKs. Apply to logging calls, telemetry, error handlers, debug statements, and committed test fixtures. |
 | [`test-discipline`](skills/test-discipline/SKILL.md) | Flag the test-edit patterns that hollow out a suite over time: deleted assertions without replacement, mocks that hide the thing being tested, snapshot churn, `.skip`/`.only` left in the diff, time-dependent assertions without frozen time, assertions on internal state instead of observable behavior. |
 | [`orchestrating-agent-delegation`](skills/orchestrating-agent-delegation/SKILL.md) | The CTO-as-orchestrator discipline for handing work to subagents — model tiering, the load-bearing agent-brief shape (with a copyable skeleton), trust-but-verify every "done" against the diff, refute-first review panels, design→rule→build separation. The general delegation mechanics beneath [`orchestrating-elite-agent-qa`](skills/orchestrating-elite-agent-qa/SKILL.md)'s UI-quality pipeline. |
+| [`curating-a-skill-catalog`](skills/curating-a-skill-catalog/SKILL.md) | The skill-census rubric — lifecycle states, the five verdict kinds with evidence standards, the top-5-plus-digest noise budget, and the human-editor gate. Applied weekly by the census workflow; recursive (the rubric censuses itself). |
 | [`token-frugal-tooling`](skills/token-frugal-tooling/SKILL.md) | Quick-reference for the org's token-frugal CLI conventions in repos running both logmind and clud-bug — quiet-mode env vars, artifact defaults, agent-mode flags. Detail lives in the per-tool skills. |
 | [`skillforge`](skills/skillforge/SKILL.md) ✨ | Create or update a reusable agent skill. Use when you notice a repeated pattern, when a workflow should be persisted for future sessions, or when asked to forge/create/scaffold a new skill. **Vendored from [zakelfassi/skills-driven-development](https://github.com/zakelfassi/skills-driven-development) with attribution** — the canonical SkDD meta-skill (the skill that creates skills). MIT, Zak El Fassi. |
 
@@ -92,7 +93,7 @@ Also design-adjacent, listed in the main table above: [`brand-voice-review`](ski
 
 ### Skill census
 
-Org-wide skill inventories feed the editorial cycle (what gets promoted, demoted, revised). Reports live in `docs/skill-census/`: [clud-bug](docs/skill-census/2026-07-16-clud-bug.md) · [logmind](docs/skill-census/2026-07-16-logmind.md) · [tokenomics](docs/skill-census/2026-07-16-tokenomics.md).
+Org-wide skill inventories feed the editorial cycle (what gets promoted, demoted, revised). Reports live in `docs/skill-census/`: [clud-bug](docs/skill-census/2026-07-16-clud-bug.md) · [logmind](docs/skill-census/2026-07-16-logmind.md) · [tokenomics](docs/skill-census/2026-07-16-tokenomics.md). The census runs weekly via [skill-census.yml](.github/workflows/skill-census.yml) — counters + an AI panel that files verdict issues for the editor; the rubric it applies is [curating-a-skill-catalog](skills/curating-a-skill-catalog/SKILL.md).
 
 ## Personalisation templates
 

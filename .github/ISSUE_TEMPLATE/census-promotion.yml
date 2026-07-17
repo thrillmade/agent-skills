@@ -1,0 +1,53 @@
+name: "Census: Promotion"
+description: Skills that have demonstrated value and should be elevated in visibility or tier
+title: "[Promotion] "
+labels: ["census", "promotion-candidate"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Skill Census: Promotion Verdict
+
+        A **promotion** verdict flags a skill that has proven its value
+        and should be elevated in visibility, tier, or the org-wide catalog.
+        Evidence standards: quote usage data (loads, PR findings, user
+        feedback), impact metrics, or unmet demand.
+  - type: input
+    id: subject
+    attributes:
+      label: Skill or repo this concerns
+      description: The skill being promoted
+      placeholder: "e.g., my-skill, or thrillmade/myrepo"
+    validations:
+      required: true
+  - type: textarea
+    id: grounds
+    attributes:
+      label: Evidence (quote census data, issue numbers, or recurring cases — verdicts without grounds get closed)
+      description: |
+        Show why this skill deserves elevation. Quote usage stats, loads,
+        PR findings, user feedback, or adoption across repos. Is it solving
+        a widespread problem? Should it be org-wide instead of local?
+      placeholder: |
+        - Loaded in 12 repos, 89% of PRs benefit (clud-bug census data)
+        - Repeatedly requested across Slack; should graduate from experimental
+        - Moved from .claude/skills to org catalog three months ago, now foundational
+        - Catches 5+ issues per repo per week; should be highlighted in onboarding
+    validations:
+      required: true
+  - type: dropdown
+    id: confidence
+    attributes:
+      label: Confidence
+      description: How strong is the case for promotion?
+      options:
+        - high (high adoption, proven impact, clear next tier)
+        - medium (good usage, worth evaluating, borderline)
+        - low (interesting, but not yet ready)
+      default: 0
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        Filed by the weekly census or by hand — either way the editor decides; see [skills/curating-a-skill-catalog/SKILL.md](https://github.com/thrillmade/agent-skills/tree/main/skills/curating-a-skill-catalog).

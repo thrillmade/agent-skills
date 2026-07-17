@@ -1,0 +1,337 @@
+name: skill-census
+
+# Weekly org-wide skill census. Two-mode engine:
+#
+#   Mode A (always) — .github/scripts/census_counters.py. Deterministic,
+#     stdlib-only counters: what each consumer repo subscribes vs. carries
+#     locally, catalog subscription coverage, convergent local skills, docket
+#     staleness. Emits census.json + digest.md. This is the guaranteed
+#     deliverable — it ships even when the LLM panel is unavailable.
+#
+#   Mode B (when ANTHROPIC_API_KEY is present) — .github/scripts/census_panel.py.
+#     Reads census.json and produces verdicts.json (gap / placement / revise /
+#     promotion-candidate / demotion-candidate proposals). The panel step is
+#     JUDGMENT; filing those verdicts as issues is the FILING step below —
+#     dry_run suppresses filing, never judgment.
+#
+# Auth: the thrillmade-orchestrator App installation token (all-install scope,
+# minted per-run) reads consumer repos across the org and files issues here.
+# Requires the org secrets THRILLMADE_ORCHESTRATOR_APP_ID +
+# THRILLMADE_ORCHESTRATOR_PRIVATE_KEY to be visible to agent-skills — the
+# secret-guard step fails loudly with remediation if they are not.
+#
+# Idempotency: one digest issue per ISO-week cycle (commented on re-run, not
+# duplicated); verdict issues de-duplicated by exact title; hard cap of 5
+# verdict issues filed per cycle with the overflow count surfaced in the
+# digest. See the "File issues" step.
+
+on:
+  schedule:
+    # Mondays 12:00 UTC — the org's weekly rhythm.
+    - cron: "0 12 * * 1"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Print would-be issue creates/comments to the log instead of filing them."
+        type: boolean
+        required: false
+        default: false
+
+concurrency:
+  group: skill-census
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  census:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout catalog
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+
+      # Loud fail if the App secrets aren't visible to this repo. Missing
+      # ANTHROPIC_API_KEY does NOT fail — it only degrades to Mode B (digest
+      # only), so we emit a warning and flip the panel_enabled output off.
+      - name: Guard org secrets + resolve panel mode
+        id: guard
+        env:
+          ORCH_APP_ID: ${{ secrets.THRILLMADE_ORCHESTRATOR_APP_ID }}
+          ORCH_PRIVATE_KEY: ${{ secrets.THRILLMADE_ORCHESTRATOR_PRIVATE_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          set -euo pipefail
+          missing=0
+          if [ -z "${ORCH_APP_ID:-}" ]; then
+            echo "::error::THRILLMADE_ORCHESTRATOR_APP_ID is empty. Remediation: extend org-secret visibility to agent-skills (org Settings -> Secrets and variables -> Actions -> the secret -> Repository access -> add agent-skills)."
+            missing=1
+          fi
+          if [ -z "${ORCH_PRIVATE_KEY:-}" ]; then
+            echo "::error::THRILLMADE_ORCHESTRATOR_PRIVATE_KEY is empty. Remediation: extend org-secret visibility to agent-skills (org Settings -> Secrets and variables -> Actions -> the secret -> Repository access -> add agent-skills)."
+            missing=1
+          fi
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+          if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
+            echo "::warning::ANTHROPIC_API_KEY is empty — degrading to Mode B (deterministic digest only, no LLM panel). Extend the ANTHROPIC_API_KEY org secret to agent-skills to enable verdicts."
+            echo "panel_enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "panel_enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Scoped to exactly the consumer repos census_counters.py reads
+      # cross-repo (STEWARD_TOKEN). agent-skills itself is read via checkout,
+      # not this token, and issue filing now runs on github.token (see the
+      # File issues step) — so agent-skills does not need to be in scope here.
+      - name: Mint steward App token
+        id: app_token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3
+        with:
+          app-id: ${{ secrets.THRILLMADE_ORCHESTRATOR_APP_ID }}
+          private-key: ${{ secrets.THRILLMADE_ORCHESTRATOR_PRIVATE_KEY }}
+          owner: thrillmade
+          repositories: |
+            clud-bug
+            clud-bug-app
+            logmind
+            tokenomics
+            protocol
+            reporulez
+            rezgen
+            skdd
+
+      # Mode A — deterministic counters. Stdlib only; runs on the bare runner
+      # (no setup-python / pip) before the panel step installs anything.
+      - name: Census counters (Mode A)
+        id: counters
+        env:
+          STEWARD_TOKEN: ${{ steps.app_token.outputs.token }}
+          OUT_DIR: ${{ runner.temp }}/census
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/census_counters.py
+
+      # Mode B — LLM judgment. Runs whenever the panel is enabled, INCLUDING
+      # dry_run (we gate FILING, not judgment). continue-on-error stays false:
+      # the script owns its own failure handling and exits 0 on API failure
+      # after writing a Mode-B marker, so an infra hiccup inside it degrades
+      # to digest-only rather than killing the run.
+      - name: Set up Python (panel)
+        if: steps.guard.outputs.panel_enabled == 'true'
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.12"
+
+      - name: Install anthropic SDK (panel)
+        if: steps.guard.outputs.panel_enabled == 'true'
+        run: pip install anthropic
+
+      - name: Census panel (Mode B judgment)
+        id: panel
+        if: steps.guard.outputs.panel_enabled == 'true'
+        continue-on-error: false
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CENSUS_DIR: ${{ runner.temp }}/census
+          # Reads the open `census` docket via `gh issue list` in THIS repo —
+          # the App has no Issues permission at all, so this must be the
+          # workflow's own GITHUB_TOKEN (issues: write, granted above), not
+          # the App token.
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/census_panel.py
+
+      # File the digest (always, if counters produced one) and any verdict
+      # issues (Mode B). Runs even if the panel step failed unexpectedly, so
+      # an infra failure never swallows the digest. dry_run prints instead of
+      # filing. All issue bodies are passed via --body-file — untrusted
+      # (LLM-authored) content is never interpolated into a shell command.
+      - name: File issues (digest + verdicts)
+        id: file_issues
+        if: ${{ !cancelled() && steps.counters.outcome == 'success' }}
+        env:
+          # Filing uses GITHUB_TOKEN (github-actions[bot]); switch GH_TOKEN to
+          # the App token once the App is granted Issues R/W to file under the
+          # steward identity.
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: thrillmade/agent-skills
+          CENSUS_DIR: ${{ runner.temp }}/census
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+
+          DRY_RUN="${DRY_RUN:-false}"
+
+          # One cycle-tag computation (ISO week, UTC). CYCLE_TAG matches the
+          # `cycle` field census_counters.py writes into census.json.
+          CYCLE_WEEK="$(date -u +%G-W%V)"      # e.g. 2026-W29
+          CYCLE_TAG="census-${CYCLE_WEEK}"     # e.g. census-2026-W29
+          DIGEST_TITLE="census ${CYCLE_WEEK} digest"
+
+          echo "Cycle: ${CYCLE_TAG} (dry_run=${DRY_RUN})"
+
+          # Ensure the cycle labels exist (idempotent, --force is create-or-update).
+          for lbl in census gap placement revise promotion-candidate demotion-candidate; do
+            gh label create "$lbl" --force >/dev/null 2>&1 || true
+          done
+
+          DIGEST_FILE="${CENSUS_DIR}/digest.md"
+          VERDICTS_FILE="${CENSUS_DIR}/verdicts.json"
+
+          if [ ! -f "$DIGEST_FILE" ]; then
+            echo "::error::digest.md missing at ${DIGEST_FILE} — Mode A did not produce a digest."
+            exit 1
+          fi
+
+          # Resolve verdict count + Mode-B state. A Mode-B marker is either a
+          # missing verdicts.json, a {"mode":"b"} payload, or an empty
+          # .verdicts array — all mean "digest only, no verdict issues".
+          VERDICT_COUNT=0
+          MODE_B=1
+          if [ -f "$VERDICTS_FILE" ]; then
+            MODE=$(jq -r '.mode // ""' "$VERDICTS_FILE" 2>/dev/null || echo "")
+            VERDICT_COUNT=$(jq '(.verdicts // []) | length' "$VERDICTS_FILE" 2>/dev/null || echo 0)
+            if [ "$MODE" = "b" ]; then
+              echo "::notice::Panel wrote a Mode-B marker (API unavailable) — filing digest only."
+              VERDICT_COUNT=0
+            fi
+            if [ "$VERDICT_COUNT" -gt 0 ]; then
+              MODE_B=0
+            fi
+          else
+            echo "::notice::No verdicts.json present — Mode B (deterministic digest only)."
+          fi
+
+          MAX_VERDICTS=5
+          OVERFLOW=0
+          if [ "$VERDICT_COUNT" -gt "$MAX_VERDICTS" ]; then
+            OVERFLOW=$(( VERDICT_COUNT - MAX_VERDICTS ))
+          fi
+
+          # Digest body = digest.md, plus an overflow note when the panel
+          # produced more than the 5-issue cap.
+          DIGEST_BODY_FILE="$(mktemp)"
+          cp "$DIGEST_FILE" "$DIGEST_BODY_FILE"
+          if [ "$OVERFLOW" -gt 0 ]; then
+            {
+              echo ""
+              echo "> **Verdict overflow:** the panel produced ${VERDICT_COUNT} verdicts; only the top ${MAX_VERDICTS} were filed as issues this cycle. ${OVERFLOW} additional verdict(s) were held back — see the verdicts.json workflow artifact."
+            } >> "$DIGEST_BODY_FILE"
+          fi
+
+          # Append the panel's own reasoning (prosecutor/defender calls, folded
+          # candidates) to the digest, when present.
+          if [ -f "$VERDICTS_FILE" ]; then
+            ADDENDUM=$(jq -r '.digest_addendum_md // ""' "$VERDICTS_FILE" 2>/dev/null || echo "")
+            if [ -n "$ADDENDUM" ]; then
+              {
+                echo ""
+                echo "$ADDENDUM"
+              } >> "$DIGEST_BODY_FILE"
+            fi
+          fi
+
+          # Digest issue: one per cycle, commented on re-run (exact-title match).
+          EXISTING_DIGEST=$(gh issue list --state open --search "${DIGEST_TITLE} in:title" \
+            --json number,title 2>/dev/null \
+            | jq -r --arg t "$DIGEST_TITLE" 'map(select(.title == $t)) | .[0].number // empty') || EXISTING_DIGEST=""
+
+          if [ "$DRY_RUN" = "true" ]; then
+            echo "=== DRY-RUN: digest issue ==="
+            if [ -n "$EXISTING_DIGEST" ]; then
+              echo "Would COMMENT on existing digest issue #${EXISTING_DIGEST}:"
+            else
+              echo "Would CREATE issue '${DIGEST_TITLE}' (label: census):"
+            fi
+            echo "----- body -----"
+            cat "$DIGEST_BODY_FILE"
+            echo "----- end body -----"
+          else
+            if [ -n "$EXISTING_DIGEST" ]; then
+              gh issue comment "$EXISTING_DIGEST" --body-file "$DIGEST_BODY_FILE"
+              echo "::notice::Updated digest issue #${EXISTING_DIGEST} for ${CYCLE_TAG}."
+            else
+              gh issue create --title "$DIGEST_TITLE" --label census --body-file "$DIGEST_BODY_FILE"
+              echo "::notice::Created digest issue '${DIGEST_TITLE}'."
+            fi
+          fi
+          rm -f "$DIGEST_BODY_FILE"
+
+          if [ "$MODE_B" -eq 1 ]; then
+            echo "Mode B — no verdict issues to file."
+            exit 0
+          fi
+
+          # Verdict issues: hard-cap at 5 (head -5 semantics), exact-title
+          # idempotency, bodies via --body-file.
+          FILE_N=$VERDICT_COUNT
+          if [ "$FILE_N" -gt "$MAX_VERDICTS" ]; then
+            FILE_N=$MAX_VERDICTS
+          fi
+
+          i=0
+          while [ "$i" -lt "$FILE_N" ]; do
+            V_TITLE=$(jq -r ".verdicts[$i].title // \"\"" "$VERDICTS_FILE")
+            if [ -z "$V_TITLE" ]; then
+              echo "::warning::verdict index ${i} has no title — skipping."
+              i=$((i + 1))
+              continue
+            fi
+
+            V_BODY_FILE="$(mktemp)"
+            jq -r ".verdicts[$i].body // \"\"" "$VERDICTS_FILE" > "$V_BODY_FILE"
+
+            # Labels: always census; add each declared label if it is allowed.
+            LABEL_ARGS=(--label census)
+            while IFS= read -r l; do
+              [ -z "$l" ] && continue
+              case "$l" in
+                gap|placement|revise|promotion-candidate|demotion-candidate)
+                  LABEL_ARGS+=(--label "$l") ;;
+                *)
+                  echo "::warning::verdict '${V_TITLE}' declares unknown label '${l}' — ignoring." ;;
+              esac
+            done < <(jq -r ".verdicts[$i].labels // [] | .[]" "$VERDICTS_FILE")
+
+            EXISTS=$(gh issue list --state open --search "${V_TITLE} in:title" \
+              --json number,title 2>/dev/null \
+              | jq -r --arg t "$V_TITLE" 'map(select(.title == $t)) | .[0].number // empty') || EXISTS=""
+
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "=== DRY-RUN: verdict $((i + 1))/${FILE_N} ==="
+              if [ -n "$EXISTS" ]; then
+                echo "Would SKIP (already open as #${EXISTS}): ${V_TITLE}"
+              else
+                echo "Would CREATE '${V_TITLE}' (labels: ${LABEL_ARGS[*]}):"
+                echo "----- body -----"
+                cat "$V_BODY_FILE"
+                echo "----- end body -----"
+              fi
+            else
+              if [ -n "$EXISTS" ]; then
+                echo "::notice::Verdict already open as #${EXISTS} — skipping: ${V_TITLE}"
+              else
+                gh issue create --title "$V_TITLE" "${LABEL_ARGS[@]}" --body-file "$V_BODY_FILE"
+                echo "::notice::Created verdict issue: ${V_TITLE}"
+              fi
+            fi
+            rm -f "$V_BODY_FILE"
+            i=$((i + 1))
+          done
+
+      - name: Upload census artifacts
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: skill-census-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/census/census.json
+            ${{ runner.temp }}/census/digest.md
+            ${{ runner.temp }}/census/verdicts.json
+          if-no-files-found: ignore
+          retention-days: 30
