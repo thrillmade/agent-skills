@@ -25,7 +25,7 @@ A modular type scale derives every font size from a single ratio applied to a ba
 |---|---|---|
 | 1.067 | Minor second | Very dense UI; gaps so small that most stops feel near-identical |
 | 1.125 | Major second | Dense UI (admin consoles, data-heavy tools); subtle hierarchy |
-| 1.200 | Minor third | **Default for product UI** — balanced, readable, distinct headings |
+| 1.200 | Minor third | **A common default for product UI** — balanced, readable, distinct headings |
 | 1.250 | Major third | Slightly more dramatic UI; comfortable for mixed product + marketing |
 | 1.333 | Perfect fourth | Editorial leaning; large gap between body and H1 |
 | 1.414 | Augmented fourth | Editorial; sharp hierarchy |
@@ -36,7 +36,7 @@ A modular type scale derives every font size from a single ratio applied to a ba
 
 ## Stops-up / stops-down
 
-UDTS's default range is **step −2 to step +8**. Step 0 is the base size.
+A common default range is **step −2 to step +8**. Step 0 is the base size.
 
 ```
 size(n) = round(base × ratio^n)
@@ -63,7 +63,7 @@ The range is generous so a single scale spans dense UI through marketing without
 
 ## Rounding rules
 
-UDTS rounds font sizes by default:
+Round font sizes to integer px by default:
 
 1. Compute the raw size: `base × ratio^n`.
 2. Round to the **nearest integer px**. Sub-pixel sizes render inconsistently across browsers and OS hinting.
@@ -76,7 +76,7 @@ Rounding can be disabled for math-pure systems where fractional sizes are tolera
 
 - **REQUIRED BACKGROUND:** `line-height-grid` — every size in the scale needs a line-height; the lh-ui (× 1.20) / lh-prose (× 1.50) tracks pair with this scale.
 - **For role assignment after picking sizes:** the typography-styles spec (compound tokens combining size + lh + tracking + weight + paragraph margin).
-- **For the base size choice:** UDTS bases default to 16 px; smaller bases (14 px) are valid for dense product UI but require revisiting line-heights and tap targets.
+- **For the base size choice:** 16 px is the common base; smaller bases (14 px) are valid for dense product UI but require revisiting line-heights and tap targets.
 
 ## Verification
 
@@ -91,4 +91,4 @@ After picking a ratio and emitting the scale:
 
 - [Modular Scale by Tim Brown](https://www.modularscale.com/) — interactive picker for the canonical ratios.
 - [Type Scale](https://typescale.com/) — same idea with live preview.
-- The UDTS / token.design typography foundations spec.
+- One worked instantiation: the UDTS typography foundations (its L2 skills are incubating in thrillmade/tokenomics).

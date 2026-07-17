@@ -1,12 +1,12 @@
 ---
 name: dtcg-format
 description: |
-  Use when authoring, validating, or transforming W3C Design Tokens Format (DTCG) JSON. Names the `$type` / `$value` / `$extensions` separation, alias-reference syntax (`{path.to.token}`), group inheritance for shared `$type` / `$description`, composite token shapes (shadow, typography, transition), and the UDTS-specific `$extensions.udts` schema (catalog-level `mode-axis` + token-level `class` / `kind` / `stop` / `mode-behavior` / `valid-pair-rule`). Cite when an agent proposes bare `value` / `type` keys without `$`, invents a top-level `$modes` key (themes/modes aren't in DTCG draft), or omits the `$extensions.udts` block on a UDTS-conformant catalog.
+  Use when authoring, validating, or transforming W3C Design Tokens Format (DTCG) JSON. Names the $type / $value / $extensions separation, alias-reference syntax ({path.to.token}), group inheritance for shared $type / $description, composite token shapes (shadow, typography, transition), and the namespaced $extensions mechanism for tool-specific metadata. Cite when an agent proposes bare value / type keys without $, invents a top-level $modes key (themes/modes aren't in the DTCG draft), or hand-rolls tool metadata outside a namespaced extension bag. For one system's concrete extension schema see udts-dtcg-extensions.
 ---
 
 # DTCG format
 
-W3C Design Tokens Community Group format (DTCG) is the canonical interchange format for design tokens. UDTS exports DTCG as its source of truth; every other emitted format (CSS variables, Tailwind, TypeScript, iOS, Android, Flutter) derives from a DTCG snapshot.
+W3C Design Tokens Community Group format (DTCG) is the canonical interchange format for design tokens. Token systems typically treat a DTCG snapshot as the export source of truth from which every platform format (CSS variables, Tailwind, TypeScript, iOS, Android, Flutter) derives.
 
 The DTCG spec is in draft (currently 2025.10) — practitioner adoption is wide enough that breaking changes face strong pushback, but the format is a Community Group product, not a W3C Recommendation.
 
@@ -32,7 +32,7 @@ Every DTCG token is an object with reserved `$`-prefixed keys:
 | `$value` | yes (on tokens; groups omit it) | The token's data — a primitive value or an alias reference |
 | `$type` | yes on leaves, optional on groups | The semantic type (`color`, `dimension`, `fontFamily`, `duration`, `shadow`, `typography`, `transition`, `cubicBezier`, etc.) |
 | `$description` | no | Free-form description; carried into doc generation |
-| `$extensions` | no | Namespaced bag for tooling-specific metadata. UDTS lives at `$extensions.udts` |
+| `$extensions` | no | Namespaced bag for tooling-specific metadata; namespace under a tool/system identifier so other tooling can ignore it |
 
 Bare keys (no `$` prefix) are **group children**, not properties. A token named `value: "#ff0000"` (no `$`) is a child token named `value`, not a token with a value of `#ff0000`. Validators that don't strictly enforce this silently accept it and produce empty output.
 
@@ -132,76 +132,28 @@ The `transition` composite bundles `duration`, `delay`, and `timingFunction` (it
 
 Composite tokens can alias individual sub-values — useful for systems that share a font family across many typography tokens.
 
-## The UDTS `$extensions.udts` schema
+## Extensions
 
-UDTS extends DTCG via `$extensions.udts`. Tooling that doesn't understand UDTS ignores the namespace; UDTS-aware tooling (the linter, the Tokenomics CLI, AI generators) reads it.
+`$extensions` is a namespaced bag for tool- or system-specific metadata that the DTCG spec deliberately leaves open. Namespace every entry under a stable tool/system identifier (reverse-DNS or a short vendor slug) so entries never collide.
 
-### Catalog-level
+- **Unknown namespaces are ignored by other tooling — that's the design.** Each tool reads only the namespaces it owns and passes the rest through untouched.
+- **Keep extension schemas versioned and documented.** Pin a schema version inside the bag so consumers can detect drift, and document the fields somewhere durable.
 
-```json
-{
-  "$extensions": {
-    "udts": {
-      "version": "1.2.3",
-      "spec": "1.0",
-      "mode-axis": {
-        "modes": ["light", "dark"],
-        "sources": ["auto", "forced"],
-        "default-mode": "light",
-        "states": ["auto-light", "auto-dark", "forced-light", "forced-dark"]
-      },
-      "stop-ladder": [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950],
-      "max-stop": 1000
-    }
-  }
-}
-```
-
-`mode-axis.modes` is open-ended; catalogs extend with `hc-light`, `hc-dark`, `sepia`, tenant-themed modes.
-
-### Token-level (contrast-bound)
-
-```json
-"$extensions": {
-  "udts": {
-    "class": "contrast-bound",
-    "kind": "text",
-    "stop": { "light": 900, "dark": 100 },
-    "mode-behavior": "varies",
-    "apca-target": 90,
-    "valid-pair-rule": "stop-distance >= 700 OR pair-apca-lc >= apca-target",
-    "min-font-size-px": 14,
-    "pairing-background-kind": "surface"
-  }
-}
-```
-
-### Token-level (free)
-
-```json
-"$extensions": {
-  "udts": {
-    "class": "free",
-    "kind": "brand-spot",
-    "mode-behavior": "fixed"
-  }
-}
-```
-
-Free tokens deliberately omit `apca-target`, `valid-pair-rule`, `stop`, and `pairing-background-kind` — they carry no pairing obligation.
+One worked extension schema is UDTS's, documented in `udts-dtcg-extensions` (an incubating L2 stub).
 
 ## Common pitfalls
 
 1. **Bare `value` / `type` keys.** Legacy systems use unprefixed names; DTCG ignores them as group children. Codemod before migration.
-2. **Top-level `$modes` key.** Multi-mode theming isn't in the DTCG draft. UDTS puts modes in `$extensions.udts.mode-axis`; other approaches (Style Dictionary's `$extensions["studio.tokens"].modes`, Tokens Studio's sets, per-mode files) are also valid. Pick one explicitly.
+2. **Top-level `$modes` key.** Multi-mode theming isn't in the DTCG draft. Valid approaches include a namespaced extension (see `udts-dtcg-extensions`), Style Dictionary's `$extensions["studio.tokens"].modes`, Tokens Studio sets, or per-mode files. Pick one explicitly.
 3. **Alias cycles.** Not caught by the spec; CI must verify.
 4. **Composite-token sub-aliasing with wrong type.** `shadow.color` must reference a color token, not a dimension. Validators flag this; if your validator doesn't, your runtime will.
 5. **`$type` repeated on leaves under a typed group.** Redundant but not wrong; clean DTCG omits it.
 
 ## Cross-references
 
-- **REQUIRED BACKGROUND:** `design-token-naming` — the prefix conventions that drive the `$extensions.udts.class` and `$extensions.udts.kind` fields.
+- **REQUIRED BACKGROUND:** `token-naming-conventions` — the naming principles that extension metadata redundantly encodes.
 - **For the version-bump policy when DTCG files change:** `semver-design-tokens`.
+- **For one system's concrete extension schema:** `udts-dtcg-extensions` — the worked example.
 
 ## Verification
 
@@ -211,12 +163,10 @@ For each DTCG file:
 2. **Alias resolution:** every `{path}` reference resolves to an existing token.
 3. **Type inheritance:** leaves under a typed group don't redeclare `$type`.
 4. **No cycles:** alias chains terminate.
-5. **`$extensions.udts` present** on UDTS-conformant catalogs at the catalog level and every token.
-6. **Class-prefix match:** every token's prefix matches its `$extensions.udts.class`.
+5. **Extension consistency:** if the catalog declares a namespaced extension schema, every token carries it consistently and its fields agree with what the token's name declares.
 
 ## Sources
 
 - [W3C Design Tokens Format Module](https://tr.designtokens.org/format/) — the spec.
 - [Design Tokens Community Group](https://www.designtokens.org/) — group home + discussion archive.
 - [Style Dictionary](https://styledictionary.com/) — the reference transformer pipeline.
-- The UDTS / token.design integration spec at `docs/integrations/code-exports.md`.

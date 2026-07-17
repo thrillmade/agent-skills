@@ -13,6 +13,10 @@ PR's CI run, so this file is always coherent with current `main`.
 ---
 
 
+## 2026-07
+
+- **2026-07-16** — skill unification: three-layer design catalog — K0 splits/stubs/promotions, K1 dispatchers, K3 abstraction *(feat/skill-unification-k0-k1-k3)* — [decisions-branches/feat__skill-unification-k0-k1-k3.md](decisions-branches/feat__skill-unification-k0-k1-k3.md)
+
 ## 2026-06 (10 decisions)
 
 - **2026-06-29** — re-pin: float the max-mode hook to @next (auto-update; last manual re-pin) *(repin-next)* — [decisions-branches/repin-next.md](decisions-branches/repin-next.md)
