@@ -10,6 +10,7 @@ agent-skills
 │   └── settings.json
 ├── .github
 │   ├── ISSUE_TEMPLATE
+│   ├── scripts
 │   ├── workflows
 │   └── dependabot.yml
 ├── .logmind
@@ -33,6 +34,7 @@ agent-skills
 │   ├── consuming-a-design-system
 │   ├── conventions-template
 │   ├── critical-issues-only
+│   ├── curating-a-skill-catalog
 │   ├── design-system-consistency
 │   ├── design-token-naming
 │   ├── designing-a-design-system

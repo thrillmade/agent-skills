@@ -1,0 +1,55 @@
+name: "Census: Demotion"
+description: Skills that should be deprecated, downgraded, or relocated
+title: "[Demotion] "
+labels: ["census", "demotion-candidate"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Skill Census: Demotion Verdict
+
+        A **demotion** verdict flags a skill that is stale, low-value, or
+        superseded — and should be deprecated, downgraded to a local-only
+        skill, or relocated. Evidence standards: cite usage metrics, conflict
+        reports, or replacement skills that make the current one obsolete.
+  - type: input
+    id: subject
+    attributes:
+      label: Skill or repo this concerns
+      description: The skill being demoted
+      placeholder: "e.g., my-skill, or thrillmade/myrepo"
+    validations:
+      required: true
+  - type: textarea
+    id: grounds
+    attributes:
+      label: Evidence (quote census data, issue numbers, or recurring cases — verdicts without grounds get closed)
+      description: |
+        Explain why demotion is warranted. Quote low usage, conflicts with
+        other skills, or evidence the skill is no longer needed. If it's
+        superseded, name the replacement. If it only fits one repo,
+        recommend relocation to .claude/skills/.
+      placeholder: |
+        - Zero loads in the past 8 weeks (clud-bug census)
+        - Conflicts with X on the same PRs; should defer to X
+        - Replaced by Y in 2026-Q2; only legacy code still needs this
+        - Specific to thrillmade/myrepo; should be .claude/skills/ only
+        - Trigger too broad; catches false positives 60% of the time
+    validations:
+      required: true
+  - type: dropdown
+    id: confidence
+    attributes:
+      label: Confidence
+      description: How certain is the demotion need?
+      options:
+        - high (clear signal: no usage, conflicts, or obsolescence)
+        - medium (weak signal; needs confirmation before action)
+        - low (preliminary; more data needed)
+      default: 0
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        Filed by the weekly census or by hand — either way the editor decides; see [skills/curating-a-skill-catalog/SKILL.md](https://github.com/thrillmade/agent-skills/tree/main/skills/curating-a-skill-catalog).

@@ -1,0 +1,53 @@
+name: "Census: Placement"
+description: Skills that need better curation, categorization, or scoping
+title: "[Placement] "
+labels: ["census", "placement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Skill Census: Placement Verdict
+
+        A **placement** verdict flags a skill that exists but is in the wrong
+        category, tier, or scope — or needs clearer positioning. Evidence
+        standards: show where the skill is now, where it should be, and why
+        the current placement confuses agents or misallocates effort.
+  - type: input
+    id: subject
+    attributes:
+      label: Skill or repo this concerns
+      description: The skill being repositioned
+      placeholder: "e.g., my-skill, or thrillmade/myrepo"
+    validations:
+      required: true
+  - type: textarea
+    id: grounds
+    attributes:
+      label: Evidence (quote census data, issue numbers, or recurring cases — verdicts without grounds get closed)
+      description: |
+        Explain the placement problem: is the skill in the wrong tier,
+        category, or scope? Is it too broad or too narrow? Quote catalog
+        data, issue threads, or user feedback showing the mismatch.
+      placeholder: |
+        - Currently under "Design & design-system skills" but is a general testing utility
+        - Overly broad trigger matches irrelevant PRs; should be scoped to paths
+        - Placed after X but logically should come before Y because of dependency
+        - Users report the description doesn't match what the skill actually does
+    validations:
+      required: true
+  - type: dropdown
+    id: confidence
+    attributes:
+      label: Confidence
+      description: How certain is the placement problem?
+      options:
+        - high (clear mismatch affecting multiple users or repos)
+        - medium (plausible positioning issue, needs discussion)
+        - low (minor concern, low urgency)
+      default: 0
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        Filed by the weekly census or by hand — either way the editor decides; see [skills/curating-a-skill-catalog/SKILL.md](https://github.com/thrillmade/agent-skills/tree/main/skills/curating-a-skill-catalog).
