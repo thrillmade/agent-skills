@@ -7,5 +7,5 @@ description: "[L2 stub — incubating] UDTS's SemVer policy choices for token re
 
 **Status: incubating L2 stub (parity marker).** This skill's full content is being authored in `thrillmade/tokenomics` (`.claude/skills/`) while the underlying UDTS spec is finalized, and will be PR'd here once stable.
 
-- **Layer:** L2 — an opinionated, system-specific stance. See `SKILL-UNIFICATION-SPEC.md` (repo root) for the L0/L1/L2 architecture.
+- **Layer:** L2 — an opinionated, system-specific stance. See the design-catalog section of the [README](../../README.md) for the L0/L1/L2 architecture.
 - **Universal background:** [[semver-design-tokens]]

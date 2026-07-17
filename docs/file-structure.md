@@ -20,6 +20,7 @@ agent-skills
 │   ├── decisions-archive.md
 │   ├── decisions.md
 │   ├── file-structure.md
+│   ├── integrating-with-agent-skills.md
 │   └── timeline.md
 ├── skills
 │   ├── apca-contrast
@@ -72,8 +73,7 @@ agent-skills
 ├── AGENTS.md
 ├── CLAUDE.md
 ├── LICENSE
-├── README.md
-└── SKILL-UNIFICATION-SPEC.md
+└── README.md
 ```
 
 _Truncated at depth 2 (logmind v0.5.0+ default). For a deeper view, run
