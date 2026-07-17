@@ -1,13 +1,13 @@
 ---
 name: web-interface-guidelines-review
 description: |
-  Use when reviewing UI code or design output (React, Vue, Svelte, Astro, plain HTML, design specs) for adherence to web-interface guidelines — Vercel's WIG, Material 3, Radix patterns, and similar opinionated rule sets — extended with UDTS-specific contrast, typography-scale, and spacing-system rules. Names the APCA-preferred contrast stance (cross-check WCAG 2.2 AA, never WCAG-only), the atomic typography class convention (one class binds font + size + lh + tracking + weight), the token-not-raw-hex rule, verb-noun action labels, the focus-ring contract (≥ 2 px, 3:1 against both control and adjacent surface, never suppressed), the 24 CSS px WCAG 2.5.8 interactive floor, and the link-vs-button distinction. Cite when an agent reviews UI without checking class system, hardcoded values, or atomic typography compliance.
+  Use when reviewing UI code or design output (React, Vue, Svelte, Astro, plain HTML, design specs) for adherence to web-interface guidelines — Vercel's WIG, Material 3, Radix patterns, and similar opinionated rule sets — extended with token-driven contrast, typography-scale, and spacing-system rules. Names the APCA-preferred contrast stance (cross-check WCAG 2.2 AA, never WCAG-only), the atomic typography class convention (one class binds font + size + lh + tracking + weight), the token-not-raw-hex rule, verb-noun action labels, the focus-ring contract (>= 2 px, 3:1 against both control and adjacent surface, never suppressed), the 24 CSS px WCAG 2.5.8 interactive floor, and the link-vs-button distinction. Cite when an agent reviews UI without checking token discipline, hardcoded values, or atomic typography compliance.
 review_mode: dedicated
 ---
 
 # Web interface guidelines review
 
-A skill for reviewing UI code and design specs against the opinionated guidelines UDTS-aligned systems honor. Extends the general `web-design-guidelines` material with UDTS-specific contrast, typography, and spacing rules.
+A skill for reviewing UI code and design specs against the opinionated guidelines token-driven design systems honor. Extends the general `web-design-guidelines` material with token-system contrast, typography, and spacing rules.
 
 ## When to use
 
@@ -31,7 +31,7 @@ Apply each section in order. Stop and flag at the first failure in each section;
 - **Primary model is APCA Lc.** Verify the foreground color hits its declared Lc target (typically 90 fluent body, 75 body minimum, 60 secondary, 45 large display, 30 spot, 15 non-text — see `apca-contrast`).
 - **WCAG 2.2 AA is a cross-check, not the primary.** Verify the pair also meets 4.5:1 (normal) / 3:1 (large or non-text) per `wcag-contrast`. Sizes are in **points**, not pixels (18 pt ≈ 24 CSS px; 14 pt bold ≈ 18.67 CSS px).
 - Flag any review that cites WCAG as the *only* model — APCA catches real perceptual failures WCAG misses.
-- Flag hardcoded hex colors in source. Every contrast-bound color should resolve from a token (`content-*`, `surface-*`, `border-*`, `ui-*` — see `design-token-naming`).
+- Flag hardcoded hex colors in source. Every contrast-bound color should resolve from a token (role-token families such as content / surface / border — see `token-naming-conventions`).
 
 ### 2. Typography: atomic classes from the scale
 
@@ -43,8 +43,8 @@ Apply each section in order. Stop and flag at the first failure in each section;
 ### 3. Spacing + sizing: token-driven
 
 - Padding, gap, margin values are tokens from the spacing scale (`padding-*` / `space-*` / `gap-*`), not raw px. See `spacing-system`.
-- Component heights come from the per-density ladder (24, 32, 40, 48, 56 in balanced 4/8). See `component-sizing`.
-- **Interactive heights ≥ 24 CSS px** per WCAG 2.5.8 (AA, Target Size Minimum). The `xs` 24 px rung is *non-interactive only* in balanced and dense modes; interactive rungs start at `sm` 32 px.
+- Component heights come from the system's per-density curated ladder. See `component-sizing-principles`.
+- **Interactive heights ≥ 24 CSS px** per WCAG 2.5.8 (AA, Target Size Minimum). The smallest rung is non-interactive only; interactive rungs start at the first rung clearing the floor.
 - Flag inconsistent rung mixing in the same UI surface (`sm` + `md` buttons side by side reads as a typo, not a hierarchy).
 
 ### 4. Action labels: verb-noun
@@ -63,7 +63,7 @@ Apply each section in order. Stop and flag at the first failure in each section;
 ### 6. Focus + keyboard
 
 - **Focus-visible always.** Every interactive element has a visible focus ring on `:focus-visible`. The default Tailwind reset suppresses outlines; the system must re-add them.
-- **Focus ring contract:** ≥ 2 px thickness; 3:1 contrast against both the focused control's background AND the adjacent surface (WCAG 2.4.13, AA in WCAG 2.2). UDTS's `border-focus` token is generated to satisfy this.
+- **Focus ring contract:** ≥ 2 px thickness; 3:1 contrast against both the focused control's background AND the adjacent surface (WCAG 2.4.13, AA in WCAG 2.2). A well-formed system generates its focus token to satisfy this contract.
 - **Keyboard reachability:** every interactive control is tabbable; tab order matches visual order.
 - **Escape closes overlays:** dialogs, popovers, dropdowns close on Escape.
 
@@ -78,7 +78,7 @@ Apply each section in order. Stop and flag at the first failure in each section;
 
 - Decorative icons get `aria-hidden="true"` and no accessible name.
 - Functional icons (icon-only buttons) get an accessible name via `aria-label` ("Search", "Close dialog").
-- Icon sizes come from the curated ladder (12, 16, 24, 32, 40, 48), paired with the control's rung per `component-sizing`. No arbitrary `size={14}`.
+- Icon sizes come from the curated ladder (e.g. 12, 16, 24, 32, 40, 48), paired with the control's rung per `component-sizing-principles`. No arbitrary `size={14}`.
 
 ### 9. Motion
 
@@ -88,23 +88,23 @@ Apply each section in order. Stop and flag at the first failure in each section;
 
 ### 10. Token discipline
 
-- No raw hex, no raw px, no raw rem in source. Every value resolves from a token (`content-primary`, `padding-md`, `radius-lg`, etc.).
-- Component tokens reference semantic / color-mode tokens, never primitives directly (see `design-token-naming` for the two chain shapes).
+- No raw hex, no raw px, no raw rem in source. Every value resolves from a token (a text role token, `padding-md`, `radius-lg`, etc.).
+- Component tokens reference semantic / color-mode tokens, never primitives directly (see `token-naming-conventions` for the two chain shapes).
 - Flag inline `style={{ … }}` carrying values that should be tokens. The exception is dynamic values that genuinely require runtime computation.
 
 ## How to phrase findings
 
 - One finding per comment. Bundling unrelated issues makes them hard to track.
 - Cite the rule + the source (WCAG SC, WIG section, the relevant skill name).
-- Show the fix, not just the rule. "Replace `style={{ color: '#666' }}` with `className=\"text-content-secondary\"`" beats "use the design tokens."
+- Show the fix, not just the rule. "Replace `style={{ color: '#666' }}` with `className=\"text-secondary\"`" beats "use the design tokens."
 - Quote the offending line verbatim before the critique.
 
 ## Cross-references
 
 - **REQUIRED BACKGROUND for contrast review:** `apca-contrast`, `wcag-contrast`.
 - **REQUIRED BACKGROUND for typography review:** `type-scale`, `line-height-grid`.
-- **REQUIRED BACKGROUND for spacing review:** `spacing-system`, `component-sizing`.
-- **REQUIRED BACKGROUND for token discipline:** `design-token-naming`, `dtcg-format`.
+- **REQUIRED BACKGROUND for spacing review:** `spacing-system`, `component-sizing-principles`.
+- **REQUIRED BACKGROUND for token discipline:** `token-naming-conventions`, `dtcg-format`.
 - **For broader brand-voice review of UI strings:** `brand-voice-review` in the agent-skills baseline.
 
 ## Verification
@@ -115,7 +115,7 @@ After completing a review:
 2. **Every finding has a fix.** Findings without fixes get rejected by reviewers.
 3. **Sections applied in order.** Contrast and a11y come before token discipline; don't lead with cosmetic findings.
 4. **No bundled comments.** One issue per inline comment.
-5. **Skills cross-referenced.** Findings on contrast cite `apca-contrast` / `wcag-contrast`; findings on size cite `type-scale` / `component-sizing`.
+5. **Skills cross-referenced.** Findings on contrast cite `apca-contrast` / `wcag-contrast`; findings on size cite `type-scale` / `component-sizing-principles`.
 
 ## Sources
 
@@ -123,4 +123,4 @@ After completing a review:
 - [Material Design 3](https://m3.material.io/) — alternate canon for cross-checks.
 - [Radix UI documentation](https://www.radix-ui.com/primitives) — accessible-component reference.
 - [WCAG 2.2 Recommendation](https://www.w3.org/TR/WCAG22/) — the legal baseline.
-- The UDTS / token.design spec at `docs/foundations`, `docs/semantics`, `docs/integrations`.
+- System-specific review layers (e.g. `udts-review`, incubating) compose on top of this generic lens.
