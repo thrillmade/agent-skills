@@ -15,6 +15,8 @@ One build pass plus one agreeable review ships bugs. Quality comes from three in
 
 Gate the merge on all three. Each catches a class the others miss.
 
+(The general delegation mechanics beneath this pipeline — brief structure, model tiering, trust-but-verify — live in `orchestrating-agent-delegation`; this skill is the UI-quality-gate specialization.)
+
 ## The Per-Slice Pipeline (run in order)
 
 1. **Scope ONE slice → branch** off main. Small, self-contained, independently mergeable.
