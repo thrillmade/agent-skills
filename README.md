@@ -88,6 +88,10 @@ Parity markers: each names a `udts-*` skill being authored in `thrillmade/tokeno
 
 Also design-adjacent, listed in the main table above: [`brand-voice-review`](skills/brand-voice-review/SKILL.md) (microcopy voice for user-facing strings).
 
+### Skill census
+
+Org-wide skill inventories feed the editorial cycle (what gets promoted, demoted, revised). Reports live in `docs/skill-census/`: [clud-bug](docs/skill-census/2026-07-16-clud-bug.md) · [logmind](docs/skill-census/2026-07-16-logmind.md) · [tokenomics](docs/skill-census/2026-07-16-tokenomics.md).
+
 ## Personalisation templates
 
 These are **copy-and-edit starting points**, not skills you install as-is. Each ships with placeholder frontmatter that fails the SPEC slug check on purpose — copy the directory into your repo, customize, and the bot's log tells you if you forgot to replace a placeholder.
