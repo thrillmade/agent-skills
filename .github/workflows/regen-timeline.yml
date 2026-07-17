@@ -46,7 +46,7 @@ jobs:
     name: check-derived-docs
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           # For internal PRs, check out the PR's head ref so we can push
           # back to it. For forks, github.head_ref is set but we can't
