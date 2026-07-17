@@ -18,11 +18,12 @@ These skills run inside any agent that loads skills.sh — Claude Code, Cursor, 
 | [`api-contract-enforcement`](skills/api-contract-enforcement/SKILL.md) | Flag PRs that change the shape, semantics, or error behavior of a public API without versioning or a migration path. Catches removed fields, renamed parameters, changed status codes, broken pagination, silent enum drift across HTTP/gRPC/GraphQL/SDK/CLI surfaces. |
 | [`pii-and-compliance`](skills/pii-and-compliance/SKILL.md) | Catch PII and auth material leaking into logs, error traces, analytics events, URLs, or third-party SDKs. Apply to logging calls, telemetry, error handlers, debug statements, and committed test fixtures. |
 | [`test-discipline`](skills/test-discipline/SKILL.md) | Flag the test-edit patterns that hollow out a suite over time: deleted assertions without replacement, mocks that hide the thing being tested, snapshot churn, `.skip`/`.only` left in the diff, time-dependent assertions without frozen time, assertions on internal state instead of observable behavior. |
+| [`token-frugal-tooling`](skills/token-frugal-tooling/SKILL.md) | Quick-reference for the org's token-frugal CLI conventions in repos running both logmind and clud-bug — quiet-mode env vars, artifact defaults, agent-mode flags. Detail lives in the per-tool skills. |
 | [`skillforge`](skills/skillforge/SKILL.md) ✨ | Create or update a reusable agent skill. Use when you notice a repeated pattern, when a workflow should be persisted for future sessions, or when asked to forge/create/scaffold a new skill. **Vendored from [zakelfassi/skills-driven-development](https://github.com/zakelfassi/skills-driven-development) with attribution** — the canonical SkDD meta-skill (the skill that creates skills). MIT, Zak El Fassi. |
 
 ## Design & design-system skills — three layers
 
-The design catalog is organized in three layers (locked in [SKILL-UNIFICATION-SPEC.md](SKILL-UNIFICATION-SPEC.md)):
+The design catalog is organized in three layers (locked by the CDO; executed in [PR #136](https://github.com/thrillmade/agent-skills/pull/136), decision log: [skill-unification entry](docs/decisions-branches/feat__skill-unification-k0-k1-k3.md); the normative contracts are graduating to the protocol SPEC via [protocol#39](https://github.com/thrillmade/protocol/issues/39)):
 
 - **L0 — universal primitives.** Math, standards, and principles any design system can build on. No product opinions.
 - **L1 — purpose dispatchers.** Thin entry points that route an agent (or a human landing cold) to the right L0 primitives and L2 stances for a given mode of work. Start here.
@@ -99,6 +100,18 @@ These are **copy-and-edit starting points**, not skills you install as-is. Each 
 | Template | Purpose |
 |---|---|
 | [`conventions-template`](skills/conventions-template/SKILL.md) | Scaffold for a "review like me" skill — captures one maintainer's review conventions (what they flag, what they ignore, structural preferences). Copy into `.claude/skills/conventions-<your-gh-login>/SKILL.md`, set the `applies_to.author` frontmatter to your login (per SPEC v0.5.1), customize the body, and clud-bug applies your conventions ONLY to PRs you open. Layers on top of org-wide review-discipline skills. |
+
+## Integrating your repo
+
+**Full guide: [docs/integrating-with-agent-skills.md](docs/integrating-with-agent-skills.md)** — the canonical how-to for any thrillmade repo (and any org adopting the SkDD toolchain).
+
+The short version — every repo holds each skill in one of three postures:
+
+- **Subscribed** — pulled from this catalog (`npx skills add ...` + a committed `skills-lock.json`, or clud-bug's pinned-ref fetch). Updates arrive as reviewable PRs.
+- **Published** — born in your repo, nominated here by PR. The editor gate (validate-skills CI, `skill-frontmatter-quality`, strict-mode review, human approval) accepts or rejects — nomination ≠ publication.
+- **Local** — repo-specific, never syncs.
+
+New repo: `npx skdd init` (logmind + clud-bug + baselines), subscribe to what you need, **commit your manifests**, apply the reporulez ruleset. Existing repo: run the census checklist in the guide (register untracked skills, commit your lock, classify local vs promotion-worthy). A weekly editorial cycle audits placement, gaps, and staleness org-wide and files its verdicts as issues here; steward-run automation for onboarding and fan-out is the roadmap (protocol#39).
 
 ## Install
 
