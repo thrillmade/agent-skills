@@ -1,12 +1,12 @@
 ---
 name: semver-design-tokens
 description: |
-  Use when applying SemVer to a design-token release, computing a version bump from a token-tree diff, or auditing a release for correct severity. Names the UDTS auto-compute policy (major = remove/rename/type-change/class-change; minor = add; patch = value-only or alias-rebind-preserving-value), the alias-chain awareness rule (compute by resolved values, not source paths), the pre-1.0 relaxation (removals AND renames are minor not major; type changes remain major), the snapshot storage convention (`snapshots/v<X>.dtcg.json`), and the deprecation cycle (warn in minor, remove in next major). Cite when an agent picks a bump by intuition rather than by computing from the diff, or when an agent classifies a pre-1.0 rename as major.
+  Use when applying SemVer to a design-token release, computing a version bump from a token-tree diff, or auditing a release for correct severity. Names the compute-from-the-diff policy (major = remove / rename / type-change / class-change; minor = add or deprecate; patch = value-only or alias-rebind-preserving-value), the alias-chain awareness rule (compute by resolved values, not source paths), the snapshot-per-release convention, the deprecation cycle (warn in a minor, remove in the next major), and the pattern of documenting an explicit pre-1.0 relaxation. Cite when an agent picks a bump by intuition rather than computing it from the diff. For one system's concrete policy choices see udts-semver-defaults.
 ---
 
 # SemVer for design tokens
 
-Design tokens are an API. Consumers depend on **names** (the contract) and **resolved values** (the rendered output). UDTS auto-computes the SemVer bump from a structured diff between successive DTCG snapshots — humans don't pick the bump; the diff does.
+Design tokens are an API. Consumers depend on **names** (the contract) and **resolved values** (the rendered output). Compute the bump from a structured diff between successive snapshots — humans don't pick the bump; the diff does.
 
 ## When to use
 
@@ -22,14 +22,14 @@ Design tokens are an API. Consumers depend on **names** (the contract) and **res
 
 ## The bump policy
 
-UDTS bumps are computed from the diff between the previous published snapshot and the current. Each diff entry maps to a severity; the release's bump is the **highest** severity across all entries.
+The bump is computed from the diff between the previous published snapshot and the current. Each diff entry maps to a severity; the release's bump is the **highest** severity across all entries.
 
 ### Major (breaking)
 
 - Token **removed** (its name is gone from the catalog).
 - Token **renamed** (a name disappears and a new name appears; even if the resolved value is identical).
 - Token's `$type` **changes** (color → string, dimension → number, scalar → composite).
-- Token's `$extensions.udts.class` changes (contrast-bound → free or vice versa). This is a contract change.
+- A token's declared **class** changes (e.g. contrast-bound to free) — a contract change.
 - A theme is **removed**, or the default theme is **swapped**.
 - The DTCG export structure changes (groups reorganized, paths shifted).
 
@@ -50,7 +50,7 @@ UDTS bumps are computed from the diff between the previous published snapshot an
 
 ## Compute from resolved values, not source paths
 
-UDTS evaluates the diff against **resolved values**, not source paths. This matters for alias chains:
+Evaluate the diff against **resolved values**, not source paths. This matters for alias chains:
 
 If `button-bg-primary-default → primary-contrast-500 → teal-180-harmony-500 → #008b8b` and you change `teal-180-harmony-500`'s OKLCH value, **every alias inherits the major-bump consideration** — even if `button-bg-primary-default`'s name didn't change.
 
@@ -68,17 +68,18 @@ Source-path diffs miss this. A linter that only diffs source paths reports "no c
 
 ## Pre-1.0 relaxation
 
-Per the standard SemVer caveat, `0.x.y` is "anything goes." UDTS applies a softer relaxation specifically for design tokens:
+Per the standard SemVer caveat, `0.x.y` is "anything goes." A `0.x` catalog is still shaping its contract, so document an **explicit** relaxation rather than leave the behavior undefined. One reasonable relaxation (the one UDTS documents — see `udts-semver-defaults`):
 
 - **Removals are minor**, not major. Pre-1.0 catalogs are still actively shaping their contract; removing tokens that turn out to be wrong shouldn't burn a major.
 - **Renames remain minor** for the same reason.
-- **Type changes** stay major even pre-1.0 — that level of break shouldn't be silent.
+
+Whatever relaxation you document, **type changes stay major even pre-1.0** — that level of break shouldn't be silent.
 
 Cut 1.0 **before** you have external consumers, not after. The relaxation is for the system-design phase, not for shipping breakage to a stable consumer base.
 
 ## Snapshot storage
 
-UDTS stores every published snapshot at `snapshots/v<X>.dtcg.json` in the repo. The snapshot is the diff target for the *next* release's bump compute:
+Store every published snapshot; it is the diff target for the *next* release's bump compute. One convention is to commit each release's snapshot at `snapshots/v<X>.dtcg.json` in the repo:
 
 ```
 snapshots/
@@ -88,7 +89,7 @@ snapshots/
   v2.0.0.dtcg.json
 ```
 
-Snapshots are large (a typical UDTS catalog has 500–2000 tokens) but flat key→value JSON that compresses well and diffs cleanly. The first published snapshot is `0.1.0`, not `1.0.0` — the npm convention applies.
+Snapshots are large (catalogs run hundreds to thousands of tokens) but flat key→value JSON that compresses well and diffs cleanly. The first published snapshot is `0.1.0`, not `1.0.0` — the npm convention applies.
 
 ## Deprecation cycle
 
@@ -109,8 +110,9 @@ A theme's resolved values changing is a separate axis:
 
 ## Cross-references
 
-- **REQUIRED BACKGROUND:** `dtcg-format` — the snapshot format the diff operates on; the `$extensions.udts.class` field that triggers the class-change major-bump rule.
-- **For name conventions that the bump rules reference:** `design-token-naming`.
+- **REQUIRED BACKGROUND:** `dtcg-format` — the snapshot format the diff operates on.
+- **For name conventions that the bump rules reference:** `token-naming-conventions`.
+- **For one system's concrete policy choices (worked example):** `udts-semver-defaults`.
 
 ## Verification
 
@@ -119,12 +121,12 @@ For each release candidate:
 1. **Diff resolved values**, not source paths.
 2. **Classify every diff entry** by the bump policy.
 3. **Bump = max severity** across all entries.
-4. **Pre-1.0 relaxation applied** correctly (removals AND renames → minor; type changes remain major).
+4. **If the catalog documents a pre-1.0 relaxation, it's applied exactly as documented.**
 5. **Snapshot stored** at `snapshots/v<new>.dtcg.json` before tagging.
 6. **Deprecation cycle honored** — no removals without a prior minor that marked the token deprecated.
 
 ## Sources
 
 - [SemVer 2.0.0](https://semver.org/) — the underlying spec.
-- The UDTS / token.design versioning policy at `docs/versioning.md`.
+- The `udts-semver-defaults` skill — one system's concrete versioning-policy choices (incubating).
 - [Style Dictionary's release notes](https://github.com/amzn/style-dictionary/releases) — practitioner reference for how token systems version in practice.
