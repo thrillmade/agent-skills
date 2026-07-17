@@ -130,7 +130,7 @@ jobs:
         if: steps.guard.outputs.panel_enabled == 'true'
         run: pip install anthropic
 
-      - name: Census panel (Mode B judgment)
+      - name: Census panel (judgment)
         id: panel
         if: steps.guard.outputs.panel_enabled == 'true'
         continue-on-error: false
@@ -333,5 +333,6 @@ jobs:
             ${{ runner.temp }}/census/census.json
             ${{ runner.temp }}/census/digest.md
             ${{ runner.temp }}/census/verdicts.json
+            ${{ runner.temp }}/census/panel_failed.marker
           if-no-files-found: ignore
           retention-days: 30

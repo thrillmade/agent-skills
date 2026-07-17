@@ -485,12 +485,29 @@ def call_claude(system_prompt: str, user_message: str) -> str:
         raise RuntimeError("ANTHROPIC_API_KEY not set")
 
     client = Anthropic(timeout=CLIENT_TIMEOUT)  # SDK default max_retries (no extra retries)
-    msg = client.messages.create(
+    request = dict(
         model=MODEL,
         max_tokens=MAX_TOKENS,
         system=system_prompt,
         messages=[{"role": "user", "content": user_message}],
+        # This is a JSON-only structured task; without this, the model can spend
+        # the entire max_tokens budget inside a default thinking block and hit
+        # max_tokens before emitting any text block (cycle census-2026-W29
+        # failed exactly this way: ~92s generation, zero text blocks).
+        thinking={"type": "disabled"},
     )
+    try:
+        msg = client.messages.create(**request)
+    except TypeError:
+        # Older SDK without the thinking kwarg — retry without it.
+        request.pop("thinking", None)
+        msg = client.messages.create(**request)
+    except Exception as exc:  # noqa: BLE001 - param-rejection fallback only
+        if "thinking" in str(exc).lower():
+            request.pop("thinking", None)
+            msg = client.messages.create(**request)
+        else:
+            raise
 
     parts: list[str] = []
     for block in msg.content:
@@ -498,7 +515,12 @@ def call_claude(system_prompt: str, user_message: str) -> str:
         if text:
             parts.append(text)
     if not parts:
-        raise RuntimeError("empty response from Anthropic API")
+        block_types = [getattr(b, "type", "?") for b in msg.content]
+        raise RuntimeError(
+            "no text blocks in Anthropic API response "
+            f"(stop_reason={getattr(msg, 'stop_reason', '?')}, "
+            f"block_types={block_types or 'none'})"
+        )
     return "".join(parts)
 
 
