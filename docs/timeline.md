@@ -13,9 +13,10 @@ PR's CI run, so this file is always coherent with current `main`.
 ---
 
 
-## 2026-07
+## 2026-07 (3 decisions)
 
-- **2026-07-16** — integration guide + retire SKILL-UNIFICATION-SPEC.md post-execution *(docs/agent-skills-integration-guide)* — [decisions-branches/docs__agent-skills-integration-guide.md](decisions-branches/docs__agent-skills-integration-guide.md)
+- **2026-07-17** — deps: bump actions/checkout 6→7 and actions/setup-node 6→7 across workflows *(chore/actions-bumps-checkout7-node7)* — [decisions-branches/chore__actions-bumps-checkout7-node7.md](decisions-branches/chore__actions-bumps-checkout7-node7.md)
+- *... 1 more decision ...*
 - **2026-07-16** — skill unification: three-layer design catalog — K0 splits/stubs/promotions, K1 dispatchers, K3 abstraction *(feat/skill-unification-k0-k1-k3)* — [decisions-branches/feat__skill-unification-k0-k1-k3.md](decisions-branches/feat__skill-unification-k0-k1-k3.md)
 
 ## 2026-06 (10 decisions)
