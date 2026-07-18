@@ -1,0 +1,277 @@
+{
+  "version": 1,
+  "updated": "2026-07-17",
+  "skills": {
+    "critical-issues-only": {
+      "authoring_home": "catalog",
+      "distribution": "default-on",
+      "subscribers": ["clud-bug", "clud-bug-app", "logmind", "tokenomics", "protocol", "reporulez", "rezgen"]
+    },
+    "evidence-based-review": {
+      "authoring_home": "catalog",
+      "distribution": "default-on",
+      "subscribers": ["clud-bug", "clud-bug-app", "logmind", "tokenomics", "protocol", "reporulez", "rezgen"]
+    },
+    "respect-existing-conventions": {
+      "authoring_home": "catalog",
+      "distribution": "default-on",
+      "subscribers": ["clud-bug", "clud-bug-app", "logmind", "tokenomics", "protocol", "reporulez", "rezgen"]
+    },
+    "clud-bug-collaboration": {
+      "authoring_home": "catalog",
+      "distribution": "default-on",
+      "subscribers": ["clud-bug", "clud-bug-app", "logmind", "tokenomics", "protocol", "reporulez", "rezgen"]
+    },
+    "logmind": {
+      "authoring_home": "repo-mirrored:logmind",
+      "distribution": "opt-in",
+      "subscribers": ["tokenomics"],
+      "notes": "release-sync: logmind's release workflow PRs its skill update here"
+    },
+    "brand-voice-review": {
+      "authoring_home": "catalog",
+      "distribution": "opt-in",
+      "subscribers": ["tokenomics"]
+    },
+    "designing-elite-ui": {
+      "authoring_home": "undecided",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "authoring-home ruling pending clud-bug#235; currently authored in clud-bug/templates/skills/design/, promotion in flight"
+    },
+    "design-system-consistency": {
+      "authoring_home": "undecided",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "authoring-home ruling pending clud-bug#235; currently authored in clud-bug/templates/skills/design/, promotion in flight"
+    },
+    "frontend-a11y": {
+      "authoring_home": "undecided",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "authoring-home ruling pending clud-bug#235; currently authored in clud-bug/templates/skills/design/, promotion in flight"
+    },
+    "visual-polish": {
+      "authoring_home": "undecided",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "authoring-home ruling pending clud-bug#235; currently authored in clud-bug/templates/skills/design/, promotion in flight"
+    },
+    "orchestrating-elite-agent-qa": {
+      "authoring_home": "catalog",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "tokenomics flip from authored-here to subscribed is pending (nomination in flight); tokenomics census says it would subscribe once accepted"
+    },
+    "udts-component-sizing-ladders": {
+      "authoring_home": "repo-mirrored:tokenomics",
+      "distribution": "catalog-only",
+      "subscribers": [],
+      "notes": "incubating — deliberately unwritten; tokenomics is holding K2 incubation until the Phase R tier-model rewrite (feat/udts-color-polarity) lands so it doesn't encode the old model"
+    },
+    "udts-dtcg-extensions": {
+      "authoring_home": "repo-mirrored:tokenomics",
+      "distribution": "catalog-only",
+      "subscribers": [],
+      "notes": "incubating — deliberately unwritten; tokenomics is holding K2 incubation until the Phase R tier-model rewrite (feat/udts-color-polarity) lands so it doesn't encode the old model"
+    },
+    "udts-linter-rules": {
+      "authoring_home": "repo-mirrored:tokenomics",
+      "distribution": "catalog-only",
+      "subscribers": [],
+      "notes": "incubating — deliberately unwritten; tokenomics is holding K2 incubation until the Phase R tier-model rewrite (feat/udts-color-polarity) lands so it doesn't encode the old model"
+    },
+    "udts-naming-convention": {
+      "authoring_home": "repo-mirrored:tokenomics",
+      "distribution": "catalog-only",
+      "subscribers": [],
+      "notes": "incubating — deliberately unwritten; tokenomics is holding K2 incubation until the Phase R tier-model rewrite (feat/udts-color-polarity) lands so it doesn't encode the old model"
+    },
+    "udts-review": {
+      "authoring_home": "repo-mirrored:tokenomics",
+      "distribution": "catalog-only",
+      "subscribers": [],
+      "notes": "incubating — deliberately unwritten; tokenomics census names this a gap (clud-bug lens for UDTS R7-R10 rules), but holding K2 incubation until the Phase R tier-model rewrite lands"
+    },
+    "udts-semver-defaults": {
+      "authoring_home": "repo-mirrored:tokenomics",
+      "distribution": "catalog-only",
+      "subscribers": [],
+      "notes": "incubating — deliberately unwritten; tokenomics is holding K2 incubation until the Phase R tier-model rewrite (feat/udts-color-polarity) lands so it doesn't encode the old model"
+    },
+    "udts-spacing-defaults": {
+      "authoring_home": "repo-mirrored:tokenomics",
+      "distribution": "catalog-only",
+      "subscribers": [],
+      "notes": "incubating — deliberately unwritten; tokenomics is holding K2 incubation until the Phase R tier-model rewrite (feat/udts-color-polarity) lands so it doesn't encode the old model"
+    },
+    "udts-token-model": {
+      "authoring_home": "repo-mirrored:tokenomics",
+      "distribution": "catalog-only",
+      "subscribers": [],
+      "notes": "incubating — deliberately unwritten; tokenomics is holding K2 incubation until the Phase R tier-model rewrite (feat/udts-color-polarity) lands so it doesn't encode the old model"
+    },
+    "design-token-naming": {
+      "authoring_home": "catalog",
+      "distribution": "catalog-only",
+      "subscribers": [],
+      "notes": "deprecated — migration window; SUPERSEDED by token-naming-conventions (L0) + udts-naming-convention (L2, incubating); kept unchanged until downstream migrations land"
+    },
+    "component-sizing": {
+      "authoring_home": "catalog",
+      "distribution": "catalog-only",
+      "subscribers": [],
+      "notes": "deprecated — migration window; SUPERSEDED by component-sizing-principles (L0) + udts-component-sizing-ladders (L2, incubating); kept unchanged until downstream migrations land"
+    },
+    "consuming-a-design-system": {
+      "authoring_home": "catalog",
+      "distribution": "catalog-only",
+      "subscribers": [],
+      "notes": "L1 dispatcher — entry point that routes to the L0 primitives; a repo consumes what it routes to, not the dispatcher itself as a standing subscription"
+    },
+    "designing-a-design-system": {
+      "authoring_home": "catalog",
+      "distribution": "catalog-only",
+      "subscribers": [],
+      "notes": "L1 dispatcher — entry point that routes to the L0 primitives; a repo consumes what it routes to, not the dispatcher itself as a standing subscription"
+    },
+    "reviewing-design-work": {
+      "authoring_home": "catalog",
+      "distribution": "catalog-only",
+      "subscribers": [],
+      "notes": "L1 dispatcher — entry point that routes to review lenses; a repo consumes what it routes to, not the dispatcher itself as a standing subscription"
+    },
+    "curating-a-skill-catalog": {
+      "authoring_home": "catalog",
+      "distribution": "catalog-only",
+      "subscribers": [],
+      "notes": "catalog-steward tooling for running/judging the census cycle itself, not a downstream repo's review discipline"
+    },
+    "skill-frontmatter-quality": {
+      "authoring_home": "catalog",
+      "distribution": "catalog-only",
+      "subscribers": [],
+      "notes": "nomination-time gate scoped to skills/*/SKILL.md edits in this repo; not applicable to a downstream repo's product code"
+    },
+    "skillforge": {
+      "authoring_home": "catalog",
+      "distribution": "catalog-only",
+      "subscribers": [],
+      "notes": "skill-authoring tool (vendored, author: zakelfassi); catalog-side utility rather than a per-repo subscription"
+    },
+    "spacing-system": {
+      "authoring_home": "catalog",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "L0 primitive; a repo building or extending its own token system might subscribe directly"
+    },
+    "test-discipline": {
+      "authoring_home": "catalog",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "review-discipline skill (review_mode: dedicated, applies_to test paths) a repo might subscribe to"
+    },
+    "token-frugal-tooling": {
+      "authoring_home": "catalog",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "quick-reference for repos running both logmind and clud-bug; a repo with both installed might subscribe"
+    },
+    "token-naming-conventions": {
+      "authoring_home": "catalog",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "L0 primitive; successor to deprecated design-token-naming; a repo building or extending its own token system might subscribe directly"
+    },
+    "type-scale": {
+      "authoring_home": "catalog",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "L0 primitive; a repo building or extending its own token system might subscribe directly"
+    },
+    "wcag-contrast": {
+      "authoring_home": "catalog",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "L0 primitive; a repo building or extending its own token system might subscribe directly"
+    },
+    "web-interface-guidelines-review": {
+      "authoring_home": "catalog",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "review-discipline skill (review_mode: dedicated) for UI code a repo might subscribe to"
+    },
+    "apca-contrast": {
+      "authoring_home": "catalog",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "L0 primitive; tokenomics census names this as a would-subscribe (build-agent grounding), not yet subscribed"
+    },
+    "api-contract-enforcement": {
+      "authoring_home": "catalog",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "review-discipline skill (review_mode: dedicated, applies_to api paths) a repo might subscribe to"
+    },
+    "chroma-harmonization": {
+      "authoring_home": "catalog",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "L0 primitive; a repo building or extending its own token system might subscribe directly"
+    },
+    "component-sizing-principles": {
+      "authoring_home": "catalog",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "L0 primitive; successor to deprecated component-sizing; a repo building or extending its own token system might subscribe directly"
+    },
+    "conventions-template": {
+      "authoring_home": "catalog",
+      "distribution": "catalog-only",
+      "subscribers": [],
+      "notes": "template — copy + customize per maintainer's applies_to.author, not a live subscription"
+    },
+    "dtcg-format": {
+      "authoring_home": "catalog",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "L0 primitive; a repo building or extending its own token system might subscribe directly"
+    },
+    "line-height-grid": {
+      "authoring_home": "catalog",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "L0 primitive; a repo building or extending its own token system might subscribe directly"
+    },
+    "oklch-color-space": {
+      "authoring_home": "catalog",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "L0 primitive; tokenomics census names this as a would-subscribe (build-agent grounding), not yet subscribed"
+    },
+    "orchestrating-agent-delegation": {
+      "authoring_home": "catalog",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "agent-orchestration discipline a repo doing multi-agent build/review work might subscribe to"
+    },
+    "palette-relationships": {
+      "authoring_home": "catalog",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "L0 primitive; a repo building or extending its own token system might subscribe directly"
+    },
+    "pii-and-compliance": {
+      "authoring_home": "catalog",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "review-discipline skill (review_mode: dedicated) a repo might subscribe to"
+    },
+    "semver-design-tokens": {
+      "authoring_home": "catalog",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "L0 primitive; a repo building or extending its own token system might subscribe directly"
+    }
+  }
+}
