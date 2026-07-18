@@ -22,6 +22,7 @@ agent-skills
 │   ├── decisions.md
 │   ├── file-structure.md
 │   ├── integrating-with-agent-skills.md
+│   ├── placement-map.json
 │   └── timeline.md
 ├── skills
 │   ├── apca-contrast
