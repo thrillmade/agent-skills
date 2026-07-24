@@ -13,10 +13,10 @@ PR's CI run, so this file is always coherent with current `main`.
 ---
 
 
-## 2026-07 (6 decisions)
+## 2026-07 (7 decisions)
 
-- **2026-07-17** — census panel: disable thinking for the JSON-only judgment call (cycle-W29 root cause) *(fix/census-panel-thinking-budget)* — [decisions-branches/fix__census-panel-thinking-budget.md](decisions-branches/fix__census-panel-thinking-budget.md)
-- *... 4 more decisions ...*
+- **2026-07-17** — skill engine W1: drift detection, placement-map ground truth, §1.10.1 validator, six-kind taxonomy *(feat/skill-engine-w1-foundations)* — [decisions-branches/feat__skill-engine-w1-foundations.md](decisions-branches/feat__skill-engine-w1-foundations.md)
+- *... 5 more decisions ...*
 - **2026-07-16** — skill unification: three-layer design catalog — K0 splits/stubs/promotions, K1 dispatchers, K3 abstraction *(feat/skill-unification-k0-k1-k3)* — [decisions-branches/feat__skill-unification-k0-k1-k3.md](decisions-branches/feat__skill-unification-k0-k1-k3.md)
 
 ## 2026-06 (10 decisions)

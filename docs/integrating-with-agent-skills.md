@@ -73,6 +73,14 @@ For a repo that predates this system (all current thrillmade repos):
 5. **Subscribe deliberately.** Check the open `placement:` issues on this repo — the census may already have recommendations for you.
 6. **Protect your seams:** never hand-edit subscribed copies (updaters overwrite them); publishers must never let refresh automation write their shipped source (e.g. clud-bug's `templates/skills/**` — that's an npm release, not a cron); preserve symlink topology (`.claude/skills/` → `.agents/skills/`); automation commits use `[skip-logmind]` or file a decision entry (protocol SPEC §15).
 
+### The placement map
+
+[`docs/placement-map.json`](placement-map.json) is the per-skill ground truth the census reads as **signal 1**. For every skill in `skills/`, it records `authoring_home` (`catalog` / `repo-mirrored:<repo>` / `undecided`), `distribution` (`default-on` / `opt-in` / `catalog-only`), and `subscribers` (the repos that actually pull it) — the verdicts a prior editorial round already reached, so each new census cycle starts from a baseline instead of re-litigating placement from zero.
+
+Divergence from live state — a repo's `skills-lock.json` or `.clud-bug.json` subscribing to something the map marks `catalog-only`, or authoring a copy of something the map homes at `catalog` — isn't silently reconciled. It *files* a placement verdict: the census raises it as a `placement:` issue for a human to resolve, either by correcting the repo or by updating the map.
+
+Editing the map is a normal PR through the same gate as any other catalog change — `validate-skills.yml`, strict-mode clud-bug review, human approval. There's no separate authority for it.
+
 ## Publishing a skill (nomination flow)
 
 1. Incubate in your repo's `.claude/skills/<slug>/SKILL.md` until it's stable.

@@ -1,7 +1,7 @@
 ---
 name: curating-a-skill-catalog
 description: |
-  Use when judging whether a skill earns its place — running or reviewing a skill census cycle, triaging gap:/placement:/revise:/promotion-candidate:/demotion-candidate: issues, deciding to deprecate or promote a skill, or auditing a skill catalog's health. Names the lifecycle state machine (incubating → active → needs-revision → deprecated → retired), the five verdict kinds with their evidence standards (Keep is silent — no issue; Demote needs zero citations across cycles AND no structural role, with L0-primitive grace; Revise needs a fought-usage or stale-source quote; Promote needs convergent evolution or a named consumer; Gap needs the concrete recurring case), the prosecutor/defender judgment frame, the top-5-plus-digest noise budget, and the human-editor gate (the census proposes; it never merges or demotes by itself). Cite when a census run files more than ~6 issues, when a demotion is proposed without usage evidence, or when a verdict issue lacks quoted grounds.
+  Use when judging whether a skill earns its place — running or reviewing a skill census cycle, triaging gap:/placement:/revise:/promotion-candidate:/demotion-candidate: issues, deciding to deprecate or promote a skill, or auditing a skill catalog's health. Names the lifecycle state machine (incubating → active → needs-revision → deprecated → retired), the six verdict kinds with their evidence standards (Keep is silent — no issue; Revise needs a fought-usage or stale-source quote; Demote needs zero citations across cycles AND no structural role, with L0-primitive grace; Promotion-candidate needs convergent evolution or a named consumer; Placement needs an applies_to profile or placement-map row naming the repo; Gap needs the concrete recurring case), the prosecutor/defender judgment frame, the top-5-plus-digest noise budget, and the human-editor gate (the census proposes; it never merges or demotes by itself). Cite when a census run files more than ~6 issues, when a demotion is proposed without usage evidence, or when a verdict issue lacks quoted grounds.
 ---
 
 # Curating a skill catalog
@@ -49,12 +49,17 @@ Demotion follows the catalog's own SemVer deprecation discipline, not an
 ad-hoc cut: **warn in a minor, remove in a major, notify subscribers**. See
 `semver-design-tokens` for the underlying warn/remove cycle this borrows.
 
-## The five verdict kinds
+## The six verdict kinds
 
 **Keep** — the silent default. No issue is filed. Sufficient grounds: none
 required — Keep is what happens when no other verdict clears its bar.
 Insufficient-to-overturn: a reviewer's hunch that "probably nobody uses this"
 with no citation data behind it stays Keep, it does not become Demote.
+
+**Revise** — a fought-usage or stale-source quote. Sufficient: a quoted
+review thread where an agent applied the skill's rule and got pushback, or a
+quoted dead link / superseded API in its Sources section. Insufficient: "this
+reads a bit dated" with nothing quoted.
 
 **Demote** — zero usage citations across multiple census cycles **and** no
 structural role (not named as `REQUIRED BACKGROUND` or a cross-reference
@@ -63,15 +68,15 @@ structurally rather than by usage. Sufficient: "zero citations across three
 consecutive cycles; not referenced by any other skill; not L0." Insufficient:
 "this feels redundant with X" with no citation count quoted.
 
-**Revise** — a fought-usage or stale-source quote. Sufficient: a quoted
-review thread where an agent applied the skill's rule and got pushback, or a
-quoted dead link / superseded API in its Sources section. Insufficient: "this
-reads a bit dated" with nothing quoted.
+**Promotion-candidate** — convergent evolution or a named consumer.
+Sufficient: two independent repos quoted arriving at the same pattern
+unprompted, or a named skill citing this one as `REQUIRED BACKGROUND`.
+Insufficient: "this seems important enough to promote" with no repo or
+consumer named.
 
-**Promote** — convergent evolution or a named consumer. Sufficient: two
-independent repos quoted arriving at the same pattern unprompted, or a named
-skill citing this one as `REQUIRED BACKGROUND`. Insufficient: "this seems
-important enough to promote" with no repo or consumer named.
+**Placement** — a skill belongs in a repo that doesn't subscribe (or vice
+versa). Sufficient: an applies_to profile or placement-map row naming the
+repo. Insufficient: "seems useful there."
 
 **Gap** — the concrete recurring case. Sufficient: three quoted PRs this cycle
 each hand-rolling the same missing pattern. Insufficient: "agents might want
@@ -85,6 +90,10 @@ amendment), not Gap. Only when no existing skill is the right home does it
 stay Gap — and the grounds must say why not. (Precedent: the dual-review gap
 that first had to check overlap with `orchestrating-elite-agent-qa` before
 forging.)
+
+Filed labels are symmetric candidates: a demote verdict files as
+`demotion-candidate`, a promotion verdict as `promotion-candidate`; the other
+kinds file under their own names.
 
 ## Prosecutor/defender judgment frame
 
