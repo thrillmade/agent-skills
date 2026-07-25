@@ -19,13 +19,23 @@ Two rules make the system trustworthy:
 
 ## New repo setup — today
 
-Until the steward automates onboarding (see roadmap below), a new repo wires in with four steps:
+`npx skdd init` — a single command bundling toolchain + rulesets +
+subscriptions into one onboarding step — is the umbrella installer **being
+built** (see [thrillmade/skdd](https://github.com/thrillmade/skdd)); it
+is not available yet, and no repo should be told to run it. Until it
+ships, a new repo wires in with the commands that actually work today:
 
 ```bash
-# 1. Toolchain: logmind (decision logging) + clud-bug (skill-driven review).
-#    Installs the 4 baseline review skills into .claude/skills/ and writes
-#    .claude/skills/.clud-bug.json. Add --with-design for the design-critic lenses.
-npx skdd init
+# 1. logmind (decision logging) — separate install, not yet bundled:
+brew install thrillmade/tap/logmind   # or: curl -fsSL https://logmind.dev/install.sh | bash
+logmind init
+
+#    clud-bug (skill-driven review) — installs the 4 baseline review
+#    skills into .claude/skills/ and writes .claude/skills/.clud-bug.json.
+#    Add --with-design for the design-critic lenses (installs the kit and
+#    flips it to enabled — still needs a browser MCP + allowedTools wired
+#    into your review workflow to actually run).
+npx clud-bug init
 
 # 2. Subscribe to the catalog skills this repo needs (per-skill opt-in):
 npx skills add https://github.com/thrillmade/agent-skills --skill logmind
@@ -35,9 +45,13 @@ npx skills add https://github.com/thrillmade/agent-skills --skill brand-voice-re
 # 3. Commit the manifests (skills-lock.json + .clud-bug.json). Do not gitignore them.
 
 # 4. Org rules: apply the reporulez ruleset so the review gate is enforced.
-#    Use the `skdd` variant when the clud-bug review check has a producer
-#    (hosted App or Action); use the `external` variant when it does not —
+#    Use the `clud-bug` variant when only the clud-bug-review check needs to
+#    gate merges; use the `skdd` variant (the canonical thrillmade-toolchain
+#    ruleset — clud-bug + logmind + protocol checks) for repos running the
+#    full toolchain; use `baseline` when no producer needs gating at all —
 #    per protocol SPEC §7, never require a check nothing produces.
+#    (`external` is a deprecated alias for `baseline` — reporulez's own
+#    README says so; use `baseline`.)
 ```
 
 Then point agents at the system: `AGENTS.md` should name logmind (decision logging is REQUIRED for substantive commits) and clud-bug (see the `clud-bug-collaboration` skill), the same shape as this repo's own `AGENTS.md`.
@@ -54,12 +68,16 @@ Then point agents at the system: `AGENTS.md` should name logmind (decision loggi
 - **Release → catalog sync** — logmind's release workflow PRs its skill update here (the `repo-mirrored` authoring pattern).
 - **The review gate** — strict-mode clud-bug review + `validate-skills.yml` on every PR touching `skills/`.
 
+**Shipped:**
+
+- **The registration manifest** — any org registers its own `skdd-steward` App instance from [skdd/docs/skdd-steward-app.md](https://github.com/thrillmade/skdd/blob/main/docs/skdd-steward-app.md); there is no shared, hosted steward, every adopting org runs its own.
+- **The weekly editorial cycle** (skill census) runs today: [`skill-census.yml`](../.github/workflows/skill-census.yml) mints the steward App's installation token to read every subscribed repo's manifests + clud-bug's skill-usage data cross-org, an adversarial panel judges, and verdicts land as `gap:` / `placement:` / `promotion-candidate:` / `demotion-candidate:` / `revise:` issues here (top ~5 + digest, weekly). Humans decide; the steward merges nothing.
+
 **Steward roadmap** (post-Marketplace-launch, per the locked sequencing in [protocol#8](https://github.com/thrillmade/protocol/issues/8); contracts in [protocol#39](https://github.com/thrillmade/protocol/issues/39)):
 
-- The `thrillmade-orchestrator` App renames to **`skdd-steward`** and publishes a registration manifest so any org can run its own instance.
+- **thrillmade's own App instance finishing its rename**: the manifest above targets the `skdd-steward` identity for new adopters, but this repo's own workflows still mint from the legacy `THRILLMADE_ORCHESTRATOR_APP_ID` / `THRILLMADE_ORCHESTRATOR_PRIVATE_KEY` secrets and post census issues under `github-actions[bot]` rather than the App's own identity (pending the App being granted Issues R/W) — the cutover for thrillmade's own instance isn't complete yet, even though the manifest and the weekly cycle both already work.
 - **Auto-onboarding:** `skdd init` grows the full-magic bundle — toolchain + rulesets + subscriptions + guided App registration + an offer to scaffold an org-local skill reservoir.
-- **Skill fan-out:** a catalog change opens refresh PRs on every subscribed repo under `skdd-steward[bot]`, replacing per-repo crons with one org-wide watcher.
-- **The weekly editorial cycle** (skill census) runs under the steward: counters read every repo's manifests + clud-bug's skill-usage data → an adversarial panel judges → verdicts land as `gap:` / `placement:` / `promotion-candidate:` / `demotion-candidate:` / `revise:` issues here (top ~5 + digest). Humans decide; the steward merges nothing.
+- **Skill fan-out:** a catalog change opens refresh PRs on every subscribed repo under the steward's identity, replacing per-repo crons with one org-wide watcher.
 - **Invokes, never bypasses:** steward changes are always PRs, always clud-bug-reviewed, always gated by reporulez rulesets, always logged per logmind conventions.
 
 ## Existing repo — adjustment checklist
@@ -107,4 +125,4 @@ When the catalog supersedes a skill (e.g. `design-token-naming` → `token-namin
 
 ## Questions this guide will absorb answers to
 
-Authoring-home ruling for the promoted design lenses ([clud-bug#235](https://github.com/thrillmade/clud-bug/issues/235)); the steward service contract and census cadence details (protocol#39); the org-reservoir template for consumer orgs (skdd roadmap). When those land, this section shrinks.
+The authoring-home ruling for the promoted design lenses landed ([clud-bug#243](https://github.com/thrillmade/clud-bug/issues/243) Ruling 2: `catalog`, per [`docs/placement-map.json`](placement-map.json)). Still open: the steward service contract and census cadence details (protocol#39); the org-reservoir template for consumer orgs (skdd roadmap). When those land, this section shrinks further.

@@ -267,8 +267,15 @@ jobs:
             exit 0
           fi
 
-          # Verdict issues: hard-cap at 5 (head -5 semantics), exact-title
-          # idempotency, bodies via --body-file.
+          # Verdict issues: hard-cap at 5 (head -5 semantics), bodies via
+          # --body-file. Dedup is by `census_key` (a stable `<kind>:<subject-
+          # slug>` marker the panel computes deterministically — same subject
+          # next cycle produces the same key, no cycle tag in it) — NOT by
+          # title, which changes every cycle and was re-filing the identical
+          # verdict as a fresh issue three cycles running. A census_key match
+          # gets THIS cycle's reasoning as a comment on the existing canonical
+          # issue; only a miss creates a new one, and the new body embeds the
+          # marker so next cycle's search finds it in turn.
           FILE_N=$VERDICT_COUNT
           if [ "$FILE_N" -gt "$MAX_VERDICTS" ]; then
             FILE_N=$MAX_VERDICTS
@@ -283,8 +290,19 @@ jobs:
               continue
             fi
 
+            V_KEY=$(jq -r ".verdicts[$i].census_key // \"\"" "$VERDICTS_FILE")
+            if [ -z "$V_KEY" ]; then
+              echo "::warning::verdict '${V_TITLE}' has no census_key — falling back to exact-title dedup only, so an identical verdict may re-file next cycle under a new title."
+            fi
+
             V_BODY_FILE="$(mktemp)"
             jq -r ".verdicts[$i].body // \"\"" "$VERDICTS_FILE" > "$V_BODY_FILE"
+            if [ -n "$V_KEY" ]; then
+              {
+                echo ""
+                echo "<!-- census-key: ${V_KEY} -->"
+              } >> "$V_BODY_FILE"
+            fi
 
             # Labels: always census; add each declared label if it is allowed.
             LABEL_ARGS=(--label census)
@@ -298,6 +316,38 @@ jobs:
               esac
             done < <(jq -r ".verdicts[$i].labels // [] | .[]" "$VERDICTS_FILE")
 
+            # Primary lookup: an open issue already carrying this census_key,
+            # anywhere in its body OR its comments. `in:body` alone would miss
+            # the catalog's first four canonical issues, seeded with the
+            # marker as a comment rather than in the body — search both so
+            # dedup works for those as well as for every issue this workflow
+            # creates from here on (which embeds the marker in the body).
+            KEY_MATCH=""
+            if [ -n "$V_KEY" ]; then
+              KEY_MATCH=$(gh issue list --state open \
+                --search "\"<!-- census-key: ${V_KEY} -->\" in:body,comments" \
+                --json number 2>/dev/null | jq -r '.[0].number // empty') || KEY_MATCH=""
+            fi
+
+            if [ -n "$KEY_MATCH" ]; then
+              if [ "$DRY_RUN" = "true" ]; then
+                echo "=== DRY-RUN: verdict $((i + 1))/${FILE_N} ==="
+                echo "Would COMMENT on existing canonical issue #${KEY_MATCH} (census_key=${V_KEY}) instead of filing a new one:"
+                echo "----- body -----"
+                cat "$V_BODY_FILE"
+                echo "----- end body -----"
+              else
+                gh issue comment "$KEY_MATCH" --body-file "$V_BODY_FILE"
+                echo "::notice::census_key=${V_KEY} already tracked as #${KEY_MATCH} — commented this cycle's reasoning instead of re-filing."
+              fi
+              rm -f "$V_BODY_FILE"
+              i=$((i + 1))
+              continue
+            fi
+
+            # Fallback: no census_key (or no match) — exact-title dedup, same
+            # as before, so a verdict never double-files within one title's
+            # lifetime even without a usable key.
             EXISTS=$(gh issue list --state open --search "${V_TITLE} in:title" \
               --json number,title 2>/dev/null \
               | jq -r --arg t "$V_TITLE" 'map(select(.title == $t)) | .[0].number // empty') || EXISTS=""
@@ -307,7 +357,7 @@ jobs:
               if [ -n "$EXISTS" ]; then
                 echo "Would SKIP (already open as #${EXISTS}): ${V_TITLE}"
               else
-                echo "Would CREATE '${V_TITLE}' (labels: ${LABEL_ARGS[*]}):"
+                echo "Would CREATE '${V_TITLE}' (labels: ${LABEL_ARGS[*]}, census_key=${V_KEY:-<none>}):"
                 echo "----- body -----"
                 cat "$V_BODY_FILE"
                 echo "----- end body -----"

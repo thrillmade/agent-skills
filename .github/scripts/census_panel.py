@@ -25,7 +25,13 @@ Inputs (env):
 
 Outputs (written to CENSUS_DIR):
   verdicts.json      On success — the sanitized, capped, prefix-enforced
-                     verdicts the workflow's bash step files as issues.
+                     verdicts the workflow's bash step files as issues. Each
+                     non-keep verdict carries a `census_key` field
+                     (`<kind>:<subject-slug>`, deterministic, no cycle tag) so
+                     the workflow can find and comment on the SAME canonical
+                     issue across cycles instead of re-filing an identical
+                     verdict under a new per-cycle title. See RULING 5 below
+                     `validate_and_build`.
   panel_failed.marker  On any API/validation failure — a reason string. The
                      workflow treats the panel as skipped (Mode B) on this.
 
@@ -67,6 +73,14 @@ RUBRIC_PATH = "skills/curating-a-skill-catalog/SKILL.md"  # cwd-relative (RULING
 DOCKET_BODY_LIMIT = 1500  # per-issue body truncation before it reaches the model
 BODY_CAP = 6000           # per-verdict body cap in the written verdicts.json
 MAX_NON_KEEP = 5          # hard cap on filable (non-keep) verdicts
+
+# RULING 5 (DEDUP-BY-KEY): a stable identifier per verdict, independent of the
+# cycle tag, so the same (kind, subject) recurring next week resolves to the
+# SAME key. The workflow's file-issues step searches open issues for this
+# marker before creating one; a match gets a comment, not a new issue. Caps
+# the subject-slug segment so the key stays a sane length for a `gh issue
+# list --search` query string.
+CENSUS_KEY_SUBJECT_MAX = 60
 
 KEEP_KIND = "keep"
 VALID_KINDS = frozenset(
@@ -553,6 +567,29 @@ def _defang(text: str) -> str:
     return text.replace("@", "@ ")
 
 
+def _slugify(text: str) -> str:
+    """Deterministic lowercase-kebab slug for the subject segment of a
+    census_key. No randomness, no cycle/date component: the same input text
+    always yields the same slug, which is the whole point — it's what lets
+    the same verdict recur across cycles under one stable key instead of a
+    fresh one every time. Never raises; an empty/unslugabble input yields
+    "untitled" rather than an empty or malformed key segment."""
+    text = text.strip().lower()
+    text = re.sub(r"[`'\"]", "", text)      # drop quote/backtick noise
+    text = re.sub(r"[^a-z0-9]+", "-", text)  # non-alnum runs -> single hyphen
+    text = text.strip("-")
+    if len(text) > CENSUS_KEY_SUBJECT_MAX:
+        text = text[:CENSUS_KEY_SUBJECT_MAX].rstrip("-")
+    return text or "untitled"
+
+
+def _census_key(kind: str, subject: str) -> str:
+    """`<kind>:<subject-slug>` — the stable cross-cycle identifier for a
+    verdict (RULING 5). `kind` is used verbatim (already one of VALID_KINDS
+    by the time this is called); only the subject is slugged."""
+    return f"{kind}:{_slugify(subject)}"
+
+
 def _sanitize_body(value: object) -> str:
     """Defang @-mentions, then cap at BODY_CAP characters (final length <= cap)."""
     text = value if isinstance(value, str) else ("" if value is None else str(value))
@@ -590,7 +627,15 @@ def validate_and_build(
     `revise` targeting `amend_target` — but only if `amend_target` names a real
     catalog skill; otherwise the verdict is dropped with a printed warning. A
     "new-skill" (or undisposed) gap is left as-is: whether its `grounds` records
-    a comparison is the model's job, not this validator's — we don't over-police."""
+    a comparison is the model's job, not this validator's — we don't over-police.
+
+    RULING 5 (DEDUP-BY-KEY): every non-keep verdict also gets a `census_key`
+    (`<kind>:<subject-slug>`, see `_census_key`/`_slugify`) computed from the
+    FINAL kind/subject — i.e. after the RULING-4 amend rewrite, so an
+    amend-disposed gap keys off its rewritten `revise` + `amend_target`, not
+    its original `gap` + free-text subject. The workflow's file-issues step
+    searches open issues for this marker before filing; a hit gets a comment
+    instead of a new issue, which is the whole point — see skill-census.yml."""
     data = _parse_json(response_text)
     if not isinstance(data, dict):
         raise PanelValidationError("model output is not a JSON object")
@@ -656,6 +701,13 @@ def validate_and_build(
             {
                 "kind": kind,
                 "subject": subject,
+                # RULING 5: computed AFTER the amend-vs-forge rewrite above, so
+                # a `gap` disposed "amend" keys off its rewritten `revise` kind
+                # and the amend_target subject — the same underlying skill
+                # gets the same key regardless of which cycle first proposed
+                # amending it. No cycle tag: same (kind, subject) next week
+                # produces the identical string.
+                "census_key": _census_key(kind, subject),
                 "grounds": grounds,
                 "confidence": confidence,
                 "title": _enforce_title(kind, cycle_slug, verdict.get("title"), subject),

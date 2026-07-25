@@ -72,6 +72,23 @@ When you write a custom skill, follow the SKILL.md frontmatter format
 Generic advice gets ignored; rules with examples and quoted-line evidence
 move the bot's behavior.
 
+### Example: a good custom skill
+
+Don't write generic prose like "be careful with database code" — not
+actionable. Anchor to specific files + behaviors: name the exact path
+(e.g. `lib/db/queries.ts`), the exact pattern to flag, and what to quote.
+
+```ts
+// BAD — flag: string-interpolated SQL
+db.query(`SELECT * FROM users WHERE id = ${userId}`)
+// GOOD — parameterized
+db.query('SELECT * FROM users WHERE id = ?', [userId])
+```
+
+Pair each rule with a bad/good snippet like this. A generic warning gets
+ignored; a rule anchored to a real path and pattern moves the bot's
+review behavior.
+
 ## When you edit `.github/workflows/clud-bug-*.yml`
 
 `anthropics/claude-code-action` **refuses to run on PRs that modify its
@@ -154,7 +171,7 @@ CLUD_BUG_QUIET=1 clud-bug add evidence-based-review
 # → ok added: .claude/skills/evidence-based-review/SKILL.md
 ```
 
-## Why reviews are cheap (cost-control wiring, v0.6.3–v0.6.11)
+## Why reviews are cheap (cost-control wiring)
 
 The bot is engineered for token frugality, several layers deep:
 
@@ -164,17 +181,33 @@ The bot is engineered for token frugality, several layers deep:
   window. The first review in a fresh window writes the cache (1.25×); the
   next ones in that window read at 10%. Visible via `cache_read_input_tokens`
   in the run's result JSON (`show_full_output: true`).
-- **Per-section byte budgets** (v0.6.4): `MAX_DIFF_BYTES=80000`,
-  `MAX_COMMENT_BYTES=20000`, `MAX_SKILL_BYTES=4000`. Caps the PR diff /
-  prior-comment / skill-content section that the bot ingests on each run.
-  When a section hits its cap, an explicit truncation marker appears and
-  the bot is instructed to request the omitted hunks if relevant.
-- **`MAX_THINKING_TOKENS=8000`** + **`--max-turns 15`** (v0.6.8): thinking
-  budget + agentic-loop ceiling. Stops runaway turn-storms.
-- **Model pin** (v0.6.11): clud-bug-review now runs on
-  `claude-sonnet-4-6`, not Opus. Per Anthropic docs: "Sonnet handles most
-  coding tasks well and costs less than Opus." ~80% per-token reduction vs
-  Opus 4.7 default.
+- **Per-section byte budgets**: `MAX_COMMENT_BYTES=20000`,
+  `MAX_SKILL_BYTES=4000`, and **`MAX_DIFF_BYTES=5000000`** (bumped from an
+  original 80000 by a 2026-06-08 directive — the old 80KB default silently
+  truncated any real-world PR diff over that size, producing half-reviews;
+  5MB is far above a realistic single-PR diff but bounded enough that the
+  runner doesn't OOM). Caps the PR diff / prior-comment / skill-content
+  section the bot ingests per run; when a section hits its cap, an explicit
+  truncation marker appears and the bot is told to request the omitted
+  hunks if relevant.
+- **`MAX_THINKING_TOKENS=8000`** (v0.6.8) caps the extended-thinking budget
+  per turn.
+- **Two independent fast paths — don't conflate them**:
+  - **Workflow-only PRs** (clud-bug-update's own output: a workflow file
+    plus an allowlist like `AGENTS.md` / the baseline skills) skip review
+    entirely. The classify step emits `model=$MODEL` then `exit 0` —
+    **no `max_turns` is emitted at all** — and the review job itself is
+    gated `if: needs.paths-check.outputs.is_workflow_only != 'true'`, so
+    it never runs.
+  - **Trivial PRs** (dependency-bump bot authors, or a <2KB diff touching
+    only dependency-manifest files) get a flat `max-turns=10` and route
+    to Haiku 4.5 (`claude-haiku-4-5-20251001`, pinned in the template) —
+    roughly a third of Sonnet's per-input-token cost.
+  - **Everything else**: a pre-flight classify step estimates turns from
+    PR size (files/lines/prior threads) and sets `max(estimated × 1.2,
+    15)`, capped at 60, on the default `claude-sonnet-4-6` (not Opus —
+    per Anthropic docs, "Sonnet handles most coding tasks well and costs
+    less than Opus").
 - **Incremental-diff on fix-push** (v0.6.10): on a re-review, the bot reads
   only the delta since its prior pass (`git diff <prior_sha>..HEAD`),
   identified via a `<!-- last-reviewed-sha: <sha> -->` HTML marker in the

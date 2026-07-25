@@ -1,6 +1,6 @@
 ---
 name: chroma-harmonization
-description: Use when constructing or auditing a multi-hue palette where all hues should appear equally saturated at each contrast stop. Names the per-stop chroma cap rule (take the minimum achievable chroma across hues at the stop), the sRGB-gamut bottleneck pattern (blue at mid-L is usually the limiter), and the relationship to UDTS's default `harmony` palette variant. Generalizes Evil Martians' Harmony algorithm.
+description: Use when constructing or auditing a multi-hue palette where all hues should appear equally saturated at each contrast stop. Names the per-stop chroma cap rule (take the minimum achievable chroma across hues at the stop), the gamut bottleneck pattern (blue at mid-L is the classic limiter in sRGB; Display P3 — UDTS's default compose gamut — reshapes it), and the relationship to UDTS's default `harmony` palette variant. Generalizes Evil Martians' Harmony algorithm.
 ---
 
 # Chroma harmonization
@@ -18,13 +18,13 @@ Multi-hue palettes look unbalanced when one hue is more saturated than the rest 
 
 - Single-hue palettes (no other hues to harmonize against — chroma is unconstrained by the procedure).
 - Brand-spot or accent palettes where one hue *should* dominate. Use the `max` palette variant instead — see `oklch-color-space`.
-- Palettes designed for Display P3 only where the wider gamut changes the bottleneck calculus (the procedure still applies, just with P3 boundaries).
+- Palettes constrained to legacy sRGB-only output, where the narrower gamut shifts the bottleneck calculus back toward the classic blue-at-~220° limiter (the procedure still applies — Display P3 is the default target space; substitute the sRGB boundary deliberately for legacy-only catalogs).
 
 ## The algorithm
 
 For each contrast stop in the palette (each L value):
 
-1. For each hue in the set, find the maximum in-gamut chroma at that (L, H) in the target color space (sRGB by default; figma-p3 for wider gamut).
+1. For each hue in the set, find the maximum in-gamut chroma at that (L, H) in the target color space (**Display P3 by default** — UDTS composes end-to-end in P3 via apcach's `colorSpace: 'p3'`; sRGB only when a catalog is deliberately constrained to legacy-only output).
 2. Take the **minimum** of those per-hue maxima. This is the stop's chroma ceiling.
 3. Emit every hue at the stop using that ceiling.
 
@@ -36,7 +36,7 @@ for each stop L:
     emit oklch(L, c_ceiling, h)
 ```
 
-The bottleneck pattern: at moderate lightness (L ≈ 0.5), **blue (~220°)** is usually the limiter in sRGB — its gamut is narrowest there. At the extremes (L near 0 or 1) the gamut shrinks for all hues, so the ceiling collapses naturally.
+The bottleneck pattern: at moderate lightness (L ≈ 0.5), **blue (~220°)** is the classic limiter in sRGB — its gamut is narrowest there. In Display P3 (the default compose gamut) the boundary is wider and reshaped, so blue is not guaranteed to be the tightest hue — treat the bottleneck as empirical per palette rather than assuming ~220° holds. At the extremes (L near 0 or 1) the gamut shrinks for all hues in either space, so the ceiling collapses naturally.
 
 ## Why the *minimum*, not the average
 
@@ -44,7 +44,7 @@ Average would push half the hues out of gamut at the bottleneck. Maximum would p
 
 ## Headroom rule
 
-Stay ≥ 10% below the computed ceiling. Rounding from OKLCH to hex, downstream conversions (P3 → sRGB at consumption), and display-driver quirks can push a borderline-in-gamut value out of gamut. A headroom margin prevents those failures.
+Stay ≥ 10% below the computed ceiling. This headroom is for the **emission edge**, not the harmonization math itself: rounding when materializing the sRGB hex fallback (the compatibility export for legacy consumers — see `oklch-color-space`) and display-driver quirks can push a borderline-in-gamut P3 value out of gamut once flattened to 8-bit sRGB. A headroom margin prevents those fallback-materialization failures; it does not change the P3-native chroma math above.
 
 ## Relationship to UDTS palette variants
 
@@ -62,7 +62,7 @@ After harmonizing a stop:
 
 1. **Gamut check:** every emitted `oklch(L, c_ceiling, h)` is `displayable()` in the target color space.
 2. **Visual check:** at the same stop, all hues should report identical (or near-identical) saturation in a side-by-side swatch. Use [oklch.com](https://oklch.com) or a culori-based tool.
-3. **Headroom check:** the actual ceiling sits ≥ 10% below the computed sRGB-gamut maximum at every (L, H) in the set.
+3. **Headroom check:** the actual ceiling sits ≥ 10% below the computed **Display P3**-gamut maximum at every (L, H) in the set (verify the sRGB-fallback headroom separately, at emission).
 
 If any hue clips at the ceiling or visually "pops," recompute with a tighter chroma cap.
 
