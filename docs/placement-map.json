@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-07-17",
+  "updated": "2026-07-25",
   "skills": {
     "critical-issues-only": {
       "authoring_home": "catalog",
@@ -34,28 +34,28 @@
       "subscribers": ["tokenomics"]
     },
     "designing-elite-ui": {
-      "authoring_home": "undecided",
+      "authoring_home": "catalog",
       "distribution": "opt-in",
       "subscribers": [],
-      "notes": "authoring-home ruling pending clud-bug#235; currently authored in clud-bug/templates/skills/design/, promotion in flight"
+      "notes": "authoring-home decided (clud-bug#243 Ruling 2): catalog is the edit point; clud-bug's templates/skills/design/ is a vendored mirror refreshed only by an explicit release PR, never by automation"
     },
     "design-system-consistency": {
-      "authoring_home": "undecided",
+      "authoring_home": "catalog",
       "distribution": "opt-in",
       "subscribers": [],
-      "notes": "authoring-home ruling pending clud-bug#235; currently authored in clud-bug/templates/skills/design/, promotion in flight"
+      "notes": "authoring-home decided (clud-bug#243 Ruling 2): catalog is the edit point; clud-bug's templates/skills/design/ is a vendored mirror refreshed only by an explicit release PR, never by automation"
     },
     "frontend-a11y": {
-      "authoring_home": "undecided",
+      "authoring_home": "catalog",
       "distribution": "opt-in",
       "subscribers": [],
-      "notes": "authoring-home ruling pending clud-bug#235; currently authored in clud-bug/templates/skills/design/, promotion in flight"
+      "notes": "authoring-home decided (clud-bug#243 Ruling 2): catalog is the edit point; clud-bug's templates/skills/design/ is a vendored mirror refreshed only by an explicit release PR, never by automation"
     },
     "visual-polish": {
-      "authoring_home": "undecided",
+      "authoring_home": "catalog",
       "distribution": "opt-in",
       "subscribers": [],
-      "notes": "authoring-home ruling pending clud-bug#235; currently authored in clud-bug/templates/skills/design/, promotion in flight"
+      "notes": "authoring-home decided (clud-bug#243 Ruling 2): catalog is the edit point; clud-bug's templates/skills/design/ is a vendored mirror refreshed only by an explicit release PR, never by automation"
     },
     "orchestrating-elite-agent-qa": {
       "authoring_home": "catalog",

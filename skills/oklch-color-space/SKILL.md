@@ -1,6 +1,6 @@
 ---
 name: oklch-color-space
-description: Use when picking color values for a design-token system, constructing a palette around a starting hue, or generating colors against an accessibility contrast target. Names the OKLCH primitive ranges, the hue-angle naming convention, the gamut-mapping rule for sRGB vs Display P3, and the APCACH inverse-composition approach for guaranteed-contrast color generation. Cite when an agent reaches for "pick a color then check contrast" — the inversion is the load-bearing move.
+description: Use when picking color values for a design-token system, constructing a palette around a starting hue, or generating colors against an accessibility contrast target. Names the OKLCH primitive ranges, the hue-angle naming convention, the gamut-mapping rule (Display P3 for computation, sRGB for the emitted fallback), and the APCACH inverse-composition approach for guaranteed-contrast color generation. Cite when an agent reaches for "pick a color then check contrast" — the inversion is the load-bearing move.
 ---
 
 # OKLCH color space
@@ -26,7 +26,7 @@ Every OKLCH primitive that lands in a catalog uses the hue-angle naming conventi
 | Channel | Range | Notes |
 |---|---|---|
 | L | 0–1 | 0 = pure black, 1 = pure white; UDTS palette stops typically land 0.10–0.99 |
-| C | 0–~0.4 | Theoretical max varies by hue; in sRGB-gamut the practical ceiling is ~0.16–0.20 at moderate L |
+| C | 0–~0.4 | Theoretical max varies by hue; UDTS composes in **Display P3** by default (apcach's `colorSpace: 'p3'`), whose practical ceiling at moderate L is wider than sRGB's ~0.16–0.20 — the sRGB figure applies only to the emitted hex fallback, not the compute-time ceiling |
 | H | 0–360° | Cyclic; 0 ≈ red, 90 ≈ yellow, 180 ≈ teal/cyan, 270 ≈ blue, 360 = 0 |
 
 ## Compose to a contrast target — don't pick L and test
@@ -47,9 +47,19 @@ This applies to every contrast-bound token (text, surface, border, ui). For free
 
 ## Gamut mapping
 
-When emitting hex, gamut-map from OKLCH source into the output color space. For sRGB output, clamp chroma at the gamut boundary at the given (L, H). For Display P3 / figma-p3 output, the gamut is wider; emit the OKLCH value directly when the target supports it, fall back to sRGB clamp otherwise.
+The **compose space is P3-native**: chroma caps, `displayable()` checks, and APCACH composition all default to Display P3 (UDTS's compose gamut) — apcach's `apcach()`, `cssToApcach()`, and `maxChroma()` all default `colorSpace` to `'p3'`, and UDTS's wrapper never overrides that default.
 
-Practical rule for picking a chroma cap: stay ≥10% below the sRGB gamut ceiling at your declared (L, H) so rounding errors and downstream conversions don't push the color out of gamut. Use a culori/`displayable()` style check before shipping.
+sRGB legitimately enters the pipeline at exactly three points — nowhere else:
+
+1. **Emission edge (fallback export).** Materializing the hex fallback for legacy consumers: gamut-map the OKLCH source into sRGB and clamp chroma at that narrower boundary. Emit the Display P3 (`figma-p3`) representation directly wherever the target supports it; fall back to the sRGB clamp only for the compatibility hex export.
+2. **Background-anchor round-trip (apcach's own API shape).** APCACH inverse composition takes its background as a CSS color string — it has no OKLCH-object entry point for the anchor color. UDTS's compose wrapper round-trips the OKLCH background through sRGB hex on *every* compose call to satisfy that string-shaped API; apcach then converts it into P3 internally for the actual composition. This happens mid-computation, on every generated palette variant — it's correct because the library boundary forces it, not because the pipeline chose to compute in sRGB there.
+3. **WCAG 2 cross-check.** WCAG 2.2 AA contrast is only defined against sRGB-space luminance, so the cross-check step is sRGB by definition, not a compromise.
+
+**Known open gap — do not teach as fixed:** the shipped APCA *meter* still gamut-clamps both colors into sRGB before scoring, on every call path, while the *composer* (apcach) targets P3. That composer/meter mismatch is a documented, tolerated gap in the codebase today, not something later resolved — never state that the live meter measures in P3.
+
+Practical rule for picking a chroma cap: compose against the **Display P3 ceiling** and stay ≥10% below it at your declared (L, H) — this protects the eventual sRGB-fallback materialization and display-driver quirks from pushing the color out of gamut. Use a culori/`displayable()` check against **P3** before shipping; check sRGB separately only when validating the emitted hex fallback.
+
+**The actual doctrine:** sRGB/hex intermediates are correct only at the three points above. Anywhere else — picking L or C, doing hue math, or resolving a gamut boundary that isn't the fallback edge, the WCAG check, or apcach's background-string requirement — stay in culori-native OKLCH objects end-to-end. An 8-bit hex round-trip outside those three points quantizes precision a P3-native pipeline doesn't need, and is the pattern to flag in review.
 
 ## Cross-references
 
@@ -62,8 +72,8 @@ Practical rule for picking a chroma cap: stay ≥10% below the sRGB gamut ceilin
 After picking an OKLCH value:
 
 1. **Range check:** `0 ≤ L ≤ 1`, `0 ≤ C ≤ 0.4`, `0 ≤ H < 360`.
-2. **Gamut check:** `displayable(oklch(L C H))` returns true for the target color space (sRGB by default).
-3. **Round-trip check:** convert OKLCH → hex → OKLCH; the round-trip delta on L and C should be < 0.01.
+2. **Gamut check:** `displayable(oklch(L C H))` returns true for the target color space (**Display P3 by default** — UDTS's compute gamut; check sRGB separately only for the emitted hex fallback).
+3. **Round-trip check (fallback-emission path only):** convert OKLCH → sRGB hex → OKLCH; the round-trip delta on L and C should be < 0.01. This validates the emitted hex fallback. (A different sRGB round-trip happens inside APCACH composition for the background anchor — see Gamut mapping; that one is exercised by the compose step's own Lc tolerance, not by this check.)
 4. **Contrast check (contrast-bound tokens):** APCA Lc against the declared pairing background hits the target ± 1 Lc.
 
 If any of the four fails, fix the value before emitting the token.

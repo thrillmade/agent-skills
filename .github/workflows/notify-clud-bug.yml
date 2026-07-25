@@ -2,8 +2,8 @@ name: sync skill to clud-bug
 
 # Open a PR on thrillmade/clud-bug refreshing one bundled baseline SKILL.md
 # from the current state of this repo, plus the BASELINE_SKILLS_REF pin in
-# lib/skills.js, plus a patch version bump and CHANGELOG entry. Replaces the
-# v0.x workflow that opened an issue with "you should update X" instructions
+# src/cli/skills.ts, plus a patch version bump and CHANGELOG entry. Replaces
+# the v0.x workflow that opened an issue with "you should update X" instructions
 # the maintainer then applied by hand — the PR shape applies them directly.
 #
 # Triggers:
@@ -164,6 +164,25 @@ jobs:
           # Surfaces the scope mismatch loudly before we try to mutate the repo.
           gh api repos/thrillmade/clud-bug --jq '.full_name' > /dev/null
 
+      - name: Verify BASELINE_SKILLS_REF target exists
+        # Fail loud, not silent-no-op: clud-bug's v0.7.0 TS migration moved this
+        # constant from lib/skills.js (deleted) to src/cli/skills.ts. If clud-bug
+        # ever relocates or reshapes the declaration again, `set -euo pipefail`
+        # alone won't catch a sed that silently matches zero lines — this step
+        # names exactly what it looked for before the sync step below relies on it.
+        working-directory: clud-bug
+        run: |
+          set -euo pipefail
+          TARGET="src/cli/skills.ts"
+          if [ ! -f "$TARGET" ]; then
+            echo "::error::${TARGET} not found in thrillmade/clud-bug — BASELINE_SKILLS_REF may have moved again since the v0.7.0 TS migration. Update the target path in notify-clud-bug.yml (search clud-bug's repo for 'BASELINE_SKILLS_REF' to find its new home)."
+            exit 1
+          fi
+          if ! grep -qE "^const BASELINE_SKILLS_REF = '[a-f0-9]{40}';" "$TARGET"; then
+            echo "::error::No line matching \`const BASELINE_SKILLS_REF = '<40-hex-sha>';\` found in ${TARGET} — the constant's declaration shape changed, so the sed in the sync step would silently no-op. Update the regex (or the target path) in notify-clud-bug.yml."
+            exit 1
+          fi
+
       - name: Short-circuit if PR already open for this branch
         id: existing
         working-directory: clud-bug
@@ -208,15 +227,17 @@ jobs:
           # 1. Copy source SKILL.md into bundled location.
           cp "../skills/${SKILL}/SKILL.md" "templates/skills/baseline/${SKILL}.md"
 
-          # 2. Bump BASELINE_SKILLS_REF in lib/skills.js. The constant is
-          #    declared as a single line:
+          # 2. Bump BASELINE_SKILLS_REF in src/cli/skills.ts (moved here from
+          #    the now-deleted lib/skills.js in clud-bug's v0.7.0 TS migration —
+          #    see the "Verify BASELINE_SKILLS_REF target exists" guard above).
+          #    The constant is declared as a single line:
           #      const BASELINE_SKILLS_REF = '<40-hex-sha>';
           #    Verify after sed that the new SHA actually landed — if the
           #    declaration shape ever changes the regex would silently no-op.
-          sed -i.bak -E "s|^(const BASELINE_SKILLS_REF = ')[a-f0-9]{40}(';.*)$|\1${SHA}\2|" lib/skills.js
-          rm lib/skills.js.bak
-          if ! grep -q "BASELINE_SKILLS_REF = '${SHA}'" lib/skills.js; then
-            echo "::error::BASELINE_SKILLS_REF sed did not produce the expected line — check the constant declaration shape in lib/skills.js."
+          sed -i.bak -E "s|^(const BASELINE_SKILLS_REF = ')[a-f0-9]{40}(';.*)$|\1${SHA}\2|" src/cli/skills.ts
+          rm src/cli/skills.ts.bak
+          if ! grep -q "BASELINE_SKILLS_REF = '${SHA}'" src/cli/skills.ts; then
+            echo "::error::BASELINE_SKILLS_REF sed did not produce the expected line — check the constant declaration shape in src/cli/skills.ts."
             exit 1
           fi
 
@@ -237,7 +258,7 @@ jobs:
 
           ### Changed
 
-          - **Bundled \`${SKILL}\` SKILL.md refreshed** from \`thrillmade/agent-skills@${SHORT}\`. \`BASELINE_SKILLS_REF\` in \`lib/skills.js\` pinned to the same commit so the install-time fetch path and the bundled offline-fallback path resolve to byte-identical content. Auto-synced by \`agent-skills/.github/workflows/notify-clud-bug.yml\`.
+          - **Bundled \`${SKILL}\` SKILL.md refreshed** from \`thrillmade/agent-skills@${SHORT}\`. \`BASELINE_SKILLS_REF\` in \`src/cli/skills.ts\` pinned to the same commit so the install-time fetch path and the bundled offline-fallback path resolve to byte-identical content. Auto-synced by \`agent-skills/.github/workflows/notify-clud-bug.yml\`.
 
           EOF
           # awk inserts the entry on the line after the [Unreleased] header.
@@ -291,7 +312,7 @@ jobs:
           ## Changes applied
 
           - \`templates/skills/baseline/${SKILL}.md\` ← byte-for-byte copy of the source above.
-          - \`lib/skills.js\` — \`BASELINE_SKILLS_REF\` bumped to \`${SHA}\` so the install-time fetch from \`thrillmade/agent-skills\` and the bundled offline-fallback both resolve to identical content.
+          - \`src/cli/skills.ts\` — \`BASELINE_SKILLS_REF\` bumped to \`${SHA}\` so the install-time fetch from \`thrillmade/agent-skills\` and the bundled offline-fallback both resolve to identical content.
           - \`package.json\` — patch version bump to \`${new_version}\`.
           - \`CHANGELOG.md\` — entry under [Unreleased] documenting the refresh.
 

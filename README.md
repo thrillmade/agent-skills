@@ -113,7 +113,7 @@ The short version — every repo holds each skill in one of three postures:
 - **Published** — born in your repo, nominated here by PR. The editor gate (validate-skills CI, `skill-frontmatter-quality`, strict-mode review, human approval) accepts or rejects — nomination ≠ publication.
 - **Local** — repo-specific, never syncs.
 
-New repo: `npx skdd init` (logmind + clud-bug + baselines), subscribe to what you need, **commit your manifests**, apply the reporulez ruleset. Existing repo: run the census checklist in the guide (register untracked skills, commit your lock, classify local vs promotion-worthy). A weekly editorial cycle audits placement, gaps, and staleness org-wide and files its verdicts as issues here; steward-run automation for onboarding and fan-out is the roadmap (protocol#39).
+New repo, today: `brew install thrillmade/tap/logmind && logmind init` + `npx clud-bug init` (baselines), subscribe to what you need, **commit your manifests**, apply the reporulez ruleset. (`npx skdd init` — one command bundling all of this — is the umbrella installer being built; it isn't available yet.) Existing repo: run the census checklist in the guide (register untracked skills, commit your lock, classify local vs promotion-worthy). A weekly editorial cycle already audits placement, gaps, and staleness org-wide and files its verdicts as issues here; steward-run auto-onboarding and catalog fan-out are the roadmap (protocol#39).
 
 ## Install
 
