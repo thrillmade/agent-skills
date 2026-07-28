@@ -19,12 +19,34 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  issues: write   # needed for the failure-notification step (opens/comments an issue on `if: failure()`)
+  # NOTE: there is no `permissions:` knob that lets GITHUB_TOKEN push to
+  # .github/workflows/*.yml — GitHub rejects that at the git layer no
+  # matter what is granted here (confirmed by the remote's own rejection
+  # message: "refusing to allow a GitHub App to create or update workflow
+  # ... without `workflows` permission" — that scope only exists for PATs
+  # / GitHub Apps, not the ephemeral GITHUB_TOKEN). `clud-bug update`
+  # refreshes the workflow templates (clud-bug-review.yml,
+  # clud-bug-self-update.yml) on every real version bump, so a push with
+  # plain GITHUB_TOKEN fails once that diff touches a workflow file — see
+  # the "Run clud-bug update + open PR" step below, which uses the same
+  # LOGMIND_AUTO_REGEN_PAT secret that logmind-self-update.yml /
+  # regen-timeline.yml use for the identical reason when configured, and
+  # otherwise skips the PR gracefully with a `::notice::` instead of
+  # failing.
 
 jobs:
   check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          # Use the regen PAT when available so we can push refreshed
+          # workflow files. Falls through to GITHUB_TOKEN when absent —
+          # push still works for non-workflow-file changes but will be
+          # rejected for workflow-file changes (handled in the update
+          # step below via the smart skip).
+          token: ${{ secrets.LOGMIND_AUTO_REGEN_PAT || secrets.GITHUB_TOKEN }}
 
       - uses: actions/setup-node@v7
         with:
@@ -64,6 +86,7 @@ jobs:
           INSTALLED: ${{ steps.compare.outputs.installed }}
           LATEST: ${{ steps.compare.outputs.latest }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PAT: ${{ secrets.LOGMIND_AUTO_REGEN_PAT }}
         run: |
           BRANCH="clud-bug/self-update-${LATEST}"
           # Use github-actions[bot]'s real identity so commits resolve to a
@@ -81,6 +104,28 @@ jobs:
           # branch. We rely on `git diff` simply to detect *real* file changes
           # outside the manifest, and let the PR open either way.
           git add -A
+          if git diff --cached --quiet; then
+            echo "::notice::No file changes after clud-bug update — nothing to PR."
+            exit 0
+          fi
+
+          # SMART WORKFLOW-SKIP (same shape as logmind-self-update.yml's).
+          # `clud-bug update` refreshes clud-bug-review.yml /
+          # clud-bug-self-update.yml on every real release, and GITHUB_TOKEN
+          # can never push a workflow-file change (GitHub blocks it at the
+          # git layer, not via any `permissions:` grant). Without a PAT
+          # configured, skip the release with a clear `::notice::` instead
+          # of committing/pushing and hitting the remote's hard rejection.
+          WORKFLOW_CHANGES=$(git diff --cached --name-only -- '.github/workflows/*.yml' '.github/workflows/*.yaml' || true)
+          if [ -n "$WORKFLOW_CHANGES" ] && [ -z "${PAT:-}" ]; then
+            echo "::notice title=Skipping workflow-touching release::This release would update workflow file(s):"
+            echo "::notice::$WORKFLOW_CHANGES"
+            echo "::notice::No \`LOGMIND_AUTO_REGEN_PAT\` is configured, so this run will skip pushing/opening a PR."
+            echo "::notice::To enable: configure a fine-grained PAT with Contents:write + Workflows:write + Pull-requests:write as the \`LOGMIND_AUTO_REGEN_PAT\` repo or org secret (same secret used by logmind-self-update.yml / regen-timeline.yml)."
+            echo "::notice::OR: skip this release by running \`npx clud-bug@${LATEST} update\` locally and opening a PR manually."
+            exit 0
+          fi
+
           git commit -m "🐛 Clud Bug self-update: ${INSTALLED} → ${LATEST}"
           git push -u origin "$BRANCH"
           # Build the PR body via printf so the embedded newlines don't break
@@ -90,6 +135,60 @@ jobs:
           # line and rejected the next line as an unexpected top-level value,
           # which broke `workflow_dispatch` on every consuming repo.
           BODY=$(printf 'Automated update from clud-bug %s → %s. Custom and skills.sh-installed specimens were left alone; only baseline specimens and the workflow templates were refreshed.\n\nReview the diff. To stay on this version permanently, add `"pinVersion": "%s"` to `.claude/skills/.clud-bug.json` before merging.' "${INSTALLED}" "${LATEST}" "${INSTALLED}")
-          gh pr create \
+          # `gh pr create` uses PAT too when available. Per-repo "Allow
+          # GitHub Actions to create and approve pull requests" setting
+          # blocks GITHUB_TOKEN from opening PRs on some org/repo configs.
+          # Using the PAT for this step too eliminates the second per-repo
+          # setup checkbox.
+          PR_TOKEN="${PAT:-${GH_TOKEN}}"
+          GH_TOKEN="$PR_TOKEN" gh pr create \
             --title "🐛 Clud Bug self-update: ${INSTALLED} → ${LATEST}" \
             --body "$BODY"
+
+      # Scheduled workflows fail silently — nobody watches a cron's status
+      # page. Surface it instead of leaving it red-and-unnoticed (this
+      # exact workflow ran red for 6+ consecutive weeks before anyone
+      # caught it). Idempotent: dedupes on an HTML-comment marker via
+      # `gh issue list --search`, same shape as skill-census.yml's
+      # census-key pattern — comments on the existing open issue instead
+      # of re-filing one every week.
+      - name: Notify on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          MARKER="<!-- workflow-failure-key: clud-bug-self-update -->"
+          TITLE="Scheduled workflow failing: Clud Bug 🐛 Self-Update"
+          RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+
+          gh label create automation-failure --color B60205 --force >/dev/null 2>&1 || true
+
+          # AUTHOR FILTER, NOT OPTIONAL. `--search` matches any issue whose body
+          # carries the marker, and anyone can open an issue containing it. Without
+          # this filter an outsider redirects every future failure notice onto an
+          # issue they control, silently defeating the visibility this step exists
+          # to provide. Only a workflow in THIS repo can author as github-actions,
+          # and changing a workflow requires a merged PR through the gate.
+          EXISTING=$(gh issue list --state open --search "\"${MARKER}\" in:body,comments" \
+            --json number,author 2>/dev/null \
+            | jq -r '[.[] | select(.author.is_bot == true and (.author.login | test("^(app/)?github-actions$")))][0].number // empty') || EXISTING=""
+
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" --body "Still failing as of $(date -u +%Y-%m-%dT%H:%MZ): ${RUN_URL}"
+            echo "::notice::Commented on existing failure issue #${EXISTING}."
+          else
+            BODY_FILE="$(mktemp)"
+            {
+              echo "The **Clud Bug 🐛 Self-Update** scheduled workflow (\`.github/workflows/clud-bug-self-update.yml\`) failed."
+              echo ""
+              echo "Failing run: ${RUN_URL}"
+              echo ""
+              echo "This issue is commented on (not re-filed) on every subsequent failure — see the marker below."
+              echo ""
+              echo "$MARKER"
+            } > "$BODY_FILE"
+            gh issue create --title "$TITLE" --label automation-failure --body-file "$BODY_FILE"
+            echo "::notice::Filed new failure issue."
+          fi

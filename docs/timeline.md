@@ -13,10 +13,10 @@ PR's CI run, so this file is always coherent with current `main`.
 ---
 
 
-## 2026-07 (9 decisions)
+## 2026-07 (11 decisions)
 
-- **2026-07-28** — Close the census marker-laundering chain at both boundaries, and stop the sync from assigning versions *(fix/census-marker-laundering)* — [decisions-branches/fix__census-marker-laundering.md](decisions-branches/fix__census-marker-laundering.md)
-- *... 7 more decisions ...*
+- **2026-07-28** — Correct the failure-notify author filter: gh reports the login as app/github-actions *(fix/self-update-workflows)* — [decisions-branches/fix__self-update-workflows.md](decisions-branches/fix__self-update-workflows.md)
+- *... 9 more decisions ...*
 - **2026-07-16** — skill unification: three-layer design catalog — K0 splits/stubs/promotions, K1 dispatchers, K3 abstraction *(feat/skill-unification-k0-k1-k3)* — [decisions-branches/feat__skill-unification-k0-k1-k3.md](decisions-branches/feat__skill-unification-k0-k1-k3.md)
 
 ## 2026-06 (10 decisions)
