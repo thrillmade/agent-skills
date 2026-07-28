@@ -11,3 +11,14 @@
 
 ---
 
+## 2026-07-28 01:39 - Correct the failure-notify author filter: gh reports the login as app/github-actions
+
+**Reasoning:** Caught by testing the filter rather than reasoning about it. gh issue list --json author emits login 'app/github-actions' for a GITHUB_TOKEN-authored issue, not 'github-actions' -- verified against census issue #177, which is known bot-authored. My filter compared against the bare form, so it would have matched nothing, left EXISTING empty on every run, and filed a brand-new issue on each weekly failure. That is spam, and it is exactly the behaviour the dedupe exists to prevent -- the fix would have replaced six weeks of silence with an unbounded pile of duplicate issues. Now matches ^(app/)?github-actions$ so either spelling works, still requiring is_bot.
+
+**Alternatives considered:** Match on is_bot alone -- rejected, any bot could then claim the marker, which reopens the redirection hole the filter was added to close. Hardcode app/github-actions only -- rejected, gh has changed this rendering before and a tolerant anchored pattern costs nothing.
+
+**Implications:**
+- Proven by execution against live data, both directions: the corrected filter matches the one bot-authored issue (#177) and rejects all five human-authored ones. Third time this exact class has bitten -- an identity string that is almost but not quite what the API returns. The durable lesson is that an identity comparison must be tested against a real payload from the API that will be used at runtime, never against the name as a human would write it.
+
+---
+

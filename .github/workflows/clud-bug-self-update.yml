@@ -173,7 +173,7 @@ jobs:
           # and changing a workflow requires a merged PR through the gate.
           EXISTING=$(gh issue list --state open --search "\"${MARKER}\" in:body,comments" \
             --json number,author 2>/dev/null \
-            | jq -r '[.[] | select(.author.is_bot == true and .author.login == "github-actions")][0].number // empty') || EXISTING=""
+            | jq -r '[.[] | select(.author.is_bot == true and (.author.login | test("^(app/)?github-actions$")))][0].number // empty') || EXISTING=""
 
           if [ -n "$EXISTING" ]; then
             gh issue comment "$EXISTING" --body "Still failing as of $(date -u +%Y-%m-%dT%H:%MZ): ${RUN_URL}"
