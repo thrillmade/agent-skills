@@ -241,20 +241,32 @@ jobs:
             exit 1
           fi
 
-          # 3. Bump patch version in package.json. Use node to avoid pulling
-          #    in jq just for this single field — clud-bug already requires
-          #    node to run.
-          NEW_VERSION="$(node -e "const p=require('./package.json'); const [maj,min,pat]=p.version.split('.').map(Number); console.log(\`\${maj}.\${min}.\${pat+1}\`)")"
-          node -e "const fs=require('fs'); const p=JSON.parse(fs.readFileSync('package.json')); p.version='${NEW_VERSION}'; fs.writeFileSync('package.json', JSON.stringify(p, null, 2) + '\n');"
-          echo "new_version=${NEW_VERSION}" >> "$GITHUB_ENV"
+          # 3. DO NOT bump the version. Two reasons, both learned the hard way
+          #    (clud-bug PR #251, 2026-07-25):
+          #
+          #    (a) The old code did `p.version.split('.').map(Number)` and
+          #        assumed X.Y.Z. clud-bug ships PRERELEASES — on `0.7.0-rc.26`
+          #        that splits to ["0","7","0-rc","26"], `Number("0-rc")` is
+          #        NaN, and it wrote a literal `"version": "0.7.NaN"` into the
+          #        publisher's package.json and CHANGELOG.
+          #
+          #    (b) More fundamentally, assigning a version number is the
+          #        PUBLISHER'S act, not ours. This workflow proposes CONTENT;
+          #        clud-bug decides when that content ships and under what
+          #        version. A refresh PR that pre-assigns a version preempts
+          #        their release process and — mid-release-candidate — collides
+          #        with it. Per protocol SPEC §17.1, refresh automation must not
+          #        take a publisher's release decisions for them.
+          #
+          #    The CHANGELOG entry therefore lands under [Unreleased], where
+          #    their own release process will fold it into whatever version
+          #    they cut next.
 
           # 4. Prepend a CHANGELOG entry under [Unreleased]. The file format
           #    is Keep-a-Changelog; the [Unreleased] header sits at the top.
           DATE="$(date -u +%Y-%m-%d)"
           ENTRY_FILE="$(mktemp)"
           cat > "$ENTRY_FILE" <<EOF
-
-          ## [${NEW_VERSION}] — ${DATE}
 
           ### Changed
 
@@ -276,11 +288,15 @@ jobs:
           # Verify the entry actually landed. Mirrors the sed-then-grep check
           # above so the awk can't silently no-op if clud-bug's [Unreleased]
           # header shape ever drifts (e.g. "## [Unreleased] - 2026-XX-YY").
-          # Without this, the version + pin bump would still ship but the
-          # CHANGELOG entry would be missing, and the failure would only
-          # surface on maintainer review.
-          if ! grep -qF "[${NEW_VERSION}]" CHANGELOG.md; then
-            echo "::error::CHANGELOG entry for ${NEW_VERSION} not inserted — check the [Unreleased] header shape in clud-bug's CHANGELOG.md."
+          # Without this, the pin bump would still ship but the CHANGELOG
+          # entry would be missing, and the failure would only surface on
+          # maintainer review.
+          #
+          # Match on the skill name + source SHA rather than a version number:
+          # this workflow no longer assigns a version (see step 3), and the
+          # skill+SHA pair is what actually identifies this refresh.
+          if ! grep -qF "thrillmade/agent-skills@${SHORT}" CHANGELOG.md; then
+            echo "::error::CHANGELOG entry for ${SKILL}@${SHORT} not inserted — check the [Unreleased] header shape in clud-bug's CHANGELOG.md."
             exit 1
           fi
 
@@ -313,8 +329,9 @@ jobs:
 
           - \`templates/skills/baseline/${SKILL}.md\` ← byte-for-byte copy of the source above.
           - \`src/cli/skills.ts\` — \`BASELINE_SKILLS_REF\` bumped to \`${SHA}\` so the install-time fetch from \`thrillmade/agent-skills\` and the bundled offline-fallback both resolve to identical content.
-          - \`package.json\` — patch version bump to \`${new_version}\`.
           - \`CHANGELOG.md\` — entry under [Unreleased] documenting the refresh.
+
+          **\`package.json\` is deliberately untouched.** This PR proposes *content*; assigning a version is your release decision, not ours. The CHANGELOG entry sits under [Unreleased] for your own release process to fold in.
 
           ## How this was generated
 

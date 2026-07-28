@@ -348,7 +348,12 @@ def render_docket(issues: list[dict], error: str | None) -> str:
         )
         title = (issue.get("title") or "").strip()
         updated = issue.get("updatedAt") or ""
-        body = issue.get("body") or ""
+        # INGESTION BOUNDARY. Docket bodies are attacker-writable — the issue
+        # templates auto-apply the `census` label at creation, so this list is
+        # not an allowlist. Neutralize marker delimiters (and defang mentions)
+        # BEFORE any of it reaches the model. See _neutralize_markers.
+        body = _neutralize_markers(_defang(issue.get("body") or ""))
+        title = _neutralize_markers(title)
         truncated = len(body) > DOCKET_BODY_LIMIT
         shown = body[:DOCKET_BODY_LIMIT]
         note = "\n…[body truncated to 1500 chars]" if truncated else ""
@@ -567,6 +572,40 @@ def _defang(text: str) -> str:
     return text.replace("@", "@ ")
 
 
+def _neutralize_markers(text: str) -> str:
+    """Break HTML-comment delimiters so text passing through this panel can
+    never carry a marker that a downstream consumer will read as authoritative.
+
+    WHY THIS EXISTS — the laundering chain, found 2026-07-27:
+
+      1. `fetch_docket()` reads EVERY open `census`-labelled issue with no
+         author filter. The issue templates auto-apply `census` + a kind label
+         at creation, so any outside contributor can put text on the docket
+         without holding a single repo permission.
+      2. `render_docket()` quotes DOCKET_BODY_LIMIT chars of each body VERBATIM
+         into the model's context.
+      3. The model's own output is then filed as a census-authored issue, and
+         `skill-census.yml` appends the genuine `<!-- census-key: … -->` marker
+         at the END of that body.
+      4. A consumer that extracts the FIRST marker-shaped substring therefore
+         resolves an attacker-planted one instead of the appended one — and
+         because HTML comments are invisible in GitHub's rendered view, the
+         maintainer approving the issue sees nothing.
+
+    Authorship was never the weak link; the census IS trusted. The weakness was
+    that untrusted text flowed THROUGH a trusted author. Stripping the
+    delimiters at both the ingestion and emission boundaries removes the
+    capability rather than filtering the payload.
+
+    Zero-width chars defeat a naive `<!--` match, so normalize those first.
+    """
+    if not text:
+        return text
+    for zw in ("​", "‌", "‍", "﻿"):
+        text = text.replace(zw, "")
+    return text.replace("<!--", "< !--").replace("-->", "-- >")
+
+
 def _slugify(text: str) -> str:
     """Deterministic lowercase-kebab slug for the subject segment of a
     census_key. No randomness, no cycle/date component: the same input text
@@ -591,9 +630,18 @@ def _census_key(kind: str, subject: str) -> str:
 
 
 def _sanitize_body(value: object) -> str:
-    """Defang @-mentions, then cap at BODY_CAP characters (final length <= cap)."""
+    """Defang @-mentions, neutralize marker delimiters, then cap at BODY_CAP
+    characters (final length <= cap).
+
+    EMISSION BOUNDARY. Even with ingestion neutralized, the model can emit a
+    marker-shaped string of its own — quoted from a source we didn't sanitize,
+    or simply confabulated. The genuine `<!-- census-key: … -->` is appended by
+    the filing step in skill-census.yml AFTER this, so nothing upstream of that
+    append is entitled to produce one. Belt and braces on the same invariant:
+    the only marker in a filed body is the one the filing step wrote.
+    """
     text = value if isinstance(value, str) else ("" if value is None else str(value))
-    text = _defang(text)
+    text = _neutralize_markers(_defang(text))
     if len(text) > BODY_CAP:
         text = text[: BODY_CAP - 13].rstrip() + "\n\n[truncated]"
     return text
