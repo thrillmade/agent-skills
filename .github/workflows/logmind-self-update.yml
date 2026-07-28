@@ -32,6 +32,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  issues: write   # needed for the failure-notification step (opens/comments an issue on `if: failure()`)
   # NOTE: there is NO `permissions:` knob that lets GITHUB_TOKEN push
   # to .github/workflows/*.yml — GitHub blocks that at the git layer
   # for security. When a logmind refresh would touch a workflow file
@@ -138,10 +139,19 @@ jobs:
       # `logmind init` (the refresh) runs against the same binary
       # version consumer repos will see after this workflow lands its
       # PR. The action's version tracks the LATEST step output.
+      #
+      # NOTE: `compare.outputs.latest` is a bare `X.Y.Z` (the leading `v`
+      # is stripped for the INSTALLED/LATEST string comparison above).
+      # setup-logmind's `resolve_version()` only accepts 'latest',
+      # 'v<MAJOR>', or 'v<MAJOR>.<MINOR>.<PATCH>' — passing the bare
+      # number through unprefixed fails with "unrecognized version
+      # input '<X.Y.Z>'" (root cause of every run since the first real
+      # version bump after this workflow's v1.1.0 rewrite). Re-add the
+      # `v` prefix here.
       - uses: thrillmade/setup-logmind@v1.0.1
         if: steps.compare.outputs.skip == 'false'
         with:
-          version: ${{ steps.compare.outputs.latest }}
+          version: v${{ steps.compare.outputs.latest }}
 
       - name: Run logmind init + open PR
         if: steps.compare.outputs.skip == 'false'
@@ -205,3 +215,51 @@ jobs:
           Refresh mode only touched workflow templates whose \`# logmind-template-version:\` marker is stale; \`docs/\`, \`.logmind/config.yml\`, and agent files were left alone.
 
           Review the diff. To stop self-updates after this, add \`pinVersion: \"${LATEST}\"\` to \`.logmind/config.yml\` before merging."
+
+      # Scheduled workflows fail silently — nobody watches a cron's status
+      # page. Surface it instead of leaving it red-and-unnoticed (this
+      # exact workflow ran red for 6+ consecutive weeks before anyone
+      # caught it). Idempotent: dedupes on an HTML-comment marker via
+      # `gh issue list --search`, same shape as skill-census.yml's
+      # census-key pattern — comments on the existing open issue instead
+      # of re-filing one every week.
+      - name: Notify on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          MARKER="<!-- workflow-failure-key: logmind-self-update -->"
+          TITLE="Scheduled workflow failing: logmind self-update"
+          RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+
+          gh label create automation-failure --color B60205 --force >/dev/null 2>&1 || true
+
+          # AUTHOR FILTER, NOT OPTIONAL. `--search` matches any issue whose body
+          # carries the marker, and anyone can open an issue containing it. Without
+          # this filter an outsider redirects every future failure notice onto an
+          # issue they control, silently defeating the visibility this step exists
+          # to provide. Only a workflow in THIS repo can author as github-actions,
+          # and changing a workflow requires a merged PR through the gate.
+          EXISTING=$(gh issue list --state open --search "\"${MARKER}\" in:body,comments" \
+            --json number,author 2>/dev/null \
+            | jq -r '[.[] | select(.author.is_bot == true and .author.login == "github-actions")][0].number // empty') || EXISTING=""
+
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" --body "Still failing as of $(date -u +%Y-%m-%dT%H:%MZ): ${RUN_URL}"
+            echo "::notice::Commented on existing failure issue #${EXISTING}."
+          else
+            BODY_FILE="$(mktemp)"
+            {
+              echo "The **logmind self-update** scheduled workflow (\`.github/workflows/logmind-self-update.yml\`) failed."
+              echo ""
+              echo "Failing run: ${RUN_URL}"
+              echo ""
+              echo "This issue is commented on (not re-filed) on every subsequent failure — see the marker below."
+              echo ""
+              echo "$MARKER"
+            } > "$BODY_FILE"
+            gh issue create --title "$TITLE" --label automation-failure --body-file "$BODY_FILE"
+            echo "::notice::Filed new failure issue."
+          fi
