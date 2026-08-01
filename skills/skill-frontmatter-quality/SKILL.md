@@ -1,6 +1,6 @@
 ---
 name: skill-frontmatter-quality
-description: Review SKILL.md frontmatter for trigger surface, specificity, voice, and completeness. Apply on PRs that add or modify a skills/*/SKILL.md file. Catches descriptions that won't be discoverable, that wave at the topic instead of naming concrete buckets, that drift from the prescriptive house voice, or that omit fields like `review_mode` that downstream tools depend on.
+description: Review SKILL.md frontmatter for trigger surface, specificity, voice, and completeness. Apply on PRs that add or modify a skills/*/SKILL.md file. Catches descriptions that won't be discoverable, that wave at the topic instead of naming concrete buckets, that drift from the prescriptive house voice, or that omit fields downstream tools depend on.
 ---
 
 # Skill frontmatter quality
@@ -21,7 +21,7 @@ When reviewing a PR that adds or modifies a `skills/*/SKILL.md`, surface issues 
 
 5. **Frontmatter-body mismatch.** The frontmatter promises one thing (e.g. "flag X, Y, Z") and the body delivers a different list. Quote both. The description is the contract — fix whichever side is wrong.
 
-6. **Missing `review_mode` on a clud-bug-routed skill.** If the skill is intended for clud-bug review (lives in or is being added to `.claude/skills/`, or referenced from `.clud-bug.json`), and its frontmatter has no `review_mode: shared` or `review_mode: dedicated` field, flag it. Default-route ambiguity drops review coverage silently.
+6. **`kind` that does not match what the skill judges.** A skill about prose carrying `kind: rule` can be the sole citation for a finding about code behaviour, which SPEC §2.2 reserves for `rule` skills. Check the body against the value: code correctness → `rule`, shipped prose → `writing`, the rendered surface → `design`. An absent `kind` means `rule`, so omitting it on a prose skill has the same effect as declaring it wrongly.
 
 ## Do not surface
 
