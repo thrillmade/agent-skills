@@ -2,7 +2,6 @@
 name: designing-elite-ui
 description: Visual review — hold the rendered UI to a concrete elite/Figma-grade bar (one-axis color, APCA-gated contrast, floating stable chrome, dark verified) instead of a vague "looks fine." The STANDARD a design-critic measures against.
 kind: design
-review_mode: dedicated
 applies_to:
   paths: ["site/**", "app/**", "**/components/**", "**/ui/**"]
   extensions: [".tsx", ".jsx", ".css", ".scss", ".vue", ".svelte"]

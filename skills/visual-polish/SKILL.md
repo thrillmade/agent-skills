@@ -5,7 +5,6 @@ description: >-
   centering, spacing rhythm, glyph/pattern quality, state coverage, theme
   parity. Flag "fine but not elite," not only broken.
 kind: design
-review_mode: dedicated
 applies_to:
   paths: ["site/**", "app/**", "**/components/**", "**/ui/**"]
   extensions: [".tsx", ".jsx", ".css", ".scss", ".vue", ".svelte"]

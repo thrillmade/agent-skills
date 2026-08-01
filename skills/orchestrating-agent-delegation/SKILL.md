@@ -86,6 +86,30 @@ REPORT (<500 words): punch list per sub-step · final <check> output tail ·
 verification evidence (numeric before/after) · contradictions found · files touched.
 ```
 
+## Roles are files, not prose
+
+A dispatch names a **role** that exists on disk at `.claude/agents/<name>.md`
+(SPEC §2.4). The file carries the role's instructions, its `tools`, its
+`model` and its `effort`. Discovery is reading that directory — no registry,
+no network call.
+
+So a brief does not restate what a role is for. It says which role and what
+this particular job is. If you find yourself pasting the same framing into
+every dispatch, that framing belongs in the role file, where the next agent
+inherits it for free.
+
+**`model` and `effort` are separate knobs.** A strong model asked to think
+briefly and a cheaper one asked to think hard are different trades. Raise
+`effort` where being wrong is expensive *and hard to notice* — an audit, a
+security pass, a claim that something is safe. Leave it alone for mechanical
+work. Where a role omits `model`, it inherits the dispatching session's,
+which is silent and easy to miss — pin it on any role where the tier matters.
+
+**A review pass is a dispatched role too** (SPEC §4). Reviewing is not a
+special mode of some other tool; it is an agent from the same roster, which
+is why a repository can give its security pass a stronger model than its
+prose pass by editing one file.
+
 ## Rules the orchestrator holds
 
 **Trust but verify — always.** Every "done" gets an independent check: run the test suite yourself, grep the emitted output for the specific claims, spot-check a load-bearing case. Agents summarize what they intended; the diff is what actually happened.

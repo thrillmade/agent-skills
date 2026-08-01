@@ -3,14 +3,13 @@ name: logmind
 description: |
   MUST be loaded for any task in a project that uses logmind (detect by:
   .logmind/config.yml at repo root, or AGENTS.md / CLAUDE.md mentioning
-  logmind, or docs/decisions.md present). Use BEFORE writing >20 lines of
+  logmind, or docs/decisions-branches/ present). Use BEFORE writing >20 lines of
   new code, BEFORE choosing between alternatives, BEFORE adding a
   dependency, BEFORE modifying existing functionality, BEFORE making any
   security or performance trade-off, BEFORE renaming or moving any
   significant module. Logging is part of the work, not after it. Also use
   to read prior decisions before starting any task in such a project so
   you don't re-litigate something already decided.
-review_mode: shared
 ---
 
 # logmind: log decisions as you work
@@ -47,17 +46,17 @@ logmind log "Use PostgreSQL for primary database" \
 
 A single invocation replaces `git add` + `git commit` + `git push`:
 
-1. Appends the decision to the active log file (default branch →
-   `docs/decisions.md`; feature branch →
-   `docs/decisions-branches/<branch>.md`).
-2. Archives the oldest decision if `decisions.md` exceeds `max_recent`.
-3. Regenerates `docs/file-structure.md` (default branch only) and
-   `docs/timeline.md` (every branch).
-4. **Stages the whole working tree** (`--stage all`, the default since
+1. Appends the decision to `docs/decisions-branches/<branch>.md` — one
+   file per branch, and `main` is a branch like any other. Every file is
+   append-only and uncapped: nothing rotates, nothing is archived.
+2. Regenerates the derived docs **on the default branch only** — a branch
+   MUST NOT modify them (SPEC §3.3). `docs/timeline.md` carries the 50 most
+   recent entries, with `docs/timeline-archive.md` continuing it.
+3. **Stages the whole working tree** (`--stage all`, the default since
    v0.2.7) — the decision and the code that prompted it land in one
    commit. Pass `--stage scoped` to stage only the decision file(s) when
    you have unrelated WIP you don't want swept in.
-5. `git commit` with message `logmind: <decision>`, then `git push`
+4. `git commit` with message `logmind: <decision>`, then `git push`
    (configurable via `auto_push`).
 
 Don't follow up with `git add`, `git commit`, `git push`, or
@@ -78,10 +77,10 @@ Escape hatches, for genuinely no-decision commits (typos, dep bumps):
 
 ## Branch-aware routing (automatic)
 
-On a feature branch the entry lands in
-`docs/decisions-branches/<sanitized-branch>.md`. On PR merge, a workflow
-appends a one-line summary linking the PR + the per-branch file to
-`docs/decisions.md`. `logmind log` manages this; you don't.
+Every entry lands in `docs/decisions-branches/<sanitized-branch>.md` — one
+file per branch, and `main` is a branch like any other. The file is
+permanent: when a branch lands, nothing folds it elsewhere, copies it or
+deletes it. `logmind log` manages the routing; you don't.
 
 ## Reading prior context
 
@@ -89,12 +88,11 @@ Before starting non-trivial work, read in order:
 
 1. **`docs/timeline.md`** — the canonical, source-derived union of
    decision entries across every branch, each led by its **headline**
-   (see below). Start here.
-2. **`docs/decisions.md`** — direct-on-main decisions in detail (20 most
-   recent).
-3. **`docs/decisions-branches/<your-branch>.md`** if present — decisions
-   made earlier on the same feature branch.
-4. **`docs/file-structure.md`** — current project tree (capped at depth 2
+   (see below). Carries the 50 most recent; `docs/timeline-archive.md`
+   continues it. Start here.
+2. **`docs/decisions-branches/<your-branch>.md`** if present — decisions
+   made earlier on the same branch, in full.
+3. **`docs/file-structure.md`** — current project tree (capped at depth 2
    by default; `logmind file-structure --max-depth N`, or
    `logmind tree --max-depth 0` for the unbounded view).
 5. **The canonical spec file, if configured** — `.logmind/config.yml`'s
@@ -160,11 +158,11 @@ stale-pin drift even when no template body changed.
 
 ### Derived docs are main-only — don't edit them on a branch
 
-`docs/timeline.md` and `docs/file-structure.md` regenerate on `main` only,
-straight from source (per-branch decision logs + `decisions.md` for the
-timeline; a tree walk for file-structure). A branch's own decisions live in
-`docs/decisions-branches/<branch>.md` instead — that file is what you
-commit to.
+`docs/timeline.md`, `docs/timeline-archive.md` and `docs/file-structure.md`
+regenerate on `main` only, straight from source (every per-branch decision
+log for the history; a tree walk for file-structure). A branch's own
+decisions live in `docs/decisions-branches/<branch>.md` — that file is what
+you commit to.
 
 The shipped `regen-timeline.yml` GH Action enforces this with a **blocking**
 PR-time gate: if your branch's diff touches either derived doc, the check

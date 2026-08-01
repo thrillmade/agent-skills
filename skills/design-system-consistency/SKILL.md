@@ -2,7 +2,6 @@
 name: design-system-consistency
 description: Visual review — flag rendered UI that drifts from the design system's tokens, scale, and color discipline. Judges the screenshot, not just the code.
 kind: design
-review_mode: dedicated
 applies_to:
   paths: ["site/**", "app/**", "**/components/**", "**/ui/**"]
   extensions: [".tsx", ".jsx", ".css", ".scss", ".vue", ".svelte"]

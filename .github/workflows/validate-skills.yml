@@ -64,12 +64,8 @@ jobs:
           NAME_SLUG_RE = re.compile(r"^[a-z][a-z0-9-]{0,62}$")
           # SPEC §1.10.1: `source: manual | logmind-derived | skills-sh | clud-bug-baseline`
           SOURCE_VALUES = {"manual", "logmind-derived", "skills-sh", "clud-bug-baseline"}
-          # SPEC §1.10.1: `kind: rule | voice | design`
-          KIND_VALUES = {"rule", "voice", "design"}
-          # SPEC §1.10.1: `voice_scope: personal | team | org | community`
-          VOICE_SCOPE_VALUES = {"personal", "team", "org", "community"}
-          # SPEC §1.10.1: `review_mode: shared | dedicated`
-          REVIEW_MODE_VALUES = {"shared", "dedicated"}
+          # SPEC: `kind: rule | writing | design`
+          KIND_VALUES = {"rule", "writing", "design"}
 
           def _valid_extension_entry(e: object) -> bool:
               """An `applies_to.extensions` entry is a suffix-matched string —
@@ -169,26 +165,11 @@ jobs:
                       f"{sorted(KIND_VALUES)} (SPEC §1.10.1)"
                   )
 
-              voice_scope = meta.get("voice_scope")
-              if kind == "voice":
-                  if voice_scope is None or voice_scope not in VOICE_SCOPE_VALUES:
-                      errors.append(
-                          f"::error file={prefix}::`kind: voice` requires `voice_scope` "
-                          f"to be one of {sorted(VOICE_SCOPE_VALUES)} (SPEC §1.10.1)"
-                      )
-              elif voice_scope is not None:
-                  errors.append(
-                      f"::error file={prefix}::`voice_scope` is set but `kind` is not "
-                      "`voice` (SPEC §1.10.1: voice_scope is required by, and only "
-                      "valid alongside, kind: voice)"
-                  )
-
-              review_mode = meta.get("review_mode")
-              if review_mode is not None and review_mode not in REVIEW_MODE_VALUES:
-                  errors.append(
-                      f"::error file={prefix}::`review_mode: {review_mode!r}` is not one "
-                      f"of {sorted(REVIEW_MODE_VALUES)} (SPEC §1.10.1)"
-                  )
+              # `review_mode` was removed from the skill schema: how a repo
+              # groups skills into passes is `review.passes` in its own review
+              # config (SPEC §2.2), not a field on a skill it may not edit.
+              # Unrecognised keys round-trip untouched (SPEC §2.1), so a stale
+              # one is ignored rather than rejected.
 
               source = meta.get("source")
               if source is not None and source not in SOURCE_VALUES:

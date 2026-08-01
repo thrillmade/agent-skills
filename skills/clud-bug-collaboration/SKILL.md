@@ -1,7 +1,6 @@
 ---
 name: clud-bug-collaboration
 description: How Claude Code agents working in a clud-bug-installed repo should interact with the bot's review threads, strict-mode gate, and skill set. Use this skill whenever you're about to push a commit, address a clud-bug PR review comment, edit anything under .claude/skills/, modify .github/workflows/clud-bug-*.yml, or wonder why a PR check is red. Also use when planning work in a repo that has a `clud-bug-review` workflow installed — even if the user didn't mention clud-bug by name.
-review_mode: shared
 ---
 
 # Working in a clud-bug-installed repo
@@ -29,29 +28,37 @@ issue and re-push," not "mark the conversation resolved."
 
 ## When you read the PR's `clud-bug-review` check status
 
-- **Green** = Clud Bug ran and either found no critical issues OR strict
-  mode is off (advisory).
-- **Red** = either the action errored OR strict mode is on AND Clud Bug
-  flagged a critical issue. Read the latest `## 🐛 Clud Bug review` comment
-  on the PR — the body indicates "critical findings" or "clean."
-- **Skipped/green-with-comment** = bot- or fork-authored PR (Dependabot,
-  Renovate, fork contributor). GitHub deliberately doesn't pass repo
-  secrets to those workflows. The bot posts a one-line "Clud Bug skipped"
-  comment and exits 0. Review the diff manually.
+- **Green** = Clud Bug ran, found no critical issues, and a notary
+  certified that the review really happened. A green with no certification
+  is not conformant (SPEC §4.5).
+- **Red** = strict mode is on and Clud Bug flagged a critical issue.
+- **Grey (neutral)** = the review could not verify what it examined, strict
+  mode is off, or it could not run at all — a **fork** PR being the common
+  case. Grey never blocks, and it never claims the change was checked.
+  Review the diff manually. Note SPEC §6.5 changed this: a fork check is
+  now neutral, never green, because a green there is a false clean on the
+  one class of change nothing reviewed.
+  A **same-repo bot PR** (Dependabot, Renovate) is **not** skipped — the
+  hosted App holds its own credentials, so it reviews those normally, just
+  on a cheaper model. A green there means a real review ran; read it.
 
 ## Strict mode
 
 Read `.claude/skills/.clud-bug.json` to check this repo's setting.
-`strictMode: true` means the workflow check fails on critical findings.
+`review.strict_mode: true` means the check fails on critical findings.
 The setting is read from the **base ref**, so a PR cannot disable strict
 mode on itself by editing the manifest. Changes take effect for PRs opened
 after the change merges to the base branch.
 
-To disable strict mode for a repo, edit the manifest on the base branch:
+**An agent MUST NOT change this setting** — not through the config command,
+not by editing the file. Strict mode decides whether something blocks, and
+SPEC §1.6 makes that class of setting a person's to set. Ask; do not switch
+it off to get unblocked.
 
-```json
-{ "strictMode": false, ... }
-```
+A person changes it with `clud-bug config set review.strict_mode false`.
+The setting is read from the **base ref**, so the change takes effect for
+pull requests opened after it merges — and a pull request cannot disable
+the gate judging it.
 
 ## When you modify a clud-bug skill
 

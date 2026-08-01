@@ -2,7 +2,6 @@
 name: conventions-template
 description: Template for a "review like me" skill - captures one maintainer's review conventions (formatting, what to flag, what to ignore). Copy + customize per SPEC v0.5.1 applies_to.author.
 kind: rule
-review_mode: shared
 applies_to:
   author: _REPLACE_ME_
 ---

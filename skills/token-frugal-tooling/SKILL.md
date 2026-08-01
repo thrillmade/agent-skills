@@ -7,7 +7,6 @@ description: |
   artifact defaults, and the "agent mode" flags both CLIs accept. Detail lives
   in the per-tool skills — load `logmind` and `clud-bug-collaboration`
   alongside this one when you actually need to invoke them.
-review_mode: shared
 ---
 
 # Token-frugal tooling — quick reference

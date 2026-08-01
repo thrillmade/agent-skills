@@ -5,7 +5,6 @@ description: >-
   visibility, tap targets, semantics, motion. Cite the element and the
   failing ratio or state.
 kind: design
-review_mode: dedicated
 applies_to:
   paths: ["site/**", "app/**", "**/components/**", "**/ui/**"]
   extensions: [".tsx", ".jsx", ".css", ".scss", ".vue", ".svelte"]
