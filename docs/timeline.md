@@ -13,10 +13,10 @@ PR's CI run, so this file is always coherent with current `main`.
 ---
 
 
-## 2026-07 (12 decisions)
+## 2026-07 (13 decisions)
 
-- **2026-07-31** — Reconcile the three toolchain skills against SPEC 2.0 *(skills/reconcile-spec-2.0)* — [decisions-branches/skills__reconcile-spec-2.0.md](decisions-branches/skills__reconcile-spec-2.0.md)
-- *... 10 more decisions ...*
+- **2026-07-31** — Drop review_mode from the skill schema across the catalog, and stop validating it *(skills/reconcile-spec-2.0)* — [decisions-branches/skills__reconcile-spec-2.0.md](decisions-branches/skills__reconcile-spec-2.0.md)
+- *... 11 more decisions ...*
 - **2026-07-16** — skill unification: three-layer design catalog — K0 splits/stubs/promotions, K1 dispatchers, K3 abstraction *(feat/skill-unification-k0-k1-k3)* — [decisions-branches/feat__skill-unification-k0-k1-k3.md](decisions-branches/feat__skill-unification-k0-k1-k3.md)
 
 ## 2026-06 (10 decisions)
