@@ -49,9 +49,9 @@ A single invocation replaces `git add` + `git commit` + `git push`:
 1. Appends the decision to `docs/decisions-branches/<branch>.md` — one
    file per branch, and `main` is a branch like any other. Every file is
    append-only and uncapped: nothing rotates, nothing is archived.
-2. Regenerates `docs/file-structure.md` (default branch only) and
-   `docs/timeline.md` (every branch), which carries the 50 most recent
-   entries with `docs/timeline-archive.md` continuing it.
+2. Regenerates the derived docs **on the default branch only** — a branch
+   MUST NOT modify them (SPEC §3.3). `docs/timeline.md` carries the 50 most
+   recent entries, with `docs/timeline-archive.md` continuing it.
 4. **Stages the whole working tree** (`--stage all`, the default since
    v0.2.7) — the decision and the code that prompted it land in one
    commit. Pass `--stage scoped` to stage only the decision file(s) when
