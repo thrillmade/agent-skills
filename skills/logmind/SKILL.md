@@ -52,11 +52,11 @@ A single invocation replaces `git add` + `git commit` + `git push`:
 2. Regenerates the derived docs **on the default branch only** — a branch
    MUST NOT modify them (SPEC §3.3). `docs/timeline.md` carries the 50 most
    recent entries, with `docs/timeline-archive.md` continuing it.
-4. **Stages the whole working tree** (`--stage all`, the default since
+3. **Stages the whole working tree** (`--stage all`, the default since
    v0.2.7) — the decision and the code that prompted it land in one
    commit. Pass `--stage scoped` to stage only the decision file(s) when
    you have unrelated WIP you don't want swept in.
-5. `git commit` with message `logmind: <decision>`, then `git push`
+4. `git commit` with message `logmind: <decision>`, then `git push`
    (configurable via `auto_push`).
 
 Don't follow up with `git add`, `git commit`, `git push`, or
