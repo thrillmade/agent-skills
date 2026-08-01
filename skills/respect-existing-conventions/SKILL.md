@@ -1,7 +1,6 @@
 ---
 name: respect-existing-conventions
 description: Don't suggest changes that fight the codebase's established patterns. Match what's already there.
-review_mode: shared
 ---
 
 # Respect existing conventions

@@ -1,7 +1,6 @@
 ---
 name: skill-frontmatter-quality
 description: Review SKILL.md frontmatter for trigger surface, specificity, voice, and completeness. Apply on PRs that add or modify a skills/*/SKILL.md file. Catches descriptions that won't be discoverable, that wave at the topic instead of naming concrete buckets, that drift from the prescriptive house voice, or that omit fields like `review_mode` that downstream tools depend on.
-review_mode: dedicated
 ---
 
 # Skill frontmatter quality
