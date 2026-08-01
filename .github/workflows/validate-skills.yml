@@ -64,10 +64,8 @@ jobs:
           NAME_SLUG_RE = re.compile(r"^[a-z][a-z0-9-]{0,62}$")
           # SPEC §1.10.1: `source: manual | logmind-derived | skills-sh | clud-bug-baseline`
           SOURCE_VALUES = {"manual", "logmind-derived", "skills-sh", "clud-bug-baseline"}
-          # SPEC §1.10.1: `kind: rule | voice | design`
-          KIND_VALUES = {"rule", "voice", "design"}
-          # SPEC §1.10.1: `voice_scope: personal | team | org | community`
-          VOICE_SCOPE_VALUES = {"personal", "team", "org", "community"}
+          # SPEC: `kind: rule | writing | design`
+          KIND_VALUES = {"rule", "writing", "design"}
           # SPEC §1.10.1: `review_mode: shared | dedicated`
           REVIEW_MODE_VALUES = {"shared", "dedicated"}
 
@@ -167,20 +165,6 @@ jobs:
                   errors.append(
                       f"::error file={prefix}::`kind: {kind!r}` is not one of "
                       f"{sorted(KIND_VALUES)} (SPEC §1.10.1)"
-                  )
-
-              voice_scope = meta.get("voice_scope")
-              if kind == "voice":
-                  if voice_scope is None or voice_scope not in VOICE_SCOPE_VALUES:
-                      errors.append(
-                          f"::error file={prefix}::`kind: voice` requires `voice_scope` "
-                          f"to be one of {sorted(VOICE_SCOPE_VALUES)} (SPEC §1.10.1)"
-                      )
-              elif voice_scope is not None:
-                  errors.append(
-                      f"::error file={prefix}::`voice_scope` is set but `kind` is not "
-                      "`voice` (SPEC §1.10.1: voice_scope is required by, and only "
-                      "valid alongside, kind: voice)"
                   )
 
               review_mode = meta.get("review_mode")
