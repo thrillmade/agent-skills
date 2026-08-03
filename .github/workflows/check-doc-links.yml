@@ -1,4 +1,4 @@
-# logmind-template-version: v4
+# logmind-template-version: v5
 name: doc link integrity
 
 # Fail PRs that introduce broken or orphaned markdown links so agents stay
@@ -10,19 +10,216 @@ name: doc link integrity
 # GitHub treats a filter-skipped check as "expected but missing" and
 # blocks the merge forever. Running unconditionally is cheap (~15s
 # end-to-end) and keeps the gate predictable.
+#
+# v5 (logmind v1.2.0+) — adds a dual-mode self-heal job that fires on
+# pull_request events when `check-links` finds issues. With
+# `secrets.ANTHROPIC_API_KEY` configured, mode A invokes Claude to
+# propose minimal markdown link fixes and pushes them back to the PR
+# head ref via `GITHUB_TOKEN`. Without the key, mode B falls back to a
+# deterministic PR comment listing each finding + a suggested fix
+# (sourced from `logmind check-links --json`). Both modes work out of
+# the box for ANY logmind user — no orchestrator App dependency, no
+# extra config required for mode B. The conditional means the
+# self-heal job is a free upgrade for repos that opt into Anthropic
+# tokens and a no-op for everyone else (mode B always lands a PR
+# comment so the user has actionable feedback regardless).
 
 on:
   pull_request:
   push:
     branches: [main, master]
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   check-links:
+    # Skip for dependabot PRs — they never touch markdown links.
+    if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
+    outputs:
+      report: ${{ steps.check.outputs.report }}
+      failed: ${{ steps.check.outputs.failed }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v6
+        with:
+          # Self-heal mode A pushes commits back to this PR. Need the
+          # head ref + full history so the push is fast-forward.
+          ref: ${{ github.event.pull_request.head.ref || github.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
-      - uses: thrillmade/setup-logmind@v1.0.1
+      # logmind v1.1.0 (2026-06-05) switched from `pip install logmind==X.Y.Z`
+      # to the dedicated `thrillmade/setup-logmind` action. The action handles
+      # platform detection, version pinning, and step caching uniformly across
+      # consumer repos. Dependabot keeps the action ref current via the
+      # `github-actions` ecosystem block in `.github/dependabot.yml` (also
+      # installed by `logmind init`).
+      - uses: thrillmade/setup-logmind@v1.0.0
 
       - name: Check markdown link integrity
-        run: logmind check-links
+        id: check
+        run: |
+          set +e
+          logmind check-links --json > /tmp/check-links.json 2>/tmp/check-links.err
+          rc=$?
+          # Always emit the report so the self-heal job has data to act on.
+          # Use heredoc shielding to keep multiline JSON safe across the
+          # GITHUB_OUTPUT framing.
+          {
+            echo 'report<<LOGMIND_EOF'
+            cat /tmp/check-links.json
+            echo 'LOGMIND_EOF'
+            echo "failed=$rc"
+          } >> "$GITHUB_OUTPUT"
+          # Also print human-readable for the job log.
+          logmind check-links || true
+          exit $rc
+
+  # Self-heal job — only fires when (a) the link check failed AND
+  # (b) the trigger event is a pull_request (push events to main don't
+  # have a writable PR ref to push fixes to).
+  self-heal:
+    needs: check-links
+    if: failure() && github.event_name == 'pull_request' && needs.check-links.outputs.failed != '0'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - uses: thrillmade/setup-logmind@v1.0.0
+
+      # Mode A — ANTHROPIC_API_KEY is configured: invoke Claude to
+      # propose minimal markdown link fixes, apply, commit, push back to
+      # the PR head ref. The push triggers a fresh `pull_request` run;
+      # if linkcheck passes that run, the PR is unblocked.
+      - name: Self-heal via Claude (mode A)
+        if: ${{ env.ANTHROPIC_API_KEY != '' }}
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          REPORT_JSON: ${{ needs.check-links.outputs.report }}
+        run: |
+          set -euo pipefail
+          echo "Mode A: ANTHROPIC_API_KEY detected — invoking Claude for auto-fix."
+          # Constrained prompt; reads the report; produces a unified diff
+          # touching only markdown files; applies via `git apply`.
+          python3 <<'PY'
+          import json, os, subprocess, sys, urllib.request
+
+          report = json.loads(os.environ.get("REPORT_JSON", "{}") or "{}")
+          if not (report.get("broken") or report.get("orphans")):
+              print("Report is empty; nothing to fix.")
+              sys.exit(0)
+
+          prompt = (
+              "You are a markdown link repair assistant for a logmind repo.\n"
+              "The following report lists broken or orphan markdown links.\n"
+              "For each finding, propose the MINIMAL edit that fixes it:\n"
+              " - For broken links to docs/timeline.md or docs/file-structure.md,\n"
+              "   the fix is usually `logmind timeline --write` / "
+              "`logmind file-structure --write` — emit the command as a comment.\n"
+              " - For other broken links, either remove the link line or fix the\n"
+              "   target path (whichever is more likely correct from context).\n"
+              " - For orphan files, add a link from the suggested parent doc.\n\n"
+              "Output a unified diff (git format) touching ONLY markdown files.\n"
+              "No prose; no code fences; just the diff.\n\n"
+              f"REPORT:\n{json.dumps(report, indent=2)}\n"
+          )
+
+          req = urllib.request.Request(
+              "https://api.anthropic.com/v1/messages",
+              data=json.dumps({
+                  "model": "claude-sonnet-4-5",
+                  "max_tokens": 4096,
+                  "messages": [{"role": "user", "content": prompt}],
+              }).encode("utf-8"),
+              headers={
+                  "Content-Type": "application/json",
+                  "x-api-key": os.environ["ANTHROPIC_API_KEY"],
+                  "anthropic-version": "2023-06-01",
+              },
+          )
+          with urllib.request.urlopen(req, timeout=60) as resp:
+              body = json.loads(resp.read())
+
+          diff_text = "".join(block.get("text", "") for block in body.get("content", []))
+          if not diff_text.strip().startswith("diff "):
+              print("Claude did not emit a unified diff; aborting self-heal.")
+              print(diff_text[:500])
+              sys.exit(1)
+
+          # Apply via `git apply`. Failure surfaces a real error so the
+          # workflow stays red and a human reviews.
+          with open("/tmp/self-heal.patch", "w") as f:
+              f.write(diff_text)
+          subprocess.run(["git", "apply", "--whitespace=fix", "/tmp/self-heal.patch"], check=True)
+          PY
+
+          # Auto-fix common derived-doc cases by re-running the regen
+          # commands (idempotent; no-op when content is already correct).
+          if [ -d docs ]; then
+            logmind timeline --write docs/timeline.md || true
+            logmind file-structure --write docs/file-structure.md || true
+          fi
+
+          # Commit + push if there's a diff.
+          git config user.name "clud-bug[bot]"
+          git config user.email "clud-bug[bot]@users.noreply.github.com"
+          if ! git diff --quiet || ! git diff --cached --quiet; then
+            git add -A
+            git commit -m "fix(docs): self-heal markdown links
+
+          Applied by check-doc-links workflow (mode A, Claude-assisted)."
+            git push origin HEAD:${{ github.event.pull_request.head.ref }}
+          fi
+
+      # Mode B — no ANTHROPIC_API_KEY: post a deterministic PR comment
+      # listing each finding + the SuggestedFix sourced from
+      # `logmind check-links --json`. No tokens, no AI, no extra config.
+      - name: Self-heal via PR comment (mode B)
+        if: ${{ env.ANTHROPIC_API_KEY == '' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPORT_JSON: ${{ needs.check-links.outputs.report }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          echo "Mode B: no ANTHROPIC_API_KEY — posting deterministic PR comment."
+          python3 <<'PY' > /tmp/pr-comment.md
+          import json, os
+          report = json.loads(os.environ.get("REPORT_JSON", "{}") or "{}")
+          broken = report.get("broken") or []
+          orphans = report.get("orphans") or []
+          print("## logmind check-links: link issues detected")
+          print()
+          print("This PR introduced markdown links that don't resolve, or "
+                "added docs/*.md files that no parent doc references. Please "
+                "address the issues below and push again. (Set "
+                "`ANTHROPIC_API_KEY` as a repo secret to enable automatic "
+                "self-heal via Claude.)")
+          print()
+          if broken:
+              print(f"### Broken links ({len(broken)})")
+              for f in broken:
+                  print(f"- **{f.get('path','?')}** — {f.get('reason','?')}")
+                  fix = f.get("suggestedFix") or f.get("suggested_fix") or ""
+                  if fix:
+                      print(f"  {fix}")
+              print()
+          if orphans:
+              print(f"### Orphan markdown files ({len(orphans)})")
+              for f in orphans:
+                  print(f"- **{f.get('path','?')}** — {f.get('reason','?')}")
+                  fix = f.get("suggestedFix") or f.get("suggested_fix") or ""
+                  if fix:
+                      print(f"  {fix}")
+              print()
+          print("_Posted by check-doc-links workflow (logmind self-heal, mode B)._")
+          PY
+          gh pr comment "$PR_NUMBER" --body-file /tmp/pr-comment.md
