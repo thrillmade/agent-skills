@@ -51,6 +51,10 @@ Gate the merge on all three. Each catches a class the others miss.
 
 > For each slice: branch off main. (If non-trivial, first run a **design** agent that reads the real code and specifies the algorithm + exact file/function seams.) Run a **build** agent (no commit). Then run **3 parallel adversarial reviewers**, each a distinct lens (correctness · invariants/regression · the headline behavior), prompted *refute-first* — report only real, high-confidence issues with a concrete fix, empty if clean. Run a **fix** agent on the confirmed high/med findings. Then a **design-critic** agent that *drives the browser* (cache-bust the JS, screenshot light + dark, exercise the states) and gates the merge on its findings. Then **QA it yourself on a fresh, simple setup** with realistic pointer events (not the dense seed, not exact-handle clicks). Merge only when all gates pass; update the spec + plan in the same PR; fix QA issues, never ship them. **Sequence slices that share files; verify "done" before trusting it; cache-bust before believing a browser result; for interaction slices, get a human real-mouse confirmation.**
 
+## Cross-references
+
+- **For a run that outlives one sitting:** `session-heartbeat` — this skill says which gates a slice must clear, but nothing about a pipeline continuing across a usage-limit reset or a resumed session. That is where pacing, the checkpoint, and re-firing a gate whose producer was killed mid-flight live.
+
 ## Deploying This Skill (per writing-skills)
 
 This draft has NOT been pressure-tested. Per `superpowers:writing-skills` (TDD for skills), before relying on it broadly: run a baseline scenario without the skill, capture the rationalizations an agent uses to skip the gates, then tighten the wording (especially the "verify done" and "don't ship synthetic-only QA" rules) until an agent complies under time pressure.

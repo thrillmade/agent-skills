@@ -35,3 +35,15 @@
 
 ---
 
+## 2026-08-14 17:46 - Add the reciprocal back-link in orchestrating-elite-agent-qa — a skill nothing links to is a skill nothing finds
+
+**Reasoning:** Editor's ruling on PR #207 open question 2. That skill had no Cross-references section at all, so one was created in the catalog's house form rather than burying the pointer in prose. The honest framing is the gap itself: it covers which gates a slice must clear and says nothing about a run continuing across sittings.
+
+**Alternatives considered:** Add the line to orchestrating-agent-delegation instead — rejected: its body is 10150 bytes against a 10150 grandfathered cap, so any addition reds CI, Put the pointer in the existing Overview parenthetical — rejected: 20 of the catalog's skills carry a Cross-references section and that is where a reader looks for routes
+
+**Implications:**
+- orchestrating-elite-agent-qa body 5542 -> 5870 against the 8192 cap; it is not grandfathered, so skill-size-budget.json is untouched
+- The heartbeat<->delegation edge stays one-directional until a maintainer decides what to cut from orchestrating-agent-delegation
+
+---
+
