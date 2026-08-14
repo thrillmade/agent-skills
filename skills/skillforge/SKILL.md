@@ -1,6 +1,8 @@
 ---
 name: skillforge
-description: Create or update a reusable agent skill. Use when you notice a repeated pattern, when a workflow should be persisted for future sessions, or when asked to forge/create/scaffold a new skill.
+description: |
+  SUPERSEDED — skill authoring is now split three ways, and this skill duplicates all three without matching any of them: `skill-creator` (Anthropic plugin) owns measurement, since it carries the only executable eval harness in the set — trigger-rate testing on a held-out split, with-skill vs baseline runs, benchmark aggregation; `superpowers:writing-skills` owns wording form, including the match-the-form-to-the-failure model; and the studio's `skill-smith` agent owns house rules — catalog conformity, the frontmatter contract, upstream-PR discipline. Kept unchanged during the migration window; new work should load the successors. Its own conventions do not fit this catalog: the `.skills/<name>/` layout matches neither `.claude/skills/` nor `skills/`, its `.skills-registry.json` and `skdd forge` tooling are not wired here, and its "under 200 lines" is a third size rule alongside Anthropic's 500 lines and this catalog's CI-enforced byte budget. Use when you need the historical text; otherwise load a successor.
+
 metadata:
   author: zakelfassi
   version: "2.0"
