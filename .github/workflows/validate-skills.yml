@@ -76,8 +76,10 @@ jobs:
           #   listed                      -> body must be <= its recorded size
           # A listed skill may shrink, never grow; once it is back inside the
           # budget its entry must be deleted so it cannot slip again.
-          # Over budget? Move detail into references/ -- those load on demand
-          # and are not counted. Raising a number here is not the remedy.
+          # Over budget? Write tighter or split the skill. Do NOT move prose
+          # into references/: verified against clud-bug's src/ and templates/,
+          # nothing reads a reference file -- its CI reads SKILL.md and only
+          # SKILL.md, so for that consumer the move is deletion, not deferral.
           BUDGET_PATH = ROOT / "skill-size-budget.json"
           try:
               _budget = json.loads(BUDGET_PATH.read_text(encoding="utf-8"))
@@ -184,14 +186,15 @@ jobs:
                       errors.append(
                           f"::error file={prefix}::body grew to {body_bytes} bytes, above its "
                           f"recorded {allowed}. A grandfathered skill may shrink, never grow -- "
-                          f"move detail into references/ instead of raising its entry."
+                          f"write tighter or split it instead of raising its entry."
                       )
                   else:
                       errors.append(
                           f"::error file={prefix}::body is {body_bytes} bytes, over the "
                           f"{SIZE_LIMIT}-byte budget. A consuming reviewer truncates past this, "
-                          f"so the tail would be silently dropped. Move detail into references/ "
-                          f"(loaded on demand, not counted). Do NOT add a grandfather entry."
+                          f"so the tail would be silently dropped. Write tighter or split the "
+                          f"skill -- reference files are NOT read by that consumer, so moving "
+                          f"prose there deletes it. Do NOT add a grandfather entry."
                       )
               elif dir_name in GRANDFATHERED and body_bytes <= SIZE_LIMIT:
                   errors.append(
