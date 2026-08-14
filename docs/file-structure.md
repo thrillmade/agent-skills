@@ -70,7 +70,8 @@ agent-skills
 │   ├── udts-token-model
 │   ├── visual-polish
 │   ├── wcag-contrast
-│   └── web-interface-guidelines-review
+│   ├── web-interface-guidelines-review
+│   └── skill-size-budget.json
 ├── .cursorrules
 ├── .gitattributes
 ├── .gitignore
