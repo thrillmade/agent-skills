@@ -255,6 +255,18 @@
       "subscribers": [],
       "notes": "agent-orchestration discipline a repo doing multi-agent build/review work might subscribe to"
     },
+    "session-heartbeat": {
+      "authoring_home": "catalog",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "temporal-continuity mechanism for long autonomous runs; sibling of orchestrating-agent-delegation, a repo running multi-hour agent pipelines might subscribe to"
+    },
+    "night-mode": {
+      "authoring_home": "catalog",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "unattended-operation policy layered on session-heartbeat; only fires on an explicit human handover, so opt-in rather than default-on"
+    },
     "palette-relationships": {
       "authoring_home": "catalog",
       "distribution": "opt-in",
