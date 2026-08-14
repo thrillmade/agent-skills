@@ -1,0 +1,27 @@
+{
+  "_comment": [
+    "Ratchet, not a cap you can raise. A skill ABSENT from `grandfathered` must have a",
+    "body at or under `limitBytes`. A skill LISTED here must stay at or under its recorded",
+    "size: it may shrink, never grow. When it reaches limitBytes, delete its entry.",
+    "Entries are never added - a new skill over budget is a build failure, not a new row.",
+    "Body excludes YAML frontmatter, measured exactly as validate-skills.yml measures it.",
+    "",
+    "limitBytes is clud-bug's DEFAULT_MAX_SKILL_BYTES (prompt-builder.ts), which its own",
+    "comment ties to SPEC 1.10. Note its shipped workflow templates override this DOWN to",
+    "4000; a repo using an unmodified template truncates earlier than this budget allows.",
+    "",
+    "Over budget? The remedy is to write tighter or split the skill - NOT to move prose",
+    "into references/. Verified against clud-bug src/ and templates/: nothing reads a",
+    "reference file. Its CI does `head -c $MAX_SKILL_BYTES .claude/skills/<n>/SKILL.md`",
+    "and nothing else, so for that consumer moving content to references/ is deletion,",
+    "not deferral. Progressive disclosure works for an interactive agent; it does not",
+    "work here, and this file must not pretend otherwise."
+  ],
+  "limitBytes": 8192,
+  "grandfathered": {
+    "logmind": 11382,
+    "clud-bug-collaboration": 10977,
+    "orchestrating-agent-delegation": 10150,
+    "web-interface-guidelines-review": 8194
+  }
+}

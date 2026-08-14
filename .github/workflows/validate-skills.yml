@@ -67,6 +67,28 @@ jobs:
           # SPEC: `kind: rule | writing | design`
           KIND_VALUES = {"rule", "writing", "design"}
 
+          # Body size is a RATCHET, not a cap anyone may raise. A consuming
+          # reviewer truncates skill content when building its prompt, so a
+          # skill past the budget is silently half-delivered -- the tail never
+          # reaches the model. That failure is invisible at author time, which
+          # is why it is enforced here rather than asked for in a style guide.
+          #   absent from `grandfathered` -> body must be <= limitBytes
+          #   listed                      -> body must be <= its recorded size
+          # A listed skill may shrink, never grow; once it is back inside the
+          # budget its entry must be deleted so it cannot slip again.
+          # Over budget? Write tighter or split the skill. Do NOT move prose
+          # into references/: verified against clud-bug's src/ and templates/,
+          # nothing reads a reference file -- its CI reads SKILL.md and only
+          # SKILL.md, so for that consumer the move is deletion, not deferral.
+          BUDGET_PATH = ROOT / "skill-size-budget.json"
+          try:
+              _budget = json.loads(BUDGET_PATH.read_text(encoding="utf-8"))
+              SIZE_LIMIT = int(_budget["limitBytes"])
+              GRANDFATHERED = {str(k): int(v) for k, v in _budget["grandfathered"].items()}
+          except Exception as exc:
+              print(f"::error file={BUDGET_PATH}::unreadable skill size budget: {exc}")
+              sys.exit(1)
+
           def _valid_extension_entry(e: object) -> bool:
               """An `applies_to.extensions` entry is a suffix-matched string —
               clud-bug does suffix matching, not strict dotfile-extension
@@ -154,6 +176,31 @@ jobs:
               if not re.search(r"^# .+", body, flags=re.MULTILINE):
                   errors.append(
                       f"::error file={prefix}::body has no top-level `# Title` heading"
+                  )
+
+              # --- Body size ratchet (see BUDGET_PATH above) ---
+              body_bytes = len(body.encode("utf-8"))
+              allowed = GRANDFATHERED.get(dir_name, SIZE_LIMIT)
+              if body_bytes > allowed:
+                  if dir_name in GRANDFATHERED:
+                      errors.append(
+                          f"::error file={prefix}::body grew to {body_bytes} bytes, above its "
+                          f"recorded {allowed}. A grandfathered skill may shrink, never grow -- "
+                          f"write tighter or split it instead of raising its entry."
+                      )
+                  else:
+                      errors.append(
+                          f"::error file={prefix}::body is {body_bytes} bytes, over the "
+                          f"{SIZE_LIMIT}-byte budget. A consuming reviewer truncates past this, "
+                          f"so the tail would be silently dropped. Write tighter or split the "
+                          f"skill -- reference files are NOT read by that consumer, so moving "
+                          f"prose there deletes it. Do NOT add a grandfather entry."
+                      )
+              elif dir_name in GRANDFATHERED and body_bytes <= SIZE_LIMIT:
+                  errors.append(
+                      f"::error file={prefix}::body is now {body_bytes} bytes, back inside the "
+                      f"{SIZE_LIMIT}-byte budget -- delete its entry from "
+                      f"skills/skill-size-budget.json so the ratchet cannot slip back."
                   )
 
               # --- SPEC §1.10.1 OPTIONAL-field validation ---
