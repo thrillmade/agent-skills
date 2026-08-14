@@ -12,3 +12,14 @@
 
 ---
 
+## 2026-08-14 17:32 - night-mode verification asks the remote, not local refs — the local-ref check silently lies in a shallow/single-branch clone
+
+**Reasoning:** Control-testing the shipped command showed git log --branches --not --remotes still listing a commit that had just been pushed, because gh repo clone --depth implies --single-branch and the remote-tracking ref was never created. git ls-remote --heads origin control-tested cleanly in both directions.
+
+**Alternatives considered:** Keep the local-ref command with a caveat — rejected: a verification step that can report a false 'nothing was pushed' is worse than none in an unattended window
+
+**Implications:**
+- The failure is now encoded in the skill itself, not just fixed
+
+---
+

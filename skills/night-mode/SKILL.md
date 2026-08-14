@@ -99,7 +99,7 @@ A chronological narration of beats is the wrong output: it hands the reader the 
 
 1. Quote the directive that started the mode, and the scope you wrote back.
 2. `git log --oneline` over the window, checked against that scope — everything landed is inside it.
-3. Remote refs unchanged except the ones pre-authorized by name: `git log --branches --not --remotes --oneline` should show the night's work still local.
+3. Remote refs unchanged except the ones pre-authorized by name — compare `git ls-remote --heads origin` against the shas recorded at handover. Ask the remote, not your local refs: `--not --remotes` reports pushed work as local in a shallow or single-branch clone, because the remote-tracking ref it compares against was never fetched.
 4. Every parked item states a decision, not a status.
 5. The digest has all six slots, outcome first, with no beat-by-beat narration.
 6. Nothing left in flight or pending that no one will sweep.
