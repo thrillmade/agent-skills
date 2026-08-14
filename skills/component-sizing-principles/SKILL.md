@@ -70,7 +70,7 @@ Default heuristic:
 After picking a rung:
 
 1. **Ladder match:** the rung comes from the declared density ladder, not a one-off height. Mixing rungs from different density ladders in one surface is a bug.
-2. **Interactive floor:** the height clears 24 CSS px for interactive controls; the smallest rung is reserved for non-interactive use.
+2. **Interactive floor:** the height clears 24 CSS px for interactive controls. Where the smallest rung sits below that floor it is reserved for non-interactive use; a ladder whose smallest rung already clears 24 px has no reserved tier.
 3. **Font pairing:** the inner font-size matches the rung's paired size from the type scale, not a free-picked value.
 4. **Icon pairing:** the leading or trailing icon size matches the rung's paired icon, and is not smaller than the font.
 5. **Sibling consistency:** sibling controls in the same surface share a rung.

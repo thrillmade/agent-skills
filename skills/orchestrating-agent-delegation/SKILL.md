@@ -6,81 +6,62 @@ description: |
 
 # Orchestrating agent delegation
 
-A discipline for the primary/orchestrator agent (the "CTO layer") coordinating one or more subagents to execute work. Applies whenever the primary is going to hand off implementation, review, or design to another agent and stay in the judgment layer.
-
-This is the **general delegation mechanics** — briefs, model tiering, verification discipline. Its sibling `orchestrating-elite-agent-qa` is the **UI-quality-gate specialization** on top: the per-slice pipeline that adds the browser-driving design critic and realistic-pointer QA. Hold both when orchestrating UI work; hold only this one elsewhere.
+The **general delegation mechanics** — briefs, model tiering, verification — for the orchestrator agent (the "CTO layer") that stays in the judgment layer while subagents execute.
 
 ## When to use
 
-- Dispatching one or more subagents to execute non-trivial work.
-- Writing a prompt for another agent that will do the actual coding.
-- Planning parallel work across multiple agents.
+- Dispatching subagents to non-trivial work.
+- Writing a prompt for an agent that will do the coding.
+- Planning parallel work across agents.
 - Structuring an adversarial review panel.
-- Reviewing a draft prompt about to be sent to an agent.
+- Reviewing a draft prompt before it is sent.
 
 ## When NOT to use
 
 - Single-shot trivial tasks (typo fix, one-line rename) — direct action beats delegation overhead.
-- When YOU are the executing agent, not the orchestrator — this skill is for the layer above.
+- When you are the executing agent, not the orchestrator — this skill is the layer above.
 - Solo work where no delegation is planned.
 
 ## Core principles
 
-**1. The orchestrator owns synthesis; agents own execution.** The orchestrator reads the spec, decides architecture, rules on ambiguities, verifies results. Agents implement to a spec the orchestrator has already committed to. Never ask an agent "what should we do?" — that's the orchestrator's job. Ask them "here's what to do, execute + report."
+**1. The orchestrator owns synthesis; agents own execution.** The orchestrator reads the spec, decides architecture, rules on ambiguities, verifies results. Agents implement a spec it has already committed to: "here's what to do, execute + report."
 
 **2. Model tier matches task complexity.** Three tiers — cheap-fast, mid, frontier — named below by their current Claude instantiations (haiku / sonnet / opus); map to your stack's equivalents.
 
 | Task | Tier | Why |
 |---|---|---|
 | Broad code exploration | haiku | Reading is cheap; depth wasted |
-| Adversarial reviewers (refute-first) | sonnet | Pattern recognition + tenacity, not novel reasoning — bump to opus when the correctness surface is subtle or algorithmic, not mechanical |
+| Adversarial reviewers (refute-first) | sonnet | Pattern recognition + tenacity, not novel reasoning — bump to opus when the correctness surface is subtle or algorithmic |
 | Build agents (implementing to spec) | sonnet | Spec removes ambiguity; execution is mechanical |
 | Design agents (algorithm/seam design) | opus | Design errors are the expensive ones |
 | Build agents on load-bearing architecture | opus | One wrong seam ripples through the rest of the work |
 | Fix agents (applying confirmed findings) | sonnet OR opus | Sonnet for scoped fixes; opus if the fix touches algorithm |
-| Docs / trivial reconciliation | haiku | Wall-clock throughput matters, quality is deterministic |
+| Docs / trivial reconciliation | haiku | Throughput matters; quality is deterministic |
 
-**3. Parallelize by file-isolation.** Agents that touch different files run concurrently. Sequence when they share files. Adversarial reviewers always parallel (3+ lenses, distinct hunts). Verify isolation yourself before dispatching.
+**3. Parallelize by file-isolation.** Agents that touch different files run concurrently; sequence when they share files. Adversarial reviewers always parallel (3+ lenses, distinct hunts). Verify the isolation yourself before dispatching.
 
-## Prompt structure (the load-bearing shape)
+## Prompt structure
 
-Every agent brief has these blocks in this order:
-
-**Role + scope (1–2 sentences).** *"You are the build agent for X. Do NOT commit. Do NOT create .md files. Local branch only."* Guard rails first — before anything else can go wrong.
-
-**Repo context.** Cwd, branch, HEAD sha, current test count. Enough that a fresh agent lands with a coordinate system.
-
-**Non-negotiable rulings.** Every architectural call the orchestrator has already made. Numbered, terse, with rationale where a reader might argue. This is where the orchestrator encodes authority — the agent doesn't relitigate; it implements. Overriding a ruling requires explicit escalation in the report.
-
-**The spec / contract.** Which files/sections are the source of truth. Name specific line ranges when possible so the agent doesn't have to hunt.
-
-**What to build/fix/find.** Sub-step sequence. Each sub-step ends with a scoped verification (a specific test filter, grep, or check). Not vague "make it work" — checkable milestones.
-
-**Constraints (repeated).** No commits. No test-weakening. No .md files. Follow existing style. Preserve current green count. If a classifier or permission blocks something reasonable, note in the report — don't route around.
-
-**Report format.** Exact structure required back. Punch list per sub-step. Final check output. Verification evidence with numeric before/after. Any contradictions found. File count. Word budget (usually <500 words).
-
-### Copyable brief skeleton
+Blocks in this order: **guard rails** first, before anything else goes wrong; **repo context** so a fresh agent lands with a coordinate system; **rulings** numbered and terse, with a rationale where a reader might argue — this is where authority is encoded; **spec** with line ranges so the agent doesn't hunt; **sub-steps** each ending in a scoped, checkable verification, never a vague "make it work"; **constraints** repeated though they opened the brief; **report format** exact, because a shapeless report can't be checked.
 
 ```
-You are the <role> agent for <slice>. Do NOT commit. Touch ONLY the files named
-below. <other guard rails>.
+You are the <role> agent for <slice>. Do NOT commit. Do NOT create .md files.
+Local branch only. Touch ONLY the files named below.
 
 REPO: <cwd> · branch <name> · HEAD <sha> · <N> tests green.
 
 NON-NEGOTIABLE RULINGS (implement, don't relitigate; escalate in your report to override):
 1. <ruling + one-line rationale>
-2. ...
 
 SPEC: <files/sections that are source of truth, with line ranges>.
 
 TASK:
 1. <sub-step> — verify with: <specific test filter / grep / check>
-2. ...
 
 CONSTRAINTS (repeated): no commits · no test-weakening · no new .md files ·
-match existing style · preserve the green count · if blocked, do the independent
-sub-steps and report the block — don't route around it.
+match existing style · preserve the green count · if a classifier or permission
+blocks something reasonable, do the independent sub-steps and note the block —
+don't route around it.
 
 REPORT (<500 words): punch list per sub-step · final <check> output tail ·
 verification evidence (numeric before/after) · contradictions found · files touched.
@@ -88,65 +69,47 @@ verification evidence (numeric before/after) · contradictions found · files to
 
 ## Roles are files, not prose
 
-A dispatch names a **role** that exists on disk at `.claude/agents/<name>.md`
-(SPEC §2.4). The file carries the role's instructions, its `tools`, its
-`model` and its `effort`. Discovery is reading that directory — no registry,
-no network call.
+A dispatch names a **role** on disk at `.claude/agents/<name>.md` (SPEC §2.4), carrying its instructions, `tools`, `model` and `effort`. Discovery is reading that directory — no registry, no network call. So a brief says which role and what this job is, not what the role is for; framing you paste into every dispatch belongs in the role file.
 
-So a brief does not restate what a role is for. It says which role and what
-this particular job is. If you find yourself pasting the same framing into
-every dispatch, that framing belongs in the role file, where the next agent
-inherits it for free.
+**`model` and `effort` are separate knobs.** A strong model thinking briefly and a cheap one thinking hard are different trades. Raise `effort` where being wrong is expensive *and hard to notice* — an audit, a security pass, a claim that something is safe. Leave it alone for mechanical work. **Silent failure:** a role that omits `model` inherits the dispatching session's, with nothing to report it — pin `model` on any role where the tier matters.
 
-**`model` and `effort` are separate knobs.** A strong model asked to think
-briefly and a cheaper one asked to think hard are different trades. Raise
-`effort` where being wrong is expensive *and hard to notice* — an audit, a
-security pass, a claim that something is safe. Leave it alone for mechanical
-work. Where a role omits `model`, it inherits the dispatching session's,
-which is silent and easy to miss — pin it on any role where the tier matters.
-
-**A review pass is a dispatched role too** (SPEC §4). Reviewing is not a
-special mode of some other tool; it is an agent from the same roster, which
-is why a repository can give its security pass a stronger model than its
-prose pass by editing one file.
+**A review pass is a dispatched role too** (SPEC §4) — an agent from the same roster, so a repo can give its security pass a stronger model than its prose pass in one file.
 
 ## Rules the orchestrator holds
 
-**Trust but verify — always.** Every "done" gets an independent check: run the test suite yourself, grep the emitted output for the specific claims, spot-check a load-bearing case. Agents summarize what they intended; the diff is what actually happened.
+**Trust but verify — always.** Every "done" gets an independent check: run the test suite yourself, grep the emitted output for the specific claims, spot-check a load-bearing case. Agents summarize what they intended; the diff is what happened.
 
-**Refute-first for reviewers.** Adversarial panels get an explicit "empty report if genuinely clean" instruction. Bad reviewers rubber-stamp; the prompt has to license silence and reward specific findings with grounded evidence (quoted line / reproduction / named invariant).
+**Refute-first for reviewers.** Adversarial panels get an explicit "empty report if genuinely clean." Bad reviewers rubber-stamp; the prompt must license silence and reward findings with grounded evidence (quoted line / reproduction / named invariant).
 
-**Overlap 2–3 concerns across reviewers.** If two independent lenses flag the same thing, it's real. If only one does, judgment call. Deliberately word the briefs to hit certain claims from different angles.
+**Overlap 2–3 concerns across reviewers.** Word the briefs to hit certain claims from different angles, then triangulate (see Verification).
 
-**Design agent → orchestrator rules → build agent.** Never design + build in the same agent. The design agent flags orchestrator decisions; the orchestrator decides them; the build agent implements a spec that's already been ruled on. Removes an entire class of "agent silently picked" bugs.
+**Design agent → orchestrator rules → build agent.** Never design + build in the same agent: the design agent flags decisions, the orchestrator rules on them, the build agent implements a spec already ruled on. Removes a class of "agent silently picked" bugs.
 
-**Budget context, not just time.** A fix agent that burns 200 tool uses failing classifier calls is worse than a scoped rebrief. If an agent stalls, take the partial work, verify what's usable, and dispatch a tighter continuation with the tricky parts pre-decided.
+**Budget context, not just time.** A fix agent burning 200 tool uses on failing classifier calls is worse than a scoped rebrief. If an agent stalls, take the partial work, verify what's usable, and dispatch a tighter continuation with the tricky parts pre-decided.
 
-**One fix agent for the batch, not one per finding.** After an adversarial panel, consolidate findings, pick fix shapes in the orchestrator layer, and hand ONE brief covering everything. Cheaper + coherent + one round of golden regen / fixture update.
+**One fix agent for the batch, not one per finding.** After a panel, consolidate findings, pick fix shapes in the orchestrator layer, and hand ONE brief covering everything — cheaper, coherent, one round of golden regen / fixture update.
 
-**Never delegate the "should we?" question.** If an agent's brief includes "decide whether to do X," that's a smell — the orchestrator should have decided already. Agents ask the wrong questions the wrong way, or default to the safe/wrong answer.
+**Never delegate the "should we?" question.** A brief that says "decide whether to do X" is a smell — the orchestrator should have decided already. Agents ask the wrong questions the wrong way, or default to the safe/wrong answer.
 
-## Failure modes to watch for
+## Failure modes
 
-- Agent reports "clean" when a specific check wasn't run → orchestrator's independent verification catches it.
-- Agent goes off-brief because a subtask blocked → the brief should include "continue with independent sub-steps if blocked; report the block."
-- Agent's model is wrong for the task (e.g., sonnet on a design decision) → the tiering table above prevents this.
-- Fix agent picks the wrong fix shape when it was left ambiguous → state the fix shape explicitly per finding, or pick between named options.
-- Cross-repo cwd trips permission classifiers (a Claude Code behavior; other harnesses vary) → don't let a subagent operate cross-repo from a session bound to a different cwd; use a fresh session from the target repo.
+- Agent reports "clean" without having run the specific check → independent verification catches it.
+- Agent goes off-brief because a subtask blocked → the brief must say "continue with the independent sub-steps if blocked; report the block."
+- Model wrong for the task (sonnet on a design decision) → the tiering table above prevents this.
+- Fix agent picks the wrong fix shape when it was left ambiguous → state the fix shape per finding, or name the options.
+- Cross-repo cwd trips permission classifiers (a Claude Code behavior; other harnesses vary) → never dispatch a subagent cross-repo from a session bound to a different cwd; start a fresh session in the target repo.
 
 ## Verification
 
-After delegating:
-
-1. Every subagent's "done" is verified with a direct diff / test / grep by the orchestrator — never by re-asking the agent.
-2. Adversarial findings are triangulated: 2+ reviewers flagging the same thing = real; 1 reviewer alone = judgment call.
-3. The commit that lands is authored by the orchestrator (or by consensus-reviewed subagent output) — not blind-passed from a report.
+1. Every "done" verified by a direct diff / test / grep — never by re-asking the agent.
+2. Adversarial findings triangulated: 2+ reviewers flagging the same thing = real; 1 reviewer alone = judgment call.
+3. The landed commit is authored by the orchestrator (or consensus-reviewed subagent output) — not blind-passed from a report.
 
 ## Cross-references
 
-- **REQUIRED COMPANION for UI work:** `orchestrating-elite-agent-qa` — the per-slice quality pipeline this delegation layer drives (adversarial panels, the browser-driving design-critic gate, fresh-case QA). This skill covers *how to brief and verify agents*; that one covers *which gates a slice must clear*.
-- For authoring the skills your agents load: `skillforge`; for their trigger-surface discipline: `skill-frontmatter-quality`.
+- **REQUIRED COMPANION for UI work:** [orchestrating-elite-agent-qa](../orchestrating-elite-agent-qa/SKILL.md) — *which gates a slice must clear* (adversarial panels, the browser-driving design-critic gate, fresh-case QA), where this skill covers *how to brief and verify*. Hold only this one elsewhere.
+- Authoring the skills your agents load: [skillforge](../skillforge/SKILL.md). Their trigger surface: [skill-frontmatter-quality](../skill-frontmatter-quality/SKILL.md).
 
 ## Sources
 
-- Practitioner-derived: distilled from running multi-agent slices at the CTO layer, including the agent-skills skill-unification build (PR #136: 23-agent build/verify workflow run on this skill's model).
+- Practitioner-derived from multi-agent slices run at the CTO layer, including the agent-skills skill-unification build (PR #136: 23-agent build/verify workflow run on this skill's model).
