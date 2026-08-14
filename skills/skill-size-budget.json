@@ -1,0 +1,42 @@
+{
+  "_comment": [
+    "Ratchet, not a cap you can raise. A skill ABSENT from `grandfathered` must have a",
+    "body at or under `limitBytes`. A skill LISTED here must stay at or under its recorded",
+    "size: it may shrink, never grow. When it reaches limitBytes, delete its entry.",
+    "Entries are never added - a new skill over budget is a build failure, not a new row.",
+    "Body excludes YAML frontmatter, measured exactly as validate-skills.yml measures it.",
+    "Over budget? Move detail into references/ - those load on demand and are not counted."
+  ],
+  "limitBytes": 4000,
+  "grandfathered": {
+    "logmind": 11382,
+    "clud-bug-collaboration": 10977,
+    "orchestrating-agent-delegation": 10150,
+    "web-interface-guidelines-review": 8194,
+    "test-discipline": 8191,
+    "pii-and-compliance": 7770,
+    "curating-a-skill-catalog": 7751,
+    "oklch-color-space": 7460,
+    "token-naming-conventions": 7199,
+    "dtcg-format": 6958,
+    "design-token-naming": 6767,
+    "api-contract-enforcement": 6594,
+    "spacing-system": 6279,
+    "brand-voice-review": 6196,
+    "semver-design-tokens": 6195,
+    "component-sizing-principles": 6186,
+    "component-sizing": 5915,
+    "reviewing-design-work": 5838,
+    "orchestrating-elite-agent-qa": 5542,
+    "token-frugal-tooling": 5460,
+    "designing-elite-ui": 5325,
+    "line-height-grid": 5127,
+    "chroma-harmonization": 5113,
+    "type-scale": 4868,
+    "designing-a-design-system": 4737,
+    "palette-relationships": 4533,
+    "consuming-a-design-system": 4501,
+    "wcag-contrast": 4319,
+    "apca-contrast": 4273
+  }
+}
