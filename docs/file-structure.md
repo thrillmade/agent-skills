@@ -45,7 +45,6 @@ agent-skills
 │   ├── frontend-a11y
 │   ├── line-height-grid
 │   ├── logmind
-│   ├── night-mode
 │   ├── oklch-color-space
 │   ├── orchestrating-agent-delegation
 │   ├── orchestrating-elite-agent-qa
@@ -70,6 +69,7 @@ agent-skills
 │   ├── udts-semver-defaults
 │   ├── udts-spacing-defaults
 │   ├── udts-token-model
+│   ├── unattended-operation
 │   ├── visual-polish
 │   ├── wcag-contrast
 │   ├── web-interface-guidelines-review

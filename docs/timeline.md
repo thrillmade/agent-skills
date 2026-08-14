@@ -13,10 +13,10 @@ PR's CI run, so this file is always coherent with current `main`.
 ---
 
 
-## 2026-08 (3 decisions)
+## 2026-08 (4 decisions)
 
-- **2026-08-14** — night-mode verification asks the remote, not local refs — the local-ref check silently lies in a shallow/single-branch clone *(feat/session-heartbeat-and-night-mode)* — [decisions-branches/feat__session-heartbeat-and-night-mode.md](decisions-branches/feat__session-heartbeat-and-night-mode.md)
-- *... 1 more decision ...*
+- **2026-08-14** — Rename night-mode to unattended-operation — the mode's own rule is that the clock never starts it *(feat/session-heartbeat-and-night-mode)* — [decisions-branches/feat__session-heartbeat-and-night-mode.md](decisions-branches/feat__session-heartbeat-and-night-mode.md)
+- *... 2 more decisions ...*
 - **2026-08-14** — Gate skill size with a shrink-only ratchet, and deprecate skillforge into the three skills that own its job *(feat/skill-depth-and-interlinking)* — [decisions-branches/feat__skill-depth-and-interlinking.md](decisions-branches/feat__skill-depth-and-interlinking.md)
 
 ## 2026-07 (13 decisions)
