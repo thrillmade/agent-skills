@@ -261,11 +261,11 @@
       "subscribers": [],
       "notes": "temporal-continuity mechanism for long autonomous runs; sibling of orchestrating-agent-delegation, a repo running multi-hour agent pipelines might subscribe to"
     },
-    "night-mode": {
+    "unattended-operation": {
       "authoring_home": "catalog",
       "distribution": "opt-in",
       "subscribers": [],
-      "notes": "unattended-operation policy layered on session-heartbeat; only fires on an explicit human handover, so opt-in rather than default-on"
+      "notes": "policy layered on session-heartbeat; only fires on an explicit human handover, so opt-in rather than default-on. Renamed from night-mode before merge — the mode is never inferred from the clock, and the old name collided with dark-mode/UI night themes"
     },
     "palette-relationships": {
       "authoring_home": "catalog",

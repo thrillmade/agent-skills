@@ -1,14 +1,14 @@
 ---
 name: session-heartbeat
 description: |
-  Use when a session must keep working across a stretch longer than one uninterrupted sitting — an orchestrator rolling through a multi-slice plan for hours, a run that will cross a usage-limit reset, a session resumed after a limit or a compaction with someone else's work in flight, or the moment before dispatching an agent when you do not know whether the remaining window can finish it. Also use when a long run is accumulating wakeups but no landed commits, when you are polling for a result the harness would have pushed to you, or when a resumed session is re-deriving pipeline state it should have read off a checkpoint. Names the per-beat order, the largest-dispatch threshold rule, the checkpoint's required slots, and the resume-as-survivor protocol. Not for a single task inside one sitting, and not the unattended-overnight policy — that is `night-mode`, which builds on this.
+  Use when a session must keep working across a stretch longer than one uninterrupted sitting — an orchestrator rolling through a multi-slice plan for hours, a run that will cross a usage-limit reset, a session resumed after a limit or a compaction with someone else's work in flight, or the moment before dispatching an agent when you do not know whether the remaining window can finish it. Also use when a long run is accumulating wakeups but no landed commits, when you are polling for a result the harness would have pushed to you, or when a resumed session is re-deriving pipeline state it should have read off a checkpoint. Names the per-beat order, the largest-dispatch threshold rule, the checkpoint's required slots, and the resume-as-survivor protocol. Not for a single task inside one sitting, and not the unattended-operation policy — that is `unattended-operation`, which builds on this.
 ---
 
 # Session heartbeat
 
 A long autonomous run rarely fails at the limit. It fails at the **last dispatch before** the limit — the one nobody could finish. A heartbeat is a self-paced recurring wake that turns the ceiling from a crash into a scheduled pause: every beat reads standing before spending anything, and ends with enough state on disk for another session to take the run over.
 
-This is the **mechanism**. `night-mode` is the policy layered on it for runs a human hands over unattended; it inherits everything here and restates none of it.
+This is the **mechanism**. `unattended-operation` is the policy layered on it for runs a human hands over; it inherits everything here and restates none of it.
 
 ## When to use
 
@@ -22,7 +22,7 @@ This is the **mechanism**. `night-mode` is the policy layered on it for runs a h
 
 - One task inside one sitting. A beat costs a full context read; below the horizon where a limit or handoff is plausible it buys nothing.
 - Waiting on a single result your harness will notify you about. That is a notification, not a schedule.
-- The run is unattended by human handover — load `night-mode` too. This skill carries no rules about what may not happen while nobody watches.
+- The run is unattended by human handover — load `unattended-operation` too. This skill has no rules about what may not happen while nobody watches.
 
 ## Each beat, in this order
 
@@ -103,7 +103,7 @@ Each of these leaves a green tree and reports nothing.
 ## Cross-references
 
 - **REQUIRED BACKGROUND:** `orchestrating-agent-delegation` — brief shape, model tiering, verify-every-"done"-against-the-diff, and the file-isolation rules the occupancy slot records. This skill paces dispatches; that one is how to write and verify one.
-- **For unattended runs:** `night-mode` — the policy layer (opt-in scope, hard stops, what a wake does *not* authorize, the morning digest). Load both when a human hands the session over.
+- **For unattended runs:** `unattended-operation` — the policy layer (scope, hard stops, what a wake does *not* authorize, the handback digest). Load both when a human hands the session over.
 - **For the gates a resumed slice must re-fire:** `orchestrating-elite-agent-qa`.
 
 ## Sources
