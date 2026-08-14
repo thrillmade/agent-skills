@@ -45,6 +45,7 @@ agent-skills
 │   ├── frontend-a11y
 │   ├── line-height-grid
 │   ├── logmind
+│   ├── night-mode
 │   ├── oklch-color-space
 │   ├── orchestrating-agent-delegation
 │   ├── orchestrating-elite-agent-qa
@@ -53,6 +54,7 @@ agent-skills
 │   ├── respect-existing-conventions
 │   ├── reviewing-design-work
 │   ├── semver-design-tokens
+│   ├── session-heartbeat
 │   ├── skill-frontmatter-quality
 │   ├── skillforge
 │   ├── spacing-system
