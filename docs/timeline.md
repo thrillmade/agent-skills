@@ -15,6 +15,7 @@ PR's CI run, so this file is always coherent with current `main`.
 
 ## 2026-08
 
+- **2026-08-14** — Zero over budget: pay the 8,543-byte debt, then delete the exception mechanism entirely *(feat/zero-over-budget)* — [decisions-branches/feat__zero-over-budget.md](decisions-branches/feat__zero-over-budget.md)
 - **2026-08-14** — Gate skill size with a shrink-only ratchet, and deprecate skillforge into the three skills that own its job *(feat/skill-depth-and-interlinking)* — [decisions-branches/feat__skill-depth-and-interlinking.md](decisions-branches/feat__skill-depth-and-interlinking.md)
 
 ## 2026-07 (13 decisions)
