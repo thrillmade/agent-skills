@@ -337,14 +337,21 @@ class Loss:
 #   that breaks the gate. Understating still fails -- you cannot declare 5 to
 #   cover a cut of 500.
 #
-#   ROWS COUNT WITH MULTIPLICITY, KEYED ON THE WHOLE ROW. Two removals of the
-#   same size from the same skill are two declarations. Keying on
-#   (skill, count) alone deadlocked the second one: the author followed the
-#   printed instruction exactly, the row was visibly added by their change, and
-#   the gate failed anyway and reprinted the same instruction. An escape hatch
-#   that cannot be opened is a bypass with extra steps -- and this was the
-#   default case, not an exotic one, since 35 of the 49 skills carry two or
-#   more bullets of identical word length.
+#   ROWS COUNT WITH MULTIPLICITY, ON (SKILL, COUNT) -- NOT ON THE REASON TEXT.
+#   Two removals of the same size from the same skill are two declarations, so
+#   a row keyed as a SET on (skill, count) alone deadlocked the second one:
+#   the author followed the printed instruction exactly, the row was visibly
+#   added by their change, and the gate failed anyway and reprinted the same
+#   instruction. An escape hatch that cannot be opened is a bypass with extra
+#   steps -- and this was the default case, not an exotic one, since 35 of the
+#   49 skills carry two or more bullets of identical word length. But the
+#   reason cannot be part of the KEY either: keyed on the whole row, editing an
+#   inherited row's wording -- a typo fix, a trailing full stop -- gave it a
+#   fresh key, so the edit alone read as a declaration and covered an
+#   unrelated cut nobody wrote a reason for. What has to grow between the two
+#   ledgers is the COUNT of rows at that size, not the text of any one of
+#   them, which is why the multiset is counted on (skill, count) with the
+#   reason dropped, rather than on the full (skill, count, reason) tuple.
 #
 # The failure prints the exact row to paste, so paying it costs one copy plus a
 # reason.
@@ -424,11 +431,33 @@ def ledger_row(skill: str, net: int) -> str:
     return f"| {skill} | {net} | {REASON_PLACEHOLDER} |"
 
 
+def rows_by_size(
+    declarations: collections.Counter[tuple[str, int, str]],
+) -> collections.Counter[tuple[str, int]]:
+    """Collapse parsed rows onto `(skill, count)`, dropping the reason.
+
+    `parse_ledger` keys on the whole row -- reason included -- because that is
+    what lets a reader see two declarations of the same size as two rows
+    rather than one. But the reason must not be part of what makes a row
+    NEW: subtracting one `(skill, count, reason)` Counter from another treats
+    any edit to a row's wording as that row vanishing and an unrelated one
+    appearing, so a one-character fix to an inherited row's reason reads as a
+    fresh declaration -- covering whatever this change actually cut, under
+    wording nobody wrote for it. Collapsing first means the thing that has to
+    grow between the two ledgers is the COUNT of rows at that size, which is
+    the only thing "added a row" can honestly mean.
+    """
+    collapsed: collections.Counter[tuple[str, int]] = collections.Counter()
+    for (skill, count, _reason), n in declarations.items():
+        collapsed[(skill, count)] += n
+    return collapsed
+
+
 def declares(
-    added: collections.Counter[tuple[str, int, str]], skill: str, net: int
+    added: collections.Counter[tuple[str, int]], skill: str, net: int
 ) -> bool:
     """Does a row this change added cover a loss of `net` words from `skill`?"""
-    return any(s == skill and c >= net for s, c, _r in added)
+    return any(s == skill and c >= net for s, c in added)
 
 
 def run(
@@ -446,7 +475,9 @@ def run(
     otherwise-ordinary edit -- which is how all three historical cases got
     through.
     """
-    added = parse_ledger(ledger_after) - parse_ledger(ledger_before)
+    added = rows_by_size(parse_ledger(ledger_after)) - rows_by_size(
+        parse_ledger(ledger_before)
+    )
     errors: list[str] = []
 
     for path in sorted(cases):

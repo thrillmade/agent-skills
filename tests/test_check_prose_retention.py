@@ -532,6 +532,48 @@ def test_a_row_inherited_from_the_base_does_not_count():
     assert len(cpr.run(cases, ledger_before=row, ledger_after=row)) == 1
 
 
+def test_editing_an_inherited_rows_reason_does_not_manufacture_a_new_declaration():
+    """The anti-blanket rule again, through the edit it did not cover.
+
+    PR1 lands a row and merges. PR2 changes ONLY that row's reason -- one
+    character, a typo fix, a full stop -- and separately cuts an unrelated
+    paragraph of the same size from the same skill. Keyed on the whole row
+    `(skill, count, reason)`, Counter subtraction sees the edited reason as a
+    brand-new key, so the edit alone reads as a fresh declaration and the real
+    cut rides through covered by wording nobody wrote for it. This needs no
+    malice: a drive-by copyedit to an old row, in the same PR as an unrelated
+    cut to that skill, silently exempts the cut.
+    """
+    cases, name, net = a_real_deletion()
+    before = declared(f"| {name} | {net} | trimmed the intro |")
+    after = declared(f"| {name} | {net} | trimmed the intro. |")  # one character
+    assert len(cpr.run(cases, ledger_before=before, ledger_after=after)) == 1
+
+
+def test_cli_editing_an_inherited_rows_reason_does_not_cover_an_unrelated_cut(repo, capsys):
+    """The same defect, end to end through real git revisions.
+
+    Base already carries a declared row from an earlier change (inherited,
+    not added by this one). This change cuts three NEW words from the same
+    skill and touches the old row only to reword it -- no row this change
+    adds actually covers the new cut.
+    """
+    (repo / "skills" / "alpha" / "SKILL.md").write_text(BODY + "kilo lima mike\n")
+    (repo / "docs" / "prose-removals.md").write_text(
+        declared("| alpha | 3 | trimmed the intro |")
+    )
+    base = commit(repo, "PR1: declare and land a 3-word cut")
+
+    (repo / "skills" / "alpha" / "SKILL.md").write_text(BODY)
+    (repo / "docs" / "prose-removals.md").write_text(
+        declared("| alpha | 3 | trimmed the intro. |")
+    )
+    commit(repo, "PR2: cut three more words, only reword the old row")
+
+    assert cpr.main(["--base", base, "--head", "HEAD"]) == 1
+    assert "::error file=skills/alpha/SKILL.md::" in capsys.readouterr().out
+
+
 def test_a_second_removal_of_the_same_size_can_be_declared_again():
     """The hatch has to open twice.
 

@@ -161,23 +161,37 @@ MUTATIONS = [
         # The ledger becomes a standing exemption: a row merged to main once
         # excuses every later deletion from that skill, silently.
         "ledger_not_scoped_to_the_change",
-        "    added = parse_ledger(ledger_after) - parse_ledger(ledger_before)",
-        "    added = parse_ledger(ledger_after)",
+        "    added = rows_by_size(parse_ledger(ledger_after)) - rows_by_size(\n"
+        "        parse_ledger(ledger_before)\n    )",
+        "    added = rows_by_size(parse_ledger(ledger_after))",
+    ),
+    (
+        # Collapsing AFTER subtracting instead of before reopens the exact
+        # defect the collapse exists to close: subtraction on the raw
+        # (skill, count, reason) rows sees any edit to an inherited row's
+        # wording -- a typo fix, a trailing full stop -- as that row vanishing
+        # and an unrelated one appearing, so the edit alone reads as a fresh
+        # declaration and covers whatever this change actually cut.
+        "ledger_collapsed_after_subtracting_not_before",
+        "    added = rows_by_size(parse_ledger(ledger_after)) - rows_by_size(\n"
+        "        parse_ledger(ledger_before)\n    )",
+        "    added = rows_by_size(\n"
+        "        parse_ledger(ledger_after) - parse_ledger(ledger_before)\n    )",
     ),
     (
         # The count stops binding. A row can then be written blind, and the
         # size of the cut never reaches the reviewer's eye.
         "ledger_count_ignored",
-        "    return any(s == skill and c >= net for s, c, _r in added)",
-        "    return any(s == skill for s, c, _r in added)",
+        "    return any(s == skill and c >= net for s, c in added)",
+        "    return any(s == skill for s, c in added)",
     ),
     (
         # The count binds exactly instead of as a floor, so any later commit in
         # the pull request that ADDS words invalidates a correct declaration and
         # demands a fresh number -- a review round breaks the gate.
         "ledger_count_must_match_exactly",
-        "    return any(s == skill and c >= net for s, c, _r in added)",
-        "    return any(s == skill and c == net for s, c, _r in added)",
+        "    return any(s == skill and c >= net for s, c in added)",
+        "    return any(s == skill and c == net for s, c in added)",
     ),
     (
         # Rows lose their multiplicity and their reason, so a skill that has
