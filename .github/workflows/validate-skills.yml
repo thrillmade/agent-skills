@@ -67,27 +67,28 @@ jobs:
           # SPEC: `kind: rule | writing | design`
           KIND_VALUES = {"rule", "writing", "design"}
 
-          # Body size is a RATCHET, not a cap anyone may raise. A consuming
-          # reviewer truncates skill content when building its prompt, so a
-          # skill past the budget is silently half-delivered -- the tail never
-          # reaches the model. That failure is invisible at author time, which
-          # is why it is enforced here rather than asked for in a style guide.
-          #   absent from `grandfathered` -> body must be <= limitBytes
-          #   listed                      -> body must be <= its recorded size
-          # A listed skill may shrink, never grow; once it is back inside the
-          # budget its entry must be deleted so it cannot slip again.
-          # Over budget? Write tighter or split the skill. Do NOT move prose
-          # into references/: verified against clud-bug's src/ and templates/,
-          # nothing reads a reference file -- its CI reads SKILL.md and only
-          # SKILL.md, so for that consumer the move is deletion, not deferral.
-          BUDGET_PATH = ROOT / "skill-size-budget.json"
-          try:
-              _budget = json.loads(BUDGET_PATH.read_text(encoding="utf-8"))
-              SIZE_LIMIT = int(_budget["limitBytes"])
-              GRANDFATHERED = {str(k): int(v) for k, v in _budget["grandfathered"].items()}
-          except Exception as exc:
-              print(f"::error file={BUDGET_PATH}::unreadable skill size budget: {exc}")
-              sys.exit(1)
+          # Skill body size. No exceptions, and the number lives HERE on
+          # purpose -- in code, changeable only by a reviewed workflow edit.
+          #
+          # It was briefly a JSON file carrying a `limitBytes` key plus a
+          # grandfather list. That is the worse design: a grandfather row
+          # exempts one skill visibly in review, but `limitBytes` is one line
+          # and exempts all 46 at once, silently. Closing the small door while
+          # leaving the large one open relocates the escape rather than
+          # shutting it.
+          #
+          # There is no exception path because there is nothing to except.
+          # Past this size a consuming reviewer truncates the body when
+          # building its prompt, so the tail never reaches the model while the
+          # author sees a complete file and a green build. An oversized skill
+          # is already broken for its reader; blessing it does not make it
+          # work, it only makes the breakage approved.
+          #
+          # 8192 is clud-bug's own DEFAULT_MAX_SKILL_BYTES
+          # (src/core/prompt-builder.ts), whose comment ties it to SPEC 1.10.
+          # Its shipped workflow templates override this DOWN to 4000, so a
+          # repo on an unmodified template truncates earlier -- clud-bug#301.
+          SIZE_LIMIT = 8192
 
           def _valid_extension_entry(e: object) -> bool:
               """An `applies_to.extensions` entry is a suffix-matched string —
@@ -178,29 +179,22 @@ jobs:
                       f"::error file={prefix}::body has no top-level `# Title` heading"
                   )
 
-              # --- Body size ratchet (see BUDGET_PATH above) ---
+              # --- Body size (see SIZE_LIMIT above) ---
+              # The error carries the REASON deliberately. A maintainer who
+              # hits a bare limit files a bypass PR; one who is told the tail
+              # silently never reaches the reader fixes the skill instead.
               body_bytes = len(body.encode("utf-8"))
-              allowed = GRANDFATHERED.get(dir_name, SIZE_LIMIT)
-              if body_bytes > allowed:
-                  if dir_name in GRANDFATHERED:
-                      errors.append(
-                          f"::error file={prefix}::body grew to {body_bytes} bytes, above its "
-                          f"recorded {allowed}. A grandfathered skill may shrink, never grow -- "
-                          f"write tighter or split it instead of raising its entry."
-                      )
-                  else:
-                      errors.append(
-                          f"::error file={prefix}::body is {body_bytes} bytes, over the "
-                          f"{SIZE_LIMIT}-byte budget. A consuming reviewer truncates past this, "
-                          f"so the tail would be silently dropped. Write tighter or split the "
-                          f"skill -- reference files are NOT read by that consumer, so moving "
-                          f"prose there deletes it. Do NOT add a grandfather entry."
-                      )
-              elif dir_name in GRANDFATHERED and body_bytes <= SIZE_LIMIT:
+              if body_bytes > SIZE_LIMIT:
                   errors.append(
-                      f"::error file={prefix}::body is now {body_bytes} bytes, back inside the "
-                      f"{SIZE_LIMIT}-byte budget -- delete its entry from "
-                      f"skills/skill-size-budget.json so the ratchet cannot slip back."
+                      f"::error file={prefix}::body is {body_bytes} bytes, over the "
+                      f"{SIZE_LIMIT}-byte limit by {body_bytes - SIZE_LIMIT}. Past this, a "
+                      f"consuming reviewer truncates the body when building its prompt -- your "
+                      f"reader silently does not receive the rest, and nothing reports it. "
+                      f"Fixes, in order: cut narration and duplication; replace anything a "
+                      f"neighbouring skill already owns with a relative markdown link to it; "
+                      f"split ONLY if this is genuinely two topics, never to hit the number. "
+                      f"Do NOT move prose into references/ -- that consumer reads SKILL.md and "
+                      f"nothing else, so the move deletes it. There is no exception list."
                   )
 
               # --- SPEC §1.10.1 OPTIONAL-field validation ---
