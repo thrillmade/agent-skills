@@ -30,7 +30,41 @@ This project uses [logmind](https://logmind.dev). What counts as a decision, bra
 
 ## Development Commands
 
-<!-- Common commands a contributor needs (build, test, lint, run). -->
+```bash
+python3 .github/scripts/validate_skills.py   # the skill gate — run it before you push
+pytest tests/ -q                             # 112 tests; the gates' own regression guard
+logmind log "…" -r "…" -a "…" -i "…"         # the commit primitive (see above)
+```
+
+Both run in about a second. **Neither is optional before opening a PR** — CI runs the
+same two, unconditionally.
+
+## The `dev` branch
+
+Work lands on `dev` first and reaches `main` in batches. The bar into `dev` is an
+**independent adversarial review** by an agent that did not write the change; the bar into
+`main` is a person. The convention is stated once, in
+[protocol's `docs/the-dev-branch.md`](https://github.com/thrillmade/protocol/blob/main/docs/the-dev-branch.md) —
+this section records only what differs here.
+
+**Batching costs less in this repo than in protocol**, because more of the gates are
+per-tree:
+
+| check | weakened by batching? |
+|---|---|
+| `test` · `validate skills` · `check-links` | **No.** Each judges the tree it is handed, so six changes checked once is the same assertion as six checked six times. |
+| `check-derived-docs` | **No.** This repo runs template `v4`, which regenerates and auto-fixes rather than asking who touched what. |
+| `check-decisions` | **Yes**, the same way as protocol: `:51-57` sets `decision_touched` as a *presence* flag, so one entry satisfies a whole batch. It also only fires above **20 non-docs lines**, so a docs-only batch never trips it at all. |
+| `clud-bug-review` | **Not applicable** — returns `NEUTRAL` here, so there is nothing for batching to dilute. |
+
+So four checks hold at full strength, one is diluted in a named way, and one does not run.
+**The independent review is what covers the `check-decisions` gap** — it is the only thing
+applied per change rather than per batch.
+
+**No forge rule protects `dev`** (`gh api repos/thrillmade/agent-skills/rules/branches/dev`
+returns `[]`), so every rule above is a convention held by whoever is working. That is
+acceptable while `dev` is somewhere work *passes through*, and stops being acceptable the
+moment it becomes somewhere work *lives*.
 
 <!-- clud-bug-start -->
 <!-- clud-bug-block-version: v2 -->
