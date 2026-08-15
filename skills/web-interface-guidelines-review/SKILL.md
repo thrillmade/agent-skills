@@ -6,8 +6,6 @@ description: |
 
 # Web interface guidelines review
 
-A skill for reviewing UI code and design specs against the opinionated guidelines token-driven design systems honor. Extends the general `web-design-guidelines` material with token-system contrast, typography, and spacing rules.
-
 ## When to use
 
 - Reviewing a PR that adds or modifies UI components.
@@ -23,19 +21,19 @@ A skill for reviewing UI code and design specs against the opinionated guideline
 
 ## The review checklist
 
-Apply each section in order. Stop and flag at the first failure in each section; don't bundle.
+Apply each section in order. Stop and flag at the first failure in each section.
 
 ### 1. Contrast: APCA-preferred, WCAG cross-check
 
 - **Primary model is APCA Lc.** Verify the foreground color hits its declared Lc target (typically 90 fluent body, 75 body minimum, 60 secondary, 45 large display, 30 spot, 15 non-text — see `apca-contrast`).
 - **WCAG 2.2 AA is a cross-check, not the primary.** Verify the pair also meets 4.5:1 (normal) / 3:1 (large or non-text) per `wcag-contrast`. Sizes are in **points**, not pixels (18 pt ≈ 24 CSS px; 14 pt bold ≈ 18.67 CSS px).
 - Flag any review that cites WCAG as the *only* model — APCA catches real perceptual failures WCAG misses.
-- Flag hardcoded hex colors in source. Every contrast-bound color should resolve from a token (role-token families such as content / surface / border — see `token-naming-conventions`).
+- Flag hardcoded hex in source: every contrast-bound color resolves from a token (role families content / surface / border — see `token-naming-conventions`).
 
 ### 2. Typography: atomic classes from the scale
 
-- **Atomic typography classes.** A single Tailwind / utility class should bind font-family + size + lh + tracking + weight — e.g. `body-md`, `heading-lg`. No à-la-carte composition (`text-sm font-medium tracking-tight`).
-- **Sizes come from the type scale.** Every rendered font-size matches a step from the system's modular scale (1.067 → 1.618 family). Flag arbitrary px values like `text-[13px]` or `text-[11px]` — they're outside the scale.
+- **Atomic typography classes.** One Tailwind / utility class binds font-family + size + lh + tracking + weight — e.g. `body-md`, `heading-lg`. No à-la-carte composition (`text-sm font-medium tracking-tight`).
+- **Sizes come from the type scale.** Every rendered font-size matches a step from the system's modular scale (1.067 → 1.618 family). Flag arbitrary px like `text-[13px]` — outside the scale.
 - **Line-height per role.** UI text uses `lh-ui` (× 1.20 + grid snap); paragraph body uses `lh-prose` (× 1.50 + grid snap). See `line-height-grid`.
 - Body text **never below 14 pt** (≈ 18.67 CSS px); UI labels usable down to 12 CSS px for non-fluent content (badges, metadata) but **never below 10 px**.
 
@@ -43,7 +41,7 @@ Apply each section in order. Stop and flag at the first failure in each section;
 
 - Padding, gap, margin values are tokens from the spacing scale (`padding-*` / `space-*` / `gap-*`), not raw px. See `spacing-system`.
 - Component heights come from the system's per-density curated ladder. See `component-sizing-principles`.
-- **Interactive heights ≥ 24 CSS px** per WCAG 2.5.8 (AA, Target Size Minimum). The smallest rung is non-interactive only; interactive rungs start at the first rung clearing the floor.
+- **Interactive heights ≥ 24 CSS px** per WCAG 2.5.8 (AA, Target Size Minimum). Rungs below that floor are non-interactive only; whether a ladder's smallest rung is *additionally* reserved is owned by [component-sizing-principles](../component-sizing-principles/SKILL.md).
 - Flag inconsistent rung mixing in the same UI surface (`sm` + `md` buttons side by side reads as a typo, not a hierarchy).
 
 ### 4. Action labels: verb-noun
@@ -54,7 +52,7 @@ Apply each section in order. Stop and flag at the first failure in each section;
 
 ### 5. Link vs button
 
-- **Links go places. Buttons do things.** An element that changes the URL or navigates is an `<a>` / `<Link>`; an element that triggers an action is a `<button>`.
+- **Links go places. Buttons do things.** Navigating or changing the URL is an `<a>` / `<Link>`; triggering an action is a `<button>`.
 - Flag `<button>` using `window.location.href = …` or `router.push(…)` — that's a link.
 - Flag `<a>` with `onClick` doing in-place mutation and `href="#"` — that's a button.
 - Use the framework's router (`<Link>`, `useRouter`) for SPA navigation; never raw `window.location` reassignment.
@@ -89,7 +87,7 @@ Apply each section in order. Stop and flag at the first failure in each section;
 
 - No raw hex, no raw px, no raw rem in source. Every value resolves from a token (a text role token, `padding-md`, `radius-lg`, etc.).
 - Component tokens reference semantic / color-mode tokens, never primitives directly (see `token-naming-conventions` for the two chain shapes).
-- Flag inline `style={{ … }}` carrying values that should be tokens. The exception is dynamic values that genuinely require runtime computation.
+- Flag inline `style={{ … }}` carrying values that should be tokens; the only exception is values genuinely computed at runtime.
 
 ## How to phrase findings
 
@@ -100,21 +98,18 @@ Apply each section in order. Stop and flag at the first failure in each section;
 
 ## Cross-references
 
-- **REQUIRED BACKGROUND for contrast review:** `apca-contrast`, `wcag-contrast`.
-- **REQUIRED BACKGROUND for typography review:** `type-scale`, `line-height-grid`.
-- **REQUIRED BACKGROUND for spacing review:** `spacing-system`, `component-sizing-principles`.
-- **REQUIRED BACKGROUND for token discipline:** `token-naming-conventions`, `dtcg-format`.
-- **For broader brand-voice review of UI strings:** `brand-voice-review` in the agent-skills baseline.
+- **REQUIRED BACKGROUND:** contrast — `apca-contrast`, `wcag-contrast`; typography — `type-scale`, `line-height-grid`; spacing — `spacing-system`, `component-sizing-principles`; tokens — `token-naming-conventions`, `dtcg-format`.
+- **UI-string voice:** `brand-voice-review`.
 
 ## Verification
 
 After completing a review:
 
 1. **Every finding cites a rule.** No vibes-based "this feels off."
-2. **Every finding has a fix.** Findings without fixes get rejected by reviewers.
+2. **Every finding has a fix.** Fixless findings get rejected.
 3. **Sections applied in order.** Contrast and a11y come before token discipline; don't lead with cosmetic findings.
-4. **No bundled comments.** One issue per inline comment.
-5. **Skills cross-referenced.** Findings on contrast cite `apca-contrast` / `wcag-contrast`; findings on size cite `type-scale` / `component-sizing-principles`.
+4. **No bundled comments.**
+5. **Skills cross-referenced.** Contrast findings cite `apca-contrast` / `wcag-contrast`; size findings cite `type-scale` / `component-sizing-principles`.
 
 ## Sources
 
