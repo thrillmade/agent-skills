@@ -59,14 +59,16 @@ This is the only rule applied per change rather than per batch, so it carries th
 **Into `main`: a person.** An agent does not open or merge the `dev` → `main` promotion; it
 reports the batch ready and hands off.
 
-**A red check is fixed, not merged past.** Read the failing step first. A check whose *setup*
-step died never evaluated anything — a skipped verdict is not a passing verdict, so that is a
-red. Re-run it or fix it; do not reason your way past it.
+**A red check is fixed, not merged past.** Read the failing step first.
 
-One red is an artifact rather than a verdict. `check-links` and `check-derived-docs` check out
-the head branch **by name**, so a run still in flight when the PR merges dies at the checkout
-step with `A branch or tag with the name '…' could not be found`. Both can fail this way at
-once. Every other failing step is real.
+One *kind* of red is an artifact rather than a verdict, and only one. `check-links` and
+`check-derived-docs` check out the head branch **by name**, so a run still in flight when the
+PR merges dies at the checkout step with `A branch or tag with the name '…' could not be
+found`. Both can fail this way at once.
+
+**Every other failing step is real** — including one where the check's own step never ran
+because a *setup* step died. A skipped verdict is not a passing verdict. Re-run it or fix it;
+do not reason your way past it.
 
 **Batching dilutes exactly one check.** `check-decisions` asks only whether *some* decision file
 is in the diff, so one entry clears a whole batch. Every change still logs its own regardless.
