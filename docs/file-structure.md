@@ -77,7 +77,8 @@ agent-skills
 ├── tests
 │   ├── conftest.py
 │   ├── test_validate_skills.py
-│   └── test_validate_skills_cli.py
+│   ├── test_validate_skills_cli.py
+│   └── test_workflow_triggers.py
 ├── .cursorrules
 ├── .gitattributes
 ├── .gitignore
