@@ -1077,6 +1077,31 @@ def test_cli_ignores_a_shrinking_file_that_is_not_a_skill(repo, capsys):
     assert "OK: 0 changed SKILL.md file(s)" in capsys.readouterr().out
 
 
+def test_cli_reports_an_annotated_error_on_invalid_utf8_instead_of_a_traceback(
+    repo, capsys
+):
+    """A byte that is not valid UTF-8 must fail closed WITH an annotation.
+
+    `_git`/`_show` decoded with `text=True`, so a stray invalid byte in a
+    SKILL.md raised an uncaught `UnicodeDecodeError` that crashed the process.
+    The run does exit non-zero -- fails closed, correctly -- but as a bare
+    stack trace with no `::error file=...::` annotation, so CI shows no file
+    annotation for it at all: the failure is real but invisible in the PR's
+    Files view.
+    """
+    (repo / "skills" / "alpha" / "SKILL.md").write_bytes(BODY.encode())
+    base = commit(repo, "base")
+    (repo / "skills" / "alpha" / "SKILL.md").write_bytes(
+        b"Not valid UTF-8 from here: \xff\xfe\n"
+    )
+    commit(repo, "corrupt the file")
+
+    assert cpr.main(["--base", base, "--head", "HEAD"]) == 1
+    cap = capsys.readouterr()
+    assert "::error file=skills/alpha/SKILL.md::" in cap.out, cap.out
+    assert "Traceback" not in cap.out and "Traceback" not in cap.err, cap.err
+
+
 def test_cli_defaults_its_base_to_the_merge_base(repo, capsys):
     """The documented local command and CI have to compute the same number.
 

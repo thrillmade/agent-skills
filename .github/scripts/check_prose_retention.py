@@ -514,10 +514,38 @@ def _git(*args: str) -> subprocess.CompletedProcess[str]:
     )
 
 
+class Undecodable(Exception):
+    """A git blob at `rev:path` is not valid UTF-8.
+
+    Raised rather than left to `subprocess`'s own `text=True` decoding, which
+    throws a bare `UnicodeDecodeError` with no file attached to it. This gate
+    already fails closed on that -- the process exits non-zero either way --
+    but a stack trace carries no `::error file=...::` annotation, so CI shows
+    no file annotation for a real failure. `main` catches this and turns it
+    into one.
+    """
+
+    def __init__(self, rev: str, path: str) -> None:
+        self.rev, self.path = rev, path
+        super().__init__(f"{path} at {rev} is not valid UTF-8")
+
+
 def _show(rev: str, path: str) -> str | None:
-    """File content at `rev`, or None if it does not exist there."""
-    got = _git("show", f"{rev}:{path}")
-    return got.stdout if got.returncode == 0 else None
+    """File content at `rev`, or None if it does not exist there.
+
+    Decoded by hand rather than via `_git`'s `text=True`, so an invalid byte
+    raises `Undecodable` -- naming the file -- instead of `subprocess`'s own
+    unannotated `UnicodeDecodeError`.
+    """
+    got = subprocess.run(
+        ["git", "show", f"{rev}:{path}"], capture_output=True, check=False
+    )
+    if got.returncode != 0:
+        return None
+    try:
+        return got.stdout.decode("utf-8")
+    except UnicodeDecodeError:
+        raise Undecodable(rev, path) from None
 
 
 class Diff:
@@ -648,9 +676,17 @@ def main(argv: list[str] | None = None) -> int:
             )
             return 1
 
-    diff = collect(base, args.head)
-    ledger_before = _show(base, str(LEDGER)) or ""
-    ledger_after = _show(args.head, str(LEDGER)) or ""
+    try:
+        diff = collect(base, args.head)
+        ledger_before = _show(base, str(LEDGER)) or ""
+        ledger_after = _show(args.head, str(LEDGER)) or ""
+    except Undecodable as e:
+        print(
+            f"::error file={e.path}::cannot read this file at {e.rev} -- it is "
+            "not valid UTF-8, so no prose comparison could be made. Fix the "
+            "encoding and this gate can run again."
+        )
+        return 1
 
     errors = run(diff.cases, ledger_before, ledger_after)
 
