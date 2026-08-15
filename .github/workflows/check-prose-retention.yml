@@ -30,8 +30,16 @@ name: check-prose-retention
 # Keyed on paths, a rename dropped the file out of both sides at once and the
 # gate printed "0 changed SKILL.md file(s)" over a real deletion.
 #
+# A SKILL.md whose frontmatter cannot be located gets no verdict rather than one
+# merged scope -- merging is the evasion the scope split exists to stop, and a
+# CRLF file reaches it through validate-skills rather than around it.
+#
 # The escape hatch is a row in docs/prose-removals.md, added by the same
 # change. Deleting prose is ordinary and allowed; doing it silently is not.
+# Every LINE of that ledger occupies a slot, whether or not it parses as a row,
+# so a row parked somewhere unreadable and made readable later declares nothing
+# in the change that reveals it. Counted over parsed rows alone, each of the
+# eight ways a line could go unread was somewhere to stage a declaration.
 #
 # Run it locally with no arguments. It defaults to the merge base with `dev`,
 # falling back to `main` -- every branch here forks from and targets `dev`, so

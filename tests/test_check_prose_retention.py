@@ -62,6 +62,20 @@ def skill_file(name: str, description: str, body: str) -> str:
     return f"---\nname: {name}\ndescription: {description}\n---\n\n# Title\n\n{body}"
 
 
+def skill(body: str, name: str = "alpha") -> str:
+    """A whole SKILL.md around `body`, with a frontmatter block that does not
+    change between the two revisions.
+
+    Every case goes through one, because the gate refuses to report a verdict
+    on a file whose frontmatter it cannot locate: merging the frontmatter into
+    the prose scope is exactly what let 46 words of padding in a `description:`
+    pay for a deleted body section. An identical frontmatter on both sides
+    scores zero, so wrapping a fragment leaves every number in these tests
+    unchanged.
+    """
+    return skill_file(name, "What this skill does and when to use it.", body)
+
+
 # --- the historical defect --------------------------------------------------
 
 
@@ -157,8 +171,8 @@ def test_backticks_to_link_is_free():
     `run(...) == []` is satisfied by any word gain, so in this direction it
     passed even with normalisation deleted. `net == 0` is the actual claim.
     """
-    before = "See `spacing-system` and `apca-contrast` for the rules."
-    after = (
+    before = skill("See `spacing-system` and `apca-contrast` for the rules.")
+    after = skill(
         "See [spacing-system](../spacing-system/SKILL.md) and "
         "[apca-contrast](../apca-contrast/SKILL.md) for the rules."
     )
@@ -168,8 +182,8 @@ def test_backticks_to_link_is_free():
 
 def test_link_back_to_backticks_is_free():
     """The reverse conversion too -- #212 did exactly this to buy budget."""
-    after = "See `spacing-system` and `apca-contrast` for the rules."
-    before = (
+    after = skill("See `spacing-system` and `apca-contrast` for the rules.")
+    before = skill(
         "See [spacing-system](../spacing-system/SKILL.md) and "
         "[apca-contrast](../apca-contrast/SKILL.md) for the rules."
     )
@@ -187,7 +201,7 @@ def test_link_with_an_anchor_normalises_too():
     before = "Read `type-scale` first."
     after = "Read [type-scale](../type-scale/SKILL.md#the-ladder) first."
     assert cpr.normalise(after) == "Read type-scale first."
-    assert cpr.Loss(before, after).net == 0
+    assert cpr.Loss(skill(before), skill(after)).net == 0
 
 
 def test_an_anchored_conversion_cannot_mask_a_deletion():
@@ -197,11 +211,11 @@ def test_an_anchored_conversion_cannot_mask_a_deletion():
     the anchors are not collapsed -- enough to swallow a real deleted clause
     and go green. That is the #197 shape exactly.
     """
-    before = (
+    before = skill(
         "Read `type-scale` and `spacing-system` and `apca-contrast` and "
         "`wcag-contrast` first, and never drop the floor rule that follows.\n"
     )
-    converted = (
+    converted = skill(
         "Read [type-scale](../type-scale/SKILL.md#ladder) and "
         "[spacing-system](../spacing-system/SKILL.md#grid) and "
         "[apca-contrast](../apca-contrast/SKILL.md#lc) and "
@@ -227,12 +241,12 @@ def test_de_linking_an_external_reference_is_free():
     catalog even when the sentence kept every word -- the exact inverse of the
     transform it was built to forgive.
     """
-    before = (
+    before = skill(
         "Source: APCA spec at [git.apcacontrast.com]"
         "(https://git.apcacontrast.com/documentation/README). The table maps "
         "directly to the ladder."
     )
-    after = (
+    after = skill(
         "Source: APCA spec at git.apcacontrast.com. The table maps directly "
         "to the ladder."
     )
@@ -241,8 +255,10 @@ def test_de_linking_an_external_reference_is_free():
 
 
 def test_de_linking_a_repo_file_reference_is_free():
-    before = "See [validate_skills.py](.github/scripts/validate_skills.py) for the limit."
-    after = "See `validate_skills.py` for the limit."
+    before = skill(
+        "See [validate_skills.py](.github/scripts/validate_skills.py) for the limit."
+    )
+    after = skill("See `validate_skills.py` for the limit.")
     assert cpr.Loss(before, after).net == 0
 
 
@@ -250,8 +266,10 @@ def test_a_bare_url_is_not_prose():
     """An address is not a claim. Adding or dropping one scores zero, in both
     directions, so a reference that rotted can be pulled without a ledger row.
     """
-    before = "The canonical reference is the spec: https://git.apcacontrast.com/docs\n"
-    after = "The canonical reference is the spec:\n"
+    before = skill(
+        "The canonical reference is the spec: https://git.apcacontrast.com/docs\n"
+    )
+    after = skill("The canonical reference is the spec:\n")
     assert cpr.Loss(before, after).net == 0
     assert cpr.Loss(after, before).net == 0
 
@@ -260,11 +278,11 @@ def test_a_link_that_replaces_prose_still_fires():
     """Normalisation must not become a laundry channel: swapping a sentence
     for a bare link is a deletion wearing the free transform's clothes.
     """
-    before = (
+    before = skill(
         "Contrast findings cite the perceptual model and the legal baseline "
         "both, and name which one failed."
     )
-    after = "See [apca-contrast](../apca-contrast/SKILL.md)."
+    after = skill("See [apca-contrast](../apca-contrast/SKILL.md).")
     assert len(cpr.run(case("alpha", before, after))) == 1
 
 
@@ -272,55 +290,57 @@ def test_a_link_that_replaces_prose_still_fires():
 
 
 def test_rewrapping_a_paragraph_is_free():
-    before = "One two three four five six seven eight nine ten eleven twelve.\n"
-    after = "One two three four five\nsix seven eight nine\nten eleven twelve.\n"
+    before = skill("One two three four five six seven eight nine ten eleven twelve.\n")
+    after = skill("One two three four five\nsix seven eight nine\nten eleven twelve.\n")
     assert cpr.run(case("alpha", before, after)) == []
 
 
 def test_reordering_sections_is_free():
     a = "## Alpha\n\nThe first section says one thing about the subject.\n"
     b = "## Beta\n\nThe second section says a different thing entirely.\n"
-    assert cpr.run(case("alpha", a + "\n" + b, b + "\n" + a)) == []
+    assert cpr.run(case("alpha", skill(a + "\n" + b), skill(b + "\n" + a))) == []
 
 
 def test_moving_a_line_to_another_section_is_free():
-    before = "## A\n\nkeep this line here\n\n## B\n\nother content entirely\n"
-    after = "## A\n\n## B\n\nother content entirely\n\nkeep this line here\n"
+    before = skill("## A\n\nkeep this line here\n\n## B\n\nother content entirely\n")
+    after = skill("## A\n\n## B\n\nother content entirely\n\nkeep this line here\n")
     assert cpr.run(case("alpha", before, after)) == []
 
 
 def test_bolding_and_italicising_is_free():
-    before = "Line height is floored at 1.2 across every role in the scale.\n"
-    after = "**Line height** is *floored* at `1.2` across every role in the scale.\n"
+    before = skill("Line height is floored at 1.2 across every role in the scale.\n")
+    after = skill(
+        "**Line height** is *floored* at `1.2` across every role in the scale.\n"
+    )
     assert cpr.run(case("alpha", before, after)) == []
 
 
 def test_turning_a_paragraph_into_a_list_is_free():
-    before = "Check contrast then typography then spacing then tokens.\n"
-    after = "- Check contrast\n- then typography\n- then spacing\n- then tokens\n"
+    before = skill("Check contrast then typography then spacing then tokens.\n")
+    after = skill("- Check contrast\n- then typography\n- then spacing\n- then tokens\n")
     assert cpr.run(case("alpha", before, after)) == []
 
 
 def test_a_file_that_did_not_change_is_free():
-    text = "Some skill body with several words in it.\n"
+    text = skill("Some skill body with several words in it.\n")
     assert cpr.run(case("alpha", text, text)) == []
 
 
 def test_adding_prose_is_free():
-    before = "A short body.\n"
-    after = "A short body.\n\nPlus a new paragraph nobody had written before.\n"
+    before = skill("A short body.\n")
+    after = skill("A short body.\n\nPlus a new paragraph nobody had written before.\n")
     assert cpr.run(case("alpha", before, after)) == []
 
 
 def test_fixing_a_typo_is_free():
-    before = "Findings must cite the skills they recieve their authority from.\n"
-    after = "Findings must cite the skills they receive their authority from.\n"
+    before = skill("Findings must cite the skills they recieve their authority from.\n")
+    after = skill("Findings must cite the skills they receive their authority from.\n")
     assert cpr.run(case("alpha", before, after)) == []
 
 
 def test_rewording_at_similar_length_is_free():
-    before = "The primary model is APCA, and WCAG serves only as a cross-check.\n"
-    after = "APCA is the primary model; WCAG is nothing more than a cross-check.\n"
+    before = skill("The primary model is APCA, and WCAG serves only as a cross-check.\n")
+    after = skill("APCA is the primary model; WCAG is nothing more than a cross-check.\n")
     assert cpr.run(case("alpha", before, after)) == []
 
 
@@ -328,20 +348,20 @@ def test_rewording_at_similar_length_is_free():
 
 
 def test_deleting_a_sentence_fires():
-    before = (
+    before = skill(
         "Load the skill first.\n"
         "Findings must cite the skills they rest on, every time.\n"
         "Then report.\n"
     )
-    after = "Load the skill first.\nThen report.\n"
+    after = skill("Load the skill first.\nThen report.\n")
     (error,) = cpr.run(case("alpha", before, after))
     assert "lost 10 words" in error
 
 
 def test_replacing_a_paragraph_with_a_short_stub_fires():
     """Forty words swapped for three is a deletion, whatever replaced them."""
-    before = " ".join(f"substantive{i}" for i in range(40))
-    after = "see the other skill"
+    before = skill(" ".join(f"substantive{i}" for i in range(40)))
+    after = skill("see the other skill")
     assert len(cpr.run(case("alpha", before, after))) == 1
 
 
@@ -452,6 +472,115 @@ def test_scopes_are_not_netted_against_each_other():
     assert loss.net == 7, "a prose gain must not be subtracted from a frontmatter loss"
 
 
+# --- the scope split has to be findable, or there is no verdict -------------
+#
+# Scoring the parts separately is what stops the gate being paid off, and it
+# rests entirely on finding the frontmatter. When that fails the split does not
+# fail -- it silently returns one scope, and the evasion the split exists to
+# stop works again. It is reachable through `validate-skills`, not around it:
+# that gate reads with `Path.read_text`, which translates CRLF away before its
+# frontmatter regex ever runs, while this one decodes the git blob byte for
+# byte. A SKILL.md with CRLF line endings therefore passes validate-skills and
+# arrives here with no frontmatter the gate can see.
+
+CRLF_VARIANTS = {
+    "crlf": lambda t: t.replace("\n", "\r\n"),
+    "cr": lambda t: t.replace("\n", "\r"),
+    "bom": lambda t: "﻿" + t,
+    "bom_crlf": lambda t: "﻿" + t.replace("\n", "\r\n"),
+}
+
+
+@pytest.mark.parametrize("variant", sorted(CRLF_VARIANTS))
+@pytest.mark.parametrize("name", sorted(HISTORICAL_LOSSES))
+def test_the_scope_split_is_the_same_under_any_line_ending(variant, name):
+    """The property, pinned for every byte-level spelling of a line break
+    rather than for LF alone -- which is all it was pinned for, and the gap the
+    whole evasion fits through.
+    """
+    before, _after = fixture(name)
+    assert cpr.split_scopes(CRLF_VARIANTS[variant](before)) == cpr.split_scopes(before)
+
+
+@pytest.mark.parametrize("variant", sorted(CRLF_VARIANTS))
+@pytest.mark.parametrize("name", sorted(HISTORICAL_LOSSES))
+def test_padding_the_frontmatter_cannot_pay_for_a_deletion_under_any_line_ending(
+    variant, name
+):
+    """The evasion itself, on the gate's own canonical cases.
+
+    Each of the three real deletions, with the description padded past the size
+    of the cut and the file's line endings rewritten. Merged into one scope the
+    padding cancels the deletion exactly and all three go green.
+    """
+    rewrite = CRLF_VARIANTS[variant]
+    before, after = fixture(name)
+    net = HISTORICAL_LOSSES[name]
+    padded = "\n".join(
+        line + " " + " ".join(f"padding{i}" for i in range(net + 5))
+        if line.startswith("description:")
+        else line
+        for line in after.split("\n")
+    )
+    loss = cpr.Loss(rewrite(before), rewrite(padded))
+    assert loss.scopes["prose"] == net, loss.scopes
+    assert loss.scopes["frontmatter"] < 0, "the padding really did land"
+    assert len(cpr.run(case(name, rewrite(before), rewrite(padded)))) == 1
+
+
+UNSCOPABLE = {
+    "no frontmatter at all": "# Title\n\nA body with no frontmatter block.\n",
+    "an unclosed frontmatter block": "---\nname: alpha\ndescription: d\n\n# Title\n",
+    "a frontmatter block that starts late": "\n---\nname: alpha\n---\n\n# Title\n",
+    "a fence where the frontmatter should be": "```\nname: alpha\n```\n\n# Title\n",
+}
+
+
+@pytest.mark.parametrize("text", sorted(UNSCOPABLE.values()), ids=sorted(UNSCOPABLE))
+def test_a_file_whose_frontmatter_cannot_be_found_gets_no_verdict(text):
+    """It refuses, the way it already refuses when it cannot resolve a base.
+
+    Merging the frontmatter into the prose is not a safe default: it is the
+    exact configuration in which 46 words of padding in a `description:` buy the
+    deletion of a body section, which is one of the two evasions the scope split
+    was built for. A gate that cannot make its comparison says so.
+    """
+    with pytest.raises(cpr.Unscopable):
+        cpr.split_scopes(text)
+
+
+def test_the_control_a_well_formed_skill_file_is_scoped_without_complaint():
+    """The control for the refusals above: the refusal is about the file, not
+    about the gate having forgotten how to split anything.
+    """
+    scopes = cpr.split_scopes(skill("Body.\n"))
+    assert scopes["frontmatter"].startswith("---\n")
+    assert "Body." in scopes["prose"]
+
+
+def test_the_refusal_names_the_file_and_fails_the_run():
+    """A refusal nobody can see is a crash. It has to arrive as an annotation
+    against the file, the way the invalid-UTF-8 refusal does.
+    """
+    broken = "# Title\n\nA body with no frontmatter block at all.\n"
+    (error,) = cpr.run(case("alpha", broken, broken + "and one more line.\n"))
+    assert error.startswith("::error file=skills/alpha/SKILL.md::")
+    assert "frontmatter" in error
+    assert "no verdict" in error
+
+
+def test_a_fence_only_closes_on_a_fence_at_least_as_long():
+    """CommonMark's rule, and the reason it matters here: normalising every
+    fence to three characters let a ``` line inside a ```` block close it, so a
+    block's contents changed scope when somebody edited a line nowhere near it.
+    """
+    body = "Intro.\n\n````\n```\ncode inside the longer fence\n````\n\nOutro.\n"
+    scopes = cpr.split_scopes(skill(body))
+    assert "code inside the longer fence" in scopes["code"]
+    assert "code inside the longer fence" not in scopes["prose"]
+    assert "Intro." in scopes["prose"] and "Outro." in scopes["prose"]
+
+
 # --- the thresholds ---------------------------------------------------------
 #
 # Each floor is the top of its own scope's measured noise, with the smallest
@@ -460,15 +589,15 @@ def test_scopes_are_not_netted_against_each_other():
 
 
 def test_two_words_lost_from_prose_is_below_the_floor():
-    before = "alpha bravo charlie delta echo foxtrot golf hotel\n"
-    after = "alpha bravo charlie delta echo foxtrot\n"
+    before = skill("alpha bravo charlie delta echo foxtrot golf hotel\n")
+    after = skill("alpha bravo charlie delta echo foxtrot\n")
     assert cpr.Loss(before, after).scopes["prose"] == 2
     assert cpr.run(case("alpha", before, after)) == []
 
 
 def test_three_words_lost_from_prose_fires():
-    before = "alpha bravo charlie delta echo foxtrot golf hotel\n"
-    after = "alpha bravo charlie delta echo\n"
+    before = skill("alpha bravo charlie delta echo foxtrot golf hotel\n")
+    after = skill("alpha bravo charlie delta echo\n")
     assert cpr.Loss(before, after).scopes["prose"] == 3
     assert len(cpr.run(case("alpha", before, after))) == 1
 
@@ -514,6 +643,17 @@ def declared(*rows: str) -> str:
 
 def a_real_deletion(name: str = "session-heartbeat"):
     return case(name, *fixture(name)), name, HISTORICAL_LOSSES[name]
+
+
+def skill_errors(*args, **kwargs) -> list[str]:
+    """Only the annotations about SKILL.md files.
+
+    `run()` also annotates the ledger itself when a change takes a merged row
+    back out of it, and that is a second, separate finding. Tests whose subject
+    is the verdict on a skill filter it out here and assert it where it belongs,
+    rather than counting two findings as one.
+    """
+    return [e for e in cpr.run(*args, **kwargs) if "::error file=skills/" in e]
 
 
 def test_a_row_this_change_adds_lets_the_deletion_through():
@@ -601,7 +741,49 @@ INHERITED_ROW_EDITS = [
         "| {name} | {net} | trimmed the intro | 2026-01-02 |",
         "| {name} | {net} | trimmed the intro | 2026-03-14 |",
     ),
+    (
+        # Whitespace is stripped out of every field before a row is keyed, so
+        # padding one is an edit that changes nothing the gate looks at. It
+        # still adds no row, so it still declares nothing.
+        "its whitespace",
+        "|  {name}  |  {net}  |  trimmed the intro  |",
+        "| {name} | {net} | trimmed the intro |",
+    ),
+    (
+        # `int("0900") == 900`. A leading zero changes the row's text without
+        # changing the number, which is what a rule keyed on the row's TEXT
+        # rather than on its value would read as a new declaration.
+        "a leading zero on its count",
+        "| {name} | {net} | trimmed the intro |",
+        "| {name} | 0{net} | trimmed the intro |",
+    ),
+    (
+        # `int("9_00") == 900` too -- Python accepts underscore separators, so
+        # the text and the value part company a second way.
+        "an underscore in its count",
+        "| {name} | {net} | trimmed the intro |",
+        "| {name} | {net_underscored} | trimmed the intro |",
+    ),
+    (
+        "its count and its reason together",
+        "| {name} | 4 | trimmed the intro |",
+        "| {name} | {net} | rewrote the whole section |",
+    ),
+    (
+        "its skill, its count and a fourth column together",
+        "| some-other-skill | 4 | trimmed the intro | 2026-01-02 |",
+        "| {name} | {net} | trimmed the intro | 2026-03-14 |",
+    ),
 ]
+
+
+def _row_fields(name: str, net: int) -> dict[str, object]:
+    digits = str(net)
+    return {
+        "name": name,
+        "net": net,
+        "net_underscored": f"{digits[0]}_{digits[1:]}" if len(digits) > 1 else digits,
+    }
 
 
 @pytest.mark.parametrize(
@@ -624,7 +806,7 @@ def test_editing_an_inherited_row_declares_nothing(before_row, after_row):
     number the author cares to type.
     """
     cases, name, net = a_real_deletion()
-    fields = {"name": name, "net": net}
+    fields = _row_fields(name, net)
     before = declared(before_row.format(**fields))
     after = declared(after_row.format(**fields))
 
@@ -634,7 +816,28 @@ def test_editing_an_inherited_row_declares_nothing(before_row, after_row):
     assert sum(cpr.parse_ledger(before).values()) == 1, before
     assert sum(cpr.parse_ledger(after).values()) == 1, after
 
-    assert len(cpr.run(cases, ledger_before=before, ledger_after=after)) == 1
+    assert len(skill_errors(cases, ledger_before=before, ledger_after=after)) == 1
+
+
+@pytest.mark.parametrize(
+    "after_row",
+    [a for _f, _b, a in INHERITED_ROW_EDITS],
+    ids=[f for f, _b, _a in INHERITED_ROW_EDITS],
+)
+def test_the_discriminator_the_same_row_genuinely_added_is_credited(after_row):
+    """The other half of the test above, and the reason it is evidence.
+
+    "The gate fired" is equally explained by a rule that credits nothing ever.
+    Each row the test above edits into place is written here as a row the change
+    actually ADDS to a ledger that did not have it, and every one of them has to
+    be honoured -- otherwise the append-only rule is not a rule, it is an
+    outage.
+    """
+    cases, name, net = a_real_deletion()
+    row = after_row.format(**_row_fields(name, net))
+    assert (
+        cpr.run(cases, ledger_before=LEDGER_HEADER, ledger_after=declared(row)) == []
+    ), row
 
 
 def test_an_added_row_cannot_launder_an_edit_to_an_inherited_rows_count():
@@ -651,7 +854,7 @@ def test_an_added_row_cannot_launder_an_edit_to_an_inherited_rows_count():
     after = declared(
         f"| {name} | {net} | an earlier trim |", f"| {name} | 1 | fixed a typo |"
     )
-    assert len(cpr.run(cases, ledger_before=before, ledger_after=after)) == 1
+    assert len(skill_errors(cases, ledger_before=before, ledger_after=after)) == 1
 
 
 def test_editing_an_inherited_rows_reason_does_not_void_an_unrelated_declaration():
@@ -706,7 +909,7 @@ def test_the_error_says_the_record_was_rewritten_when_that_is_why_it_fired():
     cases, name, net = a_real_deletion()
     before = declared(f"| {name} | 4 | an earlier trim |")
     after = declared(f"| {name} | {net} | an earlier trim |")
-    (error,) = cpr.run(cases, ledger_before=before, ledger_after=after)
+    (error,) = skill_errors(cases, ledger_before=before, ledger_after=after)
     assert "back OUT of docs/prose-removals.md" in error, error
 
 
@@ -830,6 +1033,50 @@ def test_a_row_written_outside_the_table_declares_nothing():
     assert len(cpr.run(cases, ledger_before=LEDGER_HEADER, ledger_after=after)) == 1
 
 
+def test_a_worked_example_ABOVE_the_table_declares_nothing_and_does_not_shadow_it():
+    """The arrangement the ledger's own example was written in, and the one the
+    fence reading is actually load-bearing for.
+
+    Below the table a fenced example is already out of scope, because the fence
+    line ends the table. Above it, a fence that is not read opens the table on
+    the EXAMPLE's header -- so the example's rows declare for real and, since
+    only the first table counts, the table a reader would actually write into is
+    dead. Both halves are asserted, because either one alone is survivable.
+    """
+    cases, name, net = a_real_deletion()
+    ledger = (
+        "A filled-in table looks like this:\n\n```markdown\n"
+        + LEDGER_HEADER
+        + f"| {name} | {net} | example row |\n```\n\n"
+        + LEDGER_HEADER
+    )
+    assert cpr.parse_ledger(ledger) == {}, "the fenced example declared something"
+    assert len(cpr.run(cases, ledger_before=LEDGER_HEADER, ledger_after=ledger)) == 1
+
+    real = ledger + f"| {name} | {net} | Moved to unattended-operation. |\n"
+    assert cpr.parse_ledger(real) == {(name, net): 1}, "the real table went dead"
+    assert cpr.run(cases, ledger_before=ledger, ledger_after=real) == []
+
+
+def test_a_commented_out_draft_ABOVE_the_table_declares_nothing_either():
+    """The same arrangement through an HTML comment: an older draft kept above
+    the live table opens it on the draft's header if comments are not read.
+    """
+    cases, name, net = a_real_deletion()
+    ledger = (
+        "<!-- an older draft, kept for reference:\n"
+        + LEDGER_HEADER
+        + f"| {name} | {net} | an old draft |\n-->\n\n"
+        + LEDGER_HEADER
+    )
+    assert cpr.parse_ledger(ledger) == {}, "the commented draft declared something"
+    assert len(cpr.run(cases, ledger_before=LEDGER_HEADER, ledger_after=ledger)) == 1
+
+    real = ledger + f"| {name} | {net} | Moved to unattended-operation. |\n"
+    assert cpr.parse_ledger(real) == {(name, net): 1}, "the real table went dead"
+    assert cpr.run(cases, ledger_before=ledger, ledger_after=real) == []
+
+
 def test_a_commented_out_table_declares_nothing():
     cases, name, net = a_real_deletion()
     after = (
@@ -894,7 +1141,438 @@ def test_the_shipped_ledger_carries_the_table_the_parser_anchors_to():
     repo_root = Path(__file__).resolve().parents[1]
     text = (repo_root / "docs" / "prose-removals.md").read_text(encoding="utf-8")
     probe = text.rstrip("\n") + "\n| probe-skill | 7 | control row |\n"
-    assert cpr.parse_ledger(probe) == {("probe-skill", 7, "control row"): 1}
+    assert cpr.parse_ledger(probe) == {("probe-skill", 7): 1}
+
+
+# --- a line that does not parse still occupies a slot -----------------------
+#
+# THE CLASS. Everything above counts PARSED rows, so the append-only rule is an
+# invariant over the parse rather than over the file -- and every rule that
+# makes `parse_ledger` drop a line is therefore a staging slot. Park a row where
+# the parser cannot see it, in a change that merges; make it visible here; and
+# the ledger gains a declaration while the covering row sits in this change's
+# diff as unchanged context. Cardinality never notices, because the row was
+# never counted at base.
+#
+# Eight predicates dropped a line -- a fence, an HTML comment, no header yet, a
+# rule row, a row that does not match, a blank or placeholder reason, a count
+# that is not a number, and a second header re-opening the table -- and patching
+# any subset of them repeats the round this one was convened to end. The fix has
+# to be the shape of the accounting, not the list: every line occupies a slot,
+# whether or not it parses, so the total is a property of the FILE and no edit
+# to the parse can move it.
+#
+# Each case below is a matched pair. `->live` is the attack: the staged line is
+# made to parse, and no row may be credited for it. `inert` is the control: the
+# same staged line, untouched on both sides, next to a row the change really did
+# write -- which must still be honoured, or the fix is an outage rather than a
+# rule.
+
+ROW = "| {name} | {net} | Moved to unattended-operation. |"
+
+# STAGED  the row is parked where the parser cannot read it, and the change
+#         makes it readable. That flip must buy nothing.
+# INHERIT the construct no longer hides anything, so the row is an ordinary
+#         inherited declaration at both revisions -- which also buys nothing,
+#         by the rule that was already there. Two of these were staging slots
+#         before this round and are not any more, and saying which is which is
+#         the difference between a fix and a coincidence.
+# SEALED  the construct never publishes the row at all, at either revision.
+STAGED, INHERIT, SEALED = "staged", "inherited", "sealed"
+
+# (label, what the base ledger stages, what the head ledger turns it into, what
+#  the head ledger then shows a reader)
+STAGING_SLOTS = [
+    (
+        "inside a fenced block",
+        LEDGER_HEADER + "```markdown\n" + ROW + "\n```\n",
+        LEDGER_HEADER + ROW + "\n",
+        STAGED,
+    ),
+    (
+        "inside a longer fence a shorter one does not close",
+        LEDGER_HEADER + "````markdown\n```\n" + ROW + "\n````\n",
+        LEDGER_HEADER + ROW + "\n",
+        STAGED,
+    ),
+    (
+        "inside an HTML comment",
+        LEDGER_HEADER + "<!--\n" + ROW + "\n-->\n",
+        LEDGER_HEADER + ROW + "\n",
+        STAGED,
+    ),
+    (
+        "above the header, before the table opens",
+        ROW + "\n" + LEDGER_HEADER,
+        LEDGER_HEADER + ROW + "\n",
+        STAGED,
+    ),
+    (
+        "shaped like the table's rule row",
+        LEDGER_HEADER + "|---|---|---|\n",
+        LEDGER_HEADER + ROW + "\n",
+        STAGED,
+    ),
+    (
+        "a row missing its third cell",
+        LEDGER_HEADER + "| {name} | {net}\n",
+        LEDGER_HEADER + ROW + "\n",
+        STAGED,
+    ),
+    (
+        "a reason still on the printed placeholder",
+        LEDGER_HEADER + "| {name} | {net} | <why these words are gone> |\n",
+        LEDGER_HEADER + ROW + "\n",
+        STAGED,
+    ),
+    (
+        "a blank reason",
+        LEDGER_HEADER + "| {name} | {net} |  |\n",
+        LEDGER_HEADER + ROW + "\n",
+        STAGED,
+    ),
+    (
+        "a count that is not a number",
+        LEDGER_HEADER + "| {name} | forty-nine | Moved to unattended-operation. |\n",
+        LEDGER_HEADER + ROW + "\n",
+        STAGED,
+    ),
+    (
+        "below prose the change then deletes",
+        LEDGER_HEADER + "\nA later section.\n\n" + ROW + "\n",
+        LEDGER_HEADER + "\n\n" + ROW + "\n",
+        STAGED,
+    ),
+    (
+        # A malformed row used to end the table, hiding every row under it. It
+        # does not any more: the table ends where markdown ends it, so this row
+        # is published at both revisions and fixing the broken one above it
+        # publishes nothing new.
+        "a row below a malformed row that used to hide it",
+        LEDGER_HEADER + "| broken\n" + ROW + "\n",
+        LEDGER_HEADER + "| broken | row | here |\n" + ROW + "\n",
+        INHERIT,
+    ),
+    (
+        # A blank line used to end the table. It does not any more, for the same
+        # reason an author's pasted row after a blank separator has to be read.
+        "below a blank line the change then deletes",
+        LEDGER_HEADER + "\n" + ROW + "\n",
+        LEDGER_HEADER + ROW + "\n",
+        INHERIT,
+    ),
+    (
+        # A second header re-opened the table, so any table anywhere in the
+        # document was live. Only the first one counts now, so this row is
+        # never published at all.
+        "under a second header further down the document",
+        LEDGER_HEADER + "\nA later section.\n\n" + ROW + "\n",
+        LEDGER_HEADER + "\nA later section.\n\n" + LEDGER_HEADER + ROW + "\n",
+        SEALED,
+    ),
+]
+
+
+def _staged(template: str, name: str, net: int) -> str:
+    return template.format(name=name, net=net)
+
+
+@pytest.mark.parametrize(
+    "before_ledger,after_ledger,shows",
+    [(b, a, s) for _f, b, a, s in STAGING_SLOTS],
+    ids=[f for f, _b, _a, _s in STAGING_SLOTS],
+)
+def test_a_line_the_parser_had_dropped_cannot_become_a_declaration(
+    before_ledger, after_ledger, shows
+):
+    """The attack direction, one per acceptance predicate.
+
+    The base ledger already carries the row, in a form this gate does not read.
+    The change makes it readable and nothing else -- no row is written in this
+    diff. Every one of these was a green run before the slot accounting landed.
+    """
+    cases, name, net = a_real_deletion()
+    before = _staged(before_ledger, name, net)
+    after = _staged(after_ledger, name, net)
+
+    # Control on the premise, stated per case rather than assumed. "The gate
+    # fired" is worth nothing without knowing WHICH construct the head ledger
+    # publishes: a flip that is still credited, a row that was inherited all
+    # along, and a row nobody can publish are three different results.
+    assert cpr.parse_ledger(before)[(name, net)] == (1 if shows == INHERIT else 0)
+    assert cpr.parse_ledger(after)[(name, net)] == (0 if shows == SEALED else 1)
+
+    assert len(skill_errors(cases, ledger_before=before, ledger_after=after)) == 1
+
+
+@pytest.mark.parametrize(
+    "before_ledger",
+    [b for _f, b, _a, _s in STAGING_SLOTS],
+    ids=[f for f, _b, _a, _s in STAGING_SLOTS],
+)
+def test_the_control_an_untouched_inert_line_does_not_block_a_real_row(before_ledger):
+    """The free direction, and the reason the test above is evidence.
+
+    A rule that credited nothing would pass every case above. Here the same
+    staged line sits unchanged in both ledgers -- a fenced example, a commented
+    draft, a malformed row nobody has fixed -- while the change writes a row
+    into the table, and that row still counts.
+    """
+    cases, name, net = a_real_deletion()
+    before = _staged(before_ledger, name, net)
+    row = _staged(ROW, name, net) + "\n"
+    after = before.replace(LEDGER_HEADER, LEDGER_HEADER + row, 1)
+    assert after != before, "the control did not actually add a row"
+    assert cpr.run(cases, ledger_before=before, ledger_after=after) == []
+
+
+def test_every_line_of_the_ledger_occupies_a_slot():
+    """The property the class fix rests on, stated directly on the accounting.
+
+    The total is the file's non-blank line count, which no change to what parses
+    can move. That is what turns the append-only rule from an invariant over the
+    PARSE -- where a line becoming readable is a free row -- into one over the
+    FILE.
+    """
+    text = (
+        LEDGER_HEADER
+        + "| alpha | 5 | a real row |\n"
+        + "| broken\n"
+        + "\n"
+        + "Some prose.\n"
+        + "```\n| beta | 6 | fenced |\n```\n"
+        + "<!-- | gamma | 7 | commented | -->\n"
+    )
+    non_blank = [ln for ln in text.split("\n") if ln.strip()]
+    assert sum(cpr.ledger_slots(text).values()) == len(non_blank)
+
+
+def test_the_append_only_rule_holds_over_every_small_ledger_pair():
+    """Exhaustive, not asserted: with the same number of non-blank lines on both
+    sides, a surplus row without a withdrawal is impossible.
+
+    `withdrawn` empty means head has at least as many slots of every identity as
+    base; equal totals then force the two multisets to be equal, so there is no
+    surplus at all. Searched rather than argued, because the argument only holds
+    while the accounting stays total -- and it is exactly the totality that four
+    rounds of column patches did not have.
+    """
+    alphabet = [
+        "| alpha | 5 | a reason |",
+        "| alpha | 6 | a reason |",
+        "| beta | 5 | a reason |",
+        "|---|---|---|",
+        "| skill | words | why |",
+        "<!-- | alpha | 5 | a reason | -->",
+        "```",
+        "Some prose.",
+    ]
+    import itertools
+
+    def ledgers(n):
+        for combo in itertools.product(alphabet, repeat=n):
+            yield LEDGER_HEADER + "".join(ln + "\n" for ln in combo)
+
+    def rows(slots):
+        return {s: n for s, n in slots.items() if s[0] == "row"}
+
+    checked = violations = 0
+    for n in range(4):
+        cached = [cpr.ledger_slots(t) for t in ledgers(n)]
+        for before in cached:
+            for after in cached:
+                checked += 1
+                if rows(after - before) and not (before - after):
+                    violations += 1
+    assert checked > 250_000, f"the search only compared {checked} pairs"
+    assert violations == 0, f"{violations} of {checked} pairs bought a free row"
+
+
+def test_the_control_the_search_above_can_see_a_violation():
+    """The control for the search. A search that finds nothing may be the wrong
+    search, so run it against a case that must hit: let head carry one extra
+    line and the equal-cardinality premise is gone, which is precisely when a
+    surplus without a withdrawal is possible.
+    """
+    alphabet = [
+        "| alpha | 5 | a reason |",
+        "|---|---|---|",
+        "<!-- | alpha | 5 | a reason | -->",
+        "Some prose.",
+    ]
+    import itertools
+
+    def slots(n):
+        return [
+            cpr.ledger_slots(LEDGER_HEADER + "".join(ln + "\n" for ln in combo))
+            for combo in itertools.product(alphabet, repeat=n)
+        ]
+
+    found = 0
+    for before in slots(1):
+        for after in slots(2):
+            if {s for s in (after - before) if s[0] == "row"} and not (before - after):
+                found += 1
+    assert found > 0, "the search cannot see a violation, so finding none proves nothing"
+
+
+def test_a_change_that_only_reformats_the_table_declares_nothing():
+    """A schema change to the table is not a declaration, and does not have to
+    be one: widening the header and the rule row costs nothing and buys nothing.
+    """
+    cases, name, net = a_real_deletion()
+    before = LEDGER_HEADER + f"| {name} | {net} | an earlier trim |\n"
+    after = (
+        "| skill | words | why | declared |\n"
+        "|---|---|---|---|\n"
+        f"| {name} | {net} | an earlier trim | 2026-03-14 |\n"
+    )
+    assert cpr.parse_ledger(after)[(name, net)] == 1, "the wider table still parses"
+    assert len(skill_errors(cases, ledger_before=before, ledger_after=after)) == 1
+
+
+def test_a_column_added_to_the_header_does_not_disable_the_hatch():
+    """The append-only rule's own comment promises it survives "a column added
+    to this table years from now". Anchored to a three-column header exactly,
+    adding one stopped the parser finding the table at all -- so every row in it
+    went silent and the hatch could not be opened by anybody.
+    """
+    cases, name, net = a_real_deletion()
+    wide = "| skill | words | why | declared |\n|---|---|---|---|\n"
+    after = wide + f"| {name} | {net} | Moved to unattended-operation. | 2026-03-14 |\n"
+    assert cpr.run(cases, ledger_before=wide, ledger_after=after) == []
+
+
+# --- the record stands ------------------------------------------------------
+
+
+def test_taking_a_merged_row_back_out_of_the_ledger_fails_on_its_own():
+    """"Rows stay after they merge" was asserted by the ledger and enforced
+    nowhere: a change that removed every row while touching no SKILL.md went
+    green, because a withdrawal only ever voided the change's OWN declarations
+    and this change had none to void.
+    """
+    kept = declared("| alpha | 5 | an earlier trim |", "| beta | 9 | another |")
+    errors = cpr.run({}, ledger_before=kept, ledger_after=LEDGER_HEADER)
+    assert len(errors) == 1, errors
+    assert errors[0].startswith("::error file=docs/prose-removals.md::")
+    assert "alpha" in errors[0] and "beta" in errors[0]
+
+
+def test_the_control_a_ledger_nothing_was_removed_from_is_silent():
+    """The control. A change that only ADDS rows to the ledger, touching no
+    SKILL.md, is ordinary and must stay silent.
+    """
+    before = declared("| alpha | 5 | an earlier trim |")
+    after = declared("| alpha | 5 | an earlier trim |", "| beta | 9 | another |")
+    assert cpr.run({}, ledger_before=before, ledger_after=after) == []
+
+
+def test_copyediting_an_inherited_rows_reason_is_not_taking_it_out():
+    """A row's identity is its skill and its count, so wording is free to be
+    fixed. Otherwise "the record stands" would make a typo unfixable.
+    """
+    before = declared("| alpha | 5 | an earlier trim |")
+    after = declared("| alpha | 5 | an earlier trim. |")
+    assert cpr.run({}, ledger_before=before, ledger_after=after) == []
+
+
+def test_a_second_table_further_down_declares_nothing_at_either_revision():
+    """"That table only", made true. A second `| skill | words | why |` header
+    re-opened parsing, so a table anywhere in the document was live -- and the
+    rule the ledger states about itself was false in both directions.
+    """
+    cases, name, net = a_real_deletion()
+    second = (
+        LEDGER_HEADER
+        + "\nAn appendix of rows we decided against:\n\n"
+        + LEDGER_HEADER
+        + f"| {name} | {net} | never agreed |\n"
+    )
+    assert cpr.parse_ledger(second) == {}
+    assert len(skill_errors(cases, ledger_before=LEDGER_HEADER, ledger_after=second)) == 1
+
+
+# --- the hatch opens --------------------------------------------------------
+
+
+def test_a_row_appended_to_the_real_shipped_ledger_opens_the_hatch():
+    """The live failure, against the file in this repository as it stands.
+
+    Its table is the last thing in the file, so appending is what an author
+    does. A blank line between the rule row and the new row -- the shape a
+    `>>` or an editor's trailing newline produces -- ended the table, the row
+    went unread, and the gate failed and reprinted the row the author had just
+    written. An escape hatch that cannot be opened is a bypass with extra steps.
+    """
+    cases, name, net = a_real_deletion()
+    shipped = (Path(__file__).resolve().parents[1] / "docs" / "prose-removals.md").read_text(
+        encoding="utf-8"
+    )
+    row = f"| {name} | {net} | Moved to unattended-operation. |"
+    for separator in ("", "\n", "\n\n"):
+        after = shipped + separator + row + "\n"
+        assert cpr.run(cases, ledger_before=shipped, ledger_after=after) == [], (
+            f"separator {separator!r} left the row unread"
+        )
+
+
+def test_the_failure_never_reprints_a_row_the_author_already_wrote():
+    """The property behind the test above, stated so it cannot regress into
+    some other separator. If the gate prints a row to paste, pasting it must
+    end the failure.
+    """
+    cases, name, net = a_real_deletion()
+    shipped = (Path(__file__).resolve().parents[1] / "docs" / "prose-removals.md").read_text(
+        encoding="utf-8"
+    )
+    (error,) = cpr.run(cases, ledger_before=shipped, ledger_after=shipped)
+    printed = error.split("in this same change: ")[1]
+    filled = printed.replace(cpr.REASON_PLACEHOLDER, "Moved to unattended-operation.")
+    assert cpr.run(cases, ledger_before=shipped, ledger_after=shipped + "\n" + filled + "\n") == []
+
+
+def test_rewriting_the_ledgers_own_prose_voids_the_rows_the_change_adds():
+    """The price of counting the file rather than the parse, pinned deliberately
+    so it reads as a decision and not as a surprise.
+
+    Every non-blank line of the ledger is a slot, prose included, because the
+    line that ENDS the table decides which rows are inside it -- delete it and
+    rows below become declarations nobody wrote. So an unrelated edit to this
+    file's own prose, in the same change as a genuine row, is a withdrawal and
+    voids it. Loud, explicable, and the message says which: separate the two
+    changes, or put the line back. The alternative -- keying prose lines by
+    anything coarser than their text -- makes them fungible, and one added line
+    of prose then pays for a row published out of a line the diff shows as
+    unchanged context.
+    """
+    cases, name, net = a_real_deletion()
+    before = "Two lines of\nintroduction here.\n\n" + LEDGER_HEADER
+    after = "One line of introduction here.\n\n" + LEDGER_HEADER + (
+        f"| {name} | {net} | Moved to unattended-operation. |\n"
+    )
+    (error,) = skill_errors(cases, ledger_before=before, ledger_after=after)
+    assert "back OUT of docs/prose-removals.md" in error, error
+    assert "Put back what it removed" in error, error
+
+    # The control: the same row, with the prose left alone, is honoured.
+    untouched = before + f"| {name} | {net} | Moved to unattended-operation. |\n"
+    assert cpr.run(cases, ledger_before=before, ledger_after=untouched) == []
+
+
+def test_the_message_explains_a_withdrawal_even_when_no_added_row_covers_the_cut():
+    """The remedy has to be true of the failure the author is looking at.
+
+    The explanation was printed only when a row in the surplus would otherwise
+    have covered the cut. Any other author who had taken something out of the
+    ledger was told to "add the row printed above and this gate passes" -- which
+    is false while a withdrawal stands, because no row they add can count.
+    """
+    cases, name, net = a_real_deletion()
+    before = declared("| some-other-skill | 3 | an earlier trim |")
+    after = declared(f"| {name} | {net - 1} | too small to cover it |")
+    (error,) = skill_errors(cases, ledger_before=before, ledger_after=after)
+    assert "back OUT of docs/prose-removals.md" in error, error
 
 
 # --- message voice ----------------------------------------------------------
@@ -964,11 +1642,15 @@ def test_the_remedy_block_is_true_of_the_metric_it_gates(repo, capsys):
     primary advice.
     """
     before, after = (
-        "In order to make sure that the reviewer is able to understand the "
-        "finding, you should always be certain to include the exact file "
-        "and the exact line number in every single comment that you write.\n",
-        "Cite the exact file and line in every comment so the reviewer can "
-        "check it.\n",
+        skill(
+            "In order to make sure that the reviewer is able to understand the "
+            "finding, you should always be certain to include the exact file "
+            "and the exact line number in every single comment that you write.\n"
+        ),
+        skill(
+            "Cite the exact file and line in every comment so the reviewer can "
+            "check it.\n"
+        ),
     )
     assert cpr.Loss(before, after).net == 21, "the tightening rewrite must fire"
 
@@ -1004,11 +1686,15 @@ def test_the_excerpt_is_withheld_when_no_single_passage_explains_the_loss():
     """Scattered tightening has no "Gone:" passage to quote. Quoting the
     best-scoring block regardless meant quoting text still present in the file.
     """
-    before = "\n".join(
-        f"Sentence {i} really does say something quite particular here indeed."
-        for i in range(8)
+    before = skill(
+        "\n".join(
+            f"Sentence {i} really does say something quite particular here indeed."
+            for i in range(8)
+        )
     )
-    after = "\n".join(f"Sentence {i} says something particular." for i in range(8))
+    after = skill(
+        "\n".join(f"Sentence {i} says something particular." for i in range(8))
+    )
     loss = cpr.Loss(before, after)
     assert loss.net > cpr.FLOOR["prose"]
     assert loss.excerpt() == "(no single passage accounts for it -- read the diff)"
@@ -1018,12 +1704,12 @@ def test_the_excerpt_is_quoted_when_one_passage_does_explain_the_loss():
     """The control for the test above: the gate must still name what went when
     a single block accounts for it, which is the case authors need most.
     """
-    before = (
+    before = skill(
         "Load the skill first.\n"
         "Findings must cite every one of the skills they rest on, each time.\n"
         "Then report.\n"
     )
-    after = "Load the skill first.\nThen report.\n"
+    after = skill("Load the skill first.\nThen report.\n")
     assert "Findings must cite" in cpr.Loss(before, after).excerpt()
 
 
@@ -1084,7 +1770,8 @@ def commit(r: Path, message: str) -> str:
     return git(r, "rev-parse", "HEAD").strip()
 
 
-BODY = "alpha bravo charlie delta echo foxtrot golf hotel india juliet\n"
+BODY_TEXT = "alpha bravo charlie delta echo foxtrot golf hotel india juliet\n"
+BODY = skill(BODY_TEXT)
 
 # Long enough that git's rename detection has something to match on.
 LONG_BODY = (
@@ -1117,7 +1804,7 @@ def test_cli_passes_when_nothing_was_lost(repo, capsys):
 def test_cli_fails_on_an_undeclared_removal(repo, capsys):
     (repo / "skills" / "alpha" / "SKILL.md").write_text(BODY)
     base = commit(repo, "base")
-    (repo / "skills" / "alpha" / "SKILL.md").write_text("alpha bravo charlie\n")
+    (repo / "skills" / "alpha" / "SKILL.md").write_text(skill("alpha bravo charlie\n"))
     commit(repo, "cut it down")
 
     assert cpr.main(["--base", base, "--head", "HEAD"]) == 1
@@ -1129,7 +1816,7 @@ def test_cli_passes_once_the_ledger_row_lands_in_the_same_change(repo, capsys):
     (repo / "docs" / "prose-removals.md").write_text(LEDGER_HEADER)
     base = commit(repo, "base")
 
-    (repo / "skills" / "alpha" / "SKILL.md").write_text("alpha bravo charlie\n")
+    (repo / "skills" / "alpha" / "SKILL.md").write_text(skill("alpha bravo charlie\n"))
     (repo / "docs" / "prose-removals.md").write_text(
         declared("| alpha | 7 | Superseded by the dispatcher. |")
     )
@@ -1145,7 +1832,7 @@ def test_cli_ignores_a_ledger_row_that_was_already_on_the_base(repo):
     (repo / "docs" / "prose-removals.md").write_text(row)
     base = commit(repo, "base carries the row already")
 
-    (repo / "skills" / "alpha" / "SKILL.md").write_text("alpha bravo charlie\n")
+    (repo / "skills" / "alpha" / "SKILL.md").write_text(skill("alpha bravo charlie\n"))
     commit(repo, "cut it down, riding an inherited row")
 
     assert cpr.main(["--base", base, "--head", "HEAD"]) == 1
@@ -1228,8 +1915,16 @@ def test_cli_ignores_a_new_skill_and_a_deleted_one(repo, capsys):
 
     (repo / "skills" / "alpha" / "SKILL.md").unlink()
     (repo / "skills" / "gamma").mkdir()
+    # Nothing in common with alpha but the frontmatter keys, and long enough
+    # that git's 25% rename detection cannot pair the two: this test is about
+    # an add plus a delete, and a pairing would quietly turn it into a rename
+    # test that happens to still pass.
     (repo / "skills" / "gamma" / "SKILL.md").write_text(
-        "Wholly unrelated words: quixotic zephyr marmalade thimble.\n"
+        skill_file(
+            "gamma",
+            "Wholly unrelated: quixotic zephyr marmalade thimble.",
+            "\n".join(f"unrelated{i} sentence about nothing alpha ever said." for i in range(20)),
+        )
     )
     commit(repo, "swap one skill for another")
 
@@ -1293,7 +1988,7 @@ def test_cli_defaults_its_base_to_the_merge_base(repo, capsys):
 
     git(repo, "checkout", "-q", "-b", "topic")
     (repo / "skills" / "alpha" / "SKILL.md").write_text(
-        "alpha bravo charlie delta echo foxtrot golf\n"
+        skill("alpha bravo charlie delta echo foxtrot golf\n")
     )
     commit(repo, "the branch drops three words")
 
@@ -1374,3 +2069,62 @@ def test_cli_control_the_same_repo_passes_with_a_real_base(repo, capsys):
     (repo / "skills" / "alpha" / "SKILL.md").write_text(BODY)
     base = commit(repo, "base")
     assert cpr.main(["--base", base, "--head", "HEAD"]) == 0
+
+
+def test_cli_compares_a_skill_whose_path_git_would_quote(repo, capsys):
+    """`--name-status` quotes any path with a byte outside the printable ASCII
+    range, so `skills/<non-ascii>/SKILL.md` arrives wrapped in double quotes and
+    escaped. The path glob then does not match it, the file drops out of the
+    comparison, and the run prints "OK: 0 changed SKILL.md file(s)" over a real
+    deletion -- success reported for a comparison never made, which this gate's
+    own `Diff` docstring says cannot happen.
+    """
+    name = "α-skill"
+    (repo / "skills" / name).mkdir()
+    (repo / "skills" / name / "SKILL.md").write_text(skill(BODY_TEXT, name))
+    base = commit(repo, "base")
+    (repo / "skills" / name / "SKILL.md").write_text(skill("alpha bravo charlie\n", name))
+    commit(repo, "cut it down")
+
+    assert cpr.main(["--base", base, "--head", "HEAD"]) == 1
+    assert f"::error file=skills/{name}/SKILL.md::" in capsys.readouterr().out
+
+
+def test_cli_refuses_to_report_ok_over_a_file_it_could_not_read(repo, capsys, monkeypatch):
+    """The other half of the docstring's promise. Whatever the reason a blob
+    cannot be fetched, a file git listed as changed and this gate did not
+    compare has to be named, not counted as zero.
+    """
+    (repo / "skills" / "alpha" / "SKILL.md").write_text(BODY)
+    base = commit(repo, "base")
+    (repo / "skills" / "alpha" / "SKILL.md").write_text(skill("alpha bravo charlie\n"))
+    commit(repo, "cut it down")
+
+    monkeypatch.setattr(cpr, "_show", lambda rev, path: None)
+    assert cpr.main(["--base", base, "--head", "HEAD"]) == 1
+    out = capsys.readouterr().out
+    assert "skills/alpha/SKILL.md" in out, out
+    assert "OK:" not in out, out
+
+
+def test_cli_catches_a_deletion_in_a_crlf_skill_file(repo, capsys):
+    """End to end, through real git revisions, on the shape that passes
+    `validate-skills` and defeated the scope split here: CRLF line endings, a
+    deleted section, and a padded `description:` paying for it.
+    """
+    before, after = fixture("clud-bug-collaboration")
+    padded = "\n".join(
+        line + " " + " ".join(f"padding{i}" for i in range(60))
+        if line.startswith("description:")
+        else line
+        for line in after.split("\n")
+    )
+    d = repo / "skills" / "clud-bug-collaboration"
+    d.mkdir()
+    (d / "SKILL.md").write_bytes(before.replace("\n", "\r\n").encode())
+    base = commit(repo, "base")
+    (d / "SKILL.md").write_bytes(padded.replace("\n", "\r\n").encode())
+    commit(repo, "delete the section, pad the description")
+
+    assert cpr.main(["--base", base, "--head", "HEAD"]) == 1
+    assert "CLUD_BUG_QUIET" in capsys.readouterr().out

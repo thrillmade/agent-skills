@@ -112,9 +112,33 @@ MUTATIONS = [
         # half of the evasion above: the size cap excludes the frontmatter, so
         # padding there is free against the constraint that caused the defect.
         "frontmatter_folded_into_the_body",
-        "    frontmatter, body = (text[: m.end()], text[m.end() :]) if m else "
-        '("", text)',
+        "    frontmatter, body = text[: m.end()], text[m.end() :]",
         '    frontmatter, body = "", text',
+    ),
+    (
+        # The refusal deleted, so a file whose frontmatter cannot be located
+        # silently gets one merged scope instead of no verdict -- which is the
+        # same evasion, reached without anybody having to edit the split.
+        "unlocatable_frontmatter_merged_instead_of_refused",
+        "    if not m:\n        raise Unscopable()",
+        "    if not m:\n        return {"
+        '"frontmatter": "", "prose": text, "code": ""}',
+    ),
+    (
+        # Line endings stop being normalised. A SKILL.md with CRLF then passes
+        # `validate-skills` -- which reads through `Path.read_text` and never
+        # sees them -- and arrives here with no frontmatter this gate can find.
+        # Measured: all three historical deletions go green.
+        "line_endings_not_normalised",
+        '    return text.lstrip(BOM).replace("\\r\\n", "\\n").replace("\\r", "\\n")',
+        "    return text",
+    ),
+    (
+        # A fence closes on any run of three, so a ``` line inside a ````
+        # block ends it. Everything below changes scope without being edited.
+        "fence_length_ignored",
+        "            and len(m.group(1)) >= length",
+        "            and len(m.group(1)) >= 3",
     ),
     (
         # Replacements stop offsetting removals, so every reword and typo fix
@@ -138,8 +162,26 @@ MUTATIONS = [
         # cuts it drops out of both sides of the comparison and the gate prints
         # OK over a deletion it never looked at.
         "rename_pairing_removed",
-        '        "diff", "--name-status", "--find-renames=25%", base, head, "--", "skills"',
-        '        "diff", "--name-status", "--no-renames", base, head, "--", "skills"',
+        '        "diff", "--name-status", "-z", "--find-renames=25%", base, head, "--", "skills"',
+        '        "diff", "--name-status", "-z", "--no-renames", base, head, "--", "skills"',
+    ),
+    (
+        # Paths come back quoted, as the tab-and-newline format delivers any
+        # path with a byte outside printable ASCII. A quoted path matches no
+        # glob here, so the file leaves the comparison and the run prints OK
+        # over a deletion it never opened and never named. Written as the
+        # quoting rather than as the missing `-z`, so only the behaviour is
+        # mutated and not the parser around it.
+        "quoted_paths_drop_out_of_the_comparison",
+        '    fields = [f for f in out.split("\\0") if f]',
+        '    fields = [f if f.isascii() else \'"%s"\' % f for f in out.split("\\0") if f]',
+    ),
+    (
+        # A blob git named that will not come back is dropped in silence again,
+        # so the count in the success line stops meaning what it says.
+        "unreadable_blobs_dropped_in_silence",
+        "            if got is None:\n                self.unreadable.append((rev, path))",
+        "            if False:\n                self.unreadable.append((rev, path))",
     ),
     (
         # Unchanged files enter the comparison, so the success line reports
@@ -161,8 +203,12 @@ MUTATIONS = [
         # The ledger becomes a standing exemption: a row merged to main once
         # excuses every later deletion from that skill, silently.
         "ledger_not_scoped_to_the_change",
-        "    added = collections.Counter() if withdrawn else surplus",
-        "    added = after_rows",
+        "        self.added = (\n"
+        "            collections.Counter() if self.withdrawn else self.declared\n"
+        "        )",
+        "        self.added = collections.Counter(\n"
+        '            {(s[1], s[2]): n for s, n in head.items() if s[0] == "row"}\n'
+        "        )",
     ),
     (
         # The append-only rule deleted, so a row taken back out of the ledger
@@ -171,8 +217,10 @@ MUTATIONS = [
         # row -- the count worst of all, where one character covers any number
         # the author cares to type.
         "ledger_credits_rows_a_change_withdrew",
-        "    added = collections.Counter() if withdrawn else surplus",
-        "    added = surplus",
+        "        self.added = (\n"
+        "            collections.Counter() if self.withdrawn else self.declared\n"
+        "        )",
+        "        self.added = self.declared",
     ),
     (
         # The append-only rule narrowed to "the ledger got longer", which is
@@ -180,24 +228,71 @@ MUTATIONS = [
         # it back. The row that grows the total and the row that covers the cut
         # are then allowed to be different rows.
         "ledger_void_replaced_by_a_growing_row_count",
-        "    added = collections.Counter() if withdrawn else surplus",
-        "    added = (\n"
-        "        surplus\n"
-        "        if sum(after_rows.values()) > sum(before_rows.values())\n"
-        "        else collections.Counter()\n    )",
+        "        self.added = (\n"
+        "            collections.Counter() if self.withdrawn else self.declared\n"
+        "        )",
+        "        self.added = (\n"
+        "            self.declared\n"
+        "            if sum(head.values()) > sum(base.values())\n"
+        "            else collections.Counter()\n        )",
     ),
     (
-        # Collapsing AFTER subtracting instead of before. Under the append-only
-        # rule this no longer manufactures a declaration -- it voids one: an
-        # edit to an inherited row's wording, a typo fix or a trailing full
-        # stop, reads as that row withdrawn, so a copyedit to somebody else's
-        # old row kills the author's own genuine declaration in the same PR.
-        "ledger_collapsed_after_subtracting_not_before",
-        "    surplus = after_rows - before_rows\n"
-        "    withdrawn = before_rows - after_rows",
-        "    _before, _after = parse_ledger(ledger_before), parse_ledger(ledger_after)\n"
-        "    surplus = rows_by_size(_after - _before)\n"
-        "    withdrawn = rows_by_size(_before - _after)",
+        # THE CLASS, as a mutation. Slots stop being total: a line the parser
+        # cannot read stops occupying one, so the cardinality is a property of
+        # the parse again and every acceptance predicate is a staging slot --
+        # park a row where it does not parse, make it parse here, get a free
+        # declaration while the covering row sits in the diff as context.
+        "inert_lines_stop_occupying_a_slot",
+        '            slots[_declaration(line) or ("line", line)] += 1',
+        "            row = _declaration(line)\n"
+        "            if row:\n"
+        "                slots[row] += 1",
+    ),
+    (
+        # The other half of the same class: lines OUTSIDE the table stop being
+        # slots, so the table's extent becomes free to move. Deleting the prose
+        # line that ended it publishes every row below at no cost.
+        "lines_outside_the_table_stop_occupying_a_slot",
+        "            else:\n"
+        '                slots[("line", line)] += 1\n'
+        "        elif LEDGER_RULE_RE.match(line):",
+        "            else:\n"
+        "                pass\n"
+        "        elif LEDGER_RULE_RE.match(line):",
+    ),
+    (
+        # A line the parser cannot read ends the table again, so a malformed
+        # row hides every row beneath it and fixing its third cell publishes
+        # all of them at once.
+        "an_unparsable_row_ends_the_table",
+        '        if in_table and not line.startswith("|"):',
+        "        if in_table and not _declaration(line) and not "
+        "LEDGER_RULE_RE.match(line):",
+    ),
+    (
+        # A second header re-opens parsing, so a table anywhere in the document
+        # is live and the ledger's own "that table only" is false again.
+        "a_second_header_reopens_the_table",
+        "            if not seen_table and LEDGER_HEADER_RE.match(line):",
+        "            if LEDGER_HEADER_RE.match(line):",
+    ),
+    (
+        # The header anchor closes at three columns again. Adding a fourth to
+        # the table then stops the parser finding it at all -- every row goes
+        # silent and nobody can open the hatch.
+        "header_anchor_closed_at_three_columns",
+        r'LEDGER_HEADER_RE = re.compile(r"^\|\s*skill\s*\|\s*words\s*\|\s*why\s*\|", re.I)',
+        r'LEDGER_HEADER_RE = re.compile(r"^\|\s*skill\s*\|\s*words\s*\|\s*why\s*\|\s*$", re.I)',
+    ),
+    (
+        # The reason goes back into the row's identity. Under the append-only
+        # rule that no longer manufactures a declaration -- it voids one: a
+        # typo fix to an inherited row reads as that row withdrawn, so a
+        # copyedit to somebody else's old row kills the author's own genuine
+        # declaration in the same pull request.
+        "ledger_rows_keyed_on_their_reason_again",
+        '        return ("row", skill, int(count))',
+        '        return ("row", skill, int(count), reason)',
     ),
     (
         # The failure stops naming the withdrawal that caused it. The author is
@@ -205,8 +300,16 @@ MUTATIONS = [
         # fails anyway with no reason given -- which is how a gate stops being
         # read and starts being routed around.
         "withdrawal_not_explained_in_the_message",
-        "            if withdrawn and declares(surplus, skill, loss.net)",
-        "            if False",
+        "            if ledger.withdrawn\n            else \"\"",
+        '            if False\n            else ""',
+    ),
+    (
+        # "Rows stay after they merge" goes back to being asserted and enforced
+        # nowhere, so a change that empties the ledger while touching no
+        # SKILL.md is green.
+        "removed_rows_stop_being_a_finding",
+        "    if ledger.lost_rows:",
+        "    if False:",
     ),
     (
         # The count stops binding. A row can then be written blind, and the
@@ -230,14 +333,14 @@ MUTATIONS = [
         # their change, and the gate fails anyway -- an escape hatch that
         # cannot be opened is a bypass with extra steps.
         "ledger_rows_lose_their_multiplicity",
-        "            found[(skill, int(count), reason)] += 1",
-        '            found[(skill, int(count), "")] = 1',
+        '            slots[_declaration(line) or ("line", line)] += 1',
+        '            slots[_declaration(line) or ("line", line)] = 1',
     ),
     (
         # An undeclared declaration starts counting -- a row with no reason.
         "ledger_reason_not_required",
-        '        if not reason.strip("- ") or REASON_PLACEHOLDER in reason:',
-        "        if False:",
+        '    if not reason.strip("- ") or REASON_PLACEHOLDER in reason:',
+        "    if False:",
     ),
     (
         # The unfilled placeholder starts counting, so the hatch becomes
@@ -247,20 +350,38 @@ MUTATIONS = [
         'if not reason.strip("- "):',
     ),
     (
-        # Fences and comments stop being stripped, so the ledger's own worked
-        # example -- printed in a fence directly above the table -- parses as a
-        # live declaration. The hatch could then be used while the table a
-        # reader actually reads stayed empty, which is the whole point of it.
-        "ledger_fences_not_stripped",
-        '    text = re.sub(r"<!--.*?-->", "", text, flags=re.DOTALL)',
-        "    return text",
+        # Fences stop being read, so the ledger's own worked example -- a
+        # filled-in table printed in a fence -- parses as a live declaration.
+        # The hatch could then be used while the table a reader actually reads
+        # stayed empty, which is the whole point of it.
+        "ledger_fences_not_read",
+        "        if fenced or commented:",
+        "        if commented:",
+    ),
+    (
+        # HTML comments stop being read, so a commented-out draft of the table
+        # declares for real.
+        "ledger_comments_not_read",
+        "        if fenced or commented:",
+        "        if fenced:",
     ),
     (
         # Parsing stops being anchored to the table, so any pipe-shaped line
         # anywhere in the document declares a removal.
         "ledger_not_anchored_to_the_table",
-        "        if not in_table:\n            continue",
-        "        if False:\n            continue",
+        "        elif not in_table:",
+        "        elif False:",
+    ),
+    (
+        # A blank line ends the table again. The ledger's table is the last
+        # thing in the file, so a row pasted after a blank separator goes
+        # unread and the failure reprints the row the author just wrote -- an
+        # escape hatch that cannot be opened is a bypass with extra steps.
+        "a_blank_line_ends_the_table",
+        "        if not line:\n"
+        "            continue  # a blank line carries no identity and declares "
+        "nothing",
+        "        if not line:\n            in_table = False\n            continue",
     ),
     # -- the message --------------------------------------------------------
     (

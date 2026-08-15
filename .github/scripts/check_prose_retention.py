@@ -80,15 +80,27 @@ Three moves make that separable, and all three are load-bearing:
    Both are one defect -- a gain somewhere cheap paying for a loss somewhere
    expensive -- so both get one fix rather than a patch each.
 
+   The split has to be findable for any of that to hold, so a file whose
+   frontmatter cannot be located gets NO VERDICT rather than one merged scope.
+   Merging is not the conservative default: it IS the first evasion. And the
+   file that reaches it is not hypothetical -- `validate_skills.py` reads
+   through `Path.read_text`, whose universal newline translation hides CRLF
+   from its frontmatter regex, while this gate decodes the git blob. A CRLF
+   SKILL.md therefore passed that gate and defeated this split. Line endings
+   are normalised here so it does not, and the refusal stands behind that for
+   whatever the next spelling turns out to be.
+
 Stdlib only.
 
 Inputs (main): a base and a head git revision, plus the repo at cwd.
 Outputs (stdout): one `::error file=<path>::<msg>` GitHub annotation per
-undeclared removal, then a guidance block.
+undeclared removal, per file that could not be read or scoped, and one against
+the ledger if the change took a merged row out of it -- then a guidance block.
 
 Exit codes:
   0  no undeclared prose removal
-  1  undeclared prose removal, or the comparison could not be made
+  1  undeclared prose removal, a merged ledger row withdrawn, or the comparison
+     could not be made
 """
 
 from __future__ import annotations
@@ -120,10 +132,19 @@ URL_RE = re.compile(r"<https?://[^>\s]+>|\bhttps?://\S+")
 # makes bold/italic/code-span formatting changes free.
 WORD_RE = re.compile(r"[A-Za-z0-9_]+(?:['’-][A-Za-z0-9_]+)*")
 
+# `validate_skills.py`'s own frontmatter boundary, character for character --
+# see split_scopes. Applied to text with its line endings normalised, which
+# that gate gets for free from `Path.read_text` and this one does not.
 FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
 
-# ```lang or ~~~ , indented or not. A block closes on the same character.
-FENCE_RE = re.compile(r"^[ \t]*(`{3,}|~{3,})")
+# A byte-order mark is not content. Left in place it sits before the opening
+# `---` and the frontmatter stops being locatable.
+BOM = "﻿"
+
+# ```lang or ~~~ , indented or not, with whatever follows the run of fence
+# characters captured separately -- a closing fence carries nothing but the
+# fence.
+FENCE_RE = re.compile(r"^[ \t]*(`{3,}|~{3,})(.*)$")
 
 # The three parts of a SKILL.md, scored separately and never netted against
 # each other.
@@ -164,9 +185,10 @@ SCOPE_LABEL = {
 # Re-run the replay before moving any of these. The argument is the empty band,
 # not the digit -- and not the tally either. How many file-revisions the replay
 # compares, and how many of them fire, is a function of which refs a given
-# checkout happens to have: measured here at 19 fires over 172 file-revisions
-# from `--all` and 7 over 99 from `origin/dev`, same detector, same day. The
-# bands below are what reproduce, so those are what is quoted:
+# checkout happens to have: measured at 19 fires over 170 file-revisions from
+# `--all` and 7 over 99 from `origin/dev`, same detector, same run. A checkout
+# with two more branch tips in it gave 172 for the same 19. The bands are what
+# reproduce, so those are what is quoted:
 #
 #   git log --all --format=%H -- 'skills/*/SKILL.md'   # then diff each parent
 #
@@ -192,31 +214,108 @@ def words(text: str) -> list[str]:
     return WORD_RE.findall(normalise(text))
 
 
+def unwrap(text: str) -> str:
+    """One spelling of a line break and no byte-order mark.
+
+    This gate decodes the git blob itself, so it sees the bytes that are in the
+    tree. `validate_skills.py` reads through `Path.read_text`, whose universal
+    newline translation turns CRLF into LF before its frontmatter regex ever
+    runs. A CRLF SKILL.md therefore satisfies that gate and arrived here with a
+    frontmatter block this one could not find -- and an unfound frontmatter
+    used to mean one merged scope, which is the exact configuration in which
+    padding a `description:` pays for a deleted body section. Reproduced on all
+    three of the historical cases: every one of them goes green.
+    """
+    return text.lstrip(BOM).replace("\r\n", "\n").replace("\r", "\n")
+
+
+def lines_of(text: str) -> list[str]:
+    """The file's lines, one per line break, with no phantom last line.
+
+    Deliberately not `splitlines()`, which also breaks on form feed, vertical
+    tab and U+2028 -- none of which git, markdown or a diff treats as a line.
+    """
+    out = unwrap(text).split("\n")
+    if out and out[-1] == "":
+        out.pop()
+    return out
+
+
+class Fence:
+    """Fenced-code state, one line at a time, honouring the fence's LENGTH.
+
+    CommonMark: a run of N backticks or tildes opens a block, and only a run of
+    the same character, at least N long, carrying nothing else, closes it.
+    Normalising every fence to three characters -- as this did -- let a ``` line
+    *inside* a ```` block close it. Everything below that line then changed
+    scope, in a SKILL.md and in the ledger both, without anybody editing it:
+    the same shape as the acceptance flips the ledger's slot accounting exists
+    to stop, reached through the fence instead.
+    """
+
+    def __init__(self) -> None:
+        self._open: tuple[str, int] | None = None
+
+    def feed(self, line: str) -> bool:
+        """Advance one line. True if the line is part of a fenced block, the
+        opening and closing fences included.
+        """
+        m = FENCE_RE.match(line)
+        if self._open is None:
+            if m:
+                self._open = (m.group(1)[0], len(m.group(1)))
+                return True
+            return False
+        char, length = self._open
+        if (
+            m
+            and m.group(1)[0] == char
+            and len(m.group(1)) >= length
+            and not m.group(2).strip()
+        ):
+            self._open = None
+        return True
+
+
+class Unscopable(Exception):
+    """A SKILL.md whose frontmatter block cannot be delimited.
+
+    Raised rather than silently returning one merged scope. Scoring the parts
+    separately is the whole of move 3, and a file whose parts cannot be told
+    apart is a file this gate has nothing to say about -- so it says that,
+    the way it already refuses when it cannot resolve a base.
+    """
+
+    def __init__(self, side: str = "") -> None:
+        self.side = side
+        super().__init__("the frontmatter block could not be located")
+
+
 def split_scopes(text: str) -> dict[str, str]:
     """Cut a SKILL.md into the three parts that are scored separately.
 
     The frontmatter boundary is `validate_skills.py`'s own -- it measures the
     body as `content[m.end():]` against the size cap, so that is exactly where
     the byte pressure stops and the free-padding surface begins.
+
+    Raises `Unscopable` when that boundary cannot be found. A merged scope is
+    not a conservative default here, it is the evasion: with the frontmatter
+    counted as prose, 46 words of padding in a `description:` net a deleted
+    body section to nothing. Refusing costs a red run on a file that
+    `validate-skills` rejects anyway; merging costs a green one on a file it
+    accepts.
     """
+    text = unwrap(text)
     m = FRONTMATTER_RE.match(text)
-    frontmatter, body = (text[: m.end()], text[m.end() :]) if m else ("", text)
+    if not m:
+        raise Unscopable()
+    frontmatter, body = text[: m.end()], text[m.end() :]
 
     prose: list[str] = []
     code: list[str] = []
-    fence: str | None = None
-    for line in body.splitlines():
-        marker = FENCE_RE.match(line)
-        if fence is None:
-            if marker:
-                fence = marker.group(1)[0] * 3
-                code.append(line)
-            else:
-                prose.append(line)
-        else:
-            code.append(line)
-            if marker and marker.group(1)[0] * 3 == fence:
-                fence = None
+    fence = Fence()
+    for line in body.split("\n"):
+        (code if fence.feed(line) else prose).append(line)
 
     return {
         "frontmatter": frontmatter,
@@ -241,7 +340,13 @@ class Loss:
 
     def __init__(self, before: str, after: str) -> None:
         self._before, self._after = before, after
-        b_scopes, a_scopes = split_scopes(before), split_scopes(after)
+        scopes = {}
+        for side, text in (("base", before), ("head", after)):
+            try:
+                scopes[side] = split_scopes(text)
+            except Unscopable:
+                raise Unscopable(side) from None
+        b_scopes, a_scopes = scopes["base"], scopes["head"]
 
         self.scopes: dict[str, int] = {}
         self.gone: collections.Counter[str] = collections.Counter()
@@ -357,6 +462,32 @@ class Loss:
 #   have to be the same row, and the inherited one it was laundering through is
 #   missing.
 #
+#   CARDINALITY COUNTS THE FILE, NOT THE PARSE. That is the rule above made
+#   true a second time, and it is the whole of this round. Counted over PARSED
+#   rows, the invariant has one route out: a line whose ACCEPTANCE flips
+#   without any line being added or removed. Every rule that made the parser
+#   drop a line was therefore a staging slot -- park a row in a fence, in an
+#   HTML comment, above the header, under a placeholder reason, behind a
+#   malformed row, in a count that is not a number, in a second table -- let
+#   that change merge, and then make it readable here. The ledger gains a
+#   declaration, the covering row sits in this change's diff as unchanged
+#   context, and cardinality never notices because the row was never counted
+#   at base. Eight predicates did it, and patching eight predicates would have
+#   been the fifth round of patching whichever hole the last review happened to
+#   try.
+#
+#   So every LINE occupies a slot, whether or not it parses: an accepted row is
+#   keyed by (skill, count), and anything else by its own text. The total is
+#   then the ledger's non-blank line count, which no change to what parses can
+#   move, and the invariant follows from arithmetic rather than from the list
+#   of predicates: `withdrawn` empty means head holds at least as many slots of
+#   every identity as base, so with equal totals the two are the same multiset
+#   and there is no surplus at all. A line that flips from inert to accepted
+#   withdraws its own text-keyed slot on the way, which is a withdrawal, which
+#   voids the change -- and the only way to put that slot back is to add a line
+#   carrying the row verbatim, which is a declaration in the diff where a
+#   reviewer reads it. That is the property this rule was always claiming.
+#
 #   THE COUNT HAS TO COVER THE CUT. That is not busywork -- it is what stops a
 #   row being written blind, and it puts the magnitude in the diff where a
 #   reviewer reads it. It is a floor, not an equality: a later commit in the
@@ -388,8 +519,16 @@ class Loss:
 # reason.
 
 LEDGER_ROW_RE = re.compile(r"^\|([^|]+)\|([^|]+)\|(.+?)\|?\s*$")
-LEDGER_HEADER_RE = re.compile(r"^\|\s*skill\s*\|\s*words\s*\|\s*why\s*\|\s*$", re.I)
+
+# Anchored to the three columns it needs and open at the right-hand end, so a
+# fourth column added to the table years from now still opens it. Closed with
+# `\s*$`, adding one to the HEADER stopped the parser finding the table at all
+# -- every row in it went silent and nobody could open the hatch, which is the
+# opposite failure to the one this anchor is for.
+LEDGER_HEADER_RE = re.compile(r"^\|\s*skill\s*\|\s*words\s*\|\s*why\s*\|", re.I)
 LEDGER_RULE_RE = re.compile(r"^\|[\s:|-]+\|\s*$")
+
+COMMENT_OPEN, COMMENT_CLOSE = "<!--", "-->"
 
 # The reason field the error message hands you, unfilled. Rejected on sight:
 # the hatch is meant to be cheap, not automatic, and the one thing it has to
@@ -398,90 +537,153 @@ LEDGER_RULE_RE = re.compile(r"^\|[\s:|-]+\|\s*$")
 REASON_PLACEHOLDER = "<why these words are gone>"
 
 
-def _uncode(text: str) -> str:
-    """Drop fenced blocks and HTML comments from the ledger before parsing.
+def _comment_state(line: str, inside: bool) -> tuple[bool, bool]:
+    """(did this line start inside an HTML comment, does the next one).
 
-    The ledger documents its own row format, in a fence, directly above the
-    table. Without this that example parsed as a live declaration -- so the
-    hatch could be used while the table a reader actually reads stayed empty,
-    which defeats the entire point of leaving a record.
+    A row with a trailing `<!-- note -->` is still a row -- the line starts
+    outside the comment -- while every line of a commented-out draft table
+    starts inside one and declares nothing.
     """
-    text = re.sub(r"<!--.*?-->", "", text, flags=re.DOTALL)
-    out: list[str] = []
-    fence: str | None = None
-    for line in text.splitlines():
-        marker = FENCE_RE.match(line)
-        if fence is None:
-            if marker:
-                fence = marker.group(1)[0] * 3
-                continue
-            out.append(line)
-        elif marker and marker.group(1)[0] * 3 == fence:
-            fence = None
-    return "\n".join(out)
+    started = inside
+    i = 0
+    while i < len(line):
+        marker = COMMENT_CLOSE if inside else COMMENT_OPEN
+        j = line.find(marker, i)
+        if j < 0:
+            break
+        inside, i = not inside, j + len(marker)
+    return started, inside
 
 
-def parse_ledger(text: str) -> collections.Counter[tuple[str, int, str]]:
-    """Every declaration row in the ledger table, counted with multiplicity.
+def _declaration(line: str) -> tuple[str, str, int] | None:
+    """The row a table line declares, or None if it declares nothing.
 
-    Only rows inside the `| skill | words | why |` table count -- parsing is
-    anchored to that header and stops at the end of the table, so a row written
-    anywhere else in the document (in a fence, in a comment, in an example)
-    declares nothing. The point of the hatch is the record it leaves; a
-    declaration a reader of the ledger would never see is not one.
-
-    Rows whose reason is blank, or still the pasted placeholder, are ignored:
-    an undeclared declaration is not one either.
+    Keyed on (skill, count) and NOT on the reason. Two removals of the same
+    size from the same skill are two rows, so multiplicity has to survive; the
+    wording must not, or a one-character fix to an inherited row's reason reads
+    as that row withdrawn and voids the change's own genuine declarations.
+    Dropping the reason before comparing prices a copyedit at zero in both
+    directions, which is what it costs.
     """
-    found: collections.Counter[tuple[str, int, str]] = collections.Counter()
-    in_table = False
-    for raw in _uncode(text).splitlines():
+    m = LEDGER_ROW_RE.match(line)
+    if not m:
+        return None
+    skill, count, reason = (g.strip().strip("`") for g in m.groups())
+    if not reason.strip("- ") or REASON_PLACEHOLDER in reason:
+        return None
+    try:
+        return ("row", skill, int(count))
+    except ValueError:
+        return None
+
+
+def ledger_slots(text: str) -> collections.Counter[tuple]:
+    """Every non-blank LINE of the ledger, as a slot with an identity.
+
+    A declaration is keyed by what it declares; the table's header and rule row
+    by what they are, so widening the table costs nothing; and every other line
+    -- prose, a fence, a commented draft, a malformed row, a row parked above
+    the header -- by its own text. Nothing is dropped. See the fourth rule
+    above: the total has to be a property of the file, or a line becoming
+    readable is a free declaration.
+
+    The table runs from its header to the first non-blank line that does not
+    begin with `|`, and there is only ever one table. Three choices, and each
+    one is a defect that was reproduced:
+
+      A LINE THAT DOES NOT PARSE DOES NOT END THE TABLE. It ends where markdown
+      ends it -- at something that is not a table row -- rather than where the
+      parser gives up. Ending on an unparsable line made a malformed row hide
+      every row beneath it, so fixing that row's third cell published all of
+      them at once.
+
+      A BLANK LINE DOES NOT END IT EITHER. The table is the last thing in the
+      file and appending is what an author does, so a blank separator before a
+      pasted row is the ordinary case, not an exotic one. Ending on a blank
+      left a correctly written row unread and the failure reprinting the row
+      the author had just added -- an escape hatch that cannot be opened is a
+      bypass with extra steps. Refusing to end the table at all is the other
+      way to get this wrong: a pipe-shaped sentence in the prose below is not a
+      declaration.
+
+      ONLY THE FIRST TABLE COUNTS. A second `| skill | words | why |` header
+      re-opened parsing, so any table anywhere in the document was live and the
+      ledger's own "that table only" was false.
+    """
+    slots: collections.Counter[tuple] = collections.Counter()
+    fence = Fence()
+    in_comment = False
+    in_table = seen_table = False
+
+    for raw in lines_of(text):
         line = raw.strip()
-        if LEDGER_HEADER_RE.match(line):
-            in_table = True
-            continue
-        if not in_table:
-            continue
-        if LEDGER_RULE_RE.match(line):
-            continue
-        m = LEDGER_ROW_RE.match(line)
-        if not m:
+        fenced = fence.feed(raw)
+        commented, in_comment = _comment_state(line, in_comment)
+
+        if not line:
+            continue  # a blank line carries no identity and declares nothing
+        if in_table and not line.startswith("|"):
             in_table = False  # the table ended; what follows it is prose
-            continue
-        skill, count, reason = (g.strip().strip("`") for g in m.groups())
-        if not reason.strip("- ") or REASON_PLACEHOLDER in reason:
-            continue
-        try:
-            found[(skill, int(count), reason)] += 1
-        except ValueError:
-            continue
-    return found
+        if fenced or commented:
+            slots[("line", line)] += 1
+        elif not in_table:
+            if not seen_table and LEDGER_HEADER_RE.match(line):
+                in_table = seen_table = True
+                slots[("header",)] += 1
+            else:
+                slots[("line", line)] += 1
+        elif LEDGER_RULE_RE.match(line):
+            slots[("rule",)] += 1
+        else:
+            slots[_declaration(line) or ("line", line)] += 1
+
+    return slots
+
+
+def parse_ledger(text: str) -> collections.Counter[tuple[str, int]]:
+    """The declarations the ledger's table carries, counted with multiplicity.
+
+    The readable half of `ledger_slots`: what a reader of the ledger would see
+    as a row. The gate compares slots, not these -- a declaration a reader
+    would never see is not one, and a line that is not a declaration still has
+    to occupy a slot.
+    """
+    return collections.Counter(
+        {(s[1], s[2]): n for s, n in ledger_slots(text).items() if s[0] == "row"}
+    )
 
 
 def ledger_row(skill: str, net: int) -> str:
     return f"| {skill} | {net} | {REASON_PLACEHOLDER} |"
 
 
-def rows_by_size(
-    declarations: collections.Counter[tuple[str, int, str]],
-) -> collections.Counter[tuple[str, int]]:
-    """Collapse parsed rows onto `(skill, count)`, dropping the reason.
+class LedgerDiff:
+    """What a change did to `docs/prose-removals.md`, slot by slot.
 
-    `parse_ledger` keys on the whole row -- reason included -- because that is
-    what lets a reader see two declarations of the same size as two rows rather
-    than one. But the reason is not part of what makes a row NEW, and under the
-    append-only rule above it must not be part of what makes one MISSING
-    either: keyed on the whole row, a one-character fix to an inherited row's
-    wording -- a typo, a trailing full stop -- reads as that row withdrawn and
-    an unrelated one added. That once manufactured a declaration outright; it
-    would now void the change's own genuine ones instead, which is the same
-    defect pointed the other way. Collapsing first prices a copyedit to an old
-    row at zero in both directions, which is what it costs.
+    `added` is what the change may spend: the declarations it is credited with.
+    `lost_rows` is a finding in its own right -- the ledger says a row stays
+    after it merges, and that was asserted and enforced nowhere, so a change
+    that wiped every row while touching no SKILL.md went green.
     """
-    collapsed: collections.Counter[tuple[str, int]] = collections.Counter()
-    for (skill, count, _reason), n in declarations.items():
-        collapsed[(skill, count)] += n
-    return collapsed
+
+    def __init__(self, before: str, after: str) -> None:
+        base, head = ledger_slots(before), ledger_slots(after)
+        self.surplus = head - base
+        self.withdrawn = base - head
+        self.lost_rows = collections.Counter(
+            {s: n for s, n in self.withdrawn.items() if s[0] == "row"}
+        )
+        # A change that took ANY slot out is credited with nothing: an edit is a
+        # withdrawal plus an addition, so crediting the addition while ignoring
+        # the withdrawal is exactly what let an edit to any one column -- or a
+        # line made readable that had been parked unreadable -- declare on its
+        # own.
+        self.declared = collections.Counter(
+            {(s[1], s[2]): n for s, n in self.surplus.items() if s[0] == "row"}
+        )
+        self.added = (
+            collections.Counter() if self.withdrawn else self.declared
+        )
 
 
 def declares(
@@ -489,6 +691,13 @@ def declares(
 ) -> bool:
     """Does a row this change added cover a loss of `net` words from `skill`?"""
     return any(s == skill and c >= net for s, c in added)
+
+
+# The one phrase that identifies an undeclared-removal annotation, owned here
+# so the message and the count of them cannot drift apart -- `run` also
+# annotates the ledger itself and any file it could not scope, and those are
+# different findings.
+LOST_PROSE = "::this SKILL.md lost "
 
 
 def run(
@@ -506,45 +715,67 @@ def run(
     otherwise-ordinary edit -- which is how all three historical cases got
     through.
     """
-    before_rows = rows_by_size(parse_ledger(ledger_before))
-    after_rows = rows_by_size(parse_ledger(ledger_after))
-
-    # What this change added to the ledger, and what it took back out. A change
-    # that took ANY row out is credited with nothing: an edit is a withdrawal
-    # plus an addition, so crediting the addition while ignoring the withdrawal
-    # is exactly what let an edit to any one column declare on its own. See the
-    # append-only rule above.
-    surplus = after_rows - before_rows
-    withdrawn = before_rows - after_rows
-    added = collections.Counter() if withdrawn else surplus
+    ledger = LedgerDiff(ledger_before, ledger_after)
     errors: list[str] = []
+
+    if ledger.lost_rows:
+        rows = ", ".join(
+            f"`| {skill} | {count} |`"
+            for _kind, skill, count in sorted(ledger.lost_rows)
+        )
+        errors.append(
+            f"::error file={LEDGER}::this change takes "
+            f"{sum(ledger.lost_rows.values())} declared row(s) back out of the "
+            f"ledger: {rows}. A row stays after it merges -- this file is the "
+            f"record, and a change that empties it erases somebody else's "
+            f"declaration about somebody else's deletion. Correcting a row "
+            f"means adding a new one and leaving the old one standing, because "
+            f"between two snapshots an edit is a removal plus an addition and "
+            f"nothing says which added row is which removed one."
+        )
 
     for path in sorted(cases):
         before, after = cases[path]
-        loss = Loss(before, after)
+        skill = Path(path).parent.name
+        try:
+            loss = Loss(before, after)
+        except Unscopable as e:
+            errors.append(
+                f"::error file={path}::this SKILL.md's YAML frontmatter could "
+                f"not be located at the {e.side} revision, so its frontmatter, "
+                f"prose and code cannot be told apart and no verdict is "
+                f"reported for it. A SKILL.md opens with a `---` line and "
+                f"closes the block with another. Scoring the parts separately "
+                f"is what stops words added to a `description:` paying for "
+                f"prose deleted from the body, so a file whose parts cannot be "
+                f"separated is one this gate has nothing to say about."
+            )
+            continue
         if not loss:
             continue
 
-        skill = Path(path).parent.name
-        if declares(added, skill, loss.net):
+        if declares(ledger.added, skill, loss.net):
             continue
 
-        # Only when a withdrawal is what made the difference. Otherwise the
-        # author gets told about a rule that had no bearing on their failure.
+        # Printed whenever a withdrawal stands, not only when a surplus row
+        # would otherwise have covered the cut. While anything is missing from
+        # the ledger no row this change adds counts at all, so "add the row
+        # printed above and this gate passes" is false for every one of these
+        # authors, and the sentence that explains why was the one being
+        # withheld.
         rewritten = (
-            f" A row in this change's ledger does cover this, but the change "
-            f"also takes {sum(withdrawn.values())} row(s) that were already "
-            f"there back OUT of {LEDGER}, and while it does that no row it adds "
-            f"counts: between two snapshots an edit to an inherited row is a "
-            f"removal plus an addition, so any edit at all would otherwise "
-            f"declare on its own. Put back what it removed and add yours as a "
-            f"new row."
-            if withdrawn and declares(surplus, skill, loss.net)
+            f" This change also takes {sum(ledger.withdrawn.values())} line(s) "
+            f"that were already there back OUT of {LEDGER}, and while it does "
+            f"that no row it adds counts: between two snapshots an edit to an "
+            f"inherited row is a removal plus an addition, so any edit at all "
+            f"would otherwise declare on its own. Put back what it removed and "
+            f"add yours as a new row."
+            if ledger.withdrawn
             else ""
         )
 
         errors.append(
-            f"::error file={path}::this SKILL.md lost {loss.net} words that "
+            f"::error file={path}{LOST_PROSE}{loss.net} words that "
             f"nothing in the same part of it replaced ({loss.breakdown()}). "
             f"Rewrapping, reordering, moving a line and converting `{skill}` "
             f"to a markdown link all score zero here, so this is content, not "
@@ -615,6 +846,7 @@ class Diff:
         self.added: list[str] = []
         self.deleted: list[str] = []
         self.renamed: list[tuple[str, str]] = []
+        self.unreadable: list[tuple[str, str]] = []
 
     def pair(self, base: str, old: str, head: str, new: str) -> None:
         """Record one before/after comparison, whatever the paths were called.
@@ -622,12 +854,42 @@ class Diff:
         One site, so the rename branch and the ordinary-modification branch
         cannot drift apart -- and so "did this file actually change?" is a
         single decision rather than a promise made twice.
+
+        git named these two revisions of this path itself, so a blob that will
+        not come back is a comparison this gate could not make. Recorded rather
+        than dropped: dropping it printed OK over a file that was never opened
+        and never mentioned, which is the exact thing this class says out loud
+        it does not do.
         """
         before, after = _show(base, old), _show(head, new)
+        for rev, path, got in ((base, old, before), (head, new, after)):
+            if got is None:
+                self.unreadable.append((rev, path))
         if before is None or after is None:
             return
         if before != after:
             self.cases[new] = (before, after)
+
+
+def _name_status(out: str) -> list[tuple[str, list[str]]]:
+    """Parse `git diff --name-status -z` into (status, paths) records.
+
+    NUL-separated, because the tab-and-newline format QUOTES any path carrying
+    a byte outside printable ASCII -- `skills/\\316\\261-skill/SKILL.md`, with
+    the quotes -- and a quoted path matches no glob here, so the file dropped
+    out of the comparison and the run printed "OK: 0 changed SKILL.md file(s)"
+    over a real deletion. Reproduced. A status starting R or C carries two
+    paths; everything else carries one.
+    """
+    fields = [f for f in out.split("\0") if f]
+    records: list[tuple[str, list[str]]] = []
+    i = 0
+    while i < len(fields):
+        status = fields[i]
+        n = 2 if status[:1] in ("R", "C") else 1
+        records.append((status, fields[i + 1 : i + 1 + n]))
+        i += 1 + n
+    return records
 
 
 def collect(base: str, head: str) -> Diff:
@@ -653,14 +915,12 @@ def collect(base: str, head: str) -> Diff:
     """
     diff = Diff()
     got = _git(
-        "diff", "--name-status", "--find-renames=25%", base, head, "--", "skills"
+        "diff", "--name-status", "-z", "--find-renames=25%", base, head, "--", "skills"
     )
     if got.returncode != 0:
         return diff
 
-    for line in got.stdout.splitlines():
-        fields = line.split("\t")
-        status, paths = fields[0], [p for p in fields[1:] if p]
+    for status, paths in _name_status(got.stdout):
         skill_paths = [p for p in paths if SKILL_GLOB_RE.match(p)]
         if not skill_paths:
             continue
@@ -752,12 +1012,33 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 1
 
-    errors = run(diff.cases, ledger_before, ledger_after)
+    errors = [
+        f"::error file={path}::git lists this file as changed between the two "
+        f"revisions, but its content at {rev} could not be read, so it was not "
+        f"compared and no verdict is reported for it."
+        for rev, path in diff.unreadable
+    ]
+    errors += run(diff.cases, ledger_before, ledger_after)
 
     if errors:
         for e in errors:
             print(e)
-        print(f"::error::{len(errors)} SKILL.md file(s) lost prose undeclared")
+        undeclared = sum(1 for e in errors if LOST_PROSE in e)
+        if undeclared:
+            print(f"::error::{undeclared} SKILL.md file(s) lost prose undeclared")
+
+        # The last sentence has to be true of the failure the reader is looking
+        # at. It said "add the row printed above and this gate passes" over
+        # every failure, including the one where a withdrawal from the ledger
+        # means no row they add can count.
+        remedy = (
+            f"Add the row printed above\nto {LEDGER} in this same change and "
+            f"this gate passes."
+            if not LedgerDiff(ledger_before, ledger_after).withdrawn
+            else f"Add the row printed above to {LEDGER} -- and put back what "
+            f"this change\ntook out of that file, because while anything is "
+            f"missing from it no row this\nchange adds counts at all."
+        )
         print(
             f"\nA size limit and a link sweep both push in the same direction: "
             f"delete something.\nThat is how three skills lost real content on "
@@ -772,8 +1053,7 @@ def main(argv: list[str] | None = None) -> int:
             f"removal, same as a\ndeletion, and costs exactly one ledger row. "
             f"That row is the whole point of the ledger,\nnot a way around "
             f"it.\n\nDeleting prose is allowed. Doing it silently is not. "
-            f"Add the row printed above\nto {LEDGER} in this same change and "
-            f"this gate passes."
+            f"{remedy}"
         )
         return 1
 

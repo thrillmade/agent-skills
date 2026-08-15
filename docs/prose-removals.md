@@ -28,6 +28,12 @@ noise in this repository's history, with the smallest real removal in that part
 four times higher or more. `check_prose_retention.py` carries the distribution
 and the command to re-measure it.
 
+Splitting a file into its parts is what makes all of that work, so a `SKILL.md`
+whose YAML frontmatter cannot be found gets **no verdict at all** rather than
+one merged part — the gate says so and fails, the way it does when it cannot
+work out what to compare against. Open with a `---` line and close the block
+with another.
+
 ## How to add a row
 
 Run the gate, or read the CI failure. Either prints the exact row:
@@ -48,22 +54,31 @@ Paste the row below and replace the placeholder with the reason. That is the
 whole cost — and the placeholder is rejected unfilled, because deciding the
 words are safe to lose is the one part of this that cannot be automated.
 
-Five rules make the row a declaration rather than a standing exemption:
+Six rules make the row a declaration rather than a standing exemption:
 
 - **Only a row your change adds counts.** A row that was already there is
   somebody else's declaration about somebody else's deletion. Inheriting it
   would make this file the blanket exemption the size gate deliberately
   removed. Editing one does not make it yours, and which column you edit — the
-  reason, the number, even the skill name — makes no difference: between two
-  versions of a text file an edit is one row removed and one row added, and
-  nothing says which added row is which removed one.
+  reason, the number, even the skill name, even a column added to this table
+  years from now — makes no difference: between two versions of a text file an
+  edit is one row removed and one row added, and nothing says which added row
+  is which removed one.
 - **Nothing already here may be taken back out.** That is what makes the rule
-  above true rather than merely intended. Your change is credited with the rows
-  this file gained over the rows it already had, so a change that removes or
-  rewrites an existing row is credited with nothing at all — including its own
-  honest rows — until it puts that row back. Adding a throwaway row does not
-  buy the difference: the row that makes this file longer and the row that
-  covers your cut have to be the same row.
+  above true rather than merely intended. Your change is credited with what
+  this file gained over what it already had, so a change that removes or
+  rewrites anything in it is credited with nothing at all — including its own
+  honest rows — until it puts that back. Adding a throwaway row does not buy
+  the difference: the row that makes this file longer and the row that covers
+  your cut have to be the same row.
+- **A line the gate cannot read still takes up a line.** Every line of this
+  file occupies a slot: a row by what it declares, and anything else — prose, a
+  fence, a commented-out draft, a row that is missing a cell or whose count is
+  not a number — by its own text. So a row parked somewhere unreadable and made
+  readable by a later change declares nothing in that change: the line it
+  vacated is a removal, and a removal credits you with nothing. Without this
+  the rule above was an invariant over what *parses* rather than over this
+  file, and every way of writing an unreadable row was somewhere to stage one.
 - **The count must cover the cut.** It cannot be written blind, and it puts the
   size of the cut in the diff where a reviewer reads it. It is a floor, not an
   exact match: if a later commit in the same PR adds words back, the row you
@@ -73,11 +88,19 @@ Five rules make the row a declaration rather than a standing exemption:
 - **A second removal needs a second row**, even from the same skill at the same
   size. Rows are counted, not deduplicated.
 
-Rows go in the table at the bottom of this file — that table only, not in a
-fenced example and not in a comment. The record is the point.
+Rows go in the table at the bottom of this file — the **first** such table in
+it, and only that one, so a fenced example or a commented-out draft elsewhere
+in the document declares nothing and does not shadow the real table either. The
+record is the point.
 
-Rows stay after they merge. This is a record, not a queue — and that is
-enforced, not merely asked for: see the second rule above.
+Paste the row anywhere inside that table. A blank line before it is fine; the
+table ends at the first line that is neither blank nor a table row, so prose
+below it stays prose.
+
+**Rows stay after they merge.** This is a record, not a queue, and the gate
+fails on its own if a change takes a merged row back out — with no SKILL.md
+involved and nothing else wrong. Correcting a row means adding a new one and
+leaving the old one standing.
 
 The gate is characterized against the three real deletions, vendored with their
 provenance in
