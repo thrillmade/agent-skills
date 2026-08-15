@@ -73,6 +73,10 @@ agent-skills
 │   ├── visual-polish
 │   ├── wcag-contrast
 │   └── web-interface-guidelines-review
+├── tests
+│   ├── conftest.py
+│   ├── test_validate_skills.py
+│   └── test_validate_skills_cli.py
 ├── .cursorrules
 ├── .gitattributes
 ├── .gitignore

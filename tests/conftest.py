@@ -1,0 +1,84 @@
+"""Shared fixtures for the `.github/scripts` test suite.
+
+`validate_skills` lives in `.github/scripts/`, which is not a package and is
+not importable by default -- put it on `sys.path` here rather than in every
+test module.
+"""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+import pytest
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+SCRIPTS = REPO_ROOT / ".github" / "scripts"
+
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+import validate_skills  # noqa: E402  -- import needs the sys.path line above
+
+
+# A SKILL.md that passes every rule. Tests break exactly one thing at a time
+# off this baseline, so a failure names the rule that fired.
+VALID_SKILL = """---
+name: {name}
+description: What this skill does and when to use it.
+---
+
+# Title
+
+Body.
+"""
+
+
+class SkillTree:
+    """A throwaway repo-shaped tree: `skills/<name>/SKILL.md` plus an optional
+    `docs/placement-map.json`. The fixture chdirs into it, because the gate
+    resolves both paths relative to the cwd.
+    """
+
+    def __init__(self, base: Path) -> None:
+        self.base = base
+
+    def skill(self, name: str, text: str | None = None) -> Path:
+        """Create `skills/<name>/`. `text=None` leaves the dir without a
+        SKILL.md (the "missing SKILL.md" case).
+        """
+        d = self.base / "skills" / name
+        d.mkdir(parents=True, exist_ok=True)
+        if text is not None:
+            (d / "SKILL.md").write_text(text, encoding="utf-8")
+        return d
+
+    def valid_skill(self, name: str = "alpha") -> Path:
+        return self.skill(name, VALID_SKILL.format(name=name))
+
+    def frontmatter(self, name: str = "alpha", extra: str = "", body: str = "\n# Title\n\nBody.\n") -> Path:
+        """A valid skill with `extra` YAML lines spliced into the frontmatter."""
+        fm = f"---\nname: {name}\ndescription: What this skill does.\n{extra}---\n"
+        return self.skill(name, fm + body)
+
+    def placement_map(self, obj: object = None, raw: str | None = None) -> Path:
+        """Write `docs/placement-map.json` from an object (JSON-encoded) or
+        from `raw` bytes-as-text (for the malformed-JSON case).
+        """
+        import json
+
+        d = self.base / "docs"
+        d.mkdir(parents=True, exist_ok=True)
+        path = d / "placement-map.json"
+        path.write_text(raw if raw is not None else json.dumps(obj), encoding="utf-8")
+        return path
+
+    def validate(self) -> list[str]:
+        """Run the gate over this tree and return its error annotations."""
+        return validate_skills.run(Path("skills"))
+
+
+@pytest.fixture
+def tree(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> SkillTree:
+    monkeypatch.chdir(tmp_path)
+    return SkillTree(tmp_path)

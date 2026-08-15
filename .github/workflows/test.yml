@@ -1,11 +1,17 @@
 name: test
 
-# Skill repo doesn't ship runtime code, so `test` here is a stub that
-# reports success unconditionally. Exists so the org ruleset's `test`
-# required_status_check has something to gate on. Replace with a real
-# test job (e.g. SKILL.md frontmatter schema validator beyond what
-# `validate skills` covers, link checks beyond `check-links`) once the
-# repo grows beyond markdown.
+# The repo's test suite. `tests/` characterizes .github/scripts/ -- today
+# that is validate_skills.py, the `validate-skills` gate, whose rules and
+# message text are pinned there so a change to the gate has to be a
+# deliberate one.
+#
+# NO `paths:` filter, deliberately: `test` is the org ruleset's required
+# status check, and a filtered workflow reports nothing rather than success
+# on the PRs it skips. It also means the catalog's own SKILL.md files are
+# checked on every PR, not only the ones validate-skills.yml's filter
+# matches.
+#
+# The job id stays `test` -- the ruleset requires it by that name.
 
 on:
   pull_request:
@@ -19,4 +25,19 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - run: 'true'
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install test dependencies
+        # Pinned deliberately. This suite is what proves every skill gate in
+        # this repo actually fires, so an unpinned upgrade can turn it red —
+        # or, worse, quietly change what a test asserts — with no commit to
+        # point at. Every other tool here is pinned (setup-logmind@v1.0.1,
+        # checkout@v7); this is the same rule. Dependabot bumps it.
+        run: pip install pytest==8.3.4 pyyaml==6.0.2
+
+      - name: Run tests
+        run: pytest tests/ -q
