@@ -54,6 +54,12 @@ Paste the row below and replace the placeholder with the reason. That is the
 whole cost — and the placeholder is rejected unfilled, because deciding the
 words are safe to lose is the one part of this that cannot be automated.
 
+The failure is written about the ledger you actually have, so it does not always
+hand you a row. Paste one and leave the placeholder in, and the next run asks
+you to fill that in rather than reprinting the row you just added. Where this
+file already carries a row covering your cut, it says why that row is not yours
+to spend instead of offering you a second one to write underneath it.
+
 Six rules make the row a declaration rather than a standing exemption:
 
 - **Only a row your change adds counts.** A row that was already there is

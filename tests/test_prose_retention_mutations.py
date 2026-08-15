@@ -400,6 +400,71 @@ MUTATIONS = [
         "            for n, v in sorted(self.scopes.items(), key=lambda kv: -kv[1])",
         "            for n, v in sorted(self.over.items(), key=lambda kv: -kv[1])",
     ),
+    (
+        # The paste-the-row loop, restored. The failure hands over a row whose
+        # reason is the placeholder `_declaration` rejects; with the drafted
+        # state unreachable, an author who pastes it gets the same run back
+        # BYTE FOR BYTE, with nothing in it naming the placeholder. An escape
+        # hatch that cannot be opened is a bypass with extra steps, and this is
+        # the path every first-time failure takes.
+        "a_pasted_placeholder_row_is_not_noticed",
+        "    if printed in after:",
+        "    if False:",
+    ),
+    (
+        # The drafted remedy stops being tested and goes back to being
+        # asserted, so "replace the placeholder with the reason" is offered to
+        # an author for whom it clears nothing -- one whose change also took a
+        # line out of the ledger, where no row they add counts at all. That is
+        # the same defect one layer along: an instruction that does not reach
+        # green.
+        "the_drafted_remedy_is_asserted_rather_than_tested",
+        "        if declares(LedgerDiff(before, filled).added, skill, net):\n"
+        "            return DRAFTED",
+        "        return DRAFTED",
+    ),
+    (
+        # The failure goes back to printing "add this row" over a ledger that
+        # already shows the reader a row covering the cut -- the message being
+        # wrong about the reader's own diff, which `Loss.excerpt` names as how
+        # a gate stops being read.
+        "a_row_is_printed_over_one_the_ledger_already_shows",
+        "    if declares(parse_ledger(after), skill, net):\n"
+        "        return STANDING",
+        "    if False:\n        return STANDING",
+    ),
+    (
+        # The guidance stops being read off the failures being printed and
+        # closes with the first remedy every time, which is the defect as it
+        # shipped: "Add the row printed above ..." over a file whose
+        # frontmatter could not be located, over a blob that would not come
+        # back, and over a ledger the change rewound -- none of which print a
+        # row at all.
+        "the_guidance_closes_the_same_way_whatever_failed",
+        "        for marker, line, promises in REMEDIES\n"
+        "        if any(marker in e for e in errors)",
+        "        for marker, line, promises in REMEDIES[:1]\n        if True",
+    ),
+    (
+        # The promise stops being held back. "and this gate passes" is then
+        # printed to an author whose change took something out of the ledger,
+        # for whom no row they add counts at all -- the false remedy this block
+        # already had one branch to avoid, on a second mode.
+        "green_is_promised_while_a_withdrawal_stands",
+        "        line + (HELD if held else PASSES) if promises else line",
+        "        line + PASSES if promises else line",
+    ),
+    (
+        # The two ways a covering row can fail to count collapse into one
+        # remedy, so an author whose own row was voided by a withdrawal is told
+        # to write a second row -- which is voided too. Putting the ledger back
+        # is the only thing that clears it.
+        "a_voided_row_and_an_inherited_row_share_one_remedy",
+        "        INHERITED_ROW,\n"
+        "        f\"Declare the cut named above as a NEW row in {LEDGER}. The row already \"",
+        "        STANDING_INTRO,\n"
+        "        f\"Declare the cut named above as a NEW row in {LEDGER}. The row already \"",
+    ),
 ]
 
 

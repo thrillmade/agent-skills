@@ -93,3 +93,20 @@
 - Nothing here touches base resolution, the `push: [main]` fallback or `fetch-depth: 0`. The workflow has still never run on a real GitHub Actions runner, and that remains the largest unverified surface in this gate
 
 ---
+
+## 2026-08-15 18:51 - Choose the gate's remedy from the ledger the author actually has, not from a constant
+
+**Reasoning:** check_prose_retention printed a row whose reason was REASON_PLACEHOLDER and closed with 'add the row printed above and this gate passes'. _declaration rejects precisely that row for precisely that placeholder -- correctly, since somebody deciding the words are safe to lose is the one cost this hatch has. So an author who did exactly what the message said got the same run back byte for byte, with nothing in it naming the placeholder: the 'escape hatch that cannot be opened is a bypass with extra steps' failure the module names twice as its own reason for existing, live on the path every first-time failure takes. Reproduced end to end through the CLI, controls green. hatch_state now classifies the ledger as ABSENT, DRAFTED or STANDING and the message is built from that; DRAFTED is TESTED, not asserted -- a copy of the head ledger with a real reason stood into the row is run back through the same credit rules the verdict came from, so what the failure offers is what it has just checked. The guidance block's closing line is likewise read off the annotations being printed, one owned marker per failure mode, because one line served all four and was false on three of them.
+
+**Alternatives considered:** Reword the sentence alone: makes round 1 true and leaves round 2 byte-identical for anyone who pastes unedited, Accept the placeholder row as a declaration: deletes the one cost the hatch has, Detect the drafted state by substring alone, without re-running the credit rules: would offer 'fill in the reason' to an author whose withdrawal means filling it in clears nothing
+
+**Implications:**
+- Three annotations changed text — undeclared removal, and the two new shapes it now takes. The frontmatter-refusal, ledger-rewound and unreadable-blob annotations render byte-identically to before, verified by rendering each mode under both revisions of the module and comparing. Those three were only re-routed through an owned marker constant, so `main` can read the failure mode back off the annotation it is about to print rather than working it out a second time
+- Exit codes and the `::error file=...::` annotation format are unchanged, and the only new import is `textwrap` from the stdlib, so the workflow's own runner path is untouched apart from message text. It has still never run on a real GitHub Actions runner, and that remains the largest unverified surface in this gate
+- Mutation-proven at 47 committed mutations, up from 41: one per new guard, each killed by the test that is about its behaviour. The paste-the-row loop's own mutation dies on the test that asserts the two runs' whole stdout differs, which is the property rather than a proxy for it
+- The suite's two tests that parse the printed row back out of the message now split on `cpr.ROW_INTRO` rather than on their own copy of that phrase. A test carrying a second copy of a message stops finding the row the moment the message is reworded, which reads as a passing test and is a remedy nothing checks
+- The count of things `remedies()` can say is now the count of failure modes, so adding a mode without a closing line for it is visible: `NO_REMEDY` is the backstop, and a control asserts every mode the gate actually emits selects a real line instead of reaching it
+- 14 new tests, suite 348 -> 368
+
+---
+

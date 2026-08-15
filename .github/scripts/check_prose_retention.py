@@ -111,6 +111,7 @@ import difflib
 import re
 import subprocess
 import sys
+import textwrap
 from pathlib import Path
 
 SKILL_GLOB_RE = re.compile(r"^skills/[^/]+/SKILL\.md$")
@@ -536,6 +537,11 @@ COMMENT_OPEN, COMMENT_CLOSE = "<!--", "-->"
 # from the failure declares nothing.
 REASON_PLACEHOLDER = "<why these words are gone>"
 
+# A reason that is not the placeholder, stood into a copy of the ledger to TEST
+# the remedy before printing it rather than assert it -- see hatch_state. Never
+# written to a file, and never shown to anybody.
+FILLED_PROBE = "the reason those words are safe to lose"
+
 
 def _comment_state(line: str, inside: bool) -> tuple[bool, bool]:
     """(did this line start inside an HTML comment, does the next one).
@@ -693,11 +699,82 @@ def declares(
     return any(s == skill and c >= net for s, c in added)
 
 
-# The one phrase that identifies an undeclared-removal annotation, owned here
-# so the message and the count of them cannot drift apart -- `run` also
-# annotates the ledger itself and any file it could not scope, and those are
-# different findings.
+# How far this skill's declaration has got in the ledger as the change leaves
+# it. The failure's remedy is chosen from this and from nothing else, because
+# the defect it exists to fix was a remedy that was a CONSTANT: the message
+# printed `| session-heartbeat | 49 | <why these words are gone> |` and closed
+# with "add the row printed above ... and this gate passes", while
+# `_declaration` rejects precisely that row for precisely that placeholder. An
+# author who did exactly what the message said got the same failure back, byte
+# for byte, with nothing in it naming the placeholder or the word "replace".
+# That is the "escape hatch that cannot be opened is a bypass with extra steps"
+# failure this module names twice as its own reason for existing -- reached on
+# the path every first-time failure takes, rather than on an exotic one.
+ABSENT, DRAFTED, STANDING = "absent", "drafted", "standing"
+
+
+def hatch_state(before: str, after: str, skill: str, net: int) -> str:
+    """Where the declaration for a `net`-word cut from `skill` has got to.
+
+      ABSENT    nothing in the ledger speaks to this cut, so the failure hands
+                over the row to write.
+      DRAFTED   the row the failure printed is sitting in the ledger with its
+                placeholder unfilled. Filling it in is the remedy, and it is
+                the remedy because it was TESTED: a copy of the head ledger
+                with a real reason stood into that row is run back through the
+                same credit rules the verdict came from. A remedy this gate
+                asserts rather than checks is how it came to print one that
+                could not work.
+      STANDING  the ledger already shows a reader a row covering this cut, and
+                this change is not credited with it -- inherited from the base,
+                or voided by a withdrawal. Printing "add this row" over one is
+                the message being wrong about the reader's own diff, which
+                `Loss.excerpt` already names as how a gate stops being read.
+
+    DRAFTED is tried first: when both could describe the ledger, the tested
+    remedy is the one that is known to reach green.
+    """
+    printed = ledger_row(skill, net)
+    if printed in after:
+        filled = after.replace(printed, f"| {skill} | {net} | {FILLED_PROBE} |")
+        if declares(LedgerDiff(before, filled).added, skill, net):
+            return DRAFTED
+    if declares(parse_ledger(after), skill, net):
+        return STANDING
+    return ABSENT
+
+
+# The one phrase that identifies each failure mode's annotation, owned here so
+# the message and the guidance `main` prints under it cannot drift apart --
+# `run` also annotates the ledger itself and any file it could not scope, and
+# `main` annotates any blob that would not come back. Those are four different
+# findings and they do not share a remedy. LOST_PROSE additionally carries the
+# count of undeclared removals.
 LOST_PROSE = "::this SKILL.md lost "
+UNSCOPABLE_FILE = "::this SKILL.md's YAML frontmatter could not be located"
+UNREADABLE_BLOB = "::git lists this file as changed"
+LEDGER_REWOUND = "::this change takes "
+SLOTS_WITHDRAWN = f"back OUT of {LEDGER}"
+
+# How an undeclared-removal annotation told its author to open the hatch: one
+# of these three ends every one of them, chosen by `hatch_state`. `main` reads
+# the phrase back off the annotation it is about to print rather than working
+# the state out a second time -- a second computation is a second place for the
+# message and the remedy under it to disagree, and disagreeing is the defect.
+ROW_INTRO = (
+    f"add this row to {LEDGER} in this same change, with "
+    f"{REASON_PLACEHOLDER} replaced by the reason those words are safe to "
+    f"lose -- a row pasted unedited declares nothing: "
+)
+DRAFT_INTRO = f"{LEDGER} already carries that row, with "
+STANDING_INTRO = f"{LEDGER} already shows a row covering this cut, but "
+
+# The tail STANDING takes when the covering row was inherited rather than
+# voided by a withdrawal, and the only one of the two with a remedy of its own.
+# When a withdrawal is what voided the row, putting the ledger back is the whole
+# remedy -- telling that author to write a second row is telling them to write
+# one that will not count either.
+INHERITED_ROW = "not one this change added"
 
 
 def run(
@@ -724,7 +801,7 @@ def run(
             for _kind, skill, count in sorted(ledger.lost_rows)
         )
         errors.append(
-            f"::error file={LEDGER}::this change takes "
+            f"::error file={LEDGER}{LEDGER_REWOUND}"
             f"{sum(ledger.lost_rows.values())} declared row(s) back out of the "
             f"ledger: {rows}. A row stays after it merges -- this file is the "
             f"record, and a change that empties it erases somebody else's "
@@ -741,11 +818,11 @@ def run(
             loss = Loss(before, after)
         except Unscopable as e:
             errors.append(
-                f"::error file={path}::this SKILL.md's YAML frontmatter could "
-                f"not be located at the {e.side} revision, so its frontmatter, "
-                f"prose and code cannot be told apart and no verdict is "
-                f"reported for it. A SKILL.md opens with a `---` line and "
-                f"closes the block with another. Scoring the parts separately "
+                f"::error file={path}{UNSCOPABLE_FILE} at the {e.side} "
+                f"revision, so its frontmatter, prose and code cannot be told "
+                f"apart and no verdict is reported for it. A SKILL.md opens "
+                f"with a `---` line and closes the block with another. "
+                f"Scoring the parts separately "
                 f"is what stops words added to a `description:` paying for "
                 f"prose deleted from the body, so a file whose parts cannot be "
                 f"separated is one this gate has nothing to say about."
@@ -765,7 +842,7 @@ def run(
         # withheld.
         rewritten = (
             f" This change also takes {sum(ledger.withdrawn.values())} line(s) "
-            f"that were already there back OUT of {LEDGER}, and while it does "
+            f"that were already there {SLOTS_WITHDRAWN}, and while it does "
             f"that no row it adds counts: between two snapshots an edit to an "
             f"inherited row is a removal plus an addition, so any edit at all "
             f"would otherwise declare on its own. Put back what it removed and "
@@ -774,6 +851,36 @@ def run(
             else ""
         )
 
+        # The one sentence an author acts on, and the only part of this message
+        # that is about their ledger rather than about their diff. It has to be
+        # true of the ledger they are actually looking at: "add this row" is a
+        # loop when the row is already there under the placeholder, and it is
+        # wrong about their own diff when a row covering the cut is on screen.
+        state = hatch_state(ledger_before, ledger_after, skill, loss.net)
+        if state == DRAFTED:
+            hatch = (
+                f"{DRAFT_INTRO}{REASON_PLACEHOLDER} still in it, so it declares "
+                f"nothing. Deciding the words are safe to lose is the one thing "
+                f"this hatch costs and the one thing it cannot do for you: "
+                f"replace the placeholder with the reason."
+            )
+        elif state == STANDING and ledger.withdrawn:
+            hatch = f"{STANDING_INTRO}not one this change is credited with."
+        elif state == STANDING:
+            hatch = (
+                f"{STANDING_INTRO}{INHERITED_ROW}, and only a row the "
+                f"change itself adds counts. An inherited row is somebody "
+                f"else's declaration about somebody else's deletion, and "
+                f"honouring it would make that file the standing exemption this "
+                f"repository already removed once from the size gate. Declare "
+                f"this cut as a new row of your own."
+            )
+        else:
+            hatch = (
+                f"If the removal is deliberate, {ROW_INTRO}"
+                f"{ledger_row(skill, loss.net)}"
+            )
+
         errors.append(
             f"::error file={path}{LOST_PROSE}{loss.net} words that "
             f"nothing in the same part of it replaced ({loss.breakdown()}). "
@@ -781,12 +888,99 @@ def run(
             f"to a markdown link all score zero here, so this is content, not "
             f"layout. Each part is scored on its own, so words added to the "
             f"frontmatter or to a code block cannot pay for prose that went "
-            f"missing. Gone: {loss.excerpt()}. If the removal is deliberate, "
-            f"add this row to {LEDGER} in this same change: "
-            f"{ledger_row(skill, loss.net)}{rewritten}"
+            f"missing. Gone: {loss.excerpt()}. {hatch}{rewritten}"
         )
 
     return errors
+
+
+# Every failure mode, and the closing line that is true of THAT mode. One block
+# closed all of them with "Add the row printed above ... and this gate passes",
+# and it was false on every mode but one: no row is printed for a file whose
+# frontmatter cannot be located, none for a blob that would not come back, none
+# for a ledger a change rewound -- and on the mode that did print one, the row
+# carried the placeholder `_declaration` rejects, so pasting it reproduced the
+# failure byte for byte.
+#
+# `promises` is whether the line may end in "and this gate passes". A withdrawal
+# voids every row a change adds, so nothing may promise green while one stands.
+REMEDIES = [
+    (
+        ROW_INTRO,
+        f"Add the row printed above to {LEDGER} in this same change, with "
+        f"{REASON_PLACEHOLDER} replaced by the reason those words are safe to "
+        f"lose.",
+        True,
+    ),
+    (
+        DRAFT_INTRO,
+        f"Replace {REASON_PLACEHOLDER} on the row already in {LEDGER} with the "
+        f"reason those words are safe to lose. Until somebody writes that down "
+        f"the row declares nothing.",
+        True,
+    ),
+    (
+        INHERITED_ROW,
+        f"Declare the cut named above as a NEW row in {LEDGER}. The row already "
+        f"there was inherited from the base, and is not this change's to spend.",
+        True,
+    ),
+    (
+        UNSCOPABLE_FILE,
+        "Open each file named above with a `---` line and close the block with "
+        "another, so this gate can tell its frontmatter from its body. Until it "
+        "can, it reports no verdict on that file rather than a merged one.",
+        False,
+    ),
+    (
+        UNREADABLE_BLOB,
+        "Each file named above was listed as changed and could not be read at "
+        "one of the two revisions, so it was never compared. Check the checkout "
+        "step sets `fetch-depth: 0`.",
+        False,
+    ),
+    (
+        SLOTS_WITHDRAWN,
+        f"Put back every line this change took out of {LEDGER}. While anything "
+        f"is missing from that file, no row the change adds counts at all.",
+        False,
+    ),
+    (
+        LEDGER_REWOUND,
+        f"Put the row(s) named above back into {LEDGER}. A row stays after it "
+        f"merges; correcting one means adding a new row and leaving the old one "
+        f"standing.",
+        False,
+    ),
+]
+
+PASSES = " That is the whole cost, and this gate passes."
+HELD = f" It counts once {LEDGER} is whole again."
+
+# Printed when nothing above matches, which nothing this gate emits should
+# reach. A guidance block that closes with a remedy for a failure that did not
+# happen is the defect; closing with nothing at all is the same defect quieter.
+NO_REMEDY = (
+    "Read the annotations above: each one names the file it is about and what "
+    "this gate could not do with it."
+)
+
+
+def remedies(errors: list[str]) -> list[str]:
+    """The closing lines that are true of the failures being printed.
+
+    Read off the annotations themselves rather than recomputed from the ledger.
+    The guidance and the annotation above it then cannot describe two different
+    failures, which they did: the block asked every author to add a row printed
+    above, including the three modes that print no row.
+    """
+    held = any(SLOTS_WITHDRAWN in e or LEDGER_REWOUND in e for e in errors)
+    lines = [
+        line + (HELD if held else PASSES) if promises else line
+        for marker, line, promises in REMEDIES
+        if any(marker in e for e in errors)
+    ]
+    return lines or [NO_REMEDY]
 
 
 # --- git plumbing -----------------------------------------------------------
@@ -1013,7 +1207,7 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     errors = [
-        f"::error file={path}::git lists this file as changed between the two "
+        f"::error file={path}{UNREADABLE_BLOB} between the two "
         f"revisions, but its content at {rev} could not be read, so it was not "
         f"compared and no verdict is reported for it."
         for rev, path in diff.unreadable
@@ -1029,15 +1223,12 @@ def main(argv: list[str] | None = None) -> int:
 
         # The last sentence has to be true of the failure the reader is looking
         # at. It said "add the row printed above and this gate passes" over
-        # every failure, including the one where a withdrawal from the ledger
-        # means no row they add can count.
-        remedy = (
-            f"Add the row printed above\nto {LEDGER} in this same change and "
-            f"this gate passes."
-            if not LedgerDiff(ledger_before, ledger_after).withdrawn
-            else f"Add the row printed above to {LEDGER} -- and put back what "
-            f"this change\ntook out of that file, because while anything is "
-            f"missing from it no row this\nchange adds counts at all."
+        # every failure -- over the one where a withdrawal from the ledger means
+        # no row they add can count, over the three that print no row at all,
+        # and over the one where the row it printed carried the placeholder that
+        # makes the row declare nothing.
+        remedy = "\n\n".join(
+            textwrap.fill(line, 84) for line in remedies(errors)
         )
         print(
             f"\nA size limit and a link sweep both push in the same direction: "
@@ -1052,7 +1243,7 @@ def main(argv: list[str] | None = None) -> int:
             f"That is not a bypass: a genuine tightening is a declared "
             f"removal, same as a\ndeletion, and costs exactly one ledger row. "
             f"That row is the whole point of the ledger,\nnot a way around "
-            f"it.\n\nDeleting prose is allowed. Doing it silently is not. "
+            f"it.\n\nDeleting prose is allowed. Doing it silently is not.\n\n"
             f"{remedy}"
         )
         return 1

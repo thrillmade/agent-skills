@@ -1107,12 +1107,17 @@ def test_one_row_clears_one_file_and_leaves_the_others():
 def test_the_error_prints_the_exact_row_to_paste():
     """The hatch is only cheap if the failure hands you the row. Paste what the
     error prints, replace the placeholder, and the gate passes.
+
+    Split on `cpr.ROW_INTRO` rather than on a copy of that phrase: the detector
+    owns the sentence that introduces the row, and a test carrying its own copy
+    of it stops finding the row the moment the sentence is reworded -- which is
+    a remedy nothing checks, not a passing test.
     """
     cases, name, net = a_real_deletion()
     (error,) = cpr.run(cases)
     assert "docs/prose-removals.md" in error
 
-    printed = error.split("in this same change: ")[1]
+    printed = error.split(cpr.ROW_INTRO)[1]
     assert printed == cpr.ledger_row(name, net)
 
     real = printed.replace(
@@ -1527,7 +1532,7 @@ def test_the_failure_never_reprints_a_row_the_author_already_wrote():
         encoding="utf-8"
     )
     (error,) = cpr.run(cases, ledger_before=shipped, ledger_after=shipped)
-    printed = error.split("in this same change: ")[1]
+    printed = error.split(cpr.ROW_INTRO)[1]
     filled = printed.replace(cpr.REASON_PLACEHOLDER, "Moved to unattended-operation.")
     assert cpr.run(cases, ledger_before=shipped, ledger_after=shipped + "\n" + filled + "\n") == []
 
@@ -1558,6 +1563,170 @@ def test_rewriting_the_ledgers_own_prose_voids_the_rows_the_change_adds():
     # The control: the same row, with the prose left alone, is honoured.
     untouched = before + f"| {name} | {net} | Moved to unattended-operation. |\n"
     assert cpr.run(cases, ledger_before=before, ledger_after=untouched) == []
+
+
+def test_the_first_failure_tells_the_author_to_replace_the_placeholder():
+    """The row the failure hands over is one the gate will reject.
+
+    `ledger_row` fills the reason with `REASON_PLACEHOLDER` and `_declaration`
+    rejects precisely that -- correctly, since somebody deciding the words are
+    safe to lose is the one thing this hatch has to cost. So the sentence that
+    hands the row over has to say so, or it is an instruction that does not
+    work, printed by the gate whose own docstring calls an escape hatch that
+    cannot be opened a bypass with extra steps.
+    """
+    cases, _name, _net = a_real_deletion()
+    (error,) = cpr.run(cases)
+    assert cpr.REASON_PLACEHOLDER in error
+    assert "replaced by the reason" in error, error
+
+
+def test_pasting_the_printed_row_does_not_reprint_the_same_failure(repo, capsys):
+    """The loop, pinned on the two screens the author actually saw.
+
+    Round 1 printed `| alpha | 7 | <why these words are gone> |` and closed with
+    "Add the row printed above ... and this gate passes". Round 2, after the
+    author did exactly that and no more, was the SAME RUN BYTE FOR BYTE -- no
+    mention of the placeholder, of filling anything in, or of what had changed.
+    Nothing tells them the row they just pasted is the one thing being rejected.
+
+    Asserted on whole stdout rather than on a phrase, because the identity of
+    the two screens is what an author is stuck in: a proxy assertion on some
+    phrase goes green the moment any incidental byte differs.
+    """
+    (repo / "skills" / "alpha" / "SKILL.md").write_text(BODY)
+    (repo / "docs" / "prose-removals.md").write_text(LEDGER_HEADER)
+    base = commit(repo, "base")
+
+    (repo / "skills" / "alpha" / "SKILL.md").write_text(skill("alpha bravo charlie\n"))
+    commit(repo, "cut it down")
+
+    assert cpr.main(["--base", base, "--head", "HEAD"]) == 1
+    first = capsys.readouterr().out
+    printed = first.split(cpr.ROW_INTRO)[1].split("\n")[0]
+    assert printed == cpr.ledger_row("alpha", 7), first
+
+    # The author does exactly what the failure said, and no more.
+    (repo / "docs" / "prose-removals.md").write_text(LEDGER_HEADER + printed + "\n")
+    commit(repo, "paste the row the gate printed, unedited")
+
+    assert cpr.main(["--base", base, "--head", "HEAD"]) == 1
+    second = capsys.readouterr().out
+    assert second != first, (
+        "the second failure is byte-identical to the first, so acting on the "
+        f"message told the author nothing:\n{second}"
+    )
+    assert cpr.REASON_PLACEHOLDER in second
+    assert "replace the placeholder with the reason" in second, second
+
+    # The control. The same paste with the reason written in reaches green, so
+    # the failure above is about the placeholder and not about the paste -- and
+    # the two steps the two messages asked for do end the loop.
+    (repo / "docs" / "prose-removals.md").write_text(
+        LEDGER_HEADER
+        + printed.replace(cpr.REASON_PLACEHOLDER, "Superseded by the dispatcher.")
+        + "\n"
+    )
+    commit(repo, "fill the reason in")
+    assert cpr.main(["--base", base, "--head", "HEAD"]) == 0, capsys.readouterr().out
+
+
+def test_the_first_message_alone_is_enough_to_reach_green(repo, capsys):
+    """One step, not two. The test above proves the loop is broken once the
+    author pastes unedited; this one proves they never have to.
+
+    An author who does what the FIRST failure says -- paste the row with the
+    placeholder replaced -- passes without seeing a second failure at all.
+    """
+    (repo / "skills" / "alpha" / "SKILL.md").write_text(BODY)
+    (repo / "docs" / "prose-removals.md").write_text(LEDGER_HEADER)
+    base = commit(repo, "base")
+
+    (repo / "skills" / "alpha" / "SKILL.md").write_text(skill("alpha bravo charlie\n"))
+    commit(repo, "cut it down")
+
+    assert cpr.main(["--base", base, "--head", "HEAD"]) == 1
+    printed = capsys.readouterr().out.split(cpr.ROW_INTRO)[1].split("\n")[0]
+
+    (repo / "docs" / "prose-removals.md").write_text(
+        LEDGER_HEADER
+        + printed.replace(cpr.REASON_PLACEHOLDER, "Superseded by the dispatcher.")
+        + "\n"
+    )
+    commit(repo, "do exactly what the first failure said")
+    assert cpr.main(["--base", base, "--head", "HEAD"]) == 0, capsys.readouterr().out
+
+
+def test_no_row_is_printed_when_the_ledger_already_shows_one_covering_the_cut():
+    """"Add this row" is the message being wrong about the reader's own diff.
+
+    A row covering the cut is on their screen, in the file the message names, and
+    the message hands them a row keyed the same way to add underneath it. Two
+    ledgers reach this and neither is exotic: an inherited row, and the author's
+    own row voided by something they took out of that file in the same change.
+    `Loss.excerpt` already names being wrong about the reader's own diff as how
+    a gate stops being read.
+    """
+    cases, name, net = a_real_deletion()
+    inherited = declared(f"| {name} | {net} | an earlier trim |")
+    (error,) = skill_errors(cases, ledger_before=inherited, ledger_after=inherited)
+    assert cpr.ledger_row(name, net) not in error, error
+    assert "already shows a row covering this cut" in error, error
+
+    voided_before = "Two lines of\nintroduction here.\n\n" + LEDGER_HEADER
+    voided_after = "One line of introduction here.\n\n" + LEDGER_HEADER + (
+        f"| {name} | {net} | Moved to unattended-operation. |\n"
+    )
+    (error,) = skill_errors(
+        cases, ledger_before=voided_before, ledger_after=voided_after
+    )
+    assert cpr.ledger_row(name, net) not in error, error
+    assert "already shows a row covering this cut" in error, error
+
+
+def test_the_control_the_row_is_still_printed_when_the_ledger_shows_nothing():
+    """The discriminator for the test above. A rule that never printed a row
+    would satisfy it, and would be the deadlock this hatch exists to avoid.
+    """
+    cases, name, net = a_real_deletion()
+    for ledger_after in (
+        LEDGER_HEADER,  # nothing at all
+        declared(f"| {name} | {net - 1} | too small to cover it |"),
+        declared(f"| some-other-skill | {net} | a different skill |"),
+    ):
+        (error,) = skill_errors(
+            cases, ledger_before=LEDGER_HEADER, ledger_after=ledger_after
+        )
+        assert cpr.ledger_row(name, net) in error, error
+
+
+def test_filling_in_the_placeholder_is_only_offered_when_it_would_actually_work():
+    """The remedy is TESTED before it is printed, not asserted.
+
+    A row pasted from the failure sits in the ledger AND the change took a line
+    out of that file: filling the placeholder in clears nothing, because while
+    anything is missing no row the change adds counts. Offering "replace the
+    placeholder with the reason" as the remedy there is the same defect one
+    layer along -- an instruction that does not reach green. `hatch_state` runs
+    the filled ledger back through the same credit rules the verdict came from,
+    so what it offers is what it has just checked.
+    """
+    cases, name, net = a_real_deletion()
+    before = "Two lines of\nintroduction here.\n\n" + LEDGER_HEADER
+    after = "One line of introduction here.\n\n" + LEDGER_HEADER + (
+        cpr.ledger_row(name, net) + "\n"
+    )
+    assert cpr.hatch_state(before, after, name, net) == cpr.ABSENT
+
+    (error,) = skill_errors(cases, ledger_before=before, ledger_after=after)
+    assert cpr.DRAFT_INTRO not in error, error
+    assert cpr.SLOTS_WITHDRAWN in error, error
+
+    # The control: the same paste with the ledger's prose left alone IS the
+    # drafted state, so the refusal above is about the withdrawal and not about
+    # the detection having stopped working.
+    untouched = before + cpr.ledger_row(name, net) + "\n"
+    assert cpr.hatch_state(before, untouched, name, net) == cpr.DRAFTED
 
 
 def test_the_message_explains_a_withdrawal_even_when_no_added_row_covers_the_cut():
@@ -1668,6 +1837,194 @@ def test_the_remedy_block_is_true_of_the_metric_it_gates(repo, capsys):
     # What genuinely scores zero must be named, and only that.
     assert "tightening" in out
     assert "docs/prose-removals.md" in out
+
+
+# --- the guidance closes on the failure it is under -------------------------
+#
+# One closing line served every failure mode: "Add the row printed above to
+# docs/prose-removals.md in this same change and this gate passes." It was false
+# on every mode but one. Three of them print no row at all -- a file whose
+# frontmatter cannot be located, a blob that would not come back, a ledger the
+# change rewound -- and on the fourth the row it printed carried the placeholder
+# `_declaration` rejects. Each case below is a failure and the line under it.
+
+
+def flat(text: str) -> str:
+    """Whitespace-normalised. The guidance block is hard-wrapped, so a sentence
+    that has to be in it can land either side of a line break.
+    """
+    return " ".join(text.split())
+
+
+def test_the_guidance_does_not_ask_for_a_row_where_no_row_was_printed(repo, capsys):
+    """A SKILL.md whose frontmatter cannot be located gets no verdict and no
+    row. Closing with "add the row printed above" over it points at nothing.
+    """
+    (repo / "skills" / "alpha" / "SKILL.md").write_text(
+        "# Title\n\nA body with no frontmatter block at all.\n"
+    )
+    base = commit(repo, "base")
+    (repo / "skills" / "alpha" / "SKILL.md").write_text(
+        "# Title\n\nA body with no frontmatter block at all.\n\nAnd another line.\n"
+    )
+    commit(repo, "edit a file this gate cannot scope")
+
+    assert cpr.main(["--base", base, "--head", "HEAD"]) == 1
+    out = flat(capsys.readouterr().out)
+    assert "row printed above" not in out, out
+    assert "Open each file named above with a `---` line" in out, out
+
+
+def test_the_guidance_does_not_ask_for_a_row_when_the_ledger_was_rewound(repo, capsys):
+    """A change that takes a merged row back out fails on its own, with no
+    SKILL.md involved. There is no row to paste, and no cut to declare.
+    """
+    (repo / "skills" / "alpha" / "SKILL.md").write_text(BODY)
+    (repo / "docs" / "prose-removals.md").write_text(
+        declared("| beta | 9 | an earlier trim |")
+    )
+    base = commit(repo, "base carries a merged row")
+    (repo / "docs" / "prose-removals.md").write_text(LEDGER_HEADER)
+    commit(repo, "wipe the ledger, touch no skill")
+
+    assert cpr.main(["--base", base, "--head", "HEAD"]) == 1
+    out = flat(capsys.readouterr().out)
+    assert "row printed above" not in out, out
+    assert "Put the row(s) named above back into docs/prose-removals.md" in out, out
+
+
+def test_the_guidance_asks_for_the_reason_when_the_row_is_already_pasted(repo, capsys):
+    """The mode this whole fix is for, read at the closing line rather than in
+    the annotation: the row is there, the placeholder is not filled in, and
+    "add the row printed above" is an instruction the author already followed.
+    """
+    (repo / "skills" / "alpha" / "SKILL.md").write_text(BODY)
+    (repo / "docs" / "prose-removals.md").write_text(LEDGER_HEADER)
+    base = commit(repo, "base")
+    (repo / "skills" / "alpha" / "SKILL.md").write_text(skill("alpha bravo charlie\n"))
+    (repo / "docs" / "prose-removals.md").write_text(
+        LEDGER_HEADER + cpr.ledger_row("alpha", 7) + "\n"
+    )
+    commit(repo, "cut it down and paste the printed row unedited")
+
+    assert cpr.main(["--base", base, "--head", "HEAD"]) == 1
+    out = flat(capsys.readouterr().out)
+    assert "row printed above" not in out, out
+    assert f"Replace {cpr.REASON_PLACEHOLDER} on the row already in" in out, out
+
+
+def test_the_control_the_guidance_does_ask_for_the_row_when_there_is_one(repo, capsys):
+    """The discriminator for the three above. A block that never mentioned the
+    row would satisfy all of them and would have deleted the remedy instead of
+    correcting it.
+    """
+    (repo / "skills" / "alpha" / "SKILL.md").write_text(BODY)
+    (repo / "docs" / "prose-removals.md").write_text(LEDGER_HEADER)
+    base = commit(repo, "base")
+    (repo / "skills" / "alpha" / "SKILL.md").write_text(skill("alpha bravo charlie\n"))
+    commit(repo, "cut it down")
+
+    assert cpr.main(["--base", base, "--head", "HEAD"]) == 1
+    out = flat(capsys.readouterr().out)
+    assert "Add the row printed above to docs/prose-removals.md" in out, out
+    assert f"with {cpr.REASON_PLACEHOLDER} replaced by the reason" in out, out
+
+
+def test_the_guidance_does_not_promise_green_while_a_withdrawal_stands():
+    """"and this gate passes" is a claim, and a withdrawal makes it false: while
+    anything is missing from the ledger no row the change adds counts at all.
+    """
+    cases, name, net = a_real_deletion()
+    held = cpr.remedies(
+        cpr.run(
+            cases,
+            ledger_before=declared("| some-other-skill | 3 | an earlier trim |"),
+            ledger_after=declared(f"| {name} | {net - 1} | too small to cover it |"),
+        )
+    )
+    assert not any("this gate passes" in line for line in held), held
+    assert any("Put back every line this change took out" in line for line in held), held
+
+    # The control: with nothing withdrawn the promise is true, and is made.
+    free = cpr.remedies(cpr.run(cases, ledger_before=LEDGER_HEADER, ledger_after=LEDGER_HEADER))
+    assert any("this gate passes" in line for line in free), free
+
+
+def test_the_guidance_does_not_ask_for_a_second_row_that_would_not_count_either():
+    """A change whose own covering row is voided by a withdrawal is told to put
+    the ledger back -- not to write another row, which would be voided too.
+
+    The inherited case is the one where a new row IS the answer, and the two
+    read almost identically in the ledger, so the remedy is keyed on which of
+    them the annotation said rather than on the state being recomputed.
+    """
+    cases, name, net = a_real_deletion()
+    voided = cpr.remedies(
+        cpr.run(
+            cases,
+            ledger_before="Two lines of\nintroduction here.\n\n" + LEDGER_HEADER,
+            ledger_after="One line of introduction here.\n\n"
+            + LEDGER_HEADER
+            + f"| {name} | {net} | Moved to unattended-operation. |\n",
+        )
+    )
+    assert not any("as a NEW row" in line for line in voided), voided
+    assert any("Put back every line this change took out" in line for line in voided), voided
+
+    # The control: an inherited row really is answered by a new row of your own.
+    inherited = declared(f"| {name} | {net} | an earlier trim |")
+    lines = cpr.remedies(
+        cpr.run(cases, ledger_before=inherited, ledger_after=inherited)
+    )
+    assert any("as a NEW row" in line for line in lines), lines
+
+
+def test_the_guidance_closes_with_something_even_for_an_unmarked_error():
+    """A block that closes with a remedy for a failure that did not happen is
+    the defect; closing with nothing at all is the same defect, quieter.
+    """
+    assert cpr.remedies(["::error::an annotation carrying no known marker"]) == [
+        cpr.NO_REMEDY
+    ]
+
+
+def test_the_control_every_failure_this_gate_emits_is_marked():
+    """The control for the fallback above. `NO_REMEDY` is only ever a backstop
+    if every mode the gate actually produces selects a real line -- otherwise
+    the backstop is the message and nothing says so.
+    """
+    cases, name, net = a_real_deletion()
+    broken = "# Title\n\nA body with no frontmatter block at all.\n"
+    modes = {
+        "undeclared, ledger empty": cpr.run(cases),
+        "undeclared, row pasted unedited": cpr.run(
+            cases,
+            ledger_before=LEDGER_HEADER,
+            ledger_after=LEDGER_HEADER + cpr.ledger_row(name, net) + "\n",
+        ),
+        "undeclared, covering row inherited": cpr.run(
+            cases,
+            ledger_before=declared(f"| {name} | {net} | an earlier trim |"),
+            ledger_after=declared(f"| {name} | {net} | an earlier trim |"),
+        ),
+        "undeclared, plus a withdrawal": cpr.run(
+            cases,
+            ledger_before=declared("| some-other-skill | 3 | an earlier trim |"),
+            ledger_after=declared(f"| {name} | {net - 1} | too small |"),
+        ),
+        "the ledger rewound, no skill touched": cpr.run(
+            {}, ledger_before=declared("| alpha | 5 | a trim |"), ledger_after=LEDGER_HEADER
+        ),
+        "frontmatter refused": cpr.run(case("alpha", broken, broken + "one more.\n")),
+        "a blob that would not come back": [
+            f"::error file=skills/alpha/SKILL.md{cpr.UNREADABLE_BLOB} between "
+            "the two revisions, but its content at HEAD could not be read."
+        ],
+    }
+    for label, errors in modes.items():
+        assert errors, f"{label}: produced no annotation, so it is not a mode"
+        lines = cpr.remedies(errors)
+        assert cpr.NO_REMEDY not in lines, f"{label} fell through to the backstop"
 
 
 def test_the_error_does_not_claim_nothing_replaced_the_words():
