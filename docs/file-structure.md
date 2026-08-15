@@ -72,14 +72,10 @@ agent-skills
 │   ├── unattended-operation
 │   ├── visual-polish
 │   ├── wcag-contrast
-│   ├── web-interface-guidelines-review
-│   └── skill-size-budget.json
+│   └── web-interface-guidelines-review
 ├── .cursorrules
 ├── .gitattributes
 ├── .gitignore
-├── .merge_file_B7aNEZ
-├── .merge_file_DEnDCC
-├── .merge_file_VR69uY
 ├── AGENTS.md
 ├── CLAUDE.md
 ├── LICENSE

@@ -13,10 +13,10 @@ PR's CI run, so this file is always coherent with current `main`.
 ---
 
 
-## 2026-08 (5 decisions)
+## 2026-08 (7 decisions)
 
-- **2026-08-14** — Add the reciprocal back-link in orchestrating-elite-agent-qa — a skill nothing links to is a skill nothing finds *(feat/session-heartbeat-and-night-mode)* — [decisions-branches/feat__session-heartbeat-and-night-mode.md](decisions-branches/feat__session-heartbeat-and-night-mode.md)
-- *... 3 more decisions ...*
+- **2026-08-14** — Correct the debt figure in this branch's own decision entry: 7,935 over budget, 8,543 removed *(feat/zero-over-budget)* — [decisions-branches/feat__zero-over-budget.md](decisions-branches/feat__zero-over-budget.md)
+- *... 5 more decisions ...*
 - **2026-08-14** — Gate skill size with a shrink-only ratchet, and deprecate skillforge into the three skills that own its job *(feat/skill-depth-and-interlinking)* — [decisions-branches/feat__skill-depth-and-interlinking.md](decisions-branches/feat__skill-depth-and-interlinking.md)
 
 ## 2026-07 (13 decisions)
