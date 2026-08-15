@@ -13,10 +13,10 @@ PR's CI run, so this file is always coherent with current `main`.
 ---
 
 
-## 2026-08 (10 decisions)
+## 2026-08 (11 decisions)
 
-- **2026-08-15** — Delete the skill gate's paths filter rather than extending it, and assert it stays gone *(fix/unfilter-the-skill-gate)* — [decisions-branches/fix__unfilter-the-skill-gate.md](decisions-branches/fix__unfilter-the-skill-gate.md)
-- *... 8 more decisions ...*
+- **2026-08-15** — Bring the three design lenses to house standard, and correct a WCAG level that ships to a client *(feat/three-design-lenses-to-house-standard)* — [decisions-branches/feat__three-design-lenses-to-house-standard.md](decisions-branches/feat__three-design-lenses-to-house-standard.md)
+- *... 9 more decisions ...*
 - **2026-08-14** — Gate skill size with a shrink-only ratchet, and deprecate skillforge into the three skills that own its job *(feat/skill-depth-and-interlinking)* — [decisions-branches/feat__skill-depth-and-interlinking.md](decisions-branches/feat__skill-depth-and-interlinking.md)
 
 ## 2026-07 (13 decisions)
