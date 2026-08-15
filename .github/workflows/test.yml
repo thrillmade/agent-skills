@@ -1,8 +1,9 @@
 name: test
 
 # The repo's test suite. `tests/` characterizes .github/scripts/ -- today
-# that is validate_skills.py, the `validate-skills` gate, whose rules and
-# message text are pinned there so a change to the gate has to be a
+# that is validate_skills.py (the `validate-skills` gate) and
+# check_prose_retention.py (the `check-prose-retention` gate), whose rules
+# and message text are pinned there so a change to either gate has to be a
 # deliberate one.
 #
 # NO `paths:` filter, deliberately: `test` is the org ruleset's required
