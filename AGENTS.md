@@ -36,45 +36,56 @@ pytest tests/ -q                             # 112 tests; the gates' own regress
 logmind log "…" -r "…" -a "…" -i "…"         # the commit primitive (see above)
 ```
 
-Both run in about a second. **Neither is optional before opening a PR** — CI runs the
-same two, unconditionally.
+The first two run in about a second. **Neither is optional before opening a PR** — CI runs
+the same two, unconditionally.
 
 ## The `dev` branch
 
-Work lands on `dev` first and reaches `main` in batches. The bar into `dev` is an
-**independent adversarial review** by an agent that did not write the change; the bar into
-`main` is a person. The convention is stated once, in
-[protocol's `docs/the-dev-branch.md`](https://github.com/thrillmade/protocol/blob/dev/docs/the-dev-branch.md) —
-this section records only what differs here.
+Work lands on `dev` first and reaches `main` in batches. `dev` is somewhere work *passes
+through*, not somewhere work *lives*. The rules are the organisation's, set out in the private
+`thrillmade/protocol`; this repository is public, so they are stated here, not linked to.
 
-> The link points at protocol's **`dev`**, not `main`, because that is where the document
-> currently lives — protocol batches too, and this is the first doc to cite it. Repoint to
-> `blob/main/` when protocol promotes. Nothing in CI will catch this if it rots:
-> `logmind check-links` validates **relative** links only, so an absolute URL to another
-> repository is never checked.
+**Branch from `dev`, and open a pull request into `dev`** — the default branch is `main`, so
+the base has to be set by hand. No workflow triggers on a push to `dev`, so `test`, `validate
+skills`, `check-links`, `check-decisions` and `check-derived-docs` exist only on a pull
+request, and a commit pushed straight to `dev` is checked by nothing
+(`gh api repos/thrillmade/agent-skills/commits/dev/check-runs --jq .total_count` → `0`; the
+same call against `main` → `4`).
 
-**This repo has two per-tree gates protocol does not** — `test` and `validate skills` — so a
-batch is judged on more here than there. That is the whole of the difference; the rest of
-the table matches protocol's.
+**Into `dev`: an independent adversarial review.** A change may merge once a reviewer that
+did **not** write it has reviewed it and its findings are addressed — a refute-first panel,
+or clud-bug in local mode. **Independence means a different agent.** A fresh context window
+on the same agent is not a different agent, and neither is the same agent asked to look again.
+
+**Into `main`: a person.** An agent does not open or merge the `dev` → `main` promotion; it
+reports the batch ready and hands off. An active org ruleset requires one approving review on
+`main`, so a PR there reports `REVIEW_REQUIRED` until someone approves it, while a PR into
+`dev` reports no review decision at all.
+
+**A red check is fixed, not merged past.** Nothing here is gated on a check: `main` has **no
+`required_status_checks` rule** and no classic protection either
+(`gh api repos/thrillmade/agent-skills/rules/branches/main`). So red merges, and has — #188
+went into `main` four days after `check-links` failed on it. The forge asks for a human
+approval, not a green suite; the suite is on whoever is working.
+
+**Read the failing step before believing a red.** `check-links` and `check-derived-docs`
+check out the head *branch by name*, and branches are deleted on merge, so a run still in
+flight when a PR merges dies with `a branch or tag with the name '…' could not be found`.
+That is an artifact of the merge, not a verdict on the change — and it is not evidence that
+anyone merged past a failure. `test` and `validate skills` check out the merge ref instead
+and are unaffected.
+
+**What batching costs.**
 
 | check | weakened by batching? |
 |---|---|
-| `test` · `validate skills` · `check-links` | **No.** Each judges the tree it is handed, so six changes checked once is the same assertion as six checked six times. The first two are this repo's advantage. |
-| `check-derived-docs` | **No** — and not an advantage either. This repo's `v4` regenerates and auto-fixes; protocol's `v11` asks whether the branch touched the file. Different mechanisms, both properties of the tree. |
-| `check-decisions` | **Both ways** — see protocol's doc, which owns this. `:51-57` sets `decision_touched` as a *presence* flag, so one entry clears a whole batch. But `:65` fires **at or above** 20 non-docs lines (`>=`, not `>`), and `:40` excludes docs and `*.md` — so six docs-only changes need **zero** entries apiece, while six 15-line changes that individually need nothing sum to 90 and need one. |
-| `clud-bug-review` | **Not applicable** — returns `NEUTRAL` here, so there is nothing to dilute. |
+| `test` · `validate skills` · `check-links` · `check-derived-docs` | **No.** Each judges the tree it is handed, so six changes checked once is the same assertion as six checked six times. |
+| `check-decisions` | **Yes.** It is a *presence* check — one decision file anywhere in the diff clears the whole batch. **A batch does not inherit one change's decision.** The dilution is a property of the forge, not a permission: every change still logs its own, and the check simply stops being the thing that enforces it, so the reviewer is. |
+| `clud-bug-review` | **Not applicable** — it is not producing reviews here. See the clud-bug section below. |
 
-**None of these gates a merge.** `gh api repos/thrillmade/agent-skills/rules/branches/main`
-returns `deletion`, `non_fast_forward`, `pull_request`, `required_linear_history` — **no
-`required_status_checks` rule**, and no classic protection either. So the checks are a
-*signal*, not a gate: a `dev` → `main` promotion with `test` red is mergeable by anyone with
-write access. **The independent review into `dev` is therefore not a supplement to
-enforcement — for now it is the enforcement**, and the only thing applied per change rather
-than per batch.
-
-**No forge rule protects `dev` either** (`rules/branches/dev` returns `[]`), so every rule
-above is a convention held by whoever is working. Acceptable while `dev` is somewhere work
-*passes through*; not the moment it becomes somewhere work *lives*.
+**No forge rule protects `dev`** (`rules/branches/dev` returns `[]`), so every rule above is a
+convention held by whoever is working — and the independent review is the only one applied per
+change rather than per batch.
 
 <!-- clud-bug-start -->
 <!-- clud-bug-block-version: v2 -->
@@ -86,8 +97,17 @@ strict-mode mechanics, workflow-edit constraint — live in the bundled
 [`clud-bug-collaboration` skill](skills/clud-bug-collaboration/SKILL.md).
 Read that skill before pushing fixes addressing prior review threads.
 
-Strict mode is **on** in this repo (workflow check fails on critical findings). Toggle via `.claude/skills/.clud-bug.json`
-(read from PR **base ref**, so PRs can't disable strict-mode on themselves).
+Strict mode is **on** in this repo, so the check is meant to fail on critical findings. Toggle
+via `strictMode` in `.claude/skills/.clud-bug.json` (read from PR **base ref**, so PRs can't
+disable strict-mode on themselves). **It does not currently fail on anything, because no review
+is being produced here:** on every pull request since #188, `clud-bug-review` has concluded
+`neutral` with the title *"clud-bug review unavailable"*, so it never reaches a finding to fail
+on. Re-check before relying on it:
+
+```bash
+gh api repos/thrillmade/agent-skills/commits/<sha>/check-runs \
+  --jq '.check_runs[] | select(.name=="clud-bug-review") | "\(.conclusion) \(.output.title)"'
+```
 
 For agent invocations of the `clud-bug` CLI, prefer `CLUD_BUG_QUIET=1`
 (or pass `--quiet`) — suppresses progress chatter and emits a single

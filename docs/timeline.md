@@ -13,10 +13,10 @@ PR's CI run, so this file is always coherent with current `main`.
 ---
 
 
-## 2026-08 (14 decisions)
+## 2026-08 (15 decisions)
 
-- **2026-08-15** — Correct the 2.5.8 spacing exception — the paraphrase was more lenient than the spec *(feat/three-design-lenses-to-house-standard)* — [decisions-branches/feat__three-design-lenses-to-house-standard.md](decisions-branches/feat__three-design-lenses-to-house-standard.md)
-- *... 12 more decisions ...*
+- **2026-08-15** — Own the dev-branch rules in AGENTS.md instead of deferring to a private repo, and correct what the forge actually enforces *(docs/dev-branch-convention)* — [decisions-branches/docs__dev-branch-convention.md](decisions-branches/docs__dev-branch-convention.md)
+- *... 13 more decisions ...*
 - **2026-08-14** — Gate skill size with a shrink-only ratchet, and deprecate skillforge into the three skills that own its job *(feat/skill-depth-and-interlinking)* — [decisions-branches/feat__skill-depth-and-interlinking.md](decisions-branches/feat__skill-depth-and-interlinking.md)
 
 ## 2026-07 (13 decisions)
