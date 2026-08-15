@@ -43,10 +43,15 @@ name: check-prose-retention
 # path list rots -- this repository already shipped a size gate that could not
 # see edits to its own budget file. A committed test asserts this stays absent.
 #
-# NOT YET A REQUIRED CHECK. The org ruleset requires `test` by name and knows
-# nothing about this workflow, so today this reports without blocking. Add
-# `check prose retention` to the ruleset's required status checks to make it a
-# merge condition.
+# NOT A REQUIRED CHECK -- AND NEITHER IS ANYTHING ELSE, TODAY. Measured
+# directly rather than assumed: `gh api repos/thrillmade/agent-skills/rules/
+# branches/main` lists four active rule types (deletion, non_fast_forward,
+# pull_request, required_linear_history) and none of them is
+# required_status_checks, and `.../rules/branches/dev` -- the branch this
+# repository's PRs actually target -- returns an empty list, no ruleset at
+# all. So this reports without blocking, and so does `test`. Making this (or
+# anything) a required status check is an org-ruleset change, out of this
+# file's scope.
 on:
   pull_request:
   push:
