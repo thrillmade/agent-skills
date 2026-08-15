@@ -13,10 +13,10 @@ PR's CI run, so this file is always coherent with current `main`.
 ---
 
 
-## 2026-08 (8 decisions)
+## 2026-08 (9 decisions)
 
-- **2026-08-14** — Extract the skill validator from its heredoc and give the repo a real test job *(chore/extract-skill-validator)* — [decisions-branches/chore__extract-skill-validator.md](decisions-branches/chore__extract-skill-validator.md)
-- *... 6 more decisions ...*
+- **2026-08-15** — Resync the skill-frontmatter-quality mirror, and record that clud-bug-collaboration's divergence is by design *(fix/resync-frontmatter-quality-mirror)* — [decisions-branches/fix__resync-frontmatter-quality-mirror.md](decisions-branches/fix__resync-frontmatter-quality-mirror.md)
+- *... 7 more decisions ...*
 - **2026-08-14** — Gate skill size with a shrink-only ratchet, and deprecate skillforge into the three skills that own its job *(feat/skill-depth-and-interlinking)* — [decisions-branches/feat__skill-depth-and-interlinking.md](decisions-branches/feat__skill-depth-and-interlinking.md)
 
 ## 2026-07 (13 decisions)
