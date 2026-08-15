@@ -13,3 +13,16 @@
 
 ---
 
+## 2026-08-15 08:40 - Fix four defects the panel found in the dev-branch section, including a 404 on the doc it defers to
+
+**Reasoning:** The panel refuted four claims. First and blocking: the section defers to protocol's docs/the-dev-branch.md as the single authoritative statement and linked it at blob/main, where the file does not exist — it lives on protocol's dev, because protocol batches too and this is the first document to cite it. So an arriving agent following the link got a 404 and no statement of the rules at all. Nothing in CI would ever catch it: logmind check-links validates relative links only, so an absolute URL to another repository is never checked, and the job passed green with the dead link in it. Second: I wrote fires above 20 non-docs lines; check-decisions.yml:65 uses >= not >, so exactly 20 trips it. Third: I answered the check-decisions row as Yes, the same way as protocol while protocol's own doc answers Both ways, and neither is the simple story — same workflow, same lines, no repo difference to justify diverging, on a section whose stated job is recording only what differs. Fourth: I claimed four checks hold at full strength while omitting that none of them gates a merge — agent-skills has no required_status_checks rule and no classic protection, so they are signal rather than gate, which protocol's doc treats as the decisive clause.
+
+**Alternatives considered:** Hold the section until protocol promotes its document to main, which blocks a true statement on someone else's batching schedule
+
+**Implications:**
+- The link points at protocol's dev with a note to repoint when it promotes, and states that CI cannot catch this class — an absolute cross-repository URL is unchecked by construction, so the note is the only guard
+- The batching claim is narrowed to what the evidence supports. The advantage is two per-tree gates protocol lacks, test and validate skills, not a general statement about four rows: check-derived-docs is a wash because protocol's v11 is also a property of the tree, and check-decisions is identically diluted in both
+- I claimed in the PR body that every figure was measured in this pass. The >= was not — it was carried across from the workflow's own header comment, which says >20 and is itself wrong. Reciting a number from a comment is the failure this repo keeps finding, and I did it while asserting the opposite
+
+---
+

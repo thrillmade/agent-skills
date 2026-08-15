@@ -44,27 +44,37 @@ same two, unconditionally.
 Work lands on `dev` first and reaches `main` in batches. The bar into `dev` is an
 **independent adversarial review** by an agent that did not write the change; the bar into
 `main` is a person. The convention is stated once, in
-[protocol's `docs/the-dev-branch.md`](https://github.com/thrillmade/protocol/blob/main/docs/the-dev-branch.md) —
+[protocol's `docs/the-dev-branch.md`](https://github.com/thrillmade/protocol/blob/dev/docs/the-dev-branch.md) —
 this section records only what differs here.
 
-**Batching costs less in this repo than in protocol**, because more of the gates are
-per-tree:
+> The link points at protocol's **`dev`**, not `main`, because that is where the document
+> currently lives — protocol batches too, and this is the first doc to cite it. Repoint to
+> `blob/main/` when protocol promotes. Nothing in CI will catch this if it rots:
+> `logmind check-links` validates **relative** links only, so an absolute URL to another
+> repository is never checked.
+
+**This repo has two per-tree gates protocol does not** — `test` and `validate skills` — so a
+batch is judged on more here than there. That is the whole of the difference; the rest of
+the table matches protocol's.
 
 | check | weakened by batching? |
 |---|---|
-| `test` · `validate skills` · `check-links` | **No.** Each judges the tree it is handed, so six changes checked once is the same assertion as six checked six times. |
-| `check-derived-docs` | **No.** This repo runs template `v4`, which regenerates and auto-fixes rather than asking who touched what. |
-| `check-decisions` | **Yes**, the same way as protocol: `:51-57` sets `decision_touched` as a *presence* flag, so one entry satisfies a whole batch. It also only fires above **20 non-docs lines**, so a docs-only batch never trips it at all. |
-| `clud-bug-review` | **Not applicable** — returns `NEUTRAL` here, so there is nothing for batching to dilute. |
+| `test` · `validate skills` · `check-links` | **No.** Each judges the tree it is handed, so six changes checked once is the same assertion as six checked six times. The first two are this repo's advantage. |
+| `check-derived-docs` | **No** — and not an advantage either. This repo's `v4` regenerates and auto-fixes; protocol's `v11` asks whether the branch touched the file. Different mechanisms, both properties of the tree. |
+| `check-decisions` | **Both ways** — see protocol's doc, which owns this. `:51-57` sets `decision_touched` as a *presence* flag, so one entry clears a whole batch. But `:65` fires **at or above** 20 non-docs lines (`>=`, not `>`), and `:40` excludes docs and `*.md` — so six docs-only changes need **zero** entries apiece, while six 15-line changes that individually need nothing sum to 90 and need one. |
+| `clud-bug-review` | **Not applicable** — returns `NEUTRAL` here, so there is nothing to dilute. |
 
-So four checks hold at full strength, one is diluted in a named way, and one does not run.
-**The independent review is what covers the `check-decisions` gap** — it is the only thing
-applied per change rather than per batch.
+**None of these gates a merge.** `gh api repos/thrillmade/agent-skills/rules/branches/main`
+returns `deletion`, `non_fast_forward`, `pull_request`, `required_linear_history` — **no
+`required_status_checks` rule**, and no classic protection either. So the checks are a
+*signal*, not a gate: a `dev` → `main` promotion with `test` red is mergeable by anyone with
+write access. **The independent review into `dev` is therefore not a supplement to
+enforcement — for now it is the enforcement**, and the only thing applied per change rather
+than per batch.
 
-**No forge rule protects `dev`** (`gh api repos/thrillmade/agent-skills/rules/branches/dev`
-returns `[]`), so every rule above is a convention held by whoever is working. That is
-acceptable while `dev` is somewhere work *passes through*, and stops being acceptable the
-moment it becomes somewhere work *lives*.
+**No forge rule protects `dev` either** (`rules/branches/dev` returns `[]`), so every rule
+above is a convention held by whoever is working. Acceptable while `dev` is somewhere work
+*passes through*; not the moment it becomes somewhere work *lives*.
 
 <!-- clud-bug-start -->
 <!-- clud-bug-block-version: v2 -->
