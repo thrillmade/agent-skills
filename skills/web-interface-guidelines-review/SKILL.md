@@ -60,7 +60,7 @@ Apply each section in order. Stop and flag at the first failure in each section.
 ### 6. Focus + keyboard
 
 - **Focus-visible always.** Every interactive element has a visible focus ring on `:focus-visible`. The default Tailwind reset suppresses outlines; the system must re-add them.
-- **Focus ring contract:** ≥ 2 px thickness; 3:1 contrast against both the focused control's background AND the adjacent surface (WCAG 2.4.13, AA in WCAG 2.2). A well-formed system generates its focus token to satisfy this contract.
+- **Focus ring contract:** 3:1 against both the control and the adjacent surface — **1.4.11, AA**. The ≥ 2 px perimeter is **2.4.13, AAA**: an enhancement, never an AA failure. A well-formed system's focus token satisfies both.
 - **Keyboard reachability:** every interactive control is tabbable; tab order matches visual order.
 - **Escape closes overlays:** dialogs, popovers, dropdowns close on Escape.
 
