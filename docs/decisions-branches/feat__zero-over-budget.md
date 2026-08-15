@@ -14,3 +14,15 @@
 
 ---
 
+## 2026-08-14 20:50 - Correct the debt figure in this branch's own decision entry: 7,935 over budget, 8,543 removed
+
+**Reasoning:** The previous entry's summary calls 8,543 the debt. It is not. The debt — bytes over the 8192 ceiling — was 7,935: logmind 3,190 plus clud-bug-collaboration 2,785 plus orchestrating-agent-delegation 1,958 plus web-interface-guidelines-review 2. The 8,543 figure is the reduction actually made across those four skills, which exceeds the debt because the trims went below the line rather than stopping at it. Two different quantities, and conflating them tells a reader the catalog was 608 bytes further over budget than it was. The same discrepancy exists in the PR body, which cites 7,935 as the reduction; net across all five changed skills is -8,440, since component-sizing-principles gained 103 bytes.
+
+**Alternatives considered:** Amend the earlier entry, which would need a force-push on a pushed branch; leave it, since the conclusion is unaffected
+
+**Implications:**
+- Both numbers are worth keeping and they answer different questions: 7,935 is how much debt existed, 8,543 is how much editorial work was done, and the gap between them is the headroom the trims bought. Margins are now thin — test-discipline at 8,191 has one byte, clud-bug-collaboration at 8,186 has six
+- Found by the local review pass on my own commit, which is the third time this session a number I wrote was wrong in a way only measurement caught. Recite nothing; compute it
+
+---
+
