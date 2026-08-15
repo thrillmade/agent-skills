@@ -1,0 +1,451 @@
+#!/usr/bin/env python3
+"""Validate every SKILL.md under skills/<name>/ (the `validate-skills` gate).
+
+Called by `.github/workflows/validate-skills.yml` on PR + push to main.
+Catches malformed frontmatter (missing name, missing description, name
+mismatch with directory) before it ships to skills.sh, where downstream
+consumers (clud-bug, agent runtimes via skills CLI) would silently get
+broken skills.
+
+Also gates docs/placement-map.json (when present): valid JSON/shape, and its
+`skills` keys reconciled 1:1 against skills/ directory names. This is what
+makes the placement-map guide's claim ("the map is kept in sync") actually
+true instead of aspirational.
+
+This file was a `python <<'PY'` heredoc inside the workflow until it was
+extracted verbatim so it could be imported and characterized by
+`tests/test_validate_skills.py`. Every rule, message string and exit code
+below is the heredoc's, unchanged -- the gate's behaviour is now pinned by
+tests rather than by re-reading YAML.
+
+Stdlib + PyYAML only (the workflow pip-installs pyyaml; nothing else).
+
+Inputs:
+  cwd  ROOT and the placement map are BOTH cwd-relative, exactly as the
+       heredoc had them. Run from the repo root. `main()`'s coverage guard
+       is what stops a run from the wrong directory passing vacuously.
+
+Outputs (stdout):
+  One `::error file=<path>::<msg>` GitHub annotation per validation error,
+  then a `::error::<N> skill validation errors` summary -- or a single
+  `OK: <N> skills validated cleanly.` line.
+
+Exit codes:
+  0  Every SKILL.md (and the placement map, if present) validated cleanly
+     AND the coverage guard agrees the run actually saw the tree.
+  1  Any validation error, either infra-fatal condition (no skills/ dir, no
+     skill subdirectories), or a coverage-guard failure.
+"""
+
+from __future__ import annotations
+
+import json
+import re
+import sys
+from pathlib import Path
+
+import yaml
+
+ROOT = Path("skills")
+FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
+
+# protocol SPEC.md §1.10.1 "Frontmatter (NORMATIVE)" -- enums and
+# shapes enforced below. Every key here is OPTIONAL in the
+# frontmatter; unknown keys (and the RESERVED, definition-deferred
+# `layer` / `status` / `superseded_by` keys) are always tolerated
+# and never validated -- only the fields below are checked, and
+# only when present.
+NAME_SLUG_RE = re.compile(r"^[a-z][a-z0-9-]{0,62}$")
+# SPEC §1.10.1: `source: manual | logmind-derived | skills-sh | clud-bug-baseline`
+SOURCE_VALUES = {"manual", "logmind-derived", "skills-sh", "clud-bug-baseline"}
+# SPEC: `kind: rule | writing | design`
+KIND_VALUES = {"rule", "writing", "design"}
+
+# Skill body size. No exceptions, and the number lives HERE on
+# purpose -- in code, changeable only by a reviewed edit to this file.
+#
+# It was briefly a JSON file carrying a `limitBytes` key plus a
+# grandfather list. That is the worse design: a grandfather row
+# exempts one skill visibly in review, but `limitBytes` is one line
+# and exempts all 46 at once, silently. Closing the small door while
+# leaving the large one open relocates the escape rather than
+# shutting it.
+#
+# There is no exception path because there is nothing to except.
+# Past this size a consuming reviewer truncates the body when
+# building its prompt, so the tail never reaches the model while the
+# author sees a complete file and a green build. An oversized skill
+# is already broken for its reader; blessing it does not make it
+# work, it only makes the breakage approved.
+#
+# 8192 is clud-bug's own DEFAULT_MAX_SKILL_BYTES
+# (src/core/prompt-builder.ts), whose comment ties it to SPEC 1.10.
+# Its shipped workflow templates override this DOWN to 4000, so a
+# repo on an unmodified template truncates earlier -- clud-bug#301.
+SIZE_LIMIT = 8192
+
+# --- docs/placement-map.json gate ------------------------------------------
+#
+# The steward's placement map (docs/integrating-with-agent-skills.md
+# "The placement map") claims it is the per-skill ground truth kept
+# in sync with skills/. Make that claim real: validate shape + enums
+# when the file is present, and reconcile its `skills` keys 1:1
+# against the skills/ directory names (report missing/extra by
+# name). Absence is tolerated (it may not exist yet / may be
+# authored by a parallel agent) -- only presence-with-defects fails.
+
+AUTHORING_HOME_RE = re.compile(r"^(catalog|undecided|repo-mirrored:[a-z0-9-]+)$")
+DISTRIBUTION_VALUES = {"default-on", "opt-in", "catalog-only"}
+
+
+def _valid_extension_entry(e: object) -> bool:
+    """An `applies_to.extensions` entry is a suffix-matched string —
+    clud-bug does suffix matching, not strict dotfile-extension
+    matching, so both '.tsx' and '_test.py' (skills/test-discipline
+    ships the latter) are legitimate. Require: non-empty string, no
+    whitespace, at least one '.', and not the bare string '.'.
+    """
+    return (
+        isinstance(e, str)
+        and e != ""
+        and not re.search(r"\s", e)
+        and "." in e
+        and e != "."
+    )
+
+
+def _skill_dirs(root: Path) -> list[Path]:
+    """Every immediate subdirectory of `root`, sorted. The set of things the
+    gate considers a skill -- one SKILL.md is expected in each.
+    """
+    return sorted(p for p in root.iterdir() if p.is_dir())
+
+
+def run(root: Path) -> list[str]:
+    """Validate every skill under `root`, returning the `::error ...::` lines.
+
+    An empty list means clean. The caller prints the lines and the summary --
+    see `main()`, which also applies `coverage_errors()` to the clean path so
+    a run that validated nothing cannot pass.
+
+    Two INFRA-FATAL conditions print and `sys.exit(1)` from here rather than
+    returning: a missing skills/ dir and a skills/ dir with no subdirectories.
+    They are not validation errors, they carry no `::error::<N> skill
+    validation errors` summary line, and that is the workflow's shipped
+    behaviour -- preserved deliberately.
+    """
+    errors: list[str] = []
+
+    if not root.exists() or not root.is_dir():
+        print("::error::skills/ directory not found at repo root")
+        sys.exit(1)
+
+    skill_dirs = _skill_dirs(root)
+    if not skill_dirs:
+        print("::error::no skill subdirectories under skills/")
+        sys.exit(1)
+
+    for skill_dir in skill_dirs:
+        dir_name = skill_dir.name
+        skill_md = skill_dir / "SKILL.md"
+        prefix = f"{skill_md}"
+
+        if not skill_md.exists():
+            errors.append(f"::error file={prefix}::missing SKILL.md")
+            continue
+
+        content = skill_md.read_text(encoding="utf-8")
+        m = FRONTMATTER_RE.match(content)
+        if not m:
+            errors.append(
+                f"::error file={prefix}::missing YAML frontmatter "
+                "(must start with --- ... --- block)"
+            )
+            continue
+
+        try:
+            meta = yaml.safe_load(m.group(1)) or {}
+        except yaml.YAMLError as e:
+            errors.append(
+                f"::error file={prefix}::frontmatter is not valid YAML: {e}"
+            )
+            continue
+
+        if not isinstance(meta, dict):
+            errors.append(
+                f"::error file={prefix}::frontmatter must be a YAML mapping"
+            )
+            continue
+
+        name = meta.get("name")
+        if not name or not isinstance(name, str) or not name.strip():
+            errors.append(
+                f"::error file={prefix}::frontmatter is missing a non-empty `name:` field"
+            )
+        else:
+            name = name.strip()
+            if name != dir_name:
+                errors.append(
+                    f"::error file={prefix}::frontmatter name='{name}' "
+                    f"does not match directory name '{dir_name}'"
+                )
+            if not NAME_SLUG_RE.match(name):
+                errors.append(
+                    f"::error file={prefix}::frontmatter name='{name}' does not match "
+                    r"the SPEC §1.10.1 slug regex ^[a-z][a-z0-9-]{0,62}$"
+                )
+
+        description = meta.get("description")
+        if not description or not isinstance(description, str) or not description.strip():
+            errors.append(
+                f"::error file={prefix}::frontmatter is missing a non-empty `description:` field"
+            )
+
+        # Require an H1 (Markdown title) somewhere in the body after the frontmatter
+        body = content[m.end():]
+        if not re.search(r"^# .+", body, flags=re.MULTILINE):
+            errors.append(
+                f"::error file={prefix}::body has no top-level `# Title` heading"
+            )
+
+        # --- Body size (see SIZE_LIMIT above) ---
+        # The error carries the REASON deliberately. A maintainer who
+        # hits a bare limit files a bypass PR; one who is told the tail
+        # silently never reaches the reader fixes the skill instead.
+        body_bytes = len(body.encode("utf-8"))
+        if body_bytes > SIZE_LIMIT:
+            errors.append(
+                f"::error file={prefix}::body is {body_bytes} bytes, over the "
+                f"{SIZE_LIMIT}-byte limit by {body_bytes - SIZE_LIMIT}. Past this, a "
+                f"consuming reviewer truncates the body when building its prompt -- your "
+                f"reader silently does not receive the rest, and nothing reports it. "
+                f"Fixes, in order: cut narration and duplication; replace anything a "
+                f"neighbouring skill already owns with a relative markdown link to it; "
+                f"split ONLY if this is genuinely two topics, never to hit the number. "
+                f"Do NOT move prose into references/ -- that consumer reads SKILL.md and "
+                f"nothing else, so the move deletes it. There is no exception list."
+            )
+
+        # --- SPEC §1.10.1 OPTIONAL-field validation ---
+
+        kind = meta.get("kind")
+        if kind is not None and kind not in KIND_VALUES:
+            errors.append(
+                f"::error file={prefix}::`kind: {kind!r}` is not one of "
+                f"{sorted(KIND_VALUES)} (SPEC §1.10.1)"
+            )
+
+        # `review_mode` was removed from the skill schema: how a repo
+        # groups skills into passes is `review.passes` in its own review
+        # config (SPEC §2.2), not a field on a skill it may not edit.
+        # Unrecognised keys round-trip untouched (SPEC §2.1), so a stale
+        # one is ignored rather than rejected.
+
+        source = meta.get("source")
+        if source is not None and source not in SOURCE_VALUES:
+            errors.append(
+                f"::error file={prefix}::`source: {source!r}` is not one of "
+                f"{sorted(SOURCE_VALUES)} (SPEC §1.10.1)"
+            )
+
+        applies_to = meta.get("applies_to")
+        if applies_to is not None:
+            if not isinstance(applies_to, dict):
+                errors.append(
+                    f"::error file={prefix}::`applies_to` must be a YAML mapping"
+                )
+            else:
+                paths = applies_to.get("paths")
+                if paths is not None and (
+                    not isinstance(paths, list)
+                    or not all(isinstance(p, str) and p.strip() for p in paths)
+                ):
+                    errors.append(
+                        f"::error file={prefix}::`applies_to.paths` must be a list "
+                        "of non-empty glob strings (SPEC §1.10.1)"
+                    )
+
+                extensions = applies_to.get("extensions")
+                if extensions is not None and (
+                    not isinstance(extensions, list)
+                    or not all(_valid_extension_entry(e) for e in extensions)
+                ):
+                    errors.append(
+                        f"::error file={prefix}::`applies_to.extensions` must be a "
+                        "list of extension/suffix strings (e.g. '.tsx', "
+                        "'_test.py') (SPEC §1.10.1)"
+                    )
+
+                author = applies_to.get("author")
+                if author is not None:
+                    if not isinstance(author, str) or not author.strip():
+                        errors.append(
+                            f"::error file={prefix}::`applies_to.author` must be a "
+                            "single non-empty GitHub handle string, not a list "
+                            "(SPEC §1.10.1)"
+                        )
+                    elif author.strip().startswith("@"):
+                        errors.append(
+                            f"::error file={prefix}::`applies_to.author` must not "
+                            "include a leading '@' (SPEC §1.10.1)"
+                        )
+
+    # --- docs/placement-map.json gate (see the constants above) --------
+
+    placement_map_path = root.parent / "docs" / "placement-map.json"
+
+    if placement_map_path.exists():
+        pm_prefix = str(placement_map_path)
+
+        try:
+            pm_text = placement_map_path.read_text(encoding="utf-8")
+        except OSError as e:
+            errors.append(
+                f"::error file={pm_prefix}::could not read {placement_map_path}: {e}"
+            )
+            pm_text = None
+
+        pm = None
+        if pm_text is not None:
+            try:
+                pm = json.loads(pm_text)
+            except json.JSONDecodeError as e:
+                errors.append(
+                    f"::error file={pm_prefix}::{placement_map_path} is not valid JSON: {e}"
+                )
+
+        if pm is not None:
+            if not isinstance(pm, dict):
+                errors.append(
+                    f"::error file={pm_prefix}::top level of {placement_map_path} "
+                    "must be a JSON object with `version`, `updated`, `skills`"
+                )
+            else:
+                version = pm.get("version")
+                if not isinstance(version, int) or isinstance(version, bool):
+                    errors.append(
+                        f"::error file={pm_prefix}::`version` must be an int"
+                    )
+
+                updated = pm.get("updated")
+                if not isinstance(updated, str) or not updated.strip():
+                    errors.append(
+                        f"::error file={pm_prefix}::`updated` must be a non-empty string"
+                    )
+
+                skills_map = pm.get("skills")
+                if not isinstance(skills_map, dict):
+                    errors.append(
+                        f"::error file={pm_prefix}::`skills` must be an object "
+                        "mapping skill name -> metadata"
+                    )
+                else:
+                    for slug, meta in skills_map.items():
+                        if not isinstance(meta, dict):
+                            errors.append(
+                                f"::error file={pm_prefix}::skills.{slug} must be "
+                                "an object (unknown per-skill keys are tolerated; "
+                                "the value itself must still be a mapping)"
+                            )
+                            continue
+
+                        authoring_home = meta.get("authoring_home")
+                        if not isinstance(authoring_home, str) or not AUTHORING_HOME_RE.match(
+                            authoring_home
+                        ):
+                            errors.append(
+                                f"::error file={pm_prefix}::skills.{slug}.authoring_home="
+                                f"{authoring_home!r} must match "
+                                r"^(catalog|undecided|repo-mirrored:[a-z0-9-]+)$"
+                            )
+
+                        distribution = meta.get("distribution")
+                        if distribution not in DISTRIBUTION_VALUES:
+                            errors.append(
+                                f"::error file={pm_prefix}::skills.{slug}.distribution="
+                                f"{distribution!r} is not one of "
+                                f"{sorted(DISTRIBUTION_VALUES)}"
+                            )
+
+                        subscribers = meta.get("subscribers")
+                        if not isinstance(subscribers, list) or not all(
+                            isinstance(s, str) for s in subscribers
+                        ):
+                            errors.append(
+                                f"::error file={pm_prefix}::skills.{slug}.subscribers "
+                                "must be a list of strings"
+                            )
+
+                    # Map keys must EXACTLY equal the skills/ directory names.
+                    map_names = set(skills_map.keys())
+                    dir_names = {d.name for d in skill_dirs}
+                    missing_from_map = sorted(dir_names - map_names)
+                    extra_in_map = sorted(map_names - dir_names)
+                    if missing_from_map:
+                        errors.append(
+                            f"::error file={pm_prefix}::{placement_map_path} is missing "
+                            f"an entry for: {', '.join(missing_from_map)}"
+                        )
+                    if extra_in_map:
+                        errors.append(
+                            f"::error file={pm_prefix}::{placement_map_path} has an entry "
+                            f"for non-existent skills/ dir(s): {', '.join(extra_in_map)}"
+                        )
+
+    return errors
+
+
+def coverage_errors(root: Path, validated: int) -> list[str]:
+    """Assert the run actually saw the tree it claims to have validated.
+
+    `ROOT` is cwd-relative. A clean list of errors is only evidence if it was
+    produced against real skills -- a run that walked an empty or wrong tree
+    reports zero errors just as loudly as one that walked 48 correct skills.
+    So the clean path is gated on: `validated` is non-zero, AND it equals the
+    number of SKILL.md files actually on disk under `root`.
+
+    Returns the `::error::` lines (empty list == the pass is evidence).
+    """
+    on_disk = len(list(root.glob("*/SKILL.md")))
+    errors: list[str] = []
+
+    if validated == 0:
+        errors.append(
+            f"::error::coverage guard: 0 skills validated under '{root}'. This gate is "
+            "cwd-relative, so a run from the wrong directory validates nothing and "
+            "would otherwise report success -- green CI over zero coverage. Run it "
+            "from the repo root."
+        )
+
+    if validated != on_disk:
+        errors.append(
+            f"::error::coverage guard: validated {validated} skill dir(s) but '{root}' "
+            f"holds {on_disk} SKILL.md file(s). The counts must agree or the pass is "
+            "not evidence about the skills on disk."
+        )
+
+    return errors
+
+
+def main() -> int:
+    errors = run(ROOT)
+
+    if errors:
+        for e in errors:
+            print(e)
+        print(f"::error::{len(errors)} skill validation errors")
+        return 1
+
+    validated = len(_skill_dirs(ROOT))
+    guard = coverage_errors(ROOT, validated)
+    if guard:
+        for e in guard:
+            print(e)
+        return 1
+
+    print(f"OK: {validated} skills validated cleanly.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
