@@ -53,3 +53,18 @@
 
 ---
 
+## 2026-08-15 12:51 - Cut the dev-branch section in half — the accretion was generating the defects, not fixing them
+
+**Reasoning:** Four fix rounds, and each of the first three introduced a new defect. A panel tested the hypothesis that the accretion itself was the cause and found the pattern decisive: across all four rounds, not one defect has ever been found in an action sentence. Every single one lived in narration - comparative claims about protocol, evidence citations, inline gh api measurements, the dismissible-red paragraph. Two of the twelve trace to a single forty-word parenthetical (commits/main/check-runs returning 4) that changes no action whatsoever: it produced 17 percent of the section's total defect output while contributing nothing an agent does differently. Measured growth: 269, 432, 542, 698, 761 words across five commits, every one of which called itself a fix, ending at 46 percent of the whole canonical instruction file for one branch convention. Round four's own fix arrived carrying the next instance on schedule - it introduced a verbatim duplication, so 'a property of the forge, not a permission' appeared twice ten lines apart, one primitive with six statements across the section. The section is now 383 words. Every remaining sentence answers one of four questions an arriving agent must act on: what to branch from, what to open, who promotes to main, what to do when a check is red.
+
+**Alternatives considered:** Keep patching - round six has a 100 percent historical rate of introducing a defect, and the duplication proves the rate has not decayed, Merge the long version and cut later - same thing, one round further on, with the stale numbers shipped in the meantime, Delete the dismissible-red paragraph too - rejected, it is the one place where deletion changes an action: without it an agent chases a phantom red
+
+**Implications:**
+- Baked-in measurements are gone from the normative file and live in the PR body and decision log instead. The rule to measure rather than recite governs an agent's report; in a document a baked number is a liability that goes stale the day someone adds a workflow, which is exactly how the 4 produced two defects. The clud-bug section already demonstrated the right pattern - a re-check command with no number in it
+- The #209/#211/#212 zero-review roll-call is cut. The tell was that the previous round's fix for it was to add a neutralising sentence rather than to remove it: a normative file that has to carry its own antidote is carrying poison. The general claim that the approving review is bypassed in practice survives
+- The paragraph describing the checkout-by-branch-name artifact must be deleted when agent-skills#223 lands, or it rots into a documented licence to ignore a real red. The trigger is recorded on #223 rather than as a parenthetical in AGENTS.md - an instruction file says what to do, not what to do about itself
+
+---
+
+---
+

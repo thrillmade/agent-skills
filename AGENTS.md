@@ -42,64 +42,38 @@ the same two, unconditionally.
 ## The `dev` branch
 
 Work lands on `dev` first and reaches `main` in batches. `dev` is somewhere work *passes
-through*, not somewhere work *lives*. The rules are the organisation's, set out in the private
-`thrillmade/protocol`; this repository is public, so they are stated here, not linked to.
+through*, not somewhere work *lives*. These are the organisation's rules, not this repo's;
+changing them is not a local decision.
 
-**Branch from `dev`, and open a pull request into `dev`** — the default branch is `main`, so
-the base has to be set by hand. The five workflow checks — `test`, `validate skills`,
-`check-links`, `check-decisions`, `check-derived-docs` — all run on a pull request; `test`,
-`validate skills` and `check-links` also run on a push to `main`. **Nothing runs on a push to
-`dev`**, so a commit pushed straight there is checked by nothing
-(`gh api repos/thrillmade/agent-skills/commits/dev/check-runs --jq .total_count` → `0`; the
-same call against `main` → `4` — those three plus the skipped `self-heal` job — which is that
-push run).
+**Branch from `dev`, and open the pull request into `dev`.** The default base is `main`, so set
+it by hand. Never push straight to `dev` — no workflow runs on a push there, so the commit is
+checked by nothing.
 
-**Into `dev`: an independent adversarial review.** A change may merge once a reviewer that
-did **not** write it has reviewed it and its findings are addressed — a refute-first panel,
-or clud-bug in local mode. **Independence means a different agent.** A fresh context window
-on the same agent is not a different agent, and neither is the same agent asked to look again.
+**Into `dev`: an independent adversarial review.** A change may merge once a reviewer that did
+**not** write it has reviewed it and its findings are addressed — a refute-first panel, or
+clud-bug in local mode. **Independence means a different agent.** A fresh context window on the
+same agent is not a different agent, and neither is the same agent asked to look again. The
+review is a panel, not a GitHub approval; a PR into `dev` reports no review decision at all.
+This is the only rule applied per change rather than per batch, so it carries the weight.
 
 **Into `main`: a person.** An agent does not open or merge the `dev` → `main` promotion; it
-reports the batch ready and hands off. An active org ruleset requires one approving review on
-`main`, so a PR there reports `REVIEW_REQUIRED` until someone approves it, while a PR into
-`dev` reports no review decision at all.
+reports the batch ready and hands off.
 
-**A red check is fixed, not merged past.** Nothing here is gated on a check: `main` has **no
-`required_status_checks` rule** and no classic protection either
-(`gh api repos/thrillmade/agent-skills/rules/branches/main`). So red merges, and has — #188
-went into `main` four days after `check-links` failed on it. The forge asks for a human
-approval, not a green suite; the suite is on whoever is working.
+**A red check is fixed, not merged past.** Read the failing step first. A check whose *setup*
+step died never evaluated anything — a skipped verdict is not a passing verdict, so that is a
+red. Re-run it or fix it; do not reason your way past it.
 
-**Read the failing step before believing a red — one *kind* of red is dismissible, and only one.**
-`check-links` and `check-derived-docs` check out the head *branch by name*, and branches are
-deleted on merge, so a run still in flight when a PR merges dies with `A branch or tag with
-the name '…' could not be found`. That is an artifact of the merge, not a verdict on the
-change. `test`, `validate skills` and `check-decisions` check out the merge ref instead and
-are unaffected.
+One red is an artifact rather than a verdict. `check-links` and `check-derived-docs` check out
+the head branch **by name**, so a run still in flight when the PR merges dies at the checkout
+step with `A branch or tag with the name '…' could not be found`. Both can fail this way at
+once. Every other failing step is real.
 
-That is the **only** dismissible kind, and all three conditions must hold: the failing step is
-the checkout, the message is the one above, and the head branch is gone because the PR merged.
-More than one check can fail this way at once — on #216 both did. **Every other failing step is
-a real red, including one where the check's own step never ran because a setup step died.** A skipped verdict is not a passing verdict. #188's red was exactly that
-kind — `setup-logmind` failed, so `check-links` never evaluated a link — and it was merged
-anyway. Re-run it or fix it; do not reason your way past it.
+**Batching dilutes exactly one check.** `check-decisions` asks only whether *some* decision file
+is in the diff, so one entry clears a whole batch. Every change still logs its own regardless.
 
-**What batching costs.**
-
-| check | weakened by batching? |
-|---|---|
-| `test` · `validate skills` · `check-links` · `check-derived-docs` | **No.** Each judges the tree it is handed, so six changes checked once is the same assertion as six checked six times. |
-| `check-decisions` | **Yes.** It is a *presence* check — one decision file anywhere in the diff clears the whole batch. **A batch does not inherit one change's decision.** The dilution is a property of the forge, not a permission: every change still logs its own, and the check simply stops being the thing that enforces it, so the reviewer is. |
-| `clud-bug-review` | **Not applicable** — it is not producing reviews here. See [clud-bug is not reviewing here](#clud-bug-is-not-reviewing-here). |
-
-**No forge rule protects `dev`** (`rules/branches/dev` returns `[]`), so every rule above
-**about `dev`** is a convention held by whoever is working. `main` does carry forge rules —
-the approving review, `deletion`, `non_fast_forward`, `required_linear_history` — but the
-approving review is bypassed in practice: #209, #211 and #212 all went into `main` at
-`REVIEW_REQUIRED` with **zero** reviews. Nothing in the forge distinguishes an agent from a
-person either, so "a person" is a convention there too. **That the forge does not enforce a
-rule is a property of the forge, not a permission** — the independent review is the only rule
-applied per change rather than per batch, and it is held by whoever is working.
+**Nothing in the forge enforces any of the above.** No rule protects `dev`; `main`'s
+approving-review rule is bypassed in practice; nothing there tells an agent from a person. That
+a rule is not enforced is a property of the forge, not a permission.
 
 <!-- clud-bug-start -->
 <!-- clud-bug-block-version: v2 -->
