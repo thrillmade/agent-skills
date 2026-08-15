@@ -48,11 +48,22 @@ Paste the row below and replace the placeholder with the reason. That is the
 whole cost — and the placeholder is rejected unfilled, because deciding the
 words are safe to lose is the one part of this that cannot be automated.
 
-Four rules make the row a declaration rather than a standing exemption:
+Five rules make the row a declaration rather than a standing exemption:
 
-- **Only a row your change adds counts.** A row already on `main` is somebody
-  else's declaration about somebody else's deletion. Inheriting it would make
-  this file the blanket exemption the size gate deliberately removed.
+- **Only a row your change adds counts.** A row that was already there is
+  somebody else's declaration about somebody else's deletion. Inheriting it
+  would make this file the blanket exemption the size gate deliberately
+  removed. Editing one does not make it yours, and which column you edit — the
+  reason, the number, even the skill name — makes no difference: between two
+  versions of a text file an edit is one row removed and one row added, and
+  nothing says which added row is which removed one.
+- **Nothing already here may be taken back out.** That is what makes the rule
+  above true rather than merely intended. Your change is credited with the rows
+  this file gained over the rows it already had, so a change that removes or
+  rewrites an existing row is credited with nothing at all — including its own
+  honest rows — until it puts that row back. Adding a throwaway row does not
+  buy the difference: the row that makes this file longer and the row that
+  covers your cut have to be the same row.
 - **The count must cover the cut.** It cannot be written blind, and it puts the
   size of the cut in the diff where a reviewer reads it. It is a floor, not an
   exact match: if a later commit in the same PR adds words back, the row you
@@ -65,7 +76,8 @@ Four rules make the row a declaration rather than a standing exemption:
 Rows go in the table at the bottom of this file — that table only, not in a
 fenced example and not in a comment. The record is the point.
 
-Rows stay after they merge. This is a record, not a queue.
+Rows stay after they merge. This is a record, not a queue — and that is
+enforced, not merely asked for: see the second rule above.
 
 The gate is characterized against the three real deletions, vendored with their
 provenance in

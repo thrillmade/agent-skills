@@ -139,8 +139,9 @@ SCOPE_LABEL = {
 #
 # MEASURED, not chosen -- and measured PER SCOPE, because each part has its own
 # word economy and therefore its own noise floor. Replaying this detector over
-# every revision of every SKILL.md in this repository's history (159
-# file-revisions, across every commit touching one) gives, per scope, these
+# every revision of every SKILL.md reachable from ANY ref -- `--all`, the scope
+# in the command below, because the three #197 deletions live on the topic
+# branch PROVENANCE.md records rather than on a trunk -- gives, per scope, these
 # loss values and nothing in between:
 #
 #   prose        1, 2   ... then 13, 44, 49, 79, 283, 323, 408, 1364
@@ -161,7 +162,11 @@ SCOPE_LABEL = {
 # rename as major" trigger outright.
 #
 # Re-run the replay before moving any of these. The argument is the empty band,
-# not the digit:
+# not the digit -- and not the tally either. How many file-revisions the replay
+# compares, and how many of them fire, is a function of which refs a given
+# checkout happens to have: measured here at 19 fires over 172 file-revisions
+# from `--all` and 7 over 99 from `origin/dev`, same detector, same day. The
+# bands below are what reproduce, so those are what is quoted:
 #
 #   git log --all --format=%H -- 'skills/*/SKILL.md'   # then diff each parent
 #
@@ -319,7 +324,7 @@ class Loss:
 #
 #   | skill-name | 44 | why the words are gone |
 #
-# Three rules keep it a declaration rather than a standing exemption, and each
+# Four rules keep it a declaration rather than a standing exemption, and each
 # one is a hole somebody drove through in review:
 #
 #   ONLY A ROW THE CHANGE ITSELF ADDS COUNTS. A row inherited from the base is
@@ -329,13 +334,40 @@ class Loss:
 #   visibly in review, but `limitBytes` was one line and exempted all 46 at
 #   once, silently.
 #
+#   THE LEDGER IS APPEND-ONLY, AND A CHANGE THAT TAKES A ROW BACK OUT OF IT
+#   DECLARES NOTHING. This is the rule above made true rather than intended.
+#   Between two snapshots of a text file there is no such thing as an edited
+#   row: an edit is one row removed and one row added, and nothing in the two
+#   ledgers says which added row is which removed one. So an edit to an
+#   inherited row could read as a fresh declaration, and twice did -- editing
+#   the REASON, then editing the COUNT, each caught in review and each fixed in
+#   that column alone. The count is far the worse of the two: a forged reason
+#   could only ever cover a cut as large as the number already sitting there,
+#   while `| alpha | 4 |` -> `| alpha | 54 |` is one character and covers any
+#   number the author cares to type.
+#
+#   Column-by-column patching cannot close that, because the next column
+#   reopens it. What does: every row the base ledger had must still be in the
+#   head ledger, and the declarations this change made are the surplus on top.
+#   Cardinality is the one thing an edit cannot forge -- editing any field of
+#   any row, in any column, including a column added to this table years from
+#   now, leaves a ledger with exactly as many rows as it started with and
+#   therefore no surplus at all. Nor does a throwaway row bought to make the
+#   total grow: the row that grows the total and the row that covers the cut
+#   have to be the same row, and the inherited one it was laundering through is
+#   missing.
+#
 #   THE COUNT HAS TO COVER THE CUT. That is not busywork -- it is what stops a
 #   row being written blind, and it puts the magnitude in the diff where a
 #   reviewer reads it. It is a floor, not an equality: a later commit in the
 #   same PR that ADDS words shrinks the net, and demanding a fresh number on
 #   every review round would make the ordinary life of a pull request the thing
 #   that breaks the gate. Understating still fails -- you cannot declare 5 to
-#   cover a cut of 500.
+#   cover a cut of 500. The floor is only defensible because of the rule above.
+#   A floor over a number the author can edit into a row that was already there
+#   is what made the count hole worth driving through; over a row that is
+#   provably surplus it is just a number somebody wrote in this diff, next to a
+#   reason, where a reviewer reads both.
 #
 #   ROWS COUNT WITH MULTIPLICITY, ON (SKILL, COUNT) -- NOT ON THE REASON TEXT.
 #   Two removals of the same size from the same skill are two declarations, so
@@ -344,14 +376,13 @@ class Loss:
 #   added by their change, and the gate failed anyway and reprinted the same
 #   instruction. An escape hatch that cannot be opened is a bypass with extra
 #   steps -- and this was the default case, not an exotic one, since 35 of the
-#   49 skills carry two or more bullets of identical word length. But the
-#   reason cannot be part of the KEY either: keyed on the whole row, editing an
-#   inherited row's wording -- a typo fix, a trailing full stop -- gave it a
-#   fresh key, so the edit alone read as a declaration and covered an
-#   unrelated cut nobody wrote a reason for. What has to grow between the two
-#   ledgers is the COUNT of rows at that size, not the text of any one of
-#   them, which is why the multiset is counted on (skill, count) with the
-#   reason dropped, rather than on the full (skill, count, reason) tuple.
+#   49 skills carry two or more bullets of identical word length. The reason
+#   cannot be part of the KEY either, and under the append-only rule that now
+#   cuts both ways: keyed on the whole row, a one-character fix to an inherited
+#   row's wording reads as that row withdrawn and an unrelated one added, which
+#   once manufactured a declaration and would now void the change's own genuine
+#   ones. Dropping the reason before comparing prices a copyedit at zero in
+#   both directions, which is what it costs.
 #
 # The failure prints the exact row to paste, so paying it costs one copy plus a
 # reason.
@@ -437,15 +468,15 @@ def rows_by_size(
     """Collapse parsed rows onto `(skill, count)`, dropping the reason.
 
     `parse_ledger` keys on the whole row -- reason included -- because that is
-    what lets a reader see two declarations of the same size as two rows
-    rather than one. But the reason must not be part of what makes a row
-    NEW: subtracting one `(skill, count, reason)` Counter from another treats
-    any edit to a row's wording as that row vanishing and an unrelated one
-    appearing, so a one-character fix to an inherited row's reason reads as a
-    fresh declaration -- covering whatever this change actually cut, under
-    wording nobody wrote for it. Collapsing first means the thing that has to
-    grow between the two ledgers is the COUNT of rows at that size, which is
-    the only thing "added a row" can honestly mean.
+    what lets a reader see two declarations of the same size as two rows rather
+    than one. But the reason is not part of what makes a row NEW, and under the
+    append-only rule above it must not be part of what makes one MISSING
+    either: keyed on the whole row, a one-character fix to an inherited row's
+    wording -- a typo, a trailing full stop -- reads as that row withdrawn and
+    an unrelated one added. That once manufactured a declaration outright; it
+    would now void the change's own genuine ones instead, which is the same
+    defect pointed the other way. Collapsing first prices a copyedit to an old
+    row at zero in both directions, which is what it costs.
     """
     collapsed: collections.Counter[tuple[str, int]] = collections.Counter()
     for (skill, count, _reason), n in declarations.items():
@@ -475,9 +506,17 @@ def run(
     otherwise-ordinary edit -- which is how all three historical cases got
     through.
     """
-    added = rows_by_size(parse_ledger(ledger_after)) - rows_by_size(
-        parse_ledger(ledger_before)
-    )
+    before_rows = rows_by_size(parse_ledger(ledger_before))
+    after_rows = rows_by_size(parse_ledger(ledger_after))
+
+    # What this change added to the ledger, and what it took back out. A change
+    # that took ANY row out is credited with nothing: an edit is a withdrawal
+    # plus an addition, so crediting the addition while ignoring the withdrawal
+    # is exactly what let an edit to any one column declare on its own. See the
+    # append-only rule above.
+    surplus = after_rows - before_rows
+    withdrawn = before_rows - after_rows
+    added = collections.Counter() if withdrawn else surplus
     errors: list[str] = []
 
     for path in sorted(cases):
@@ -490,6 +529,20 @@ def run(
         if declares(added, skill, loss.net):
             continue
 
+        # Only when a withdrawal is what made the difference. Otherwise the
+        # author gets told about a rule that had no bearing on their failure.
+        rewritten = (
+            f" A row in this change's ledger does cover this, but the change "
+            f"also takes {sum(withdrawn.values())} row(s) that were already "
+            f"there back OUT of {LEDGER}, and while it does that no row it adds "
+            f"counts: between two snapshots an edit to an inherited row is a "
+            f"removal plus an addition, so any edit at all would otherwise "
+            f"declare on its own. Put back what it removed and add yours as a "
+            f"new row."
+            if withdrawn and declares(surplus, skill, loss.net)
+            else ""
+        )
+
         errors.append(
             f"::error file={path}::this SKILL.md lost {loss.net} words that "
             f"nothing in the same part of it replaced ({loss.breakdown()}). "
@@ -499,7 +552,7 @@ def run(
             f"frontmatter or to a code block cannot pay for prose that went "
             f"missing. Gone: {loss.excerpt()}. If the removal is deliberate, "
             f"add this row to {LEDGER} in this same change: "
-            f"{ledger_row(skill, loss.net)}"
+            f"{ledger_row(skill, loss.net)}{rewritten}"
         )
 
     return errors

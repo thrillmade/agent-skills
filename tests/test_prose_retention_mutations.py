@@ -161,22 +161,52 @@ MUTATIONS = [
         # The ledger becomes a standing exemption: a row merged to main once
         # excuses every later deletion from that skill, silently.
         "ledger_not_scoped_to_the_change",
-        "    added = rows_by_size(parse_ledger(ledger_after)) - rows_by_size(\n"
-        "        parse_ledger(ledger_before)\n    )",
-        "    added = rows_by_size(parse_ledger(ledger_after))",
+        "    added = collections.Counter() if withdrawn else surplus",
+        "    added = after_rows",
     ),
     (
-        # Collapsing AFTER subtracting instead of before reopens the exact
-        # defect the collapse exists to close: subtraction on the raw
-        # (skill, count, reason) rows sees any edit to an inherited row's
-        # wording -- a typo fix, a trailing full stop -- as that row vanishing
-        # and an unrelated one appearing, so the edit alone reads as a fresh
-        # declaration and covers whatever this change actually cut.
+        # The append-only rule deleted, so a row taken back out of the ledger
+        # costs nothing. An edit is a withdrawal plus an addition, so this
+        # hands a free declaration to an edit of ANY column of an inherited
+        # row -- the count worst of all, where one character covers any number
+        # the author cares to type.
+        "ledger_credits_rows_a_change_withdrew",
+        "    added = collections.Counter() if withdrawn else surplus",
+        "    added = surplus",
+    ),
+    (
+        # The append-only rule narrowed to "the ledger got longer", which is
+        # the near-miss fix: it stops a bare edit, and one throwaway row buys
+        # it back. The row that grows the total and the row that covers the cut
+        # are then allowed to be different rows.
+        "ledger_void_replaced_by_a_growing_row_count",
+        "    added = collections.Counter() if withdrawn else surplus",
+        "    added = (\n"
+        "        surplus\n"
+        "        if sum(after_rows.values()) > sum(before_rows.values())\n"
+        "        else collections.Counter()\n    )",
+    ),
+    (
+        # Collapsing AFTER subtracting instead of before. Under the append-only
+        # rule this no longer manufactures a declaration -- it voids one: an
+        # edit to an inherited row's wording, a typo fix or a trailing full
+        # stop, reads as that row withdrawn, so a copyedit to somebody else's
+        # old row kills the author's own genuine declaration in the same PR.
         "ledger_collapsed_after_subtracting_not_before",
-        "    added = rows_by_size(parse_ledger(ledger_after)) - rows_by_size(\n"
-        "        parse_ledger(ledger_before)\n    )",
-        "    added = rows_by_size(\n"
-        "        parse_ledger(ledger_after) - parse_ledger(ledger_before)\n    )",
+        "    surplus = after_rows - before_rows\n"
+        "    withdrawn = before_rows - after_rows",
+        "    _before, _after = parse_ledger(ledger_before), parse_ledger(ledger_after)\n"
+        "    surplus = rows_by_size(_after - _before)\n"
+        "    withdrawn = rows_by_size(_before - _after)",
+    ),
+    (
+        # The failure stops naming the withdrawal that caused it. The author is
+        # then looking at a ledger row that covers their cut and a gate that
+        # fails anyway with no reason given -- which is how a gate stops being
+        # read and starts being routed around.
+        "withdrawal_not_explained_in_the_message",
+        "            if withdrawn and declares(surplus, skill, loss.net)",
+        "            if False",
     ),
     (
         # The count stops binding. A row can then be written blind, and the

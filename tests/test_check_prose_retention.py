@@ -574,6 +574,142 @@ def test_cli_editing_an_inherited_rows_reason_does_not_cover_an_unrelated_cut(re
     assert "::error file=skills/alpha/SKILL.md::" in capsys.readouterr().out
 
 
+# Every way to edit a row that was already in the base ledger, one per column.
+# None of them adds a row, so none of them can declare anything -- which column
+# the edit lands in is not part of the rule, and must not become part of it. The
+# fourth-column case is here so a column added to this table later is covered
+# before it exists: two rounds of review each found this hole in whichever
+# column they thought to try, and each was fixed in that column alone.
+INHERITED_ROW_EDITS = [
+    (
+        "its reason",
+        "| {name} | {net} | trimmed the intro |",
+        "| {name} | {net} | trimmed the intro. |",
+    ),
+    (
+        "its count",
+        "| {name} | 4 | trimmed the intro |",
+        "| {name} | {net} | trimmed the intro |",
+    ),
+    (
+        "its skill",
+        "| some-other-skill | {net} | trimmed the intro |",
+        "| {name} | {net} | trimmed the intro |",
+    ),
+    (
+        "a fourth column",
+        "| {name} | {net} | trimmed the intro | 2026-01-02 |",
+        "| {name} | {net} | trimmed the intro | 2026-03-14 |",
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    "before_row,after_row",
+    [(b, a) for _f, b, a in INHERITED_ROW_EDITS],
+    ids=[f for f, _b, _a in INHERITED_ROW_EDITS],
+)
+def test_editing_an_inherited_row_declares_nothing(before_row, after_row):
+    """The anti-blanket rule, stated over the row rather than over a column.
+
+    A row inherited from the base is somebody else's declaration. Editing one
+    adds nothing, so it declares nothing -- whichever field the edit touches.
+    Keyed on any part of a row's text, Counter subtraction reads the edited row
+    as the old one vanishing and an unrelated one appearing, and the change gets
+    a free declaration it never wrote.
+
+    The count column is the dangerous one, and it is why this test is about the
+    row and not about a column: an edit to the reason could only ever cover a
+    cut as large as the inherited count, but an edit to the count covers any
+    number the author cares to type.
+    """
+    cases, name, net = a_real_deletion()
+    fields = {"name": name, "net": net}
+    before = declared(before_row.format(**fields))
+    after = declared(after_row.format(**fields))
+
+    # Control: both ledgers really do carry one parsed row. Without this, "the
+    # gate fired" is equally explained by a row the parser never read at all --
+    # which is a different mechanism and would leave the hole open.
+    assert sum(cpr.parse_ledger(before).values()) == 1, before
+    assert sum(cpr.parse_ledger(after).values()) == 1, after
+
+    assert len(cpr.run(cases, ledger_before=before, ledger_after=after)) == 1
+
+
+def test_an_added_row_cannot_launder_an_edit_to_an_inherited_rows_count():
+    """Adding a row does not license editing a different one.
+
+    A rule that asks only whether the skill's row COUNT grew is satisfied by one
+    throwaway row -- `| alpha | 1 | fixed a typo |` -- while the number that
+    actually covers the cut comes from an inherited row whose count was edited
+    upward in the same breath. The row that grew the total and the row that
+    covers the cut have to be the same row.
+    """
+    cases, name, net = a_real_deletion()
+    before = declared(f"| {name} | 4 | an earlier trim |")
+    after = declared(
+        f"| {name} | {net} | an earlier trim |", f"| {name} | 1 | fixed a typo |"
+    )
+    assert len(cpr.run(cases, ledger_before=before, ledger_after=after)) == 1
+
+
+def test_editing_an_inherited_rows_reason_does_not_void_an_unrelated_declaration():
+    """The matched pair for the two rules above, in the free direction.
+
+    A change may not be CREDITED for editing an inherited row; it must not be
+    PUNISHED for it either. A drive-by copyedit to an old row -- a typo, a full
+    stop -- alongside a genuine new declaration of your own is ordinary, and the
+    genuine row still stands. This is what dropping the reason before comparing
+    buys: with the reason still in the key the copyedit reads as a withdrawn
+    row, and withdrawing a row is what voids the credit.
+    """
+    cases, name, net = a_real_deletion()
+    before = declared("| some-other-skill | 3 | an earlier trim |")
+    after = declared(
+        "| some-other-skill | 3 | an earlier trim. |",
+        f"| {name} | {net} | The routing rule moved to the policy skill. |",
+    )
+    assert cpr.run(cases, ledger_before=before, ledger_after=after) == []
+
+
+def test_cli_editing_an_inherited_rows_count_does_not_cover_an_unrelated_cut(
+    repo, capsys
+):
+    """The count-column defect end to end through real git revisions.
+
+    Base already carries a declared row from an earlier change. This change cuts
+    three NEW words from the same skill and touches the old row only to raise
+    its number -- one character, zero rows added, and the cut is covered.
+    """
+    (repo / "skills" / "alpha" / "SKILL.md").write_text(BODY + "kilo lima mike\n")
+    (repo / "docs" / "prose-removals.md").write_text(
+        declared("| alpha | 1 | trimmed the intro |")
+    )
+    base = commit(repo, "PR1: declare and land a 1-word cut")
+
+    (repo / "skills" / "alpha" / "SKILL.md").write_text(BODY)
+    (repo / "docs" / "prose-removals.md").write_text(
+        declared("| alpha | 3 | trimmed the intro |")
+    )
+    commit(repo, "PR2: cut three more words, only raise the old row's number")
+
+    assert cpr.main(["--base", base, "--head", "HEAD"]) == 1
+    assert "::error file=skills/alpha/SKILL.md::" in capsys.readouterr().out
+
+
+def test_the_error_says_the_record_was_rewritten_when_that_is_why_it_fired():
+    """An author who edited an old row instead of adding one sees a row in the
+    ledger that covers their cut and a gate that fails anyway. The message has
+    to name the reason, or the only way out of it is guessing.
+    """
+    cases, name, net = a_real_deletion()
+    before = declared(f"| {name} | 4 | an earlier trim |")
+    after = declared(f"| {name} | {net} | an earlier trim |")
+    (error,) = cpr.run(cases, ledger_before=before, ledger_after=after)
+    assert "back OUT of docs/prose-removals.md" in error, error
+
+
 def test_a_second_removal_of_the_same_size_can_be_declared_again():
     """The hatch has to open twice.
 
