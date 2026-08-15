@@ -66,9 +66,9 @@ If APCA passes but WCAG fails (or vice versa), reject the value and recompose.
 
 ## Cross-references
 
-- **REQUIRED BACKGROUND:** `oklch-color-space` for the underlying perceptual model and the APCACH library context.
-- **For multi-hue palette generation:** `chroma-harmonization` (the chroma cap at each Lc target is the cross-hue minimum).
-- **For the WCAG side:** `wcag-contrast` for the cross-check thresholds and large-text rules.
+- **REQUIRED BACKGROUND:** [oklch-color-space](../oklch-color-space/SKILL.md) for the underlying perceptual model and the APCACH library context.
+- **For multi-hue palette generation:** [chroma-harmonization](../chroma-harmonization/SKILL.md) (the chroma cap at each Lc target is the cross-hue minimum).
+- **For the WCAG side:** [wcag-contrast](../wcag-contrast/SKILL.md) for the cross-check thresholds and large-text rules.
 
 ## Sources
 

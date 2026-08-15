@@ -106,10 +106,10 @@ A chronological narration of beats is the wrong output: it hands the reader the 
 
 ## Cross-references
 
-- **REQUIRED BACKGROUND:** `session-heartbeat` — the beat order, the largest-dispatch threshold, the checkpoint slots, resume-as-survivor. This skill adds policy on top and restates none of the mechanism.
-- **For dispatch discipline that must survive the window:** `orchestrating-agent-delegation` — file isolation, one editor per checkout, verify every "done" against the diff.
-- **For the gates a slice clears before landing, attended or not:** `orchestrating-elite-agent-qa` — including the human-in-the-loop ones, which are hard stops here.
-- **Not this skill:** `designing-elite-ui` for dark mode and night themes.
+- **REQUIRED BACKGROUND:** [session-heartbeat](../session-heartbeat/SKILL.md) — the beat order, the largest-dispatch threshold, the checkpoint slots, resume-as-survivor. This skill adds policy on top and restates none of the mechanism.
+- **For dispatch discipline that must survive the window:** [orchestrating-agent-delegation](../orchestrating-agent-delegation/SKILL.md) — file isolation, one editor per checkout, verify every "done" against the diff.
+- **For the gates a slice clears before landing, attended or not:** [orchestrating-elite-agent-qa](../orchestrating-elite-agent-qa/SKILL.md) — including the human-in-the-loop ones, which are hard stops here.
+- **Not this skill:** [designing-elite-ui](../designing-elite-ui/SKILL.md) for dark mode and night themes.
 
 ## Sources
 

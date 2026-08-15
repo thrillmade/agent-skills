@@ -59,7 +59,7 @@ UDTS ships three default density modes. Each is a 5-rung ladder labeled `xs` / `
 UDTS's canonical icon sizes: **12, 16, 24, 32, 40, 48**. Picked because:
 
 - These are the sizes at which Material Icons, Lucide, Heroicons, and Phosphor families render cleanly without hairline glitches.
-- They pair with the font-sizes from `type-scale` naturally (icon ≥ font-size at every rung; never undersized).
+- They pair with the font-sizes from [type-scale](../type-scale/SKILL.md) naturally (icon ≥ font-size at every rung; never undersized).
 - They subdivide into 4 px steps at the small end (where it matters for inline alignment) and 8 px steps at the large end (where it doesn't).
 
 **Don't formula-derive icon sizes.** A height-to-icon ratio (e.g. `icon = height / 2`) produces sizes like 14, 18, 22, 28 — every one of which renders worse than the curated neighbor.
@@ -96,9 +96,9 @@ Sibling controls in the same UI surface should share a rung — mixing `sm` and 
 
 ## Cross-references
 
-- **REQUIRED BACKGROUND:** `spacing-system` — the unit primitives (minor + major) drive which density mode applies, and the WCAG 2.5.8 floor lives there.
-- **For the font sizes paired with each rung:** `type-scale` — the per-rung font is taken from the canonical scale, not free-picked.
-- **For line-heights inside each rung:** `line-height-grid` — interactive controls use `lh-ui` (1.20), not `lh-prose`.
+- **REQUIRED BACKGROUND:** [spacing-system](../spacing-system/SKILL.md) — the unit primitives (minor + major) drive which density mode applies, and the WCAG 2.5.8 floor lives there.
+- **For the font sizes paired with each rung:** [type-scale](../type-scale/SKILL.md) — the per-rung font is taken from the canonical scale, not free-picked.
+- **For line-heights inside each rung:** [line-height-grid](../line-height-grid/SKILL.md) — interactive controls use `lh-ui` (1.20), not `lh-prose`.
 
 ## Verification
 

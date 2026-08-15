@@ -17,7 +17,7 @@ Multi-hue palettes look unbalanced when one hue is more saturated than the rest 
 ## When NOT to use
 
 - Single-hue palettes (no other hues to harmonize against — chroma is unconstrained by the procedure).
-- Brand-spot or accent palettes where one hue *should* dominate. Use the `max` palette variant instead — see `oklch-color-space`.
+- Brand-spot or accent palettes where one hue *should* dominate. Use the `max` palette variant instead — see [oklch-color-space](../oklch-color-space/SKILL.md).
 - Palettes constrained to legacy sRGB-only output, where the narrower gamut shifts the bottleneck calculus back toward the classic blue-at-~220° limiter (the procedure still applies — Display P3 is the default target space; substitute the sRGB boundary deliberately for legacy-only catalogs).
 
 ## The algorithm
@@ -44,7 +44,7 @@ Average would push half the hues out of gamut at the bottleneck. Maximum would p
 
 ## Headroom rule
 
-Stay ≥ 10% below the computed ceiling. This headroom is for the **emission edge**, not the harmonization math itself: rounding when materializing the sRGB hex fallback (the compatibility export for legacy consumers — see `oklch-color-space`) and display-driver quirks can push a borderline-in-gamut P3 value out of gamut once flattened to 8-bit sRGB. A headroom margin prevents those fallback-materialization failures; it does not change the P3-native chroma math above.
+Stay ≥ 10% below the computed ceiling. This headroom is for the **emission edge**, not the harmonization math itself: rounding when materializing the sRGB hex fallback (the compatibility export for legacy consumers — see [oklch-color-space](../oklch-color-space/SKILL.md)) and display-driver quirks can push a borderline-in-gamut P3 value out of gamut once flattened to 8-bit sRGB. A headroom margin prevents those fallback-materialization failures; it does not change the P3-native chroma math above.
 
 ## Relationship to UDTS palette variants
 
@@ -68,9 +68,9 @@ If any hue clips at the ceiling or visually "pops," recompute with a tighter chr
 
 ## Cross-references
 
-- **REQUIRED BACKGROUND:** `oklch-color-space` — the OKLCH primitive, the gamut-mapping rule.
-- **For the contrast targets at each stop:** `apca-contrast` — the Lc targets that fix each L value.
-- **For starting-hue palette construction before harmonization:** `palette-relationships`.
+- **REQUIRED BACKGROUND:** [oklch-color-space](../oklch-color-space/SKILL.md) — the OKLCH primitive, the gamut-mapping rule.
+- **For the contrast targets at each stop:** [apca-contrast](../apca-contrast/SKILL.md) — the Lc targets that fix each L value.
+- **For starting-hue palette construction before harmonization:** [palette-relationships](../palette-relationships/SKILL.md).
 
 ## Sources
 

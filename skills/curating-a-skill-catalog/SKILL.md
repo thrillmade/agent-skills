@@ -25,10 +25,10 @@ of Keep must survive an attempt to refute it, on evidence you can quote.
 ## When NOT to use
 
 - Reviewing a skill's *content* quality at nomination time — frontmatter
-  discoverability, voice, missing fields. That's `skill-frontmatter-quality`,
+  discoverability, voice, missing fields. That's [skill-frontmatter-quality](../skill-frontmatter-quality/SKILL.md),
   gated by the human editor, not a catalog-lifecycle question.
 - One-off authoring of a single new skill with no catalog-fit question in
-  play. That's `skillforge`.
+  play. That's [skillforge](../skillforge/SKILL.md).
 
 ## Lifecycle state machine
 
@@ -47,7 +47,7 @@ incubating → active → needs-revision → deprecated → retired
 
 Demotion follows the catalog's own SemVer deprecation discipline, not an
 ad-hoc cut: **warn in a minor, remove in a major, notify subscribers**. See
-`semver-design-tokens` for the underlying warn/remove cycle this borrows.
+[semver-design-tokens](../semver-design-tokens/SKILL.md) for the underlying warn/remove cycle this borrows.
 
 ## The six verdict kinds
 
@@ -88,7 +88,7 @@ descriptions before proposing anything new: when an existing skill's scope
 should absorb it, the verdict files as **Revise** on the owning skill (an
 amendment), not Gap. Only when no existing skill is the right home does it
 stay Gap — and the grounds must say why not. (Precedent: the dual-review gap
-that first had to check overlap with `orchestrating-elite-agent-qa` before
+that first had to check overlap with [orchestrating-elite-agent-qa](../orchestrating-elite-agent-qa/SKILL.md) before
 forging.)
 
 Filed labels are symmetric candidates: a demote verdict files as
@@ -103,7 +103,7 @@ the prosecutor missed, a structural role overlooked, an L0 exemption that
 applies?). A verdict survives only if the defender's refutation fails. **A
 verdict whose grounds you cannot quote is a Keep** — no exceptions. This
 frame is the same refute-first adversarial-review discipline as
-`orchestrating-agent-delegation`; the census panel is one instance of a
+[orchestrating-agent-delegation](../orchestrating-agent-delegation/SKILL.md); the census panel is one instance of a
 delegated adversarial review, not a special case.
 
 ## Signals hierarchy
@@ -149,7 +149,7 @@ and stops. The editor decides.
    explicit structural-role check (or a stated L0-primitive grace).
 3. At most ~5 individual issues filed; the rest sit in one digest; more than
    ~6 total triggers a `revise:` against this rubric itself.
-4. Any deprecation cites `semver-design-tokens`'s warn-in-a-minor /
+4. Any deprecation cites [semver-design-tokens](../semver-design-tokens/SKILL.md)'s warn-in-a-minor /
    remove-in-a-major cycle, not an ad-hoc removal.
 5. No issue merges, deprecates, or promotes anything directly — output is
    proposals to the human editor only.
@@ -159,12 +159,12 @@ and stops. The editor decides.
 
 ## Cross-references
 
-- **For content quality at nomination:** `skill-frontmatter-quality` — judges
+- **For content quality at nomination:** [skill-frontmatter-quality](../skill-frontmatter-quality/SKILL.md) — judges
   a skill's prose and discoverability, not its catalog-lifecycle standing.
-- **For one-off skill authoring:** `skillforge` — creating a single new skill
+- **For one-off skill authoring:** [skillforge](../skillforge/SKILL.md) — creating a single new skill
   outside a census cycle.
-- **For the deprecation mechanics Demote follows:** `semver-design-tokens` —
+- **For the deprecation mechanics Demote follows:** [semver-design-tokens](../semver-design-tokens/SKILL.md) —
   warn-in-a-minor, remove-in-a-major, notify subscribers.
-- **For the adversarial review frame:** `orchestrating-agent-delegation` —
+- **For the adversarial review frame:** [orchestrating-agent-delegation](../orchestrating-agent-delegation/SKILL.md) —
   refute-first reviewer prompts; the census panel is a delegated adversarial
   review.

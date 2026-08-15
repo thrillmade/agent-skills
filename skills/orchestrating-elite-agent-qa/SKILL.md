@@ -15,7 +15,7 @@ One build pass plus one agreeable review ships bugs. Quality comes from three in
 
 Gate the merge on all three. Each catches a class the others miss.
 
-(The general delegation mechanics beneath this pipeline — brief structure, model tiering, trust-but-verify — live in `orchestrating-agent-delegation`; this skill is the UI-quality-gate specialization.)
+(The general delegation mechanics beneath this pipeline — brief structure, model tiering, trust-but-verify — live in [orchestrating-agent-delegation](../orchestrating-agent-delegation/SKILL.md); this skill is the UI-quality-gate specialization.)
 
 ## The Per-Slice Pipeline (run in order)
 
@@ -53,7 +53,7 @@ Gate the merge on all three. Each catches a class the others miss.
 
 ## Cross-references
 
-- **For a run that outlives one sitting:** `session-heartbeat` — this skill says which gates a slice must clear, but nothing about a pipeline continuing across a usage-limit reset or a resumed session. That is where pacing, the checkpoint, and re-firing a gate whose producer was killed mid-flight live.
+- **For a run that outlives one sitting:** [session-heartbeat](../session-heartbeat/SKILL.md) — this skill says which gates a slice must clear, but nothing about a pipeline continuing across a usage-limit reset or a resumed session. That is where pacing, the checkpoint, and re-firing a gate whose producer was killed mid-flight live.
 
 ## Deploying This Skill (per writing-skills)
 

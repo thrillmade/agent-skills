@@ -17,72 +17,72 @@ You are building a design-token system from zero, or extending an existing one w
 
 ## When NOT to use
 
-- Reviewing rendered UI or a PR against a system's existing rules — load `reviewing-design-work` instead.
-- Wiring a product to a system someone else owns (install, theme, upgrade) — load `consuming-a-design-system` instead.
+- Reviewing rendered UI or a PR against a system's existing rules — load [reviewing-design-work](../reviewing-design-work/SKILL.md) instead.
+- Wiring a product to a system someone else owns (install, theme, upgrade) — load [consuming-a-design-system](../consuming-a-design-system/SKILL.md) instead.
 - This skill is for authoring the system itself, not for consuming or auditing one.
 
 ## 1. Naming & taxonomy
 
 Pick every token's name and class *before* color work starts — the prefix is the load-bearing decision every downstream station reads off (contrast obligation, DTCG extension fields, and SemVer severity of a rename all derive from the name).
 
-**REQUIRED BACKGROUND:** `token-naming-conventions`
+**REQUIRED BACKGROUND:** [token-naming-conventions](../token-naming-conventions/SKILL.md)
 
-One worked instantiation (incubating): `udts-naming-convention`.
+One worked instantiation (incubating): [udts-naming-convention](../udts-naming-convention/SKILL.md).
 
 ## 2. Color
 
 Pick the color space first, then set contrast targets with a dual-model stance — APCA as the primary generation target, WCAG as the legal-baseline cross-check — then generate the palette: hue-relationship math for the seed hue, chroma caps for equal-looking saturation across hues at each contrast stop.
 
-**REQUIRED BACKGROUND:** `oklch-color-space`, `apca-contrast`, `wcag-contrast`, `palette-relationships`, `chroma-harmonization`
+**REQUIRED BACKGROUND:** [oklch-color-space](../oklch-color-space/SKILL.md), [apca-contrast](../apca-contrast/SKILL.md), [wcag-contrast](../wcag-contrast/SKILL.md), [palette-relationships](../palette-relationships/SKILL.md), [chroma-harmonization](../chroma-harmonization/SKILL.md)
 
 ## 3. Non-color families
 
 Typography is a paired pair — a modular size ratio plus a line-height grid that snaps to the same units. Spacing follows a two-unit (minor + major) model. Component sizing is a curated, not formula-derived, height ladder that pairs with both.
 
-**REQUIRED BACKGROUND:** `type-scale`, `line-height-grid`, `spacing-system`, `component-sizing-principles`
+**REQUIRED BACKGROUND:** [type-scale](../type-scale/SKILL.md), [line-height-grid](../line-height-grid/SKILL.md), [spacing-system](../spacing-system/SKILL.md), [component-sizing-principles](../component-sizing-principles/SKILL.md)
 
-Worked instantiations (incubating): `udts-spacing-defaults`, `udts-component-sizing-ladders`.
+Worked instantiations (incubating): [udts-spacing-defaults](../udts-spacing-defaults/SKILL.md), [udts-component-sizing-ladders](../udts-component-sizing-ladders/SKILL.md).
 
 ## 4. Format & versioning
 
 Serialize the system to the DTCG interchange snapshot every consumer transforms from. Compute the version bump from the resolved-value diff, never from intuition.
 
-**REQUIRED BACKGROUND:** `dtcg-format`, `semver-design-tokens`
+**REQUIRED BACKGROUND:** [dtcg-format](../dtcg-format/SKILL.md), [semver-design-tokens](../semver-design-tokens/SKILL.md)
 
-Worked instantiations (incubating): `udts-dtcg-extensions`, `udts-semver-defaults`.
+Worked instantiations (incubating): [udts-dtcg-extensions](../udts-dtcg-extensions/SKILL.md), [udts-semver-defaults](../udts-semver-defaults/SKILL.md).
 
 ## 5. The elite bar
 
 A token system exists so shipped UI clears a concrete visual standard, not so tokens exist for their own sake. Encode that standard in the tokens plus a short design-system doc, so builders and critics measure against one shared source of truth.
 
-**REQUIRED BACKGROUND:** `designing-elite-ui`
+**REQUIRED BACKGROUND:** [designing-elite-ui](../designing-elite-ui/SKILL.md)
 
 ## 6. Testing & maintenance
 
 Snapshot-test against the DTCG export, lint contrast floors and alias cycles in CI, and run deprecation cycles per the SemVer discipline above rather than breaking consumers silently.
 
-One system's enforcement layer (incubating): `udts-linter-rules`.
+One system's enforcement layer (incubating): [udts-linter-rules](../udts-linter-rules/SKILL.md).
 
 ## Cross-references
 
 **L0 primitives:**
-- `token-naming-conventions` — token name/class/kind shape.
-- `oklch-color-space` — color space and hue-angle primitives.
-- `palette-relationships` — hue-relationship math for a seed hue.
-- `chroma-harmonization` — cross-hue chroma caps per contrast stop.
-- `type-scale` — modular type-size ratio and stops.
-- `line-height-grid` — grid-aligned line-height per font size.
-- `spacing-system` — two-unit (minor + major) spacing model.
-- `component-sizing-principles` — curated component-height and icon-size ladders.
-- `dtcg-format` — token interchange snapshot format.
-- `semver-design-tokens` — version-bump severity from a resolved-value diff.
+- [token-naming-conventions](../token-naming-conventions/SKILL.md) — token name/class/kind shape.
+- [oklch-color-space](../oklch-color-space/SKILL.md) — color space and hue-angle primitives.
+- [palette-relationships](../palette-relationships/SKILL.md) — hue-relationship math for a seed hue.
+- [chroma-harmonization](../chroma-harmonization/SKILL.md) — cross-hue chroma caps per contrast stop.
+- [type-scale](../type-scale/SKILL.md) — modular type-size ratio and stops.
+- [line-height-grid](../line-height-grid/SKILL.md) — grid-aligned line-height per font size.
+- [spacing-system](../spacing-system/SKILL.md) — two-unit (minor + major) spacing model.
+- [component-sizing-principles](../component-sizing-principles/SKILL.md) — curated component-height and icon-size ladders.
+- [dtcg-format](../dtcg-format/SKILL.md) — token interchange snapshot format.
+- [semver-design-tokens](../semver-design-tokens/SKILL.md) — version-bump severity from a resolved-value diff.
 
 **L0 critic lenses:**
-- `apca-contrast` — primary perceptual contrast target.
-- `wcag-contrast` — legal-baseline contrast cross-check.
-- `designing-elite-ui` — the visual quality bar tokens must clear.
+- [apca-contrast](../apca-contrast/SKILL.md) — primary perceptual contrast target.
+- [wcag-contrast](../wcag-contrast/SKILL.md) — legal-baseline contrast cross-check.
+- [designing-elite-ui](../designing-elite-ui/SKILL.md) — the visual quality bar tokens must clear.
 
-**L1 sibling dispatchers:** `reviewing-design-work`, `consuming-a-design-system`.
+**L1 sibling dispatchers:** [reviewing-design-work](../reviewing-design-work/SKILL.md), [consuming-a-design-system](../consuming-a-design-system/SKILL.md).
 
 **L2 stances (incubating — one system's worked instantiation, not yet loadable guidance):**
-- `udts-naming-convention`, `udts-spacing-defaults`, `udts-component-sizing-ladders`, `udts-dtcg-extensions`, `udts-semver-defaults`, `udts-linter-rules`.
+- [udts-naming-convention](../udts-naming-convention/SKILL.md), [udts-spacing-defaults](../udts-spacing-defaults/SKILL.md), [udts-component-sizing-ladders](../udts-component-sizing-ladders/SKILL.md), [udts-dtcg-extensions](../udts-dtcg-extensions/SKILL.md), [udts-semver-defaults](../udts-semver-defaults/SKILL.md), [udts-linter-rules](../udts-linter-rules/SKILL.md).

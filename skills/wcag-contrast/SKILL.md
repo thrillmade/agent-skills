@@ -16,7 +16,7 @@ WCAG 2.2 Level AA is the **legal-baseline** contrast standard for most jurisdict
 ## When NOT to use
 
 - As the *primary* contrast model when generating new colors. APCACH inverse composition against an APCA Lc target is the generator; this is the cross-check.
-- For free-class tokens (illustration, decorative, brand-spot) — they carry no pairing obligation. See `apca-contrast` for the class system.
+- For free-class tokens (illustration, decorative, brand-spot) — they carry no pairing obligation. See [apca-contrast](../apca-contrast/SKILL.md) for the class system.
 
 ## The rules
 
@@ -63,13 +63,13 @@ For each contrast-bound pairing:
 1. Compute the WCAG ratio with sRGB-linearized luminance.
 2. Apply the role-appropriate threshold (4.5:1 normal text, 3:1 large text or non-text).
 3. Confirm the bold-text size rule in **points** — 14 pt bold (~18.67 CSS px) counts as large; 14 CSS px bold does not. Same for 18 pt regular (= 24 CSS px), not 18 CSS px.
-4. Cross-check the APCA Lc (see `apca-contrast`).
+4. Cross-check the APCA Lc (see [apca-contrast](../apca-contrast/SKILL.md)).
 5. Reject if either model fails.
 
 ## Cross-references
 
-- **REQUIRED BACKGROUND:** `apca-contrast` — the primary contrast model. WCAG is the cross-check; APCA is the generator target.
-- **For the underlying color space:** `oklch-color-space` — OKLCH source values must be gamut-mapped to sRGB before applying the WCAG formula.
+- **REQUIRED BACKGROUND:** [apca-contrast](../apca-contrast/SKILL.md) — the primary contrast model. WCAG is the cross-check; APCA is the generator target.
+- **For the underlying color space:** [oklch-color-space](../oklch-color-space/SKILL.md) — OKLCH source values must be gamut-mapped to sRGB before applying the WCAG formula.
 
 ## Sources
 

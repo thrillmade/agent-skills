@@ -30,7 +30,7 @@ A token-driven system declares two unit primitives per foundation theme:
 
 Constraint: `major mod minor == 0`. Both default to 4 when not split (single-unit systems collapse to `minor == major`).
 
-Different density briefs pick different unit pairs — a dense data tool wants a smaller minor unit than a spacious marketing surface, so the same derivation rule yields a 2/4, 4/8, or 4/16 pairing depending on the brief. One system's concrete density-mode unit choices live in `udts-spacing-defaults` (an incubating L2 stub).
+Different density briefs pick different unit pairs — a dense data tool wants a smaller minor unit than a spacious marketing surface, so the same derivation rule yields a 2/4, 4/8, or 4/16 pairing depending on the brief. One system's concrete density-mode unit choices live in [udts-spacing-defaults](../udts-spacing-defaults/SKILL.md) (an incubating L2 stub).
 
 ## What derives from the unit primitives
 
@@ -58,11 +58,11 @@ Same ladder as padding, separately labeled (`gap-*`) because horizontal and vert
 
 ### Icon-size ladder
 
-**Curated**, not formula-derived. A widely-used curated set is `12, 16, 24, 32, 40, 48` — these are the sizes where rendered glyphs (Material, Lucide, Heroicons families) hit pixel boundaries cleanly. Formula-derived sizes (e.g. 14, 18, 22) produce hairline mis-renders on a lot of icon families. See `component-sizing-principles` for the rule that pairs an icon size with a control height.
+**Curated**, not formula-derived. A widely-used curated set is `12, 16, 24, 32, 40, 48` — these are the sizes where rendered glyphs (Material, Lucide, Heroicons families) hit pixel boundaries cleanly. Formula-derived sizes (e.g. 14, 18, 22) produce hairline mis-renders on a lot of icon families. See [component-sizing-principles](../component-sizing-principles/SKILL.md) for the rule that pairs an icon size with a control height.
 
 ### Component-height ladder
 
-Curated per density mode, with the **24 CSS px WCAG 2.5.8 AA Pointer Target floor** for interactive controls (anything clickable / tappable / focusable). See `component-sizing-principles` for the per-density ladder.
+Curated per density mode, with the **24 CSS px WCAG 2.5.8 AA Pointer Target floor** for interactive controls (anything clickable / tappable / focusable). See [component-sizing-principles](../component-sizing-principles/SKILL.md) for the per-density ladder.
 
 ### Border-radius ladder
 
@@ -102,9 +102,9 @@ Failing this is one of the most common WCAG 2.2 misses in design systems. The sk
 
 ## Cross-references
 
-- **REQUIRED BACKGROUND for height + font + icon pairing:** `component-sizing-principles` — the curated per-density component-height ladder + font-pairing + icon-size pairing.
-- **For the typography scale that pairs with spacing:** `type-scale` and `line-height-grid` — line-heights snap to the minor unit declared here.
-- **For one system's concrete density-mode unit choices (worked example):** `udts-spacing-defaults` — an incubating L2 stub that instantiates this model.
+- **REQUIRED BACKGROUND for height + font + icon pairing:** [component-sizing-principles](../component-sizing-principles/SKILL.md) — the curated per-density component-height ladder + font-pairing + icon-size pairing.
+- **For the typography scale that pairs with spacing:** [type-scale](../type-scale/SKILL.md) and [line-height-grid](../line-height-grid/SKILL.md) — line-heights snap to the minor unit declared here.
+- **For one system's concrete density-mode unit choices (worked example):** [udts-spacing-defaults](../udts-spacing-defaults/SKILL.md) — an incubating L2 stub that instantiates this model.
 
 ## Verification
 
@@ -120,4 +120,4 @@ After picking unit primitives + emitting ladders:
 
 - [WCAG 2.5.8 — Target Size (AA, added in 2.2)](https://www.w3.org/TR/WCAG22/#target-size-minimum) — the 24 CSS px floor.
 - [Material Design's icon sizing](https://m3.material.io/styles/icons) — informs the curated icon set.
-- One system's concrete density-mode unit choices: `udts-spacing-defaults` (incubating).
+- One system's concrete density-mode unit choices: [udts-spacing-defaults](../udts-spacing-defaults/SKILL.md) (incubating).

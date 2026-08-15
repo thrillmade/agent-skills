@@ -6,7 +6,7 @@ description: |
 
 # Component sizing principles
 
-Component heights and icon sizes are **curated**, not formula-derived. A good ladder picks each height so it pairs cleanly with a font from the type scale, an icon from the icon set, and target-size requirements — and so each rung distinguishes visually from its neighbors. This skill names the universal principles; it is deliberately system-neutral. For one concrete instantiation — the per-density rung sets with their exact heights, fonts, and icon pairings — see `udts-component-sizing-ladders`.
+Component heights and icon sizes are **curated**, not formula-derived. A good ladder picks each height so it pairs cleanly with a font from the type scale, an icon from the icon set, and target-size requirements — and so each rung distinguishes visually from its neighbors. This skill names the universal principles; it is deliberately system-neutral. For one concrete instantiation — the per-density rung sets with their exact heights, fonts, and icon pairings — see [udts-component-sizing-ladders](../udts-component-sizing-ladders/SKILL.md).
 
 ## When to use
 
@@ -25,7 +25,7 @@ Component heights and icon sizes are **curated**, not formula-derived. A good la
 A formula `height → font-size → icon-size` produces *mathematically clean* values that *render poorly*. Curate the rungs by hand instead, for three reasons:
 
 - **Formula heights create visually indistinct rungs.** Heights at every fixed step (24, 28, 32, 36, ...) are hard to tell apart in a stack — adjacent rungs blur, so the ladder loses its job of signalling hierarchy.
-- **Off-scale font sizes clash with the typography system.** A formula lands on sizes like 13, 15, 17 that sit outside the modular scale and read as noise next to type set from `type-scale`.
+- **Off-scale font sizes clash with the typography system.** A formula lands on sizes like 13, 15, 17 that sit outside the modular scale and read as noise next to type set from [type-scale](../type-scale/SKILL.md).
 - **Off-curve icon sizes glitch at common zoom levels.** Icon sizes outside the curated set render with hairline artifacts at ordinary zoom.
 
 A curated ladder trades flexibility for visual distinguishability, predictable pairing, and target-size safety. Design systems benefit from less flexibility at this layer.
@@ -50,7 +50,7 @@ Interactive control heights clear **24 CSS px** per WCAG 2.5.8 AA Target Size (a
 - Start interactive rungs at the **first rung that clears the floor**.
 - In a roomier, lower-density mode whose smallest rung already exceeds 24 px, the entire ladder is interactive-safe.
 
-Failing this floor is one of the most common WCAG 2.2 audit misses. The floor itself is defined alongside the spacing primitives in `spacing-system`.
+Failing this floor is one of the most common WCAG 2.2 audit misses. The floor itself is defined alongside the spacing primitives in [spacing-system](../spacing-system/SKILL.md).
 
 ## Sibling consistency
 
@@ -77,10 +77,10 @@ After picking a rung:
 
 ## Cross-references
 
-- **REQUIRED BACKGROUND:** `spacing-system` — the unit primitives drive which density ladder applies, and the 24 CSS px WCAG 2.5.8 floor is defined there.
-- **For the font sizes paired with each rung:** `type-scale` — the per-rung font is taken from the canonical scale, not free-picked.
-- **For line-heights inside each rung:** `line-height-grid` — interactive controls use `lh-ui`, not `lh-prose`.
-- **For one system's worked rung sets:** `udts-component-sizing-ladders` — concrete per-density heights with their font and icon pairings (incubating L2 stub).
+- **REQUIRED BACKGROUND:** [spacing-system](../spacing-system/SKILL.md) — the unit primitives drive which density ladder applies, and the 24 CSS px WCAG 2.5.8 floor is defined there.
+- **For the font sizes paired with each rung:** [type-scale](../type-scale/SKILL.md) — the per-rung font is taken from the canonical scale, not free-picked.
+- **For line-heights inside each rung:** [line-height-grid](../line-height-grid/SKILL.md) — interactive controls use `lh-ui`, not `lh-prose`.
+- **For one system's worked rung sets:** [udts-component-sizing-ladders](../udts-component-sizing-ladders/SKILL.md) — concrete per-density heights with their font and icon pairings (incubating L2 stub).
 
 ## Sources
 

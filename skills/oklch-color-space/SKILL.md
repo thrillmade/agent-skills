@@ -43,7 +43,7 @@ OUTPUT  oklch(L, c_max, 220) — hits Lc 75 against the near-white surface
 
 This applies to every contrast-bound token (text, surface, border, ui). For free-class tokens (illustration, decorative, brand-spot) the contrast obligation doesn't apply — compose freely.
 
-**REQUIRED BACKGROUND:** Use `apca-contrast` for the Lc target table (Lc 90 fluent body, 75 body minimum, 60 secondary, etc.) and the WCAG 2.2 AA cross-check rule.
+**REQUIRED BACKGROUND:** Use [apca-contrast](../apca-contrast/SKILL.md) for the Lc target table (Lc 90 fluent body, 75 body minimum, 60 secondary, etc.) and the WCAG 2.2 AA cross-check rule.
 
 ## Gamut mapping
 
@@ -63,9 +63,9 @@ Practical rule for picking a chroma cap: compose against the **Display P3 ceilin
 
 ## Cross-references
 
-- **REQUIRED BACKGROUND:** `apca-contrast` for the Lc target table, when contrast Lc applies, and the WCAG cross-check.
-- **REQUIRED for multi-hue palettes:** `chroma-harmonization` — cap chroma at the lowest-achievable value across all hues at the same stop, so no hue is a neon outlier.
-- **For starting-hue palette construction:** `palette-relationships` — analogous, complementary, triadic, etc., as hue-angle math.
+- **REQUIRED BACKGROUND:** [apca-contrast](../apca-contrast/SKILL.md) for the Lc target table, when contrast Lc applies, and the WCAG cross-check.
+- **REQUIRED for multi-hue palettes:** [chroma-harmonization](../chroma-harmonization/SKILL.md) — cap chroma at the lowest-achievable value across all hues at the same stop, so no hue is a neon outlier.
+- **For starting-hue palette construction:** [palette-relationships](../palette-relationships/SKILL.md) — analogous, complementary, triadic, etc., as hue-angle math.
 
 ## Verification
 
@@ -83,4 +83,4 @@ If any of the four fails, fix the value before emitting the token.
 - [Björn Ottosson's OKLCH spec](https://bottosson.github.io/posts/oklab/) — the math.
 - [APCACH library](https://github.com/antiflasher/apcach) — inverse composition primitive.
 - [oklch.com](https://oklch.com) — interactive picker for sanity-checks.
-- The `apca-contrast` and `chroma-harmonization` skills in this catalog.
+- The [apca-contrast](../apca-contrast/SKILL.md) and [chroma-harmonization](../chroma-harmonization/SKILL.md) skills in this catalog.

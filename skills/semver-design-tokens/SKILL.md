@@ -68,7 +68,7 @@ Source-path diffs miss this. A linter that only diffs source paths reports "no c
 
 ## Pre-1.0 relaxation
 
-Per the standard SemVer caveat, `0.x.y` is "anything goes." A `0.x` catalog is still shaping its contract, so document an **explicit** relaxation rather than leave the behavior undefined. One reasonable relaxation (the one UDTS documents — see `udts-semver-defaults`):
+Per the standard SemVer caveat, `0.x.y` is "anything goes." A `0.x` catalog is still shaping its contract, so document an **explicit** relaxation rather than leave the behavior undefined. One reasonable relaxation (the one UDTS documents — see [udts-semver-defaults](../udts-semver-defaults/SKILL.md)):
 
 - **Removals are minor**, not major. Pre-1.0 catalogs are still actively shaping their contract; removing tokens that turn out to be wrong shouldn't burn a major.
 - **Renames remain minor** for the same reason.
@@ -110,9 +110,9 @@ A theme's resolved values changing is a separate axis:
 
 ## Cross-references
 
-- **REQUIRED BACKGROUND:** `dtcg-format` — the snapshot format the diff operates on.
-- **For name conventions that the bump rules reference:** `token-naming-conventions`.
-- **For one system's concrete policy choices (worked example):** `udts-semver-defaults`.
+- **REQUIRED BACKGROUND:** [dtcg-format](../dtcg-format/SKILL.md) — the snapshot format the diff operates on.
+- **For name conventions that the bump rules reference:** [token-naming-conventions](../token-naming-conventions/SKILL.md).
+- **For one system's concrete policy choices (worked example):** [udts-semver-defaults](../udts-semver-defaults/SKILL.md).
 
 ## Verification
 
@@ -128,5 +128,5 @@ For each release candidate:
 ## Sources
 
 - [SemVer 2.0.0](https://semver.org/) — the underlying spec.
-- The `udts-semver-defaults` skill — one system's concrete versioning-policy choices (incubating).
+- The [udts-semver-defaults](../udts-semver-defaults/SKILL.md) skill — one system's concrete versioning-policy choices (incubating).
 - [Style Dictionary's release notes](https://github.com/amzn/style-dictionary/releases) — practitioner reference for how token systems version in practice.

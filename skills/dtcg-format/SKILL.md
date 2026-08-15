@@ -139,21 +139,21 @@ Composite tokens can alias individual sub-values — useful for systems that sha
 - **Unknown namespaces are ignored by other tooling — that's the design.** Each tool reads only the namespaces it owns and passes the rest through untouched.
 - **Keep extension schemas versioned and documented.** Pin a schema version inside the bag so consumers can detect drift, and document the fields somewhere durable.
 
-One worked extension schema is UDTS's, documented in `udts-dtcg-extensions` (an incubating L2 stub).
+One worked extension schema is UDTS's, documented in [udts-dtcg-extensions](../udts-dtcg-extensions/SKILL.md) (an incubating L2 stub).
 
 ## Common pitfalls
 
 1. **Bare `value` / `type` keys.** Legacy systems use unprefixed names; DTCG ignores them as group children. Codemod before migration.
-2. **Top-level `$modes` key.** Multi-mode theming isn't in the DTCG draft. Valid approaches include a namespaced extension (see `udts-dtcg-extensions`), Style Dictionary's `$extensions["studio.tokens"].modes`, Tokens Studio sets, or per-mode files. Pick one explicitly.
+2. **Top-level `$modes` key.** Multi-mode theming isn't in the DTCG draft. Valid approaches include a namespaced extension (see [udts-dtcg-extensions](../udts-dtcg-extensions/SKILL.md)), Style Dictionary's `$extensions["studio.tokens"].modes`, Tokens Studio sets, or per-mode files. Pick one explicitly.
 3. **Alias cycles.** Not caught by the spec; CI must verify.
 4. **Composite-token sub-aliasing with wrong type.** `shadow.color` must reference a color token, not a dimension. Validators flag this; if your validator doesn't, your runtime will.
 5. **`$type` repeated on leaves under a typed group.** Redundant but not wrong; clean DTCG omits it.
 
 ## Cross-references
 
-- **REQUIRED BACKGROUND:** `token-naming-conventions` — the naming principles that extension metadata redundantly encodes.
-- **For the version-bump policy when DTCG files change:** `semver-design-tokens`.
-- **For one system's concrete extension schema:** `udts-dtcg-extensions` — the worked example.
+- **REQUIRED BACKGROUND:** [token-naming-conventions](../token-naming-conventions/SKILL.md) — the naming principles that extension metadata redundantly encodes.
+- **For the version-bump policy when DTCG files change:** [semver-design-tokens](../semver-design-tokens/SKILL.md).
+- **For one system's concrete extension schema:** [udts-dtcg-extensions](../udts-dtcg-extensions/SKILL.md) — the worked example.
 
 ## Verification
 
