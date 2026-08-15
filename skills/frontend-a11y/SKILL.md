@@ -56,15 +56,17 @@ commonest false pass here.
 2. **Focus rings, in place.** Source shows a ring exists; only the render shows it
    survives — clipped by an ancestor `overflow: hidden`, drowned against the *actual*
    adjacent surface, or gone in forced-colors. **SC 2.4.11 Focus Not Obscured (Minimum),
-   AA in 2.2** is separate: sticky chrome covering the focused control fails even with a
-   perfect ring, so capture the row scrolling under it. Ring contrast is SC 1.4.11;
+   AA in 2.2** is separate: sticky chrome hiding the focused control *entirely* fails even
+   with a perfect ring, so capture the row scrolling under it. Partial occlusion is 2.4.12,
+   AAA. Ring contrast is SC 1.4.11;
    **SC 2.4.13 Focus Appearance is AAA** — an enhancement, never an AA failure. Tooltips
    and hover cards have their own rule: hoverable, dismissible without moving the pointer,
    persistent (**SC 1.4.13, AA**).
 3. **Hit area, as laid out.** **SC 2.5.8, AA — 24 by 24 CSS px**, then the spacing
-   exception: undersized targets pass when a 24 px-diameter circle centred on each
-   bounding box does not intersect another target's circle. Dense icon toolbars fail on
-   spacing more often than on size, so measure the gap too. Touch surfaces have a higher
+   exception: a 24 px circle on each **undersized** target must miss **another target's
+   box** — not its circle — or another undersized target's circle. So a 20 px button 1 px
+   from a 40 px one fails. Dense icon toolbars fail on spacing more than size; measure the
+   gap. Touch surfaces have a higher
    platform floor; read that platform's HIG. The ladder behind the height is
    [component-sizing-principles](../component-sizing-principles/SKILL.md).
 4. **Meaning that can vanish.** **SC 1.4.1 Use of Color, A** — status as red/green with

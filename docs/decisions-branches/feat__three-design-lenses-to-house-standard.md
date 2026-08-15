@@ -13,3 +13,16 @@
 
 ---
 
+## 2026-08-15 10:24 - Correct the 2.5.8 spacing exception — the paraphrase was more lenient than the spec
+
+**Reasoning:** The panel found frontend-a11y's rendering of the SC 2.5.8 spacing exception wrong in a way that certifies real failures as passes. It said undersized targets pass when a 24px circle centred on each bounding box does not intersect another target's circle. Verified verbatim against the W3C Understanding document: undersized targets are positioned so that if a 24 CSS pixel diameter circle is centered on the bounding box of each, the circles do not intersect another target or the circle for another undersized target. Two differences, both lenient. Circles are drawn only for undersized targets, not for each target. And against an adequately sized neighbour the test is that neighbour's bounding box, not a circle — a 24px circle centred on a box of 24px or more sits strictly inside it, so comparing circle to circle can never fail there. Concretely a 20 by 20 button one pixel from a 40 by 40 button fails the criterion and passed the skill's rule. That is the dense icon toolbar case the same paragraph tells a reviewer to look at, and it ships to a client who then freezes it.
+
+**Alternatives considered:** Leave the paraphrase and add a caveat, which keeps a rule that reports a real AA failure as a pass
+
+**Implications:**
+- Also tightened 2.4.11 from covering to hiding entirely, since the criterion requires the component not be entirely hidden and partial occlusion is 2.4.12 at AAA. Same error shape as the 2.4.13 level: an AAA obligation reported as an AA failure
+- The correction pushed the body 45 bytes over the ceiling and the gate caught it — a live instance of #213, resolved the way the CEO ruled. I rewrote my own two additions tighter rather than cutting a rule elsewhere; 8,237 down to 8,128, headroom 64
+- This is the second WCAG level error found in this PR's own subject matter, and both were found by an independent panel rather than by the author. The first was 2.4.13 stated as AA in two skills. Guidance that asserts conformance levels needs the primary source read at review time, not recalled
+
+---
+
