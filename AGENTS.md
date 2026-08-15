@@ -46,11 +46,12 @@ through*, not somewhere work *lives*. The rules are the organisation's, set out 
 `thrillmade/protocol`; this repository is public, so they are stated here, not linked to.
 
 **Branch from `dev`, and open a pull request into `dev`** — the default branch is `main`, so
-the base has to be set by hand. No workflow triggers on a push to `dev`, so `test`, `validate
-skills`, `check-links`, `check-decisions` and `check-derived-docs` exist only on a pull
-request, and a commit pushed straight to `dev` is checked by nothing
+the base has to be set by hand. All five checks — `test`, `validate skills`, `check-links`,
+`check-decisions`, `check-derived-docs` — run on a pull request; `test`, `validate skills`
+and `check-links` also run on a push to `main`. **Nothing runs on a push to `dev`**, so a
+commit pushed straight there is checked by nothing
 (`gh api repos/thrillmade/agent-skills/commits/dev/check-runs --jq .total_count` → `0`; the
-same call against `main` → `4`).
+same call against `main` → `4`, which is that push run).
 
 **Into `dev`: an independent adversarial review.** A change may merge once a reviewer that
 did **not** write it has reviewed it and its findings are addressed — a refute-first panel,
@@ -68,12 +69,19 @@ reports the batch ready and hands off. An active org ruleset requires one approv
 went into `main` four days after `check-links` failed on it. The forge asks for a human
 approval, not a green suite; the suite is on whoever is working.
 
-**Read the failing step before believing a red.** `check-links` and `check-derived-docs`
-check out the head *branch by name*, and branches are deleted on merge, so a run still in
-flight when a PR merges dies with `a branch or tag with the name '…' could not be found`.
-That is an artifact of the merge, not a verdict on the change — and it is not evidence that
-anyone merged past a failure. `test` and `validate skills` check out the merge ref instead
-and are unaffected.
+**Read the failing step before believing a red — one red is dismissible, and only one.**
+`check-links` and `check-derived-docs` check out the head *branch by name*, and branches are
+deleted on merge, so a run still in flight when a PR merges dies with `A branch or tag with
+the name '…' could not be found`. That is an artifact of the merge, not a verdict on the
+change. `test`, `validate skills` and `check-decisions` check out the merge ref instead and
+are unaffected.
+
+That is the **only** dismissible red, and all three conditions must hold: the failing step is
+the checkout, the message is the one above, and the run started at or after the merge. **Every
+other failing step is a real red — including one where the check's own step never ran because
+a setup step died.** A skipped verdict is not a passing verdict. #188's red was exactly that
+kind — `setup-logmind` failed, so `check-links` never evaluated a link — and it was merged
+anyway. Re-run it or fix it; do not reason your way past it.
 
 **What batching costs.**
 
@@ -81,11 +89,14 @@ and are unaffected.
 |---|---|
 | `test` · `validate skills` · `check-links` · `check-derived-docs` | **No.** Each judges the tree it is handed, so six changes checked once is the same assertion as six checked six times. |
 | `check-decisions` | **Yes.** It is a *presence* check — one decision file anywhere in the diff clears the whole batch. **A batch does not inherit one change's decision.** The dilution is a property of the forge, not a permission: every change still logs its own, and the check simply stops being the thing that enforces it, so the reviewer is. |
-| `clud-bug-review` | **Not applicable** — it is not producing reviews here. See the clud-bug section below. |
+| `clud-bug-review` | **Not applicable** — it is not producing reviews here. See [clud-bug is not reviewing here](#clud-bug-is-not-reviewing-here). |
 
-**No forge rule protects `dev`** (`rules/branches/dev` returns `[]`), so every rule above is a
-convention held by whoever is working — and the independent review is the only one applied per
-change rather than per batch.
+**No forge rule protects `dev`** (`rules/branches/dev` returns `[]`), so every rule above
+**about `dev`** is a convention held by whoever is working. `main` does carry forge rules —
+the approving review, `deletion`, `non_fast_forward`, `required_linear_history` — but an org
+owner merges past the review anyway: #209, #211 and #212 all went into `main` at
+`REVIEW_REQUIRED` with **zero** reviews. So "a person" is a convention there too, and the
+independent review is the only rule applied per change rather than per batch.
 
 <!-- clud-bug-start -->
 <!-- clud-bug-block-version: v2 -->
@@ -97,17 +108,8 @@ strict-mode mechanics, workflow-edit constraint — live in the bundled
 [`clud-bug-collaboration` skill](skills/clud-bug-collaboration/SKILL.md).
 Read that skill before pushing fixes addressing prior review threads.
 
-Strict mode is **on** in this repo, so the check is meant to fail on critical findings. Toggle
-via `strictMode` in `.claude/skills/.clud-bug.json` (read from PR **base ref**, so PRs can't
-disable strict-mode on themselves). **It does not currently fail on anything, because no review
-is being produced here:** on every pull request since #188, `clud-bug-review` has concluded
-`neutral` with the title *"clud-bug review unavailable"*, so it never reaches a finding to fail
-on. Re-check before relying on it:
-
-```bash
-gh api repos/thrillmade/agent-skills/commits/<sha>/check-runs \
-  --jq '.check_runs[] | select(.name=="clud-bug-review") | "\(.conclusion) \(.output.title)"'
-```
+Strict mode is **on** in this repo (workflow check fails on critical findings). Toggle via `.claude/skills/.clud-bug.json`
+(read from PR **base ref**, so PRs can't disable strict-mode on themselves).
 
 For agent invocations of the `clud-bug` CLI, prefer `CLUD_BUG_QUIET=1`
 (or pass `--quiet`) — suppresses progress chatter and emits a single
@@ -115,3 +117,17 @@ For agent invocations of the `clud-bug` CLI, prefer `CLUD_BUG_QUIET=1`
 
 _Installed at clud-bug v0.7.0-rc.20._
 <!-- clud-bug-end -->
+
+### clud-bug is not reviewing here
+
+The block above describes the mechanism and is regenerated by `clud-bug update` weekly, so
+nothing measured belongs inside it. What is measured belongs here: **strict mode never fails
+on anything, because no review is being produced.** On every pull request since #188 —
+twelve of them — `clud-bug-review` has concluded `neutral` with the title *"clud-bug review
+unavailable"*. #187 concluded `success`, so that is a real boundary and an outage, not a
+configuration. Re-check before relying on it:
+
+```bash
+gh api repos/thrillmade/agent-skills/commits/<sha>/check-runs \
+  --jq '.check_runs[] | select(.name=="clud-bug-review") | "\(.conclusion) \(.output.title)"'
+```

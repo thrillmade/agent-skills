@@ -40,3 +40,18 @@
 
 ---
 
+## 2026-08-15 12:22 - Move the measured clud-bug fact out of the tool-managed block, and close the red-check loophole
+
+**Reasoning:** A third panel broke my own edit in four places, which is why a fix re-enters the panel rather than getting a self-read. The worst was structural: the correction I wrote about clud-bug landed INSIDE the <!-- clud-bug-start/end --> region, which clud-bug update regenerates weekly. That region has already been machine-rewritten twice (1ac35a6 v2 to v3-app deleted the exact sentence I edited; fd6163e restored it), so the next self-update would have deleted a measured fact and restored the false claim it replaced, with the table pointing at it. The block now carries only the template's own text - verified byte-identical to fd6163e's block apart from the rc.18 to rc.20 version stamp the updater owns - and the measurement lives in its own section after the end marker. Second, 'read the failing step before believing a red' had no closing clause, and applying it to the section's own #188 example dissolved that example: #188's failing step was setup-logmind, so check-links never evaluated a link. That handed an agent a general formula for merging past any toolchain failure. The rule now names all three conditions for the one dismissible red and says a skipped verdict is not a passing verdict. Third, 'every rule above is a convention' contradicted the main-approval line I had added three paragraphs above, and the fix surfaced that #209, #211 and #212 all merged into main at REVIEW_REQUIRED with zero reviews - so the approval is a convention in practice too, and saying so is the honest version. Fourth, 'exist only on a pull request' was refuted by the doc's own main-to-4 number, which is a push run.
+
+**Alternatives considered:** Leave the clud-bug correction inside the block with a warning comment - a note telling a future reader the text may be silently reverted does not stop it being silently reverted, Drop the clud-bug correction entirely and let the block's false claim stand - the whole point of measuring it was that a reader would otherwise trust strict mode to be failing PRs, State the red-check rule without the dismissible case - simpler, but then every post-merge checkout artifact reads as a real failure and the rule gets ignored wholesale
+
+**Implications:**
+- The measured half and the template half of any tool-managed section now live on opposite sides of the end marker. Anything inside a start/end marker pair is the tool's to overwrite; a fact this repo measured must sit outside one
+- #209, #211 and #212 merged into main with zero reviews is recorded in AGENTS.md rather than only in an issue, because an agent reads AGENTS.md and would otherwise believe the approval rule constrains it
+- The anchor link from the batching table to the new section is not validated by anything - logmind check-links strips #anchor before checking, and this repo has no equivalent of protocol's check-anchors.yml
+
+---
+
+---
+
