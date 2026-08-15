@@ -634,10 +634,20 @@ def _merge_base() -> str | None:
 
     NOT the trunk's tip. Comparing against a moving tip attributes main's own
     edits to this branch -- prose added on main after the fork reads as prose
-    this branch deleted. The workflow computes the same thing, so the number
-    printed by a local run is the number CI asks for.
+    this branch deleted.
+
+    Tries `dev` before `main`. Every branch in this repository forks from and
+    targets `dev` (docs/decisions-branches/docs__dev-branch-convention.md);
+    `main` only receives `dev` in batches, so `dev` routinely carries prose
+    `main` does not have yet. A default that only ever reached `main` compared
+    against an older snapshot -- a real cut on the branch could net to a GAIN
+    against `main`'s stale copy while it was a real loss against the actual
+    fork point, which is the dangerous direction: it prints OK where CI, which
+    merge-bases against the PR's actual base, fires. Falls back to `main` so
+    this still runs on a checkout of only `main`, or a branch cut from it
+    directly; pass --base explicitly if this branch targets neither.
     """
-    for trunk in ("origin/main", "main"):
+    for trunk in ("origin/dev", "dev", "origin/main", "main"):
         if _git("rev-parse", "--verify", f"{trunk}^{{commit}}").returncode != 0:
             continue
         got = _git("merge-base", trunk, "HEAD")
@@ -650,7 +660,8 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument(
         "--base",
-        help="revision to compare against (default: merge base with origin/main)",
+        help="revision to compare against (default: merge base with dev, "
+        "falling back to main)",
     )
     ap.add_argument("--head", default="HEAD", help="revision under review")
     args = ap.parse_args(argv)
@@ -658,9 +669,9 @@ def main(argv: list[str] | None = None) -> int:
     base = args.base or _merge_base()
     if base is None:
         print(
-            "::error::no --base was given and there is no origin/main or main "
-            "to take a merge base from, so no comparison was made. Pass "
-            "--base explicitly."
+            "::error::no --base was given and there is no dev or main to take "
+            "a merge base from, so no comparison was made. Pass --base "
+            "explicitly."
         )
         return 1
 

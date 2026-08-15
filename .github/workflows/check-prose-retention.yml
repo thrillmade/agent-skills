@@ -33,9 +33,11 @@ name: check-prose-retention
 # The escape hatch is a row in docs/prose-removals.md, added by the same
 # change. Deleting prose is ordinary and allowed; doing it silently is not.
 #
-# Run it locally with no arguments. It defaults to the merge base with
-# origin/main -- the same thing this workflow computes below -- so the word
-# count a local run prints is the one CI will ask the ledger row to carry.
+# Run it locally with no arguments. It defaults to the merge base with `dev`,
+# falling back to `main` -- every branch here forks from and targets `dev`, so
+# that is usually the base this workflow computes below too. CI always derives
+# its base from the PR's actual target, though, so pass --base explicitly if
+# yours is something else.
 
 # NO `paths:` FILTER, DELIBERATELY. Do not add one back. Same two reasons
 # validate-skills.yml sets out at length: a filter-skipped check reports as

@@ -36,10 +36,13 @@ Run the gate, or read the CI failure. Either prints the exact row:
 python .github/scripts/check_prose_retention.py
 ```
 
-With no `--base` it compares against the merge base with `origin/main`, which
-is what CI compares against too — so the number it prints is the number CI will
-ask for. Comparing against the tip of `main` instead charges your branch for
-whatever landed on main since you forked.
+With no `--base` it compares against the merge base with `dev`, falling back to
+`main` if `dev` is not reachable. Every branch here forks from and targets
+`dev`, so that is usually where CI's own merge-base comparison lands too — but
+CI always computes its base from the PR's actual target, so if yours is
+something else, pass `--base` explicitly rather than trust the default.
+Comparing against the tip of a branch instead of its merge base charges yours
+for whatever landed there since you forked.
 
 Paste the row below and replace the placeholder with the reason. That is the
 whole cost — and the placeholder is rejected unfilled, because deciding the

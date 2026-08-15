@@ -1141,6 +1141,42 @@ def test_cli_defaults_its_base_to_the_merge_base(repo, capsys):
     assert cpr.main(["--base", fork]) == 1
 
 
+def test_cli_defaults_its_base_to_dev_when_the_branch_forked_from_it(repo, capsys):
+    """Panel repro: every branch in this repository forks from and targets
+    `dev`, and `dev` routinely carries growth `main` does not have yet. A
+    default that only ever tries `main` compares this branch against an
+    older snapshot -- so a real cut can read as a net gain against `main`
+    while it is a real loss against the actual fork point, `dev`. That is
+    the dangerous direction: it prints OK where CI, which merge-bases
+    against the PR's actual base, fires.
+    """
+    (repo / "skills" / "alpha" / "SKILL.md").write_text(BODY)
+    git(repo, "branch", "-M", "main")
+    commit(repo, "base")
+
+    git(repo, "checkout", "-q", "-b", "dev")
+    (repo / "skills" / "alpha" / "SKILL.md").write_text(
+        BODY + " ".join(f"kilo{i}" for i in range(60)) + "\n"
+    )
+    commit(repo, "dev grows the file well past main")
+
+    git(repo, "checkout", "-q", "-b", "topic")
+    (repo / "skills" / "alpha" / "SKILL.md").write_text(BODY)
+    commit(repo, "the branch cuts more than dev grew, back to the original text")
+
+    git(repo, "checkout", "-q", "topic")
+
+    # The buggy default (main only) still has to be reachable explicitly --
+    # this is the wrong number CI will never ask for.
+    assert cpr.main(["--base", "main"]) == 0
+    stale = capsys.readouterr().out
+    assert "No undeclared prose removal" in stale, stale
+
+    assert cpr.main([]) == 1, "the default must reach the branch's real fork point"
+    out = capsys.readouterr().out
+    assert "lost 60 words" in out, out
+
+
 def test_cli_refuses_to_pass_when_the_base_cannot_be_resolved(repo, capsys):
     """A gate that cannot resolve its base has checked nothing. Reporting
     success there is the failure this repo's coverage guard exists to stop.
