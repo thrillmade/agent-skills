@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-07-25",
+  "updated": "2026-08-14",
   "skills": {
     "critical-issues-only": {
       "authoring_home": "catalog",
@@ -248,6 +248,12 @@
       "distribution": "opt-in",
       "subscribers": [],
       "notes": "L0 primitive; tokenomics census names this as a would-subscribe (build-agent grounding), not yet subscribed"
+    },
+    "orchestrating-a-multi-agent-run": {
+      "authoring_home": "catalog",
+      "distribution": "catalog-only",
+      "subscribers": [],
+      "notes": "L1 dispatcher — entry point that routes the run's four obligations to orchestrating-agent-delegation, orchestrating-elite-agent-qa, logmind, clud-bug-collaboration, token-frugal-tooling, session-heartbeat and unattended-operation; a repo consumes what it routes to, not the dispatcher itself as a standing subscription"
     },
     "orchestrating-agent-delegation": {
       "authoring_home": "catalog",
