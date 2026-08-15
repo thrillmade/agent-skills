@@ -22,7 +22,7 @@ UDTS names tokens so that an agent or linter can derive the token's class and co
 
 ## The prefix-loaded convention
 
-Every UDTS token name is `<prefix>-<role-or-kind>-<modifier>-<stop>-<state>`. The first segment — the **prefix** — declares the token's [class](https://github.com/thrillmade/agent-skills/tree/main/skills/apca-contrast) (contrast-bound vs free, defined in `apca-contrast`) and kind (text / surface / border / ui / illustration / decorative / brand-spot, defined in the UDTS spec).
+Every UDTS token name is `<prefix>-<role-or-kind>-<modifier>-<stop>-<state>`. The first segment — the **prefix** — declares the token's [class](https://github.com/thrillmade/agent-skills/tree/main/skills/apca-contrast) (contrast-bound vs free, defined in [apca-contrast](../apca-contrast/SKILL.md)) and kind (text / surface / border / ui / illustration / decorative / brand-spot, defined in the UDTS spec).
 
 ### Contrast-bound prefixes
 
@@ -103,9 +103,9 @@ Anti-pattern: `button-bg-primary-default-dense` (density in the name). Correct: 
 
 ## Cross-references
 
-- **REQUIRED BACKGROUND:** `oklch-color-space` for the hue-angle convention; `apca-contrast` for the contrast-class concept.
-- **For the DTCG schema that mirrors the prefix:** `dtcg-format` — the `$extensions.udts.class` and `$extensions.udts.kind` fields that redundantly encode what the prefix declares.
-- **For SemVer behavior on naming changes:** `semver-design-tokens` — renames are always major.
+- **REQUIRED BACKGROUND:** [oklch-color-space](../oklch-color-space/SKILL.md) for the hue-angle convention; [apca-contrast](../apca-contrast/SKILL.md) for the contrast-class concept.
+- **For the DTCG schema that mirrors the prefix:** [dtcg-format](../dtcg-format/SKILL.md) — the `$extensions.udts.class` and `$extensions.udts.kind` fields that redundantly encode what the prefix declares.
+- **For SemVer behavior on naming changes:** [semver-design-tokens](../semver-design-tokens/SKILL.md) — renames are always major.
 
 ## Verification
 

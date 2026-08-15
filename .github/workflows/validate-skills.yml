@@ -17,20 +17,29 @@ name: validate-skills
 # at -- a gate whose only way to fail is "push a branch and watch CI" has no
 # regression guard.
 
+# NO `paths:` FILTER, DELIBERATELY. Do not add one back.
+#
+# Two reasons, and the second is why deleting beats extending.
+#
+# 1. A filtered run interacts badly with `required_status_checks`. GitHub
+#    treats a filter-skipped check as "expected but never reported" and blocks
+#    the merge forever — the failure this repo's own check-doc-links.yml:8-12
+#    documents. No such rule exists here today, which is exactly why this is
+#    free to fix now and expensive later.
+#
+# 2. A filter has to enumerate every input, and the list only ever grows. This
+#    one already missed `skills/skill-size-budget.json` for its whole life —
+#    the size gate could not see edits to its own budget, so raising the limit
+#    never even triggered the gate it disabled. Extending the list fixes one
+#    instance and ships the next: the mirror gate will read `.claude/skills/**`,
+#    and the suite reads `tests/**`.
+#
+# The run is 11-13s over 48 files. Unconditional is cheaper than being wrong.
+# A committed test asserts this filter stays absent.
 on:
   pull_request:
-    paths:
-      - "skills/**/SKILL.md"
-      - "docs/placement-map.json"
-      - ".github/scripts/validate_skills.py"
-      - ".github/workflows/validate-skills.yml"
   push:
     branches: [main]
-    paths:
-      - "skills/**/SKILL.md"
-      - "docs/placement-map.json"
-      - ".github/scripts/validate_skills.py"
-      - ".github/workflows/validate-skills.yml"
 
 permissions:
   contents: read

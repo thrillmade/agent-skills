@@ -12,7 +12,7 @@ possible is hyphen-separated, prefix-loaded, and redundantly encoded in token
 metadata so a validator can catch a name that disagrees with its own class.
 
 These are system-neutral principles. For one worked instantiation — concrete
-prefix families, spec fields, and worked chains — see `udts-naming-convention`.
+prefix families, spec fields, and worked chains — see [udts-naming-convention](../udts-naming-convention/SKILL.md).
 
 ## When to use
 
@@ -155,13 +155,13 @@ For each new or modified token:
 
 ## Cross-references
 
-- **REQUIRED BACKGROUND:** `oklch-color-space` for the hue-angle convention;
-  `apca-contrast` for the contrast-class concept.
-- **For the metadata-extension mechanism:** `dtcg-format` — how a namespaced
+- **REQUIRED BACKGROUND:** [oklch-color-space](../oklch-color-space/SKILL.md) for the hue-angle convention;
+  [apca-contrast](../apca-contrast/SKILL.md) for the contrast-class concept.
+- **For the metadata-extension mechanism:** [dtcg-format](../dtcg-format/SKILL.md) — how a namespaced
   extension redundantly encodes what the prefix declares.
-- **For SemVer behavior on naming changes:** `semver-design-tokens` — a rename
+- **For SemVer behavior on naming changes:** [semver-design-tokens](../semver-design-tokens/SKILL.md) — a rename
   is always a major change.
-- **For one worked instantiation:** `udts-naming-convention` (an incubating L2
+- **For one worked instantiation:** [udts-naming-convention](../udts-naming-convention/SKILL.md) (an incubating L2
   stub) applies these principles with concrete prefix families and metadata
   fields.
 

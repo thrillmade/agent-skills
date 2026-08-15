@@ -8,8 +8,6 @@ description: |
 
 A long autonomous run rarely fails at the limit. It fails at the **last dispatch before** the limit — the one nobody could finish. A heartbeat is a self-paced recurring wake that turns the ceiling from a crash into a scheduled pause: every beat reads standing before spending anything, and ends with enough state on disk for another session to take the run over.
 
-This is the **mechanism**. `unattended-operation` is the policy layered on it for runs a human hands over; it inherits everything here and restates none of it.
-
 ## When to use
 
 - An orchestrator is rolling through a multi-slice plan over hours.
@@ -22,7 +20,6 @@ This is the **mechanism**. `unattended-operation` is the policy layered on it fo
 
 - One task inside one sitting. A beat costs a full context read; below the horizon where a limit or handoff is plausible it buys nothing.
 - Waiting on a single result your harness will notify you about. That is a notification, not a schedule.
-- The run is unattended by human handover — load `unattended-operation` too. This skill has no rules about what may not happen while nobody watches.
 
 ## Each beat, in this order
 
@@ -102,9 +99,9 @@ Each of these leaves a green tree and reports nothing.
 
 ## Cross-references
 
-- **REQUIRED BACKGROUND:** `orchestrating-agent-delegation` — brief shape, model tiering, verify-every-"done"-against-the-diff, and the file-isolation rules the occupancy slot records. This skill paces dispatches; that one is how to write and verify one.
-- **For unattended runs:** `unattended-operation` — the policy layer (scope, hard stops, what a wake does *not* authorize, the handback digest). Load both when a human hands the session over.
-- **For the gates a resumed slice must re-fire:** `orchestrating-elite-agent-qa`.
+- **REQUIRED BACKGROUND:** [orchestrating-agent-delegation](../orchestrating-agent-delegation/SKILL.md) — brief shape, model tiering, verify-every-"done"-against-the-diff, and the file-isolation rules the occupancy slot records. This skill paces dispatches; that one is how to write and verify one.
+- **For unattended runs:** [unattended-operation](../unattended-operation/SKILL.md) — the policy layer (scope, hard stops, what a wake does *not* authorize, the handback digest). Load both when a human hands the session over.
+- **For the gates a resumed slice must re-fire:** [orchestrating-elite-agent-qa](../orchestrating-elite-agent-qa/SKILL.md).
 
 ## Sources
 

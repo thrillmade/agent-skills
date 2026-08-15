@@ -15,7 +15,7 @@ When a designer hands an agent a single starting hue and asks for "the rest of t
 
 ## When NOT to use
 
-- The palette is already specified (all hues given). Use `chroma-harmonization` to balance them, not this skill.
+- The palette is already specified (all hues given). Use [chroma-harmonization](../chroma-harmonization/SKILL.md) to balance them, not this skill.
 - The brief is for a single-hue system (just stops of one palette). No relationship to pick.
 
 ## The relationships
@@ -70,9 +70,9 @@ After picking hues:
 
 ## Cross-references
 
-- **REQUIRED BACKGROUND:** `oklch-color-space` — hues are OKLCH angles; the relationship math operates on those.
-- **For palette balance after picking hues:** `chroma-harmonization` — cap chroma at the cross-hue minimum.
-- **For contrast targets across stops:** `apca-contrast`.
+- **REQUIRED BACKGROUND:** [oklch-color-space](../oklch-color-space/SKILL.md) — hues are OKLCH angles; the relationship math operates on those.
+- **For palette balance after picking hues:** [chroma-harmonization](../chroma-harmonization/SKILL.md) — cap chroma at the cross-hue minimum.
+- **For contrast targets across stops:** [apca-contrast](../apca-contrast/SKILL.md).
 
 ## Sources
 
