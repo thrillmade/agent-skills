@@ -53,6 +53,7 @@ agent-skills
 │   ├── respect-existing-conventions
 │   ├── reviewing-design-work
 │   ├── semver-design-tokens
+│   ├── session-heartbeat
 │   ├── skill-frontmatter-quality
 │   ├── skillforge
 │   ├── spacing-system
@@ -68,6 +69,7 @@ agent-skills
 │   ├── udts-semver-defaults
 │   ├── udts-spacing-defaults
 │   ├── udts-token-model
+│   ├── unattended-operation
 │   ├── visual-polish
 │   ├── wcag-contrast
 │   └── web-interface-guidelines-review
