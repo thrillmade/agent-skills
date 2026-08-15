@@ -12,7 +12,8 @@ agent-skills
 │   ├── ISSUE_TEMPLATE
 │   ├── scripts
 │   ├── workflows
-│   └── dependabot.yml
+│   ├── dependabot.yml
+│   └── PR_218_BODY.md
 ├── .logmind
 │   └── config.yml
 ├── docs
