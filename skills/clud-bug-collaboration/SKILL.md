@@ -54,12 +54,10 @@ it off to get unblocked. A person runs
 
 Skills live in `.claude/skills/<slug>/SKILL.md`. Three groups:
 
-- **Baseline** ([critical-issues-only](../critical-issues-only/SKILL.md),
-  [evidence-based-review](../evidence-based-review/SKILL.md),
-  [respect-existing-conventions](../respect-existing-conventions/SKILL.md)) —
-  managed by clud-bug; in-place edits are overwritten on the next
-  `clud-bug update`. To customize this repo, write a NEW skill rather than
-  mutating a baseline.
+- **Baseline** (`critical-issues-only`, `evidence-based-review`,
+  `respect-existing-conventions`) — managed by clud-bug; in-place edits are
+  overwritten on the next `clud-bug update`. To customize this repo, write a
+  NEW skill rather than mutating a baseline.
 - **From skills.sh** — `clud-bug add <source/name>`, tracked in
   `.claude/skills/.clud-bug.json`; `clud-bug refresh` syncs them.
 - **Custom** (anything not in the manifest) — yours, never touched by any
@@ -120,6 +118,13 @@ Explanation with quoted evidence.
 On a re-read trust the headline and skip the collapsed `Reasoning`; expand
 only when chasing a finding. A review with **zero findings** is that triage
 line (all zeros) plus the standard summary header — no per-finding bullets.
+
+## Agent invocation: `CLUD_BUG_QUIET=1` (v0.6.7+)
+
+From an agent session, not interactively, set `CLUD_BUG_QUIET=1` or pass
+`--quiet` / `-q`: each command emits one `ok <key-value>` line (e.g.
+`ok updated: @v0.6.11, N changed`) instead of progress chatter. Errors
+still hit stderr.
 
 ## Cost-control wiring
 
