@@ -41,7 +41,7 @@ Apply each section in order. Stop and flag at the first failure in each section.
 
 - Padding, gap, margin values are tokens from the spacing scale (`padding-*` / `space-*` / `gap-*`), not raw px. See [spacing-system](../spacing-system/SKILL.md).
 - Component heights come from the system's per-density curated ladder. See [component-sizing-principles](../component-sizing-principles/SKILL.md).
-- **Interactive heights ≥ 24 CSS px** per WCAG 2.5.8 (AA, Target Size Minimum). Rungs below that floor are non-interactive only; whether a ladder's smallest rung is *additionally* reserved is owned by [component-sizing-principles](../component-sizing-principles/SKILL.md).
+- **Interactive heights ≥ 24 CSS px** per WCAG 2.5.8 (AA, Target Size Minimum). Rungs below that floor are non-interactive only; whether a ladder's smallest rung is *additionally* reserved is owned by `component-sizing-principles`.
 - Flag inconsistent rung mixing in the same UI surface (`sm` + `md` buttons side by side reads as a typo, not a hierarchy).
 
 ### 4. Action labels: verb-noun
@@ -75,7 +75,7 @@ Apply each section in order. Stop and flag at the first failure in each section.
 
 - Decorative icons get `aria-hidden="true"` and no accessible name.
 - Functional icons (icon-only buttons) get an accessible name via `aria-label` ("Search", "Close dialog").
-- Icon sizes come from the curated ladder (e.g. 12, 16, 24, 32, 40, 48), paired with the control's rung per [component-sizing-principles](../component-sizing-principles/SKILL.md). No arbitrary `size={14}`.
+- Icon sizes come from the curated ladder (e.g. 12, 16, 24, 32, 40, 48), paired with the control's rung per `component-sizing-principles`. No arbitrary `size={14}`.
 
 ### 9. Motion
 
@@ -86,7 +86,7 @@ Apply each section in order. Stop and flag at the first failure in each section.
 ### 10. Token discipline
 
 - No raw hex, no raw px, no raw rem in source. Every value resolves from a token (a text role token, `padding-md`, `radius-lg`, etc.).
-- Component tokens reference semantic / color-mode tokens, never primitives directly (see [token-naming-conventions](../token-naming-conventions/SKILL.md) for the two chain shapes).
+- Component tokens reference semantic / color-mode tokens, never primitives directly (see `token-naming-conventions` for the two chain shapes).
 - Flag inline `style={{ … }}` carrying values that should be tokens; the only exception is values genuinely computed at runtime.
 
 ## How to phrase findings
@@ -109,6 +109,7 @@ After completing a review:
 2. **Every finding has a fix.** Fixless findings get rejected.
 3. **Sections applied in order.** Contrast and a11y come before token discipline; don't lead with cosmetic findings.
 4. **No bundled comments.**
+5. **Skills cross-referenced.** Contrast findings cite `apca-contrast` / `wcag-contrast`; size findings cite `type-scale` / `component-sizing-principles`.
 
 ## Sources
 
