@@ -811,6 +811,47 @@ def test_the_breakdown_adds_up_to_the_number_the_ledger_row_carries():
     assert sum(parts) == loss.net, f"{loss.breakdown()} does not total {loss.net}"
 
 
+def test_the_remedy_block_is_true_of_the_metric_it_gates(repo, capsys):
+    """The one user-facing surface that had no test at all.
+
+    It used to tell an author over the size limit to "rewrite the section
+    tighter rather than cutting it -- a rewrite that says the same thing in
+    fewer words scores zero here". False of a word-multiset metric: fewer
+    words IS fewer words, by construction. Measured against the shipped
+    detector, a real tightening rewrite ("In order to make sure that the
+    reviewer is able to understand the finding, you should always be certain
+    to include the exact file and the exact line number in every single
+    comment that you write." -> "Cite the exact file and line in every
+    comment so the reviewer can check it.") nets 21 and fires. An author who
+    did exactly what the message said, then re-pushed, hit the identical
+    failure -- the escape hatch this design argues against, landed on its own
+    primary advice.
+    """
+    before, after = (
+        "In order to make sure that the reviewer is able to understand the "
+        "finding, you should always be certain to include the exact file "
+        "and the exact line number in every single comment that you write.\n",
+        "Cite the exact file and line in every comment so the reviewer can "
+        "check it.\n",
+    )
+    assert cpr.Loss(before, after).net == 21, "the tightening rewrite must fire"
+
+    (repo / "skills" / "alpha" / "SKILL.md").write_text(before)
+    base = commit(repo, "base")
+    (repo / "skills" / "alpha" / "SKILL.md").write_text(after)
+    commit(repo, "tighten the section")
+
+    assert cpr.main(["--base", base, "--head", "HEAD"]) == 1
+    out = capsys.readouterr().out
+
+    for false_claim in ("rewrite the section", "Reach for deletion", "in fewer words"):
+        assert false_claim not in out, f"the remedy still claims {false_claim!r}: {out}"
+
+    # What genuinely scores zero must be named, and only that.
+    assert "tightening" in out
+    assert "docs/prose-removals.md" in out
+
+
 def test_the_error_does_not_claim_nothing_replaced_the_words():
     """It used to assert "and nothing replaced them" on every failure --
     including the commonest one, tightening prose, where the replacement is
