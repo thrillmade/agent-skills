@@ -233,7 +233,7 @@ MUTATIONS = [
         # closes and every line below it changes scope.
         "a_fence_does_not_outrank_a_quote_marker",
         "        while depth >= len(self._containers) or not "
-        "self._containers[depth].fenced:",
+        "self._containers[depth].literal:",
         "        while True:",
     ),
     (
@@ -336,30 +336,90 @@ MUTATIONS = [
     ),
     (
         # The HTML blocks that begin and end on one line stop closing anything,
-        # which is the heading evasion spelled `<!-- x -->`.
+        # which is the heading evasion spelled `<!-- x -->`. Reached now by
+        # denying types 1 to 5 their own end condition, so the block that a
+        # `<!-- x -->` opens never closes and swallows every line after it back
+        # into the prose scope.
         "a_one_line_html_block_does_not_close_a_paragraph",
-        "        if any(o.match(body) and c.search(body) for o, c in "
-        "HTML_ONE_LINE):",
-        "        if False:",
+        "        return closer.search(body) is not None",
+        "        return False",
     ),
     (
         # The other direction: an HTML block stops having to CLOSE on its line,
         # so `<div>` closes the paragraph and the indented line under it -- the
         # HTML block's own content to CommonMark -- moves into the code scope.
+        # Reached now by ending types 6 and 7 on their opening line instead of
+        # at the blank line that really ends them.
         "an_html_block_need_not_close_on_its_own_line",
-        "        if any(o.match(body) and c.search(body) for o, c in "
-        "HTML_ONE_LINE):",
-        "        if any(o.match(body) for o, c in HTML_ONE_LINE):",
+        "            return not body.strip()",
+        "            return True",
+    ),
+    (
+        # THE ROUND-9 REGRESSION ITSELF: only the OPENER is modelled and the
+        # block is not, so every line inside an open `<table>` or `<div>` still
+        # reaches the paragraph rules. A `<!-- x -->` or a `## heading` in there
+        # closes a paragraph CommonMark says is not there, and the indented line
+        # under it moves into the code scope -- so a change that ADDED a line
+        # and removed none fires the gate, whose only remedy is a ledger row
+        # asserting N words are safe to lose when none were lost. A false entry
+        # in a permanent append-only record is the one thing the hatch must
+        # never require.
+        "an_html_block_that_stays_open_is_not_modelled",
+        "                self._html = None if self._html_ends(kind, body) else kind",
+        "                self._html = None",
+    ),
+    (
+        # An open HTML block stops outranking a quote marker, so a `> ` line
+        # inside a `<div>` -- that block's own HTML to CommonMark -- is peeled
+        # into a container that does not exist, and the rest of the block is
+        # read at a depth that does not describe it.
+        "an_open_html_block_does_not_outrank_a_quote_marker",
+        "        return self._fence.open or self._html is not None",
+        "        return self._fence.open",
+    ),
+    (
+        # Type 7 stops being the exception, so a complete tag alone on a line
+        # interrupts a paragraph. Every line under an ordinary sentence that
+        # happens to end in a tag is then swallowed into a block that CommonMark
+        # never opened.
+        "every_html_block_may_interrupt_a_paragraph",
+        "            return kind if interrupts or not self._paragraph else None",
+        "            return kind",
+    ),
+    (
+        # The other half: NOTHING may interrupt a paragraph, so the five blocks
+        # that begin and end on one line stop closing one when it is open --
+        # the same defect as the first entry above, reached through the rule
+        # that is about the line rather than the rule that is about the block.
+        "no_html_block_may_interrupt_a_paragraph",
+        "            return kind if interrupts or not self._paragraph else None",
+        "            return kind if not self._paragraph else None",
+    ),
+    (
+        # Start condition 6 stops being CommonMark's list of tag names, so any
+        # tag at all opens a block that runs to the next blank line -- and the
+        # lines under `<span> and more words here` leave the code scope.
+        "any_tag_name_opens_a_type_6_block",
+        r'    (re.compile(rf"^</?(?:{HTML_BLOCK_NAMES})(?=\s|/?>|$)", re.I), None, True),',
+        r'    (re.compile(r"^</?[A-Za-z]", re.I), None, True),',
+    ),
+    (
+        # Start condition 7 stops requiring the tag to be the WHOLE line, so an
+        # ordinary sentence ending in `<span>x</span>` opens a block and every
+        # line under it is read as that block's HTML.
+        "a_complete_tag_need_not_be_alone_on_its_line",
+        r'    (re.compile(rf"^(?:{HTML_TAG})[ \t]*$"), None, False),',
+        r'    (re.compile(rf"^(?:{HTML_TAG})"), None, False),',
     ),
     (
         # The lazy-continuation guard. A line indented past the threshold with a
-        # paragraph open is that paragraph's wrapped text, and no leaf block can
-        # be spelled inside one -- so `    ## H` under a paragraph is four words
-        # of prose, not a heading. Dropped, it closes the paragraph and rescopes
-        # everything under it.
+        # paragraph open is that paragraph's wrapped text, and no block can be
+        # spelled inside one -- so `    ## H` under a paragraph is four words of
+        # prose, not a heading, and `    <!-- x -->` is three. Dropped, both
+        # close the paragraph and rescope everything under it.
         "a_leaf_block_may_be_spelled_inside_a_wrapped_line",
-        "        if indent < self._threshold() and self._closes(line[indent:]):",
-        "        if self._closes(line[indent:]):",
+        "        if indent < self._threshold():\n            body = line[indent:]",
+        "        if True:\n            body = line[indent:]",
     ),
     (
         # An item with nothing on its opening line opens a paragraph again, so a
@@ -381,10 +441,11 @@ MUTATIONS = [
         # too, so `- ` under a paragraph pushes a content column that raises the
         # threshold and re-hides the block the setext rule just exposed.
         "a_closing_leaf_block_is_also_read_as_a_list_marker",
-        "            self._paragraph = False\n            return False\n"
-        "        self._paragraph = True",
-        "            self._paragraph = False\n        else:\n"
-        "            self._paragraph = True",
+        "            if self._closes(body):\n                self._paragraph = False\n"
+        "                return False\n        self._paragraph = True",
+        "            if self._closes(body):\n                self._paragraph = False\n"
+        "            else:\n                self._paragraph = True\n"
+        "        else:\n            self._paragraph = True",
     ),
     (
         # Replacements stop offsetting removals, so every reword and typo fix

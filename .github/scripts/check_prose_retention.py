@@ -176,7 +176,9 @@ LIST_ITEM_RE = re.compile(r"^( *)([-*+]|\d{1,9}[.)])( +|$)")
 QUOTE_RE = re.compile(r"^ {0,3}> ?")
 
 # The leaf blocks that CLOSE an open paragraph on their own line, matched with
-# the indent already stripped -- see `Container._closes`. Each is CommonMark's
+# the indent already stripped -- see `Container._closes`. An HTML block also
+# closes one, but it can stay OPEN afterwards, so it is state rather than a
+# predicate and lives in HTML_BLOCKS below. Each is CommonMark's
 # own shape and the bound in it is load-bearing:
 #
 #   ATX      one to six hashes, then whitespace or the end of the line. Seven
@@ -196,25 +198,75 @@ ATX_RE = re.compile(r"^#{1,6}(?:[ \t].*)?$")
 BREAK_RE = re.compile(r"^([-*_])[ \t]*(?:\1[ \t]*){2,}$")
 SETEXT_RE = re.compile(r"^(?:=+|-+)[ \t]*$")
 
-# CommonMark's five HTML blocks that can begin AND end on the same line, as
-# (what opens one, what closes it). Types 6 and 7 -- `<div>`, `<table>`, a bare
-# complete tag -- are deliberately absent: they end only at a BLANK line, so
-# the indented line under one is still the HTML block's own content and closing
-# a paragraph there would move real prose into the code scope. Measured both
-# ways; see `Container._closes`.
+# Start condition 6 IS this list of tag names: `<div>` opens an HTML block and
+# `<span>` does not. CommonMark 0.31.2's own, so it is written out rather than
+# approximated by "looks like a tag".
+HTML_BLOCK_NAMES = (
+    "address|article|aside|base|basefont|blockquote|body|caption|center|col|"
+    "colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|"
+    "footer|form|frame|frameset|h1|h2|h3|h4|h5|h6|head|header|hr|html|iframe|"
+    "legend|li|link|main|menu|menuitem|nav|noframes|ol|optgroup|option|p|param|"
+    "search|section|summary|table|tbody|td|tfoot|th|thead|title|tr|track|ul"
+)
+
+# Start condition 7 is a COMPLETE open or closing tag, and CommonMark's grammar
+# for one is spelled out here rather than approximated: `<img src="x">` opens a
+# block, `<img src=>` does not, and a rule that could not tell them apart would
+# swallow the lines under an ordinary sentence containing a `<`.
+_ATTR_NAME = r"[a-zA-Z_:][a-zA-Z0-9:._-]*"
+_ATTR_VALUE = r"""(?:[^"'=<>`\x00-\x20]+|'[^']*'|"[^"]*")"""
+_ATTRIBUTE = rf"(?:\s+{_ATTR_NAME}(?:\s*=\s*{_ATTR_VALUE})?)"
+HTML_TAG = rf"<[A-Za-z][A-Za-z0-9-]*{_ATTRIBUTE}*\s*/?>|</[A-Za-z][A-Za-z0-9-]*\s*>"
+
+# CommonMark's seven HTML blocks, as (what OPENS one, what CLOSES it, whether it
+# may interrupt an open paragraph). The shape of this table is the fix: reading
+# only the openers is what went wrong.
 #
-# Each pair is the spec's own condition, and the close is searched across the
-# whole line because that is how the spec words it -- which is why `<!-->` ends
-# on the line it starts, its closer overlapping its opener.
-HTML_ONE_LINE = (
+# A block that stays OPEN is the thing that has to be modelled. While one is
+# open every line is its content whatever the line looks like -- no heading, no
+# thematic break, no code block and no paragraph can begin inside it -- so
+# `Container.feed` returns early and the paragraph model is never consulted.
+# Consulting it is the whole defect: a `<!-- x -->` or a `## heading` inside an
+# open `<table>` closed a paragraph CommonMark says is not there, the indented
+# line under it moved into the code scope, and a PURE ADDITION fired a gate
+# whose only remedy is a ledger row asserting N words are safe to lose when
+# nothing was removed at all.
+#
+# The end conditions differ by type, and that difference is why this is a table
+# rather than a list:
+#
+#   1-5  end on their OWN condition, on whatever line meets it -- the OPENING
+#        line included, which is why `<!-- c -->` begins and ends on one line
+#        with its closer overlapping its opener, while `<!-- c` runs on. The
+#        line that meets it is the block's LAST. The search is across the whole
+#        line because that is how the spec words it.
+#   6-7  end at the next BLANK line, which is NOT part of the block. So the
+#        indented line under a `<div>` is still that block's content, and
+#        closing a paragraph there would move real prose into the code scope.
+#
+# Type 7 alone MAY NOT INTERRUPT A PARAGRAPH -- a rule about the line above it,
+# not about the tag: `<img src="x">` under an open paragraph is that paragraph's
+# own text, and the identical line with a blank one above it opens a block.
+#
+# One deliberate divergence from the adjudicator, in the safe direction: type 4
+# is `<!` plus an ASCII LETTER, which is CommonMark 0.31.2's condition, while
+# markdown-it-py 4.2.0 still carries 0.30's uppercase-only `^<![A-Z]`. So a
+# lowercase `<!doctype html>` closes a paragraph here and continues one there.
+# Matching the library would put the gate on the exploitable side of the
+# current spec, which is the one direction it must not be wrong in. Measured;
+# see `Container`.
+HTML_BLOCKS = (
     (
-        re.compile(r"^<(?:script|pre|style|textarea)(?:[ \t>]|$)", re.I),
+        re.compile(r"^<(?:script|pre|style|textarea)(?=\s|>|$)", re.I),
         re.compile(r"</(?:script|pre|style|textarea)>", re.I),
+        True,
     ),
-    (re.compile(r"^<!--"), re.compile(r"-->")),
-    (re.compile(r"^<\?"), re.compile(r"\?>")),
-    (re.compile(r"^<![A-Za-z]"), re.compile(r">")),
-    (re.compile(r"^<!\[CDATA\["), re.compile(r"\]\]>")),
+    (re.compile(r"^<!--"), re.compile(r"-->"), True),
+    (re.compile(r"^<\?"), re.compile(r"\?>"), True),
+    (re.compile(r"^<![A-Za-z]"), re.compile(r">"), True),
+    (re.compile(r"^<!\[CDATA\["), re.compile(r"\]\]>"), True),
+    (re.compile(rf"^</?(?:{HTML_BLOCK_NAMES})(?=\s|/?>|$)", re.I), None, True),
+    (re.compile(rf"^(?:{HTML_TAG})[ \t]*$"), None, False),
 )
 
 # CommonMark's indent for a code block, and its tab stop. Tabs are expanded
@@ -349,7 +401,7 @@ class Fence:
         inside a fence, and a fence cannot open inside an indented block -- a
         ``` line indented into a code block is content, and feeding it here
         would open a block that swallows the rest of the file. `Code` reads it
-        through `Container.fenced` for the same reason one step out: a `>` on a
+        through `Container.literal` for the same reason one step out: a `>` on a
         line inside a fence is content too.
         """
         return self._open is not None
@@ -450,38 +502,78 @@ class Container:
 
     Even where it did move something it could not cost a false positive on an
     unchanged file: base and head are split by the same rules, so a line nobody
-    edited lands in the same scope on both sides and nets to zero there.
+    edited lands in the same scope on both sides and nets to zero there. Nor
+    does the HTML BLOCK model, measured the same way and after the fact: the
+    split of all 49 shipping files is byte-identical with it and without it,
+    the ledger's 119 slots included, and the set of files differing from the
+    fence-only reading is still exactly the four block-quoted ones. The
+    `<details>` / `<summary>` block three skills ship sits inside a fence today,
+    so the class is present in the catalog and costs nothing in it.
 
     WHAT IS STILL WRONG, and it is an evasion rather than a rounding error, so
     it is written down where the next round can find it. Measured the same way
-    the last two residuals were -- generated documents scored against
-    markdown-it-py, disagreements shrunk to a minimal form and grouped -- the
-    reading disagrees with CommonMark in the dangerous direction (CommonMark
-    says code, this says PROSE, which is where a cut can be paid for) on 0.28%
-    of documents, down from 12.83%. Twelve minimal forms remain and they are two
-    classes:
+    the last three residuals were -- generated documents scored against
+    markdown-it-py 4.2.0, disagreements shrunk to a minimal form and grouped.
+    Over 20,000 documents drawn from an ordinary SKILL.md alphabet WITH the HTML
+    constructs this catalog ships in it, documents that disagree at all fall
+    15.91% -> 0.07% and the dangerous direction (CommonMark says code, this says
+    PROSE, which is where a cut can be paid for) 0.07% -> 0.01%; over a
+    quote-heavy alphabet, 25.03% -> 0.27% and 0.68% -> 0.07%. Eight minimal
+    forms remain on the first alphabet and 37 on the second, and ALL 45 are the
+    first class below -- measured rather than assumed, by dropping every line
+    that introduces a container and confirming the disagreement goes with it.
+    The three classes after it do not appear in those alphabets at all and are
+    each pinned by a case of its own:
 
-      A LIST COLUMN SURVIVES A CONTAINER BOUNDARY THAT CLOSED THE LIST.
-      `reopen` keeps this container's list nesting, which is right when the
-      quote sat INSIDE an item and wrong when it sat at the margin: a `>` in
-      column 0 closes an item whose content starts in column 2, so CommonMark
-      measures the next line's four spaces from the margin and calls it code
-      while this measures them from column 2 and calls it prose. Weaponised, to
-      be sure rather than assumed: `* item` and `> ` above an indented example
-      deletes web-interface-guidelines-review's Verification rule 5 for prose
-      -6, net 0, exit 0, and the file 20 bytes SMALLER -- where the identical
-      example with those two lines removed scores prose 11 / code -16 and
-      fires. It is a narrower hole than the heading was, because those two lines
-      are visible: an orphan bullet and an empty block quote render, so the two
-      spellings are NOT the same document to a reader, which the heading pair
-      was. Closing it means telling `reopen` which column the marker sat in,
-      against the measured reason the nesting is kept at all -- a different
-      predicate, and deliberately not this round's.
+      A LIST COLUMN SURVIVES A CONTAINER BOUNDARY THAT CLOSED THE LIST, and the
+      same rule read at the margin: a leaf block in column 0 closes a paragraph
+      whose content starts in column 2, where CommonMark reads it as that
+      paragraph's LAZY continuation and closes nothing. `reopen` keeps this
+      container's list nesting, which is right when the quote sat INSIDE an item
+      and wrong when it sat at the margin, so CommonMark measures the next
+      line's four spaces from the margin and calls it code while this measures
+      them from column 2 and calls it prose. Weaponised, to be sure rather than
+      assumed: `* item` and `> ` above an indented example deletes
+      web-interface-guidelines-review's Verification rule 5 for prose -6, net 0,
+      exit 0, and the file 20 bytes SMALLER -- where the identical example with
+      those two lines removed scores prose 11 / code -16 and fires. It is a
+      narrower hole than the heading was, because those two lines are visible:
+      an orphan bullet and an empty block quote render, so the two spellings are
+      NOT the same document to a reader, which the heading pair was. Closing it
+      means telling `reopen` which column the marker sat in, against the
+      measured reason the nesting is kept at all -- a different predicate, and
+      still not this round's. Two of the 45 minimal forms are this class reached
+      THROUGH the HTML model, where the wrongly-closed paragraph then lets a
+      type 7 block open: `- item`, `===`, `</pre>` and `---` above an indented
+      example. Both agreed by accident before the block was modelled and
+      disagree now, inside a residual an order of magnitude smaller in both
+      directions -- stated rather than netted away.
+
+      A FENCE MAY BE SPELLED INSIDE A WRAPPED LINE, where no other block may.
+      `FENCE_RE` allows any indent and `feed` reaches it before the guard that
+      stops a leaf block or an HTML start being read there, so a fence four
+      spaces into an open paragraph opens a block CommonMark says is that
+      paragraph's own text. Measured with its control -- the same fence one
+      blank line down really is a block, and both readings agree there. Older
+      than either of the last two rounds, in the false-positive direction, and
+      not reached by the alphabets above because neither carries an indented
+      fence.
 
       A TRAILING BLANK LINE. markdown-it-py trims blank lines off the end of a
       code block and this keeps them. It cannot move a score in either
       direction, because a blank line carries no words -- see the blank-line
       test in the suite, which is the only thing that observes it at all.
+
+      A LOWERCASE `<!doctype html>`, and this one is a divergence from the
+      ADJUDICATOR rather than from CommonMark: start condition 4 is `<!` plus an
+      ASCII letter in the 0.31.2 spec and `<!` plus an UPPERCASE letter in
+      markdown-it-py 4.2.0, which still carries 0.30's. HTML_BLOCKS follows the
+      spec, so a lowercase declaration closes a paragraph here and continues one
+      there. Following the library instead would put this on the exploitable
+      side of the current spec, which is the one direction it must not be wrong
+      in -- so the disagreement is kept, named, and excluded from the alphabets
+      above rather than quietly absorbed into them. Measured with its control:
+      the uppercase spelling agrees, the lowercase one differs by exactly this.
     """
 
     def __init__(self) -> None:
@@ -489,16 +581,21 @@ class Container:
         self._lists: list[int] = []
         self._indented = False
         self._paragraph = False
+        self._html: int | None = None
 
     @property
-    def fenced(self) -> bool:
-        """Whether a fenced block is open here.
+    def literal(self) -> bool:
+        """Whether a block whose content is LITERAL is open here -- a fenced
+        code block, or an HTML block.
 
-        `Code` asks before it peels a block-quote marker. Everything inside a
-        fenced block is literal, so a `>` on a line inside one is the author's
-        own text -- a quoted markdown example -- and not a container.
+        `Code` asks before it peels a block-quote marker, because inside either
+        one a `>` is the author's own text rather than a container: a quoted
+        markdown example inside a fence, and a `> ` line inside a `<div>`, which
+        CommonMark reads as that block's own HTML and not as a quote. One
+        property rather than two, because the question the walker asks is the
+        same one -- may a marker be read here at all.
         """
-        return self._fence.open
+        return self._fence.open or self._html is not None
 
     @property
     def paragraph(self) -> bool:
@@ -560,15 +657,15 @@ class Container:
         four candidates as stated -- each of which turned out to have a narrow
         true form underneath it that assuming would have missed:
 
-          AN HTML BLOCK START DOES NOT CLOSE ANYTHING. `<div>` opens a block
-          that runs to the next BLANK line, so the indented line under it is
-          still that block's own content and CommonMark does not call it code.
-          Adding types 6 and 7 here would have moved real prose into the code
-          scope and disagreed where this already agrees. What DOES close is an
-          HTML block that also ENDS on its line -- `<!-- c -->`, `<!DOCTYPE
-          html>`, `<?php ?>`, `<![CDATA[x]]>`, `<pre>x</pre>` -- and each of
-          those was checked against its unterminated twin, which closes
-          nothing. Hence HTML_ONE_LINE rather than a list of tag names.
+          AN HTML BLOCK IS NOT A PREDICATE AT ALL, so it is not here. It closes
+          the paragraph and then STAYS OPEN, and the lines it holds are its own
+          content whatever they look like -- see `_html_opens`. Asking this
+          question of them is the defect the block model exists to fix. The
+          five that can also END on their opening line, `<!-- c -->` and its
+          four siblings, once lived here and read correctly right up to the
+          line after them; the two that cannot, `<div>` and a bare complete
+          tag, were deliberately excluded and read correctly only until
+          something inside them looked like a leaf block.
 
           A LIST MARKER DOES NOT CLOSE ANYTHING EITHER. `- item` opens a
           paragraph inside the item, and `- ` under a paragraph is not an empty
@@ -582,9 +679,47 @@ class Container:
         """
         if ATX_RE.match(body) or BREAK_RE.match(body):
             return True
-        if any(o.match(body) and c.search(body) for o, c in HTML_ONE_LINE):
-            return True
         return self._paragraph and SETEXT_RE.match(body) is not None
+
+    def _html_opens(self, body: str) -> int | None:
+        """Which of CommonMark's HTML blocks starts on this line, if any.
+
+        The FIRST start condition that matches wins, as the spec has it, which
+        is why `<pre>` is type 1 rather than the type 7 it would also satisfy
+        and why the order of HTML_BLOCKS is part of the rule.
+
+        Type 7 alone may not interrupt a paragraph, and that is a condition on
+        the line ABOVE rather than on the tag: `<img src="x">` under an open
+        paragraph is that paragraph's own text, while the identical line with a
+        blank one over it opens a block. Reading it as an opener either way
+        swallows the lines under an ordinary sentence that happens to end in a
+        tag, which is real prose moved into a block and out of the paragraph
+        the words belong to.
+        """
+        for kind, (opener, _closer, interrupts) in enumerate(HTML_BLOCKS):
+            if not opener.match(body):
+                continue
+            return kind if interrupts or not self._paragraph else None
+        return None
+
+    def _html_ends(self, kind: int, body: str) -> bool:
+        """Does this line meet the end condition of an HTML block of `kind`?
+
+        Types 1 to 5 carry their own, searched across the whole line because
+        that is how the spec words it, and the line that meets it is the
+        block's LAST -- which is what makes `<!-- c -->` begin and end on one
+        line, its closer overlapping its opener, while `<!-- c` runs on. Types
+        6 and 7 end at a BLANK line instead, and that line is not part of the
+        block.
+
+        Asked of the opening line as well as of every line after it, because
+        the two are one question: whether the block is still open when the next
+        line arrives.
+        """
+        closer = HTML_BLOCKS[kind][1]
+        if closer is None:
+            return not body.strip()
+        return closer.search(body) is not None
 
     def feed(self, line: str) -> bool:
         """Advance one line. True if the line is part of a code block of either
@@ -601,6 +736,19 @@ class Container:
             # with no blank line between.
             self._paragraph = False
             return True
+
+        if self._html is not None:
+            # Inside an open HTML block every line is that block's own content
+            # and no block may begin, so nothing below this point runs -- the
+            # paragraph model above all. Consulting it is the whole defect: a
+            # `<!-- x -->` or a `## heading` inside an open `<table>` closed a
+            # paragraph CommonMark says is not there, and the indented line
+            # under it moved into the code scope on a change that added lines
+            # and removed none. A blank line reaches here too, because it ends
+            # a type 6 or 7 block and belongs to a type 1 to 5 one.
+            if self._html_ends(self._html, line):
+                self._html = None
+            return False
 
         if not line.strip():
             # A gap ends nothing. An indented block survives a blank line
@@ -638,12 +786,23 @@ class Container:
             return True
 
         # Deep enough to be an indented block and yet still here means a
-        # paragraph is open and this line is its wrapped text, which no leaf
-        # block can be spelled inside -- CommonMark's own "up to three spaces",
-        # measured from this container's content column.
-        if indent < self._threshold() and self._closes(line[indent:]):
-            self._paragraph = False
-            return False
+        # paragraph is open and this line is its wrapped text, which no block
+        # can be spelled inside -- CommonMark's own "up to three spaces",
+        # measured from this container's content column. It guards the HTML
+        # start conditions for the same reason it guards the leaf blocks.
+        if indent < self._threshold():
+            body = line[indent:]
+            # Checked before `_closes` only because it also records state; no
+            # line can satisfy both, since every HTML start condition begins
+            # with `<` and no leaf block does.
+            kind = self._html_opens(body)
+            if kind is not None:
+                self._paragraph = False
+                self._html = None if self._html_ends(kind, body) else kind
+                return False
+            if self._closes(body):
+                self._paragraph = False
+                return False
         self._paragraph = True
 
         m = LIST_ITEM_RE.match(line)
@@ -715,10 +874,11 @@ class Code:
 
     Two rules fall out of that rather than being added to it:
 
-      A FENCE OUTRANKS A MARKER. While one is open here nothing is peeled, so a
-      markdown example quoting `> ` inside a fence stays what the author typed
-      -- the same precedence `Fence.open` already gives it over an indented
-      block, for the same reason.
+      A LITERAL BLOCK OUTRANKS A MARKER. While a fence or an HTML block is open
+      here nothing is peeled, so a markdown example quoting `> ` inside a fence
+      stays what the author typed and a `> ` line inside a `<div>` stays that
+      block's own HTML -- the same precedence `Fence.open` already gives a fence
+      over an indented block, for the same reason and now through one property.
 
       FOUR SPACES BEFORE A `>` IS CODE, NOT A QUOTE. `QUOTE_RE`'s own indent
       bound is CommonMark's three, so an over-indented `>` inside an indented
@@ -739,7 +899,7 @@ class Code:
         line = raw.expandtabs(TAB_STOP)
 
         depth = 0
-        while depth >= len(self._containers) or not self._containers[depth].fenced:
+        while depth >= len(self._containers) or not self._containers[depth].literal:
             m = QUOTE_RE.match(line)
             if not m:
                 break

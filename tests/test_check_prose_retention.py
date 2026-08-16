@@ -22,6 +22,7 @@ the detector and asserting these tests go red.
 
 from __future__ import annotations
 
+import collections
 import subprocess
 from pathlib import Path
 
@@ -779,16 +780,17 @@ def test_a_leaf_block_cannot_be_spelled_inside_a_wrapped_line():
     happens to begin with a hash or a dash, which is a false positive on text
     nobody edited.
     """
-    for spelling in ("    ## H", "    ***", "    ---"):
+    for spelling in ("    ## H", "    ***", "    ---", "    <!-- x -->"):
         body = f"An opening paragraph here.\n{spelling}\n    an_indented_example()\n"
         scopes = cpr.split_scopes(skill(body))
         assert "an_indented_example()" in scopes["prose"], (spelling, scopes)
         assert "an_indented_example()" not in scopes["code"], (spelling, scopes)
 
-    # Three spaces is within CommonMark's slack, so that one IS a heading.
-    body = "An opening paragraph here.\n   ## H\n    an_indented_example()\n"
-    scopes = cpr.split_scopes(skill(body))
-    assert "an_indented_example()" in scopes["code"], scopes
+    # Three spaces is within CommonMark's slack, so those two really do close.
+    for spelling in ("   ## H", "   <!-- x -->"):
+        body = f"An opening paragraph here.\n{spelling}\n    an_indented_example()\n"
+        scopes = cpr.split_scopes(skill(body))
+        assert "an_indented_example()" in scopes["code"], (spelling, scopes)
 
 
 def test_a_setext_underline_needs_a_paragraph_above_it():
@@ -875,6 +877,219 @@ def test_a_line_that_closed_a_paragraph_is_not_also_a_list_marker():
     scopes = cpr.split_scopes(skill(body))
     assert "an_indented_example()" in scopes["code"], scopes
     assert "an_indented_example()" not in scopes["prose"], scopes
+
+
+# --- an HTML block is a BLOCK, and it STAYS OPEN -----------------------------
+#
+# The round above modelled the opener and stopped there. It correctly refused to
+# let `<div>` close a paragraph -- the block runs to the next BLANK line, so the
+# indented line under it is still that block's own content -- but nothing
+# modelled the block once it was open, so every line inside one still reached
+# `Container._closes`. A `<!-- x -->`, a heading or a thematic break INSIDE an
+# open HTML block then closed a paragraph CommonMark says is not there, and the
+# indented line under it moved into the code scope.
+#
+# That is the false-positive direction, and it is the worse one: a change that
+# only ADDED a line fired a gate whose only remedy is a ledger row asserting N
+# words are safe to lose when none were lost. Writing that row means writing a
+# false entry into a permanent append-only record -- the "escape hatch that
+# cannot be opened HONESTLY is a bypass with extra steps" failure the detector
+# names twice as its own reason for existing, reached a third way.
+#
+# The family below is the whole class rather than the shape that was reported:
+# 11 openers spanning CommonMark's seven start conditions, crossed with the 10
+# inner constructs that mis-fired. 98 of the 110 cells disagreed with
+# markdown-it-py 4.2.0 before, 0 after.
+
+# (label, the line that opens an HTML block)
+HTML_BLOCK_OPENERS = [
+    ("type 1 <pre>", "<pre>"),
+    ("type 1 <script>", "<script>"),
+    ("type 1 <style>", "<style>"),
+    ("type 1 <textarea>", "<textarea>"),
+    ("type 2 comment", "<!-- open"),
+    ("type 3 pi", "<?php"),
+    ("type 4 declaration", "<!DOCTYPE"),
+    ("type 5 cdata", "<![CDATA["),
+    ("type 6 <div>", "<div>"),
+    ("type 6 <table>", "<table>"),
+    ("type 7 complete tag", '<custom-tag attr="x">'),
+]
+
+# (label, a line that closes a paragraph when one is open)
+HTML_BLOCK_INNER = [
+    ("html comment", "<!-- x -->"),
+    ("doctype", "<!DOCTYPE html>"),
+    ("processing instruction", "<?php ?>"),
+    ("cdata", "<![CDATA[x]]>"),
+    ("one-line pre", "<pre>x</pre>"),
+    ("atx heading", "## heading"),
+    ("thematic break", "***"),
+    ("dashes", "---"),
+    ("equals", "==="),
+    ("bare dash", "-"),
+]
+
+# The 12 cells of the 110 where the indented line under the inner construct IS a
+# code block, READ OFF markdown-it-py 4.2.0 rather than off the implementation --
+# a table that only encodes what the code does proves nothing.
+#
+# Every one of them is the same thing: the inner construct happens to carry the
+# OPENER's own end condition, so the block closed on that line and the indented
+# line under it opened a code block with no paragraph in the way. `<pre>x</pre>`
+# carries `</pre>` and ends all four type 1 openers; `<!-- x -->` carries `-->`
+# and ends the comment; `<?php ?>` carries `?>`; `<![CDATA[x]]>` carries `]]>`;
+# and type 4's end condition is a bare `>`, which five of the ten carry. Types 6
+# and 7 appear nowhere, because nothing but a blank line ends those and there is
+# no blank line in the fixture.
+HTML_BLOCK_CODE_UNDER = {
+    ("type 1 <pre>", "one-line pre"),
+    ("type 1 <script>", "one-line pre"),
+    ("type 1 <style>", "one-line pre"),
+    ("type 1 <textarea>", "one-line pre"),
+    ("type 2 comment", "html comment"),
+    ("type 3 pi", "processing instruction"),
+    ("type 4 declaration", "html comment"),
+    ("type 4 declaration", "doctype"),
+    ("type 4 declaration", "processing instruction"),
+    ("type 4 declaration", "cdata"),
+    ("type 4 declaration", "one-line pre"),
+    ("type 5 cdata", "cdata"),
+}
+
+HTML_FAMILY = [
+    (olabel, opener, ilabel, inner)
+    for olabel, opener in HTML_BLOCK_OPENERS
+    for ilabel, inner in HTML_BLOCK_INNER
+]
+
+
+@pytest.mark.parametrize(
+    "olabel,opener,ilabel,inner",
+    HTML_FAMILY,
+    ids=[f"{o} / {i}" for o, _op, i, _in in HTML_FAMILY],
+)
+def test_an_open_html_block_holds_every_line_it_contains(olabel, opener, ilabel, inner):
+    """The class, one cell at a time, against what CommonMark does.
+
+    While a block is open the splitter must not consult paragraph-closing logic
+    at all, so the answer for 98 of these cells is "the indented line is still
+    the HTML block's content". The other 12 are where the inner construct meets
+    the opener's OWN end condition and the block really did close -- which is
+    what makes this a fixture rather than a constant.
+    """
+    body = f"An opening paragraph here.\n\n{opener}\n{inner}\n    an_indented_example()\n"
+    scopes = cpr.split_scopes(skill(body))
+    is_code = (olabel, ilabel) in HTML_BLOCK_CODE_UNDER
+    where = "code" if is_code else "prose"
+    assert "an_indented_example()" in scopes[where], (olabel, ilabel, scopes)
+    assert "an_indented_example()" not in scopes[
+        "prose" if is_code else "code"
+    ], (olabel, ilabel, scopes)
+
+
+def test_an_html_block_ends_where_its_own_type_says_it_does():
+    """The two end conditions, each pinned against the other's spelling.
+
+    Types 1 to 5 carry their own and a BLANK LINE does not end them, so a
+    comment left open runs across one. Types 6 and 7 are ended by exactly that
+    blank line and by nothing else, so a `<div>` block does not survive it. Read
+    either rule onto the other type and one of these two flips.
+    """
+    # An unterminated comment survives a blank line; the `-->` is what ends it,
+    # and only the line AFTER that can open a code block.
+    body = "Intro.\n\n<!-- open\n\n## heading\n-->\n    an_indented_example()\n"
+    scopes = cpr.split_scopes(skill(body))
+    assert "an_indented_example()" in scopes["code"], scopes
+    assert "## heading" in scopes["prose"], scopes
+
+    # A `<div>` block ends at the blank line, so the indented line below is a
+    # code block -- and with no blank line it runs to the end of the file.
+    body = "Intro.\n\n<div>\ncontent here\n\n    an_indented_example()\n"
+    assert "an_indented_example()" in cpr.split_scopes(skill(body))["code"]
+
+    body = "Intro.\n\n<div>\n## heading\n    an_indented_example()\n"
+    scopes = cpr.split_scopes(skill(body))
+    assert "an_indented_example()" in scopes["prose"], scopes
+    assert "an_indented_example()" not in scopes["code"], scopes
+
+
+def test_a_marker_inside_an_open_html_block_is_that_blocks_own_html():
+    """A literal block outranks a container marker, and an HTML block is one.
+
+    Everything inside an open HTML block is that block's content, so a `>` there
+    is the author's own HTML and not a quote. Peeled instead, it opens a
+    container that does not exist, and the block's remaining lines are read at a
+    depth that does not describe them -- the same failure `Fence.open` already
+    prevents one step out, which is why the two share one property.
+
+    The second case is what makes this checkable rather than decorative: the
+    block's END CONDITION sits on the marked line, so peeling hands that line to
+    a container the block cannot see and the block never closes at all. The
+    line under it is a code block to CommonMark and prose to a reading that
+    peeled.
+    """
+    body = "Intro.\n\n<div>\n> not a quote at all\n<!-- x -->\n    an_indented_example()\n"
+    scopes = cpr.split_scopes(skill(body))
+    assert "an_indented_example()" in scopes["prose"], scopes
+    assert "an_indented_example()" not in scopes["code"], scopes
+    assert "> not a quote at all" in scopes["prose"], scopes
+
+    for opener, closer in (("<!-- open", "> -->"), ("<![CDATA[", "> ]]>")):
+        body = f"Intro.\n\n{opener}\n{closer}\n    an_indented_example()\n"
+        scopes = cpr.split_scopes(skill(body))
+        assert "an_indented_example()" in scopes["code"], (opener, scopes)
+        assert "an_indented_example()" not in scopes["prose"], (opener, scopes)
+
+
+def test_a_complete_tag_may_not_interrupt_a_paragraph():
+    """Type 7 alone carries this rule, and it is about the line ABOVE.
+
+    `<custom-tag attr="x">` under an open paragraph is that paragraph's own
+    text; the identical line with a blank one over it opens a block that runs to
+    the next blank line. Reading it as an opener either way swallows the lines
+    under any ordinary sentence that happens to end in a tag. Reading it as
+    never opening one puts them back through the paragraph rules, which is the
+    defect this whole section is about.
+
+    Types 1 to 6 may interrupt, so the same pair with `<div>` goes the other
+    way -- which is what makes this a rule about type 7 rather than about HTML.
+    """
+    tag = '<custom-tag attr="x">'
+    under_paragraph = f"An opening paragraph here.\n{tag}\n<!-- x -->\n    an_ex()\n"
+    scopes = cpr.split_scopes(skill(under_paragraph))
+    assert "an_ex()" in scopes["code"], scopes
+
+    after_blank = f"Intro.\n\n{tag}\n<!-- x -->\n    an_ex()\n"
+    scopes = cpr.split_scopes(skill(after_blank))
+    assert "an_ex()" in scopes["prose"], scopes
+
+    # The control: type 6 interrupts, so the paragraph above changes nothing.
+    for above in ("An opening paragraph here.", ""):
+        body = f"{above}\n<div>\n<!-- x -->\n    an_ex()\n"
+        assert "an_ex()" in cpr.split_scopes(skill(body))["prose"], body
+
+
+def test_a_type_6_block_is_commonmarks_own_list_of_tag_names():
+    """`<div>` opens an HTML block and `<span>` does not, and the difference is
+    the list rather than the shape of the tag.
+
+    `<span>` still opens one as a COMPLETE TAG under type 7 -- which is why the
+    discriminating pair is the tag with words after it, where type 7's
+    alone-on-its-line condition fails and type 6's name list is the only thing
+    that could still open a block.
+    """
+    for name, opens in (("section", True), ("span", True)):
+        body = f"Intro.\n\n<{name}>\n<!-- x -->\n    an_ex()\n"
+        assert "an_ex()" in cpr.split_scopes(skill(body))["prose"], name
+
+    # A block NAME opens one with anything after it; a non-block name does not,
+    # because type 7 requires the tag to be the whole line.
+    body = "Intro.\n\n<section> and more words here\n<!-- x -->\n    an_ex()\n"
+    assert "an_ex()" in cpr.split_scopes(skill(body))["prose"], body
+
+    body = "Intro.\n\n<span> and more words here\n<!-- x -->\n    an_ex()\n"
+    assert "an_ex()" in cpr.split_scopes(skill(body))["code"], body
 
 
 # --- a block quote is a CONTAINER, not a third spelling ---------------------
@@ -3305,3 +3520,88 @@ def test_cli_catches_a_deletion_in_a_crlf_skill_file(repo, capsys):
 
     assert cpr.main(["--base", base, "--head", "HEAD"]) == 1
     assert "CLUD_BUG_QUIET" in capsys.readouterr().out
+
+
+# The `<details>` / `<summary>` block three of this catalog's skills already
+# ship, with a sentence and an indented worked example inside it. Written out
+# rather than built from a helper, because what the author saw is the file.
+#
+# No blank line anywhere inside it, deliberately: a blank line is what ends a
+# type 6 block, so one there would close it and the case would be about
+# something else.
+DETAILS_EXAMPLE = (
+    "    jest.mock('./billing', () => ({ chargeCard: jest.fn() }))\n"
+    "    it('completes checkout', async () => expect(await checkout()).toBe(true))\n"
+)
+DETAILS_BEFORE = (
+    "Some prose about when a reasoning block belongs in a finding.\n"
+    "\n"
+    "<details>\n"
+    "<summary>Reasoning</summary>\n"
+    "The mock is scoped to the one call the assertion is about.\n"
+    f"{DETAILS_EXAMPLE}"
+    "</details>\n"
+    "\n"
+    "A closing paragraph that stays exactly as it was.\n"
+)
+# One line ADDED inside the open block. Nothing else touched.
+DETAILS_AFTER = DETAILS_BEFORE.replace(
+    DETAILS_EXAMPLE, "<!-- and why -->\n" + DETAILS_EXAMPLE
+)
+
+
+def test_cli_adding_a_line_inside_an_html_block_asks_for_no_declaration(repo, capsys):
+    """THE REGRESSION, pinned on what the author actually saw: a red gate.
+
+    The head is a strict line-superset of the base and removes NO word -- both
+    asserted here rather than described, because the whole finding is that the
+    gate demanded a removal be declared when there was none. Run against the
+    round that modelled only the opener, this exits 1 with
+    `| alpha | 13 | <why these words are gone> |`, and the only way to reach
+    green is to write that row: a false entry in a permanent append-only record,
+    which is the one thing the ledger must never hold.
+
+    Asserted through `main` rather than through `split_scopes` because the
+    verdict, the exit code and the printed row are what an author is looking at,
+    and a unit assertion on the splitter can go green while the run stays red.
+    """
+    (repo / "skills" / "alpha" / "SKILL.md").write_text(skill(DETAILS_BEFORE))
+    base = commit(repo, "base")
+    (repo / "skills" / "alpha" / "SKILL.md").write_text(skill(DETAILS_AFTER))
+    commit(repo, "add a note inside the reasoning block")
+
+    before_lines = skill(DETAILS_BEFORE).split("\n")
+    after_lines = skill(DETAILS_AFTER).split("\n")
+    assert all(ln in after_lines for ln in before_lines), "head must add only"
+    gone = collections.Counter(cpr.words(skill(DETAILS_BEFORE))) - collections.Counter(
+        cpr.words(skill(DETAILS_AFTER))
+    )
+    assert sum(gone.values()) == 0, gone
+
+    assert cpr.main(["--base", base, "--head", "HEAD"]) == 0
+    out = capsys.readouterr().out
+    assert "OK: 1 changed SKILL.md file(s)" in out, out
+    assert cpr.REASON_PLACEHOLDER not in out, out
+    assert "| alpha |" not in out, out
+
+
+def test_cli_control_a_real_cut_beside_the_same_html_block_still_fires(repo, capsys):
+    """The control. A gate that has stopped firing satisfies the test above for
+    free, so the same file with its closing paragraph deleted must still print
+    the row -- and print it against the prose, where the words went.
+    """
+    (repo / "skills" / "alpha" / "SKILL.md").write_text(skill(DETAILS_BEFORE))
+    base = commit(repo, "base")
+    (repo / "skills" / "alpha" / "SKILL.md").write_text(
+        skill(
+            DETAILS_AFTER.replace(
+                "A closing paragraph that stays exactly as it was.\n", ""
+            )
+        )
+    )
+    commit(repo, "add a note and delete the closing paragraph")
+
+    assert cpr.main(["--base", base, "--head", "HEAD"]) == 1
+    out = capsys.readouterr().out
+    assert "from its prose" in out, out
+    assert cpr.ledger_row("alpha", 7) in out, out
