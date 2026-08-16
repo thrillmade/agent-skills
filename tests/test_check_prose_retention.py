@@ -581,6 +581,200 @@ def test_a_fence_only_closes_on_a_fence_at_least_as_long():
     assert "Intro." in scopes["prose"] and "Outro." in scopes["prose"]
 
 
+# --- markdown has two spellings of a code block -----------------------------
+#
+# Reading only the fence left the byte arbitrage above open through the other
+# one, at MORE bytes per word rather than fewer -- and it is the one spelling a
+# reader of the rendered page cannot tell apart from the other, so nothing in
+# review says which was used. The pairs below stand either side of the two
+# CommonMark rules that keep the reading off ordinary prose: an indented block
+# cannot interrupt a paragraph, and the four spaces are measured from the
+# enclosing list item's content column.
+
+INDENTED_EXAMPLE = (
+    "    jest.mock('./billing', () => ({ chargeCard: jest.fn() }))\n"
+    "    it('completes checkout', async () => expect(await checkout()).toBe(true))\n"
+)
+
+
+def test_filler_prose_cannot_pay_for_a_deleted_INDENTED_code_example():
+    """The founding evasion in markdown's other spelling of a code block.
+
+    The fenced version of this trade is `test_filler_prose_cannot_pay_for_a_
+    deleted_code_example` above. Written with four spaces instead the example
+    scored as PROSE, so deleting it and adding a same-length sentence of filler
+    netted the prose scope to nothing and the gate went green -- with the
+    incentive intact rather than reduced, because an indented block spends more
+    bytes per word than a fence does.
+    """
+    before = skill_file("alpha", "d", "Intro paragraph here.\n\n" + INDENTED_EXAMPLE + "\nOutro.\n")
+    after = skill_file(
+        "alpha",
+        "d",
+        "Intro paragraph here.\n\nMock only what you must and keep the rest of "
+        "the real path in play, or the test proves nothing at all whatsoever "
+        "here.\n\nOutro.\n",
+    )
+    loss = cpr.Loss(before, after)
+    assert loss.scopes["code"] > cpr.FLOOR["code"], loss.scopes
+    assert loss.scopes["prose"] < 0, "the filler really did land in the prose"
+    assert len(cpr.run(case("alpha", before, after))) == 1
+
+
+def test_an_indented_example_rewritten_at_similar_length_is_free():
+    """The control for the pair above, matching the fenced one. Reading the
+    second spelling must not turn rewriting an example into a removal.
+    """
+    before = skill_file("alpha", "d", 'Text.\n\n    { "strictMode": false }\n')
+    after = skill_file("alpha", "d", "Text.\n\n    strictMode: false\n")
+    assert cpr.run(case("alpha", before, after)) == []
+
+
+def test_an_indented_block_cannot_interrupt_a_paragraph():
+    """CommonMark's first rule, on the shape that needs it.
+
+    An over-indented continuation of a wrapped line is one paragraph to every
+    renderer. Without this rule a gate reading four spaces as code would move it
+    into the code scope -- real prose, rescoped, so a cut to it is charged
+    against the wrong floor and payable by the wrong additions.
+    """
+    body = (
+        "A paragraph whose second line is indented well past where it began,\n"
+        "    which markdown renders as one paragraph and not as a code block.\n"
+    )
+    scopes = cpr.split_scopes(skill(body))
+    assert "which markdown renders as one paragraph" in scopes["prose"]
+    assert scopes["code"].strip() == "", scopes["code"]
+
+
+def test_a_nested_list_item_keeps_its_own_paragraphs_out_of_the_code_scope():
+    """CommonMark's second rule, on the shape that needs THAT one.
+
+    A blank line inside a list item starts a second paragraph OF THAT ITEM, and
+    its indent is the item's content column -- five here, past the four that
+    would otherwise read as code. The rule above does not cover this one: the
+    blank line is there, so only measuring from the item's content column keeps
+    it prose.
+    """
+    body = (
+        "1. Outer step.\n"
+        "   - Inner bullet that runs on.\n\n"
+        "     A second paragraph belonging to the inner bullet.\n"
+    )
+    scopes = cpr.split_scopes(skill(body))
+    assert "A second paragraph belonging to the inner bullet." in scopes["prose"]
+    assert scopes["code"].strip() == "", scopes["code"]
+
+
+def test_an_indented_block_inside_a_list_item_is_still_code():
+    """The control for the rule above: measuring from the item's content column
+    is a shift, not an exemption. Four spaces past that column is a code block
+    however deep the item sits, or the list becomes the place to hide one.
+    """
+    body = "- A step.\n\n      the_worked(example, goes, here)\n"
+    scopes = cpr.split_scopes(skill(body))
+    assert "the_worked(example, goes, here)" in scopes["code"]
+    assert "the_worked" not in scopes["prose"]
+
+
+def test_a_tab_indented_block_is_code_too():
+    """A tab is four columns to CommonMark. Counting leading SPACES alone would
+    leave the same hole in a third spelling of the same block.
+    """
+    body = "Intro.\n\n\tthe_worked(example, goes, here)\n"
+    scopes = cpr.split_scopes(skill(body))
+    assert "the_worked(example, goes, here)" in scopes["code"]
+    assert "the_worked" not in scopes["prose"]
+
+
+def test_a_fence_inside_an_indented_block_does_not_open_a_fenced_block():
+    """The two spellings cannot nest, and getting that wrong is worse than not
+    reading the indented block at all: a ``` line quoted inside one would open a
+    fence that swallows every line to the end of the file, changing the scope of
+    text nobody edited.
+    """
+    body = "Intro.\n\n    ```\n    quoted fence\n    ```\n\nOutro paragraph here.\n"
+    scopes = cpr.split_scopes(skill(body))
+    assert "quoted fence" in scopes["code"]
+    assert "Outro paragraph here." in scopes["prose"], scopes["prose"]
+
+
+SKILLS = Path(__file__).resolve().parents[1] / "skills"
+
+
+def _fence_only_scopes(text: str) -> dict[str, str]:
+    """`split_scopes` as it read before the second spelling was added: fences
+    and nothing else. Spelled out here rather than imported, because the subject
+    of the test below is that the two agree on every file that ships.
+    """
+    text = cpr.unwrap(text)
+    m = cpr.FRONTMATTER_RE.match(text)
+    assert m, "the fixture must have locatable frontmatter"
+    frontmatter, body = text[: m.end()], text[m.end() :]
+    prose: list[str] = []
+    code: list[str] = []
+    fence = cpr.Fence()
+    for line in body.split("\n"):
+        (code if fence.feed(line) else prose).append(line)
+    return {
+        "frontmatter": frontmatter,
+        "prose": "\n".join(prose),
+        "code": "\n".join(code),
+    }
+
+
+def test_no_shipping_skill_file_changes_scope_under_the_second_spelling():
+    """THE REGRESSION THAT MATTERS. Reading indented blocks must move no line in
+    any file this catalog actually ships.
+
+    Measured before the reading was written: 41 lines across these 49 files are
+    indented four spaces or more outside a fence. 38 sit inside a frontmatter
+    block -- its own scope, which never reaches this split -- and the other 3
+    are wrapped list continuations in reviewing-design-work. Measured again per
+    rule: EITHER of the two CommonMark rules keeps all 3 prose on its own, and
+    only dropping both moves them, so this test cannot stand in for either
+    rule's own case above. It stands for the catalog.
+
+    Asserted line for line against the old reading rather than as a fire count,
+    because a fire count over unchanged files is zero either way.
+    """
+    files = sorted(SKILLS.glob("*/SKILL.md"))
+    assert len(files) >= 40, f"only {len(files)} SKILL.md files found -- wrong root?"
+    for path in files:
+        text = path.read_text(encoding="utf-8")
+        assert cpr.split_scopes(text) == _fence_only_scopes(text), path
+
+
+def test_the_control_the_comparison_above_notices_a_planted_indented_block():
+    """The control. A comparison that could not tell the two readings apart
+    would pass the test above whatever the split did, which is the shape of a
+    search that finds nothing because it is the wrong search.
+    """
+    planted = skill("Intro paragraph.\n\n" + INDENTED_EXAMPLE)
+    assert cpr.split_scopes(planted) != _fence_only_scopes(planted)
+
+
+def test_a_cut_beside_an_untouched_indented_example_is_charged_to_the_prose():
+    """Why the reclassification costs no false positive, made checkable.
+
+    Both revisions are split by the same rules, so a line nobody edited lands in
+    the same scope on both sides and nets to zero there. What is left is the
+    edit, charged where it happened -- so moving an example out of the prose
+    scope cannot turn a prose cut into a code finding, or the other way round.
+    """
+    example = "\n" + INDENTED_EXAMPLE + "\n"
+    before = skill(
+        "Intro paragraph here." + example + "Mock only what you must and keep "
+        "the rest of the real path in play.\n"
+    )
+    after = skill("Intro paragraph here." + example + "Mock only what you must.\n")
+
+    loss = cpr.Loss(before, after)
+    assert loss.scopes["code"] == 0, "the untouched example must net to zero"
+    assert list(loss.over) == ["prose"], loss.scopes
+    assert len(cpr.run(case("alpha", before, after))) == 1
+
+
 # --- the thresholds ---------------------------------------------------------
 #
 # Each floor is the top of its own scope's measured noise, with the smallest
@@ -1077,6 +1271,60 @@ def test_a_commented_out_draft_ABOVE_the_table_declares_nothing_either():
     assert cpr.run(cases, ledger_before=ledger, ledger_after=real) == []
 
 
+def test_an_INDENTED_draft_ABOVE_the_table_declares_nothing_either():
+    """The same arrangement through markdown's other spelling of a code block,
+    which is the one this parser did not read.
+
+    An indented example is a code block to every renderer, so nothing on the
+    rendered page distinguishes it from the fenced one above -- but its header
+    was the FIRST `| skill | words | why |` in the document, so `seen_table`
+    latched onto the example and the real table under it was dead. A row added
+    exactly where this file instructs then declared nothing and the failure
+    reprinted the row the author had just written. An escape hatch that cannot
+    be opened is a bypass with extra steps.
+    """
+    cases, name, net = a_real_deletion()
+    ledger = (
+        "A filled-in table looks like this:\n\n"
+        "    | skill | words | why |\n"
+        "    |---|---|---|\n"
+        f"    | {name} | {net} | example row |\n\n"
+        "Rows go in the table at the bottom of this file.\n\n" + LEDGER_HEADER
+    )
+    assert cpr.parse_ledger(ledger) == {}, "the indented example declared something"
+    assert len(cpr.run(cases, ledger_before=LEDGER_HEADER, ledger_after=ledger)) == 1
+
+    real = ledger + f"| {name} | {net} | Moved to unattended-operation. |\n"
+    assert cpr.parse_ledger(real) == {(name, net): 1}, "the real table went dead"
+    assert cpr.run(cases, ledger_before=ledger, ledger_after=real) == []
+
+
+def test_an_indented_row_after_a_blank_separator_is_a_code_block_not_a_row():
+    """The one boundary reading the second spelling MOVES in the ledger, pinned
+    with both halves of its control rather than left to be discovered.
+
+    Four spaces after a blank line is a code block to every renderer, so such a
+    line shows a reader monospaced literal text and not a table row -- and a
+    declaration a reader would never see is not one. The two arrangements an
+    author actually produces are unaffected and are asserted here beside it: a
+    row pasted after a blank separator with no indent still counts (which is the
+    case this parser was fixed for once already), and an indented row directly
+    under the table still counts, because nothing can open a code block there.
+    """
+    cases, name, net = a_real_deletion()
+    row = f"| {name} | {net} | Moved to unattended-operation. |"
+
+    inert = LEDGER_HEADER + "\n    " + row + "\n"
+    assert cpr.parse_ledger(inert) == {}, "an indented block declared something"
+    assert len(cpr.run(cases, ledger_before=LEDGER_HEADER, ledger_after=inert)) == 1
+
+    after_blank = LEDGER_HEADER + "\n" + row + "\n"
+    assert cpr.run(cases, ledger_before=LEDGER_HEADER, ledger_after=after_blank) == []
+
+    hard_against = LEDGER_HEADER + "    " + row + "\n"
+    assert cpr.run(cases, ledger_before=LEDGER_HEADER, ledger_after=hard_against) == []
+
+
 def test_a_commented_out_table_declares_nothing():
     cases, name, net = a_real_deletion()
     after = (
@@ -1197,6 +1445,12 @@ STAGING_SLOTS = [
     (
         "inside a longer fence a shorter one does not close",
         LEDGER_HEADER + "````markdown\n```\n" + ROW + "\n````\n",
+        LEDGER_HEADER + ROW + "\n",
+        STAGED,
+    ),
+    (
+        "inside an indented code block",
+        LEDGER_HEADER + "\nAn example:\n\n    " + ROW + "\n",
         LEDGER_HEADER + ROW + "\n",
         STAGED,
     ),
@@ -1948,6 +2202,37 @@ def test_the_guidance_does_not_promise_green_while_a_withdrawal_stands():
     # The control: with nothing withdrawn the promise is true, and is made.
     free = cpr.remedies(cpr.run(cases, ledger_before=LEDGER_HEADER, ledger_after=LEDGER_HEADER))
     assert any("this gate passes" in line for line in free), free
+
+
+def test_the_guidance_does_not_promise_green_over_a_file_it_could_not_scope():
+    """The same claim, on the mode the ledger's two did not cover.
+
+    "and this gate passes" is about the RUN, not about one finding, and the run
+    exits 1 while any finding stands. A change that cuts prose from one skill
+    and carries another whose frontmatter cannot be located gets two
+    annotations; the promise was withheld only for a ledger withdrawal, so this
+    author was told that adding the row was the whole cost and got exit 1 for
+    doing exactly that. The remedy is checked here rather than asserted, the way
+    `hatch_state` checks the drafted one.
+    """
+    cases, name, net = a_real_deletion()
+    broken = "# Title\n\nA body with no frontmatter block at all.\n"
+    both = {**cases, **case("bravo", broken, broken + "and one more line.\n")}
+    row = declared(f"| {name} | {net} | Moved to unattended-operation. |")
+
+    lines = cpr.remedies(cpr.run(both))
+    assert any("Add the row printed above" in line for line in lines), lines
+    assert any("Open each file named above" in line for line in lines), lines
+    assert not any("this gate passes" in line for line in lines), lines
+    assert cpr.run(both, ledger_before=LEDGER_HEADER, ledger_after=row), (
+        "the row really does leave this run red -- otherwise the promise was "
+        "true and this test is about nothing"
+    )
+
+    # The control: the same cut on its own promises green, and reaches it.
+    alone = cpr.remedies(cpr.run(cases))
+    assert any("this gate passes" in line for line in alone), alone
+    assert cpr.run(cases, ledger_before=LEDGER_HEADER, ledger_after=row) == []
 
 
 def test_the_guidance_does_not_ask_for_a_second_row_that_would_not_count_either():

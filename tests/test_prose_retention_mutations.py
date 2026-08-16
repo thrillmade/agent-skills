@@ -39,6 +39,7 @@ DETECTOR = REPO_ROOT / ".github" / "scripts" / "check_prose_retention.py"
 SUITE = Path(__file__).parent / "test_check_prose_retention.py"
 FIXTURES = Path(__file__).parent / "fixtures" / "prose-retention"
 LEDGER = REPO_ROOT / "docs" / "prose-removals.md"
+SKILLS = REPO_ROOT / "skills"
 
 # Each entry: a name, the exact source text to replace, and what to replace it
 # with.
@@ -139,6 +140,59 @@ MUTATIONS = [
         "fence_length_ignored",
         "            and len(m.group(1)) >= length",
         "            and len(m.group(1)) >= 3",
+    ),
+    (
+        # Markdown's second spelling of a code block stops being read, which is
+        # the whole class: an indented worked example scores as prose, so
+        # deleting one and adding a same-length sentence of filler nets to zero
+        # and the gate goes green. Same byte arbitrage as the fenced case above,
+        # through the spelling that costs MORE bytes per word.
+        "indented_code_blocks_not_read",
+        "        opens_block = self._after_blank and indent >= self._threshold()",
+        "        opens_block = False",
+    ),
+    (
+        # The false-positive direction of the same reading. An indented block
+        # may interrupt a paragraph again, so every wrapped list continuation in
+        # the catalog moves into the code scope -- real prose, charged against
+        # the wrong floor and payable by the wrong additions.
+        "an_indented_block_may_interrupt_a_paragraph",
+        "        opens_block = self._after_blank and indent >= self._threshold()",
+        "        opens_block = indent >= self._threshold()",
+    ),
+    (
+        # The four spaces are measured from the left margin rather than from the
+        # enclosing list item's content column, so a nested bullet's second
+        # paragraph reads as code. The same false positive, reached through the
+        # other CommonMark rule.
+        "the_list_content_column_is_ignored",
+        "        return (self._lists[-1] if self._lists else 0) + CODE_INDENT",
+        "        return CODE_INDENT",
+    ),
+    (
+        # An open fence stops being advanced, so it never closes: every line
+        # after the catalog's first ``` reads as code, in files nobody edited.
+        "an_open_fence_stops_being_advanced",
+        "        if self._fence.open:\n            self._fence.feed(line)",
+        "        if False:\n            self._fence.feed(line)",
+    ),
+    (
+        # An indented block ends after its first line, so its remaining lines go
+        # back to being read as markdown -- and a ``` quoted inside one then
+        # opens a fenced block that swallows every line to the end of the file.
+        # That is worse than not reading indented blocks at all: text nobody
+        # edited changes scope.
+        "an_indented_block_ends_after_its_first_line",
+        "        if self._indented and indent >= self._threshold():",
+        "        if False:",
+    ),
+    (
+        # Tabs stop being expanded before the indent is measured, leaving the
+        # same hole in a third spelling: a tab-indented block is four columns to
+        # CommonMark and zero to `lstrip(" ")`.
+        "tabs_not_expanded_before_measuring_the_indent",
+        "        expanded = line.expandtabs(TAB_STOP)",
+        "        expanded = line",
     ),
     (
         # Replacements stop offsetting removals, so every reword and typo fix
@@ -350,20 +404,30 @@ MUTATIONS = [
         'if not reason.strip("- "):',
     ),
     (
-        # Fences stop being read, so the ledger's own worked example -- a
-        # filled-in table printed in a fence -- parses as a live declaration.
-        # The hatch could then be used while the table a reader actually reads
-        # stayed empty, which is the whole point of it.
-        "ledger_fences_not_read",
-        "        if fenced or commented:",
+        # Code stops being read in the ledger, in either spelling, so its own
+        # worked example -- a filled-in table printed in a fence or indented --
+        # parses as a live declaration. The hatch could then be used while the
+        # table a reader actually reads stayed empty, which is the whole point
+        # of it.
+        "ledger_code_not_read",
+        "        if coded or commented:",
         "        if commented:",
+    ),
+    (
+        # Only the fenced spelling is read, which is how it shipped. An indented
+        # example carries the FIRST `| skill | words | why |` in the document,
+        # so it takes the table and the real one below it goes dead -- a row
+        # added exactly where the ledger says declares nothing.
+        "ledger_indented_code_not_read",
+        "    code = Code()",
+        "    code = Fence()",
     ),
     (
         # HTML comments stop being read, so a commented-out draft of the table
         # declares for real.
         "ledger_comments_not_read",
-        "        if fenced or commented:",
-        "        if fenced:",
+        "        if coded or commented:",
+        "        if coded:",
     ),
     (
         # Parsing stops being anchored to the table, so any pipe-shaped line
@@ -455,6 +519,17 @@ MUTATIONS = [
         "        line + PASSES if promises else line",
     ),
     (
+        # The promise is held back for the ledger's two modes alone, as it
+        # shipped, so "and this gate passes" is printed to an author whose run
+        # also carries a file this gate could not scope or could not read. They
+        # add the row, the second file still fails, and they get exit 1 for
+        # doing exactly what the guidance said.
+        "green_is_promised_over_a_failure_the_remedy_does_not_answer",
+        "        for marker, _line, promises in REMEDIES\n        if not promises",
+        "        for marker, _line, promises in REMEDIES\n"
+        "        if marker in (SLOTS_WITHDRAWN, LEDGER_REWOUND)",
+    ),
+    (
         # The two ways a covering row can fail to count collapse into one
         # remedy, so an author whose own row was voided by a withdrawal is told
         # to write a second row -- which is voided too. Putting the ledger back
@@ -481,6 +556,13 @@ def _scratch(tmp_path: Path, source: str) -> Path:
     # path relative to itself, so the scratch tree needs the real file.
     (tmp_path / "docs").mkdir()
     shutil.copy(LEDGER, tmp_path / "docs" / "prose-removals.md")
+
+    # And it asserts that reading indented code moves no line in any SKILL.md
+    # this catalog ships, resolved the same way. Copied rather than skipped when
+    # absent: a case that skips itself when its subject is missing reports green
+    # over a comparison it did not make, which is the defect the detector under
+    # test exists to stop.
+    shutil.copytree(SKILLS, tmp_path / "skills")
 
     shutil.copy(SUITE, tests / SUITE.name)
     shutil.copytree(FIXTURES, tests / "fixtures" / "prose-retention")

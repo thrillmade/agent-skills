@@ -75,7 +75,11 @@ Three moves make that separable, and all three are load-bearing:
        deleting a worked example and adding a same-length sentence of filler
        frees real bytes and nets to zero. Reproduced on test-discipline, the
        tightest file in the catalog: 139 bytes freed, gate green, the skill's
-       worked anti-pattern example gone.
+       worked anti-pattern example gone. Markdown spells a code block two ways
+       and reading only the fence left the other one wide open: an indented
+       example scored as prose, so the same trade went green through the
+       spelling that costs MORE bytes per word, not fewer. Both are read --
+       see `Code`.
 
    Both are one defect -- a gain somewhere cheap paying for a loss somewhere
    expensive -- so both get one fix rather than a patch each.
@@ -147,6 +151,19 @@ BOM = "﻿"
 # fence.
 FENCE_RE = re.compile(r"^[ \t]*(`{3,}|~{3,})(.*)$")
 
+# A list item's marker, with the indent before it and the run of spaces after it
+# captured -- together they give the column the item's CONTENT starts in, which
+# is where the four spaces of an indented code block are measured from. At least
+# one space is required after the marker, or the marker ends the line: `-foo` is
+# a paragraph, not a list. `\d{1,9}` is CommonMark's own bound on an ordered
+# marker, so a bare year at the start of a line is not one.
+LIST_ITEM_RE = re.compile(r"^( *)([-*+]|\d{1,9}[.)])( +|$)")
+
+# CommonMark's indent for a code block, and its tab stop. Tabs are expanded
+# before the indent is measured: a tab-indented block is the same block, and
+# leaving it unmeasured would be the same hole in a third spelling.
+CODE_INDENT = TAB_STOP = 4
+
 # The three parts of a SKILL.md, scored separately and never netted against
 # each other.
 SCOPES = ("frontmatter", "prose", "code")
@@ -183,8 +200,16 @@ SCOPE_LABEL = {
 # `description:` that deleted its "cite when an agent classifies a pre-1.0
 # rename as major" trigger outright.
 #
-# Re-run the replay before moving any of these. The argument is the empty band,
-# not the digit -- and not the tally either. How many file-revisions the replay
+# Re-run the replay before moving any of these -- and after any change to the
+# SPLIT, because the split is what puts a loss in a scope and every band above
+# is a property of one scope. Teaching it markdown's second spelling of a code
+# block was such a change: re-derived over `--all` afterwards the three bands
+# come back identical, and the control that says the replay would have noticed
+# is a naive four-spaces-is-code rule, under which prose's largest real removal
+# drops 408 -> 302 and code's smallest rises 59 -> 165.
+#
+# The argument is the empty band, not the digit -- and not the tally either.
+# How many file-revisions the replay
 # compares, and how many of them fire, is a function of which refs a given
 # checkout happens to have: measured at 19 fires over 170 file-revisions from
 # `--all` and 7 over 99 from `origin/dev`, same detector, same run. A checkout
@@ -257,6 +282,18 @@ class Fence:
     def __init__(self) -> None:
         self._open: tuple[str, int] | None = None
 
+    @property
+    def open(self) -> bool:
+        """Whether a fenced block is currently open.
+
+        `Code` has to know before it feeds a line, because a fence outranks an
+        indented block in both directions: an indented block cannot open inside
+        a fence, and a fence cannot open inside an indented block -- a ``` line
+        indented into a code block is content, and feeding it here would open a
+        block that swallows the rest of the file.
+        """
+        return self._open is not None
+
     def feed(self, line: str) -> bool:
         """Advance one line. True if the line is part of a fenced block, the
         opening and closing fences included.
@@ -276,6 +313,116 @@ class Fence:
         ):
             self._open = None
         return True
+
+
+class Code:
+    """Code-block state, one line at a time, for BOTH of markdown's spellings.
+
+    `Fence` reads one. The other is the four-space indented block, and reading
+    only fences left it open in two places at once -- one root cause, both
+    reproduced:
+
+      IN A SKILL.md it scored as prose, so deleting an indented worked example
+      and adding a same-length sentence of filler netted to zero and the gate
+      went green. That is the byte arbitrage move 3 exists to stop, reached
+      through the spelling this gate did not read -- and the incentive was
+      intact rather than reduced, because an indented block costs MORE bytes per
+      word than a fence, not fewer.
+
+      IN THE LEDGER it read as a live table. An indented example row is the
+      first `| skill | words | why |` in the document, so the parser latched
+      onto the example and the real table below it was dead: a row added exactly
+      where that file instructs declared nothing, and the failure reprinted the
+      row the author had just written. An escape hatch that cannot be opened is
+      a bypass with extra steps, which this module names twice as its own reason
+      for existing.
+
+    Two CommonMark rules keep this off ordinary prose, and a rule that read
+    four spaces as code without them would rescope real content:
+
+      AN INDENTED BLOCK CANNOT INTERRUPT A PARAGRAPH -- it opens only after a
+      blank line.
+
+      THE FOUR SPACES ARE MEASURED FROM THE ENCLOSING LIST ITEM'S CONTENT
+      COLUMN, not from the left margin, so a nested bullet's continuation is
+      that bullet's prose however deep it sits.
+
+    Measured before this was written: 41 lines across this catalog's SKILL.md
+    files are indented four or more spaces outside a fence. 38 are inside a
+    frontmatter block, which is its own scope and never reaches the prose/code
+    split; the other 3 are wrapped continuations of a nested bullet in
+    reviewing-design-work, and EITHER rule alone keeps all 3 prose -- measured
+    by dropping each in turn, which rescopes nothing, and both together, which
+    rescopes that one file. So this reclassification moves nothing that ships.
+
+    Even where it did move something it could not cost a false positive on an
+    unchanged file: base and head are split by the same rules, so a line nobody
+    edited lands in the same scope on both sides and nets to zero there.
+    """
+
+    def __init__(self) -> None:
+        self._fence = Fence()
+        self._lists: list[int] = []
+        self._indented = False
+        self._after_blank = True
+
+    def _threshold(self) -> int:
+        """The column at which an indented code block starts here -- four past
+        the innermost open list item's content, or four past the margin."""
+        return (self._lists[-1] if self._lists else 0) + CODE_INDENT
+
+    def feed(self, line: str) -> bool:
+        """Advance one line. True if the line is part of a code block of either
+        spelling, the opening and closing fences included.
+        """
+        if self._fence.open:
+            self._fence.feed(line)
+            # A closing fence ends a block rather than a paragraph, so the line
+            # after it may open an indented one without a blank line between.
+            self._after_blank = not self._fence.open
+            return True
+
+        if not line.strip():
+            # A gap ends nothing. An indented block survives a blank line
+            # between its chunks, and a list item survives one between its
+            # paragraphs -- but a blank line is what lets the NEXT one open a
+            # block, which is the first rule above.
+            self._after_blank = True
+            return self._indented
+
+        expanded = line.expandtabs(TAB_STOP)
+        indent = len(expanded) - len(expanded.lstrip(" "))
+
+        if self._indented and indent >= self._threshold():
+            self._after_blank = False
+            return True
+        self._indented = False
+
+        # A line shallower than an open item's content column is outside it.
+        while self._lists and indent < self._lists[-1]:
+            self._lists.pop()
+
+        opens_block = self._after_blank and indent >= self._threshold()
+        self._after_blank = False
+        if opens_block:
+            self._indented = True
+            return True
+
+        if self._fence.feed(line):
+            return True
+
+        m = LIST_ITEM_RE.match(expanded)
+        if m:
+            gap = len(m.group(3))
+            # More than four spaces after the marker is an indented block INSIDE
+            # the item rather than a wider marker, so the content starts one
+            # column on. So does an item with nothing on its opening line.
+            self._lists.append(
+                len(m.group(1))
+                + len(m.group(2))
+                + (gap if 1 <= gap <= CODE_INDENT else 1)
+            )
+        return False
 
 
 class Unscopable(Exception):
@@ -314,9 +461,9 @@ def split_scopes(text: str) -> dict[str, str]:
 
     prose: list[str] = []
     code: list[str] = []
-    fence = Fence()
+    block = Code()
     for line in body.split("\n"):
-        (code if fence.feed(line) else prose).append(line)
+        (code if block.feed(line) else prose).append(line)
 
     return {
         "frontmatter": frontmatter,
@@ -468,8 +615,9 @@ class Loss:
 #   rows, the invariant has one route out: a line whose ACCEPTANCE flips
 #   without any line being added or removed. Every rule that made the parser
 #   drop a line was therefore a staging slot -- park a row in a fence, in an
-#   HTML comment, above the header, under a placeholder reason, behind a
-#   malformed row, in a count that is not a number, in a second table -- let
+#   indented block, in an HTML comment, above the header, under a placeholder
+#   reason, behind a malformed row, in a count that is not a number, in a second
+#   table -- let
 #   that change merge, and then make it readable here. The ledger gains a
 #   declaration, the covering row sits in this change's diff as unchanged
 #   context, and cardinality never notices because the row was never counted
@@ -588,10 +736,15 @@ def ledger_slots(text: str) -> collections.Counter[tuple]:
 
     A declaration is keyed by what it declares; the table's header and rule row
     by what they are, so widening the table costs nothing; and every other line
-    -- prose, a fence, a commented draft, a malformed row, a row parked above
-    the header -- by its own text. Nothing is dropped. See the fourth rule
-    above: the total has to be a property of the file, or a line becoming
-    readable is a free declaration.
+    -- prose, a fenced or indented code block, a commented draft, a malformed
+    row, a row parked above the header -- by its own text. Nothing is dropped.
+    See the fourth rule above: the total has to be a property of the file, or a
+    line becoming readable is a free declaration.
+
+    Code is read in BOTH of markdown's spellings, `Code` rather than `Fence`,
+    and the indented one is not a rounding error here: an indented example row
+    is the first `| skill | words | why |` in the document, so it took `seen_table`
+    and the real table under it went dead. See `Code`.
 
     The table runs from its header to the first non-blank line that does not
     begin with `|`, and there is only ever one table. Three choices, and each
@@ -617,20 +770,20 @@ def ledger_slots(text: str) -> collections.Counter[tuple]:
       ledger's own "that table only" was false.
     """
     slots: collections.Counter[tuple] = collections.Counter()
-    fence = Fence()
+    code = Code()
     in_comment = False
     in_table = seen_table = False
 
     for raw in lines_of(text):
         line = raw.strip()
-        fenced = fence.feed(raw)
+        coded = code.feed(raw)
         commented, in_comment = _comment_state(line, in_comment)
 
         if not line:
             continue  # a blank line carries no identity and declares nothing
         if in_table and not line.startswith("|"):
             in_table = False  # the table ended; what follows it is prose
-        if fenced or commented:
+        if coded or commented:
             slots[("line", line)] += 1
         elif not in_table:
             if not seen_table and LEDGER_HEADER_RE.match(line):
@@ -955,7 +1108,16 @@ REMEDIES = [
 ]
 
 PASSES = " That is the whole cost, and this gate passes."
-HELD = f" It counts once {LEDGER} is whole again."
+
+# Appended in place of PASSES when a failure this line does not answer is also
+# being printed. "and this gate passes" is a claim about the RUN, not about one
+# finding, and the run exits 1 while any of them stands. What to do about the
+# other one is the remedy printed beside this one, which is why this line points
+# rather than repeating it.
+HELD = (
+    " It is not the whole cost: this gate stays red until the other findings "
+    "above are cleared too."
+)
 
 # Printed when nothing above matches, which nothing this gate emits should
 # reach. A guidance block that closes with a remedy for a failure that did not
@@ -974,7 +1136,19 @@ def remedies(errors: list[str]) -> list[str]:
     failures, which they did: the block asked every author to add a row printed
     above, including the three modes that print no row.
     """
-    held = any(SLOTS_WITHDRAWN in e or LEDGER_REWOUND in e for e in errors)
+    # A line may only end in "and this gate passes" when every failure being
+    # printed has a remedy that reaches green, because that promise is about the
+    # run. Read off REMEDIES' own `promises` flag rather than enumerated:
+    # computed from the ledger's two modes alone it promised green to an author
+    # whose change also carried a file this gate could not scope -- they did
+    # exactly what the line said and got exit 1 -- and every mode added after
+    # would have reopened it again.
+    held = any(
+        marker in e
+        for marker, _line, promises in REMEDIES
+        if not promises
+        for e in errors
+    )
     lines = [
         line + (HELD if held else PASSES) if promises else line
         for marker, line, promises in REMEDIES

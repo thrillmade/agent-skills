@@ -23,6 +23,11 @@ example. Both of those were live evasions: the size cap only measures the body,
 and fenced code costs two to three times as many bytes per word as prose, so
 each was a way to free real bytes while netting a whole-file word count to zero.
 
+A code example counts as one in either of markdown's spellings — fenced, or
+indented four spaces past whatever list item it sits in. Reading only the fence
+left that trade open through the other spelling, at *more* bytes per word rather
+than fewer.
+
 The floors are measured, not chosen — each sits at the top of its own part's
 noise in this repository's history, with the smallest real removal in that part
 four times higher or more. `check_prose_retention.py` carries the distribution
@@ -79,12 +84,13 @@ Six rules make the row a declaration rather than a standing exemption:
   your cut have to be the same row.
 - **A line the gate cannot read still takes up a line.** Every line of this
   file occupies a slot: a row by what it declares, and anything else — prose, a
-  fence, a commented-out draft, a row that is missing a cell or whose count is
-  not a number — by its own text. So a row parked somewhere unreadable and made
-  readable by a later change declares nothing in that change: the line it
-  vacated is a removal, and a removal credits you with nothing. Without this
-  the rule above was an invariant over what *parses* rather than over this
-  file, and every way of writing an unreadable row was somewhere to stage one.
+  code block in either of markdown's spellings, a commented-out draft, a row
+  that is missing a cell or whose count is not a number — by its own text. So a
+  row parked somewhere unreadable and made readable by a later change declares
+  nothing in that change: the line it vacated is a removal, and a removal
+  credits you with nothing. Without this the rule above was an invariant over
+  what *parses* rather than over this file, and every way of writing an
+  unreadable row was somewhere to stage one.
 - **The count must cover the cut.** It cannot be written blind, and it puts the
   size of the cut in the diff where a reviewer reads it. It is a floor, not an
   exact match: if a later commit in the same PR adds words back, the row you
@@ -95,9 +101,13 @@ Six rules make the row a declaration rather than a standing exemption:
   size. Rows are counted, not deduplicated.
 
 Rows go in the table at the bottom of this file — the **first** such table in
-it, and only that one, so a fenced example or a commented-out draft elsewhere
-in the document declares nothing and does not shadow the real table either. The
-record is the point.
+it, and only that one, so an example elsewhere in the document declares nothing
+and does not shadow the real table either. Code counts as an example in either
+of markdown's spellings, fenced or indented four spaces, and so does a
+commented-out draft. Reading the fence alone was not enough: an indented
+example renders identically, its header was the first `| skill | words | why |`
+in the document, and the table a reader would actually write into went dead
+under it. The record is the point.
 
 Paste the row anywhere inside that table. A blank line before it is fine; the
 table ends at the first line that is neither blank nor a table row, so prose
