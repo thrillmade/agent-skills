@@ -28,6 +28,15 @@ indented four spaces past whatever list item it sits in. Reading only the fence
 left that trade open through the other spelling, at *more* bytes per word rather
 than fewer.
 
+A block quote is not a third spelling. It is a **container**, and it hid both of
+them: a `>` in front of a fenced or an indented example put that example back in
+the prose scope, so the same trade went green through a marker — and, the worse
+direction, wrapping an existing example in `> ` without touching a word was
+charged as a removal whose only printed remedy was a row here declaring words
+safe to lose that were never lost. Nothing in this file is ever the right place
+for that. Quote depth is now part of a block's identity, at any nesting depth
+and with or without the space after the marker.
+
 The floors are measured, not chosen — each sits at the top of its own part's
 noise in this repository's history, with the smallest real removal in that part
 four times higher or more. `check_prose_retention.py` carries the distribution
@@ -108,6 +117,13 @@ commented-out draft. Reading the fence alone was not enough: an indented
 example renders identically, its header was the first `| skill | words | why |`
 in the document, and the table a reader would actually write into went dead
 under it. The record is the point.
+
+Putting an example inside a block quote changes nothing here, and that is
+measured rather than assumed: a quoted line begins with `>` and never with a
+pipe, so it was never a row or a header either way. The container reading moved
+no slot in this file, and moved none in 40,000 generated ledgers built from
+quoted rows, quoted fences and quoted indented rows — while the same 40,000 move
+21,043 lines in and out of the code scope, which is what says the check looked.
 
 Paste the row anywhere inside that table. A blank line before it is fine; the
 table ends at the first line that is neither blank nor a table row, so prose

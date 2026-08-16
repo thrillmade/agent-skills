@@ -79,7 +79,9 @@ Three moves make that separable, and all three are load-bearing:
        and reading only the fence left the other one wide open: an indented
        example scored as prose, so the same trade went green through the
        spelling that costs MORE bytes per word, not fewer. Both are read --
-       see `Code`.
+       see `Container`. A block quote then suppressed both spellings at once,
+       which is a CONTAINER rather than a third spelling, so containers are
+       modelled too -- see `Code`.
 
    Both are one defect -- a gain somewhere cheap paying for a loss somewhere
    expensive -- so both get one fix rather than a patch each.
@@ -158,6 +160,20 @@ FENCE_RE = re.compile(r"^[ \t]*(`{3,}|~{3,})(.*)$")
 # a paragraph, not a list. `\d{1,9}` is CommonMark's own bound on an ordered
 # marker, so a bare year at the start of a line is not one.
 LIST_ITEM_RE = re.compile(r"^( *)([-*+]|\d{1,9}[.)])( +|$)")
+
+# A block quote's marker: CommonMark's up-to-three spaces of indent, the `>`,
+# and ONE optional space that belongs to the marker rather than to the content.
+# Both bounds carry a rule that would otherwise need writing out:
+#
+#   `{0,3}` is why four spaces before a `>` is a code block and not a quote --
+#   an over-indented `>` inside an indented example is content, and no separate
+#   rule says so.
+#
+#   the single trailing space is why `>     x` leaves four spaces and opens an
+#   indented block INSIDE the quote, while `>```` leaves the run itself and
+#   opens a fence. The no-space spelling is not a special case; it is what
+#   happens when there is no space to eat.
+QUOTE_RE = re.compile(r"^ {0,3}> ?")
 
 # CommonMark's indent for a code block, and its tab stop. Tabs are expanded
 # before the indent is measured: a tab-indented block is the same block, and
@@ -286,11 +302,13 @@ class Fence:
     def open(self) -> bool:
         """Whether a fenced block is currently open.
 
-        `Code` has to know before it feeds a line, because a fence outranks an
-        indented block in both directions: an indented block cannot open inside
-        a fence, and a fence cannot open inside an indented block -- a ``` line
-        indented into a code block is content, and feeding it here would open a
-        block that swallows the rest of the file.
+        `Container` has to know before it feeds a line, because a fence outranks
+        an indented block in both directions: an indented block cannot open
+        inside a fence, and a fence cannot open inside an indented block -- a
+        ``` line indented into a code block is content, and feeding it here
+        would open a block that swallows the rest of the file. `Code` reads it
+        through `Container.fenced` for the same reason one step out: a `>` on a
+        line inside a fence is content too.
         """
         return self._open is not None
 
@@ -315,12 +333,18 @@ class Fence:
         return True
 
 
-class Code:
-    """Code-block state, one line at a time, for BOTH of markdown's spellings.
+class Container:
+    """Code-block state inside ONE container, for BOTH of markdown's spellings.
 
-    `Fence` reads one. The other is the four-space indented block, and reading
-    only fences left it open in two places at once -- one root cause, both
-    reproduced:
+    A container is the document itself, or one block quote inside it. `Code`
+    owns one of these per quote depth and hands each line to the one it belongs
+    to; everything below is about a single container and measures from ITS left
+    margin, which is what makes that ownership the only thing quote depth has
+    to change.
+
+    `Fence` reads one spelling. The other is the four-space indented block, and
+    reading only fences left it open in two places at once -- one root cause,
+    both reproduced:
 
       IN A SKILL.md it scored as prose, so deleting an indented worked example
       and adding a same-length sentence of filler netted to zero and the gate
@@ -366,6 +390,57 @@ class Code:
         self._indented = False
         self._after_blank = True
 
+    @property
+    def fenced(self) -> bool:
+        """Whether a fenced block is open here.
+
+        `Code` asks before it peels a block-quote marker. Everything inside a
+        fenced block is literal, so a `>` on a line inside one is the author's
+        own text -- a quoted markdown example -- and not a container.
+        """
+        return self._fence.open
+
+    @property
+    def paragraph(self) -> bool:
+        """Whether a paragraph is open here -- the one block that can be LAZILY
+        continued.
+
+        CommonMark ends a block quote at the first line carrying no marker,
+        with one exception: a line that would not start a block of its own
+        continues the quote's open paragraph instead, marker or no marker.
+        `Code` asks the container that is ending, because the answer decides
+        what the next line may open in the container underneath it.
+        """
+        return not self._after_blank and not self._indented and not self._fence.open
+
+    def reopen(self, lazy: bool) -> None:
+        """A child container just ended. Take up where this one left off.
+
+        The INDENTED block goes unconditionally. Whatever was open here, the
+        `>` that opened the child sat at this container's own margin, and a
+        marker at the margin is a block start: it closed the block under it.
+
+        Whether a new block may OPEN on the next line is the lazy-continuation
+        question, and it is why `lazy` is passed in rather than assumed. A quote
+        whose last block was a fence or a list leaves nothing to continue, so
+        the line after it starts a block and four spaces there are a code
+        block. A quote whose last block was a PARAGRAPH is continued by that
+        line instead, and the same four spaces are the paragraph's own wrapped
+        text. Assuming either way costs a real disagreement with CommonMark:
+        measured over 20,000 generated documents, always reopening scores 3467
+        disagreements and never reopening 3485, against 2755 for asking.
+
+        The LIST nesting stays either way, because a list item that contained a
+        quote still contains the lines after it, and its content column is the
+        only thing keeping their continuations out of the code scope -- dropping
+        it would rescope a nested bullet's own paragraph the moment somebody
+        quoted something above it, which is the false positive the second
+        CommonMark rule above exists to stop.
+        """
+        self._indented = False
+        if not lazy:
+            self._after_blank = True
+
     def _threshold(self) -> int:
         """The column at which an indented code block starts here -- four past
         the innermost open list item's content, or four past the margin."""
@@ -374,6 +449,10 @@ class Code:
     def feed(self, line: str) -> bool:
         """Advance one line. True if the line is part of a code block of either
         spelling, the opening and closing fences included.
+
+        The line arrives with its tabs already expanded and its block-quote
+        markers already peeled off by `Code`, so every column measured below is
+        a column inside THIS container.
         """
         if self._fence.open:
             self._fence.feed(line)
@@ -390,8 +469,7 @@ class Code:
             self._after_blank = True
             return self._indented
 
-        expanded = line.expandtabs(TAB_STOP)
-        indent = len(expanded) - len(expanded.lstrip(" "))
+        indent = len(line) - len(line.lstrip(" "))
 
         if self._indented and indent >= self._threshold():
             self._after_blank = False
@@ -411,7 +489,7 @@ class Code:
         if self._fence.feed(line):
             return True
 
-        m = LIST_ITEM_RE.match(expanded)
+        m = LIST_ITEM_RE.match(line)
         if m:
             gap = len(m.group(3))
             # More than four spaces after the marker is an indented block INSIDE
@@ -423,6 +501,100 @@ class Code:
                 + (gap if 1 <= gap <= CODE_INDENT else 1)
             )
         return False
+
+
+class Code:
+    """Code-block state across markdown's CONTAINERS, one line at a time.
+
+    `Container` reads both spellings of a code block. This decides WHICH
+    container a line belongs to first, because a block quote is not a third
+    spelling -- it is a container that suppressed both of the other two at once:
+
+        > ```
+        > the worked example
+        > ```
+
+    `Container` allows only whitespace before a fence and measures every indent
+    from its own left margin, so a `>` in front hid the fenced spelling and the
+    indented one together. It shipped in 4 of this catalog's 49 skills, and both
+    failure directions fired on real files:
+
+      GREEN ON A REAL CUT. Deleting test-discipline's closing 41-word paragraph
+      and putting a block-quoted worked example in its place scored the example
+      as prose, the two netted, and the gate passed the cut it exists to catch.
+      Byte for byte the same example spelled as a plain fence fires. That is
+      move 3's byte arbitrage reached through a container instead of through a
+      spelling, and a SMALLER quoted block than the cut did not even go red --
+      it went quiet, understating a 41-word removal as 8 and letting a row
+      declaring 8 cover it.
+
+      RED ON A LAYOUT-ONLY CHANGE. Wrapping api-contract-enforcement's existing
+      fenced example in `> ` and changing nothing else -- 1020 words either
+      side, the same word stream -- moved 15 of them from one scope to the
+      other, and the only remedy the failure could print was a ledger row
+      declaring 15 words safe to lose when none were lost. Following the printed
+      instruction meant writing a false entry into a permanent append-only
+      record: an escape hatch that cannot be opened HONESTLY is a bypass with
+      extra steps, which this module names twice as its own reason for existing.
+
+    So the container is modelled rather than the marker matched. Quote depth is
+    part of a block's identity: each depth owns its own `Container`, the markers
+    are peeled off a line before any block rule reads it, and the containers
+    deeper than the line's depth are DELETED rather than left dormant. A fence
+    opened inside a quote cannot extend past it and one opened outside cannot
+    reach in -- not because either is checked for, but because at the other
+    depth that state is not reachable at all. Nothing else in this class reads
+    `self._containers` at any index but the line's own.
+
+    Two rules fall out of that rather than being added to it:
+
+      A FENCE OUTRANKS A MARKER. While one is open here nothing is peeled, so a
+      markdown example quoting `> ` inside a fence stays what the author typed
+      -- the same precedence `Fence.open` already gives it over an indented
+      block, for the same reason.
+
+      FOUR SPACES BEFORE A `>` IS CODE, NOT A QUOTE. `QUOTE_RE`'s own indent
+      bound is CommonMark's three, so an over-indented `>` inside an indented
+      example is content and needs no rule of its own.
+
+    Nesting and the no-space spelling come along with it: `> > ` peels twice and
+    `>` peels once, because peeling is a loop over one marker rather than a set
+    of shapes.
+    """
+
+    def __init__(self) -> None:
+        self._containers = [Container()]
+
+    def feed(self, raw: str) -> bool:
+        """Advance one line. True if the line is part of a code block of either
+        spelling, in whatever container it sits in.
+        """
+        line = raw.expandtabs(TAB_STOP)
+
+        depth = 0
+        while depth >= len(self._containers) or not self._containers[depth].fenced:
+            m = QUOTE_RE.match(line)
+            if not m:
+                break
+            line = line[m.end() :]
+            depth += 1
+
+        if depth != len(self._containers) - 1:
+            # A depth change is a container boundary. Quotes deeper than this
+            # line closed, and their block state goes with them rather than
+            # waiting to be consulted from a depth it does not describe. What
+            # the innermost of them left open is the one thing that outlives it
+            # -- see `Container.reopen`.
+            lazy = (
+                depth < len(self._containers) - 1
+                and self._containers[-1].paragraph
+            )
+            del self._containers[depth + 1 :]
+            while len(self._containers) <= depth:
+                self._containers.append(Container())
+            self._containers[depth].reopen(lazy)
+
+        return self._containers[depth].feed(line)
 
 
 class Unscopable(Exception):
@@ -741,10 +913,14 @@ def ledger_slots(text: str) -> collections.Counter[tuple]:
     See the fourth rule above: the total has to be a property of the file, or a
     line becoming readable is a free declaration.
 
-    Code is read in BOTH of markdown's spellings, `Code` rather than `Fence`,
-    and the indented one is not a rounding error here: an indented example row
-    is the first `| skill | words | why |` in the document, so it took `seen_table`
-    and the real table under it went dead. See `Code`.
+    Code is read in BOTH of markdown's spellings and in either container,
+    `Code` rather than `Fence`, and the indented one is not a rounding error
+    here: an indented example row is the first `| skill | words | why |` in the
+    document, so it took `seen_table` and the real table under it went dead. See
+    `Container`. This does not change what a SLOT is -- every non-blank line
+    takes exactly one either way -- only whether an example's row is keyed by
+    what it declares or by its own text, which is the point of counting lines
+    rather than parses.
 
     The table runs from its header to the first non-blank line that does not
     begin with `|`, and there is only ever one table. Three choices, and each

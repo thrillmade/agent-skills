@@ -191,8 +191,83 @@ MUTATIONS = [
         # same hole in a third spelling: a tab-indented block is four columns to
         # CommonMark and zero to `lstrip(" ")`.
         "tabs_not_expanded_before_measuring_the_indent",
-        "        expanded = line.expandtabs(TAB_STOP)",
-        "        expanded = line",
+        "        line = raw.expandtabs(TAB_STOP)",
+        "        line = raw",
+    ),
+    # -- a block quote is a container, not a third spelling -----------------
+    (
+        # Block quotes stop being containers, which is how it shipped: a `>` in
+        # front hid BOTH spellings of a code block at once, so a quoted worked
+        # example scored as prose. Deleting a paragraph and putting one in its
+        # place then netted to zero and the gate passed a cut it fires on when
+        # the same example is spelled as a plain fence.
+        "quoted_code_blocks_not_read",
+        r'QUOTE_RE = re.compile(r"^ {0,3}> ?")',
+        r'QUOTE_RE = re.compile(r"^(?!)")',
+    ),
+    (
+        # The marker matches at any indent, so a `>` quoted INSIDE an indented
+        # example is peeled into a container of its own and the example's own
+        # content moves back to the prose scope -- the founding evasion, reached
+        # by writing a block quote inside the block.
+        "a_quote_marker_matches_at_any_indent",
+        r'QUOTE_RE = re.compile(r"^ {0,3}> ?")',
+        r'QUOTE_RE = re.compile(r"^ *> ?")',
+    ),
+    (
+        # The marker requires a space after it, so `>```` is not a container and
+        # the same evasion is open one character in.
+        "a_quote_marker_requires_a_space_after_it",
+        r'QUOTE_RE = re.compile(r"^ {0,3}> ?")',
+        r'QUOTE_RE = re.compile(r"^ {0,3}> ")',
+    ),
+    (
+        # A fence stops outranking a marker, so a `>` on a line INSIDE a fenced
+        # block -- a markdown example, which this catalog is full of -- is
+        # peeled into a container that does not exist. The real fence never
+        # closes and every line below it changes scope.
+        "a_fence_does_not_outrank_a_quote_marker",
+        "        while depth >= len(self._containers) or not "
+        "self._containers[depth].fenced:",
+        "        while True:",
+    ),
+    (
+        # A closed container's blocks are left dormant instead of discarded, so
+        # a fence opened inside a quote is still open when a LATER quote starts
+        # and swallows it -- text nobody edited, rescoped by a blank line
+        # somewhere above it.
+        "a_closed_container_keeps_its_open_blocks",
+        "            del self._containers[depth + 1 :]",
+        "            del self._containers[len(self._containers) :]",
+    ),
+    (
+        # The container boundary stops being one: a quote whose last block was a
+        # fence leaves nothing to continue, so four spaces under it are a code
+        # block, and this reads them as the previous paragraph's wrapped text.
+        "a_container_boundary_never_reopens_the_parent",
+        "        self._indented = False\n"
+        "        if not lazy:\n"
+        "            self._after_blank = True",
+        "        self._indented = False",
+    ),
+    (
+        # The other half: every container boundary is assumed to be one, so a
+        # line lazily continuing a quote's open PARAGRAPH opens an indented code
+        # block instead. Real prose, rescoped, charged against the wrong floor.
+        "a_container_boundary_always_reopens_the_parent",
+        "        self._indented = False\n"
+        "        if not lazy:\n"
+        "            self._after_blank = True",
+        "        self._indented = False\n        self._after_blank = True",
+    ),
+    (
+        # The indented block open OUTSIDE the quote survives it, so the lines
+        # after a quote resume a code block the marker already closed.
+        "the_parents_indented_block_survives_a_closed_quote",
+        "        self._indented = False\n"
+        "        if not lazy:\n"
+        "            self._after_blank = True",
+        "        if not lazy:\n            self._after_blank = True",
     ),
     (
         # Replacements stop offsetting removals, so every reword and typo fix

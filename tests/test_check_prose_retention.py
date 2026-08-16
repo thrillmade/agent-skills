@@ -699,13 +699,269 @@ def test_a_fence_inside_an_indented_block_does_not_open_a_fenced_block():
     assert "Outro paragraph here." in scopes["prose"], scopes["prose"]
 
 
+# --- a block quote is a CONTAINER, not a third spelling ---------------------
+#
+# Reading both spellings still left them both invisible behind a `>`: every rule
+# in `Container` allows only whitespace before a fence and measures an indent
+# from its own left margin, so one marker suppressed the pair. It shipped in 4
+# of this catalog's 49 skills and fired in both directions on real files. The
+# pairs below stand either side of that -- what must now be code, and what must
+# still be prose.
+
+EXAMPLE_LINES = [
+    "```",
+    "jest.mock('./billing', () => ({ chargeCard: jest.fn() }))",
+    "it('completes checkout', async () => expect(await checkout()).toBe(true))",
+    "```",
+]
+
+# The same example in every way markdown can spell it, INCLUDING the container.
+# The fence carries no info string, so all six reduce to the same word stream
+# and any difference in the score is a difference in the reading alone.
+SPELLINGS = {
+    "fenced": "\n".join(EXAMPLE_LINES),
+    "indented": "\n".join("    " + ln for ln in EXAMPLE_LINES[1:-1]),
+    "quoted fence": "\n".join("> " + ln for ln in EXAMPLE_LINES),
+    "quoted indent": "\n".join(">     " + ln for ln in EXAMPLE_LINES[1:-1]),
+    "nested quote": "\n".join("> > " + ln for ln in EXAMPLE_LINES),
+    "no space after the marker": "\n".join(">" + ln for ln in EXAMPLE_LINES),
+}
+
+CLOSING_PARAGRAPH = (
+    "A closing paragraph that says something worth keeping about how this skill "
+    "decides what to flag and what it leaves alone entirely.\n"
+)
+
+
+def test_a_worked_example_scores_the_same_in_every_container():
+    """DIRECTION (a), as an equivalence: green on a real undeclared cut.
+
+    Deleting a paragraph and putting a worked example in its place is the byte
+    arbitrage move 3 exists to stop, and it is one trade however the example is
+    written. Spelled as a plain fence it fires. Spelled BLOCK-QUOTED, byte for
+    byte the same example, it scored as prose, netted against the cut, and the
+    gate passed the removal it fires on in the other spelling.
+
+    Asserted as "all six spellings score identically" rather than as six
+    separate fire counts, because the defect is precisely that one of them
+    scored differently -- and an equivalence cannot be satisfied by a detector
+    that has stopped firing at all, which the floor assertion underneath pins.
+    """
+    before = skill("Intro paragraph here.\n\n" + CLOSING_PARAGRAPH)
+    scored = {}
+    for name, block in SPELLINGS.items():
+        after = skill("Intro paragraph here.\n\n" + block + "\n")
+        loss = cpr.Loss(before, after)
+        scored[name] = (tuple(sorted(loss.scopes.items())), loss.net)
+        assert len(cpr.run(case("alpha", before, after))) == 1, name
+
+    assert len(set(scored.values())) == 1, scored
+    (scopes, _net) = scored["fenced"]
+    assert dict(scopes)["prose"] > cpr.FLOOR["prose"], scopes
+    assert dict(scopes)["code"] < 0, "the example really did land in the code"
+
+
+def test_wrapping_an_example_in_a_block_quote_is_free():
+    """DIRECTION (b), and the worse one: red on a layout-only change.
+
+    Putting `> ` in front of an existing fenced example changes no word. The
+    gate scored the block out of the code scope and into the prose scope, so it
+    reported words lost from the code examples that were still in the file --
+    and the only remedy it could print was a ledger row declaring those words
+    safe to lose when none were lost. Following the printed instruction meant
+    writing a false entry into a permanent, append-only record. An escape hatch
+    that cannot be opened honestly is a bypass with extra steps.
+
+    Both directions of the wrap, because the gate is symmetric and unwrapping
+    is the same edit backwards.
+    """
+    plain = "\n".join(EXAMPLE_LINES)
+    quoted = SPELLINGS["quoted fence"]
+    loose = skill("Intro paragraph here.\n\n" + plain + "\n\nOutro.\n")
+    wrapped = skill("Intro paragraph here.\n\n" + quoted + "\n\nOutro.\n")
+
+    assert sorted(cpr.words(loose)) == sorted(cpr.words(wrapped)), "layout only"
+    for before, after in ((loose, wrapped), (wrapped, loose)):
+        loss = cpr.Loss(before, after)
+        assert loss.scopes == {"frontmatter": 0, "prose": 0, "code": 0}, loss.scopes
+        assert cpr.run(case("alpha", before, after)) == []
+
+
+def test_a_fence_opened_inside_a_quote_does_not_extend_past_it():
+    """The container that closed takes its open blocks with it.
+
+    Left dormant instead of discarded, the fence inside the quote is still open
+    when a LATER quote starts, and every line of that one reads as code -- text
+    nobody edited, rescoped by a blank line somewhere above it.
+    """
+    body = (
+        "> ```\n"
+        "> quoted_code(here)\n"
+        "\n"
+        "Outro paragraph here.\n"
+        "\n"
+        "> an ordinary quoted sentence\n"
+    )
+    scopes = cpr.split_scopes(skill(body))
+    assert "quoted_code(here)" in scopes["code"]
+    assert "Outro paragraph here." in scopes["prose"], scopes["prose"]
+    assert "an ordinary quoted sentence" in scopes["prose"], scopes["prose"]
+
+
+def test_a_fence_opened_outside_a_quote_is_not_entered():
+    """The other direction, and the reason a fence outranks a marker.
+
+    Everything inside a fenced block is literal, so a `>` on a line in one is a
+    markdown example the author typed. Peeling it there hands the line to a
+    container that does not exist, leaves the real fence open for the rest of
+    the file, and rescopes everything below it.
+    """
+    body = (
+        "Intro.\n"
+        "\n"
+        "```\n"
+        "> not a quote, just markdown inside an example\n"
+        "```\n"
+        "\n"
+        "Outro paragraph here.\n"
+    )
+    scopes = cpr.split_scopes(skill(body))
+    assert "not a quote, just markdown inside an example" in scopes["code"]
+    assert "Outro paragraph here." in scopes["prose"], scopes["prose"]
+
+
+def test_four_spaces_before_a_marker_is_code_and_not_a_quote():
+    """`QUOTE_RE`'s indent bound is CommonMark's three, and it is what says a
+    quoted line inside an indented example is the example's own content. A
+    marker matched at any indent would peel it into a container of its own and
+    move it back into the prose scope -- the founding evasion again, reached
+    by quoting a `>` inside the block.
+    """
+    body = "Intro.\n\n    > a quoted line inside an indented example\n"
+    scopes = cpr.split_scopes(skill(body))
+    assert "a quoted line inside an indented example" in scopes["code"]
+    assert scopes["prose"].strip().endswith("Intro."), scopes["prose"]
+
+
+def test_a_quote_inside_a_list_item_keeps_the_item_s_content_column():
+    """A container boundary drops the LEAF state and keeps the list nesting.
+
+    Dropping the list columns too would measure the four spaces from the left
+    margin again for every line after a quote, so a nested item's own paragraph
+    becomes code the moment somebody quotes something above it -- the false
+    positive the second CommonMark rule exists to stop, reintroduced through
+    the container.
+    """
+    body = (
+        "1. Outer step.\n"
+        "\n"
+        "   > A quote inside the step.\n"
+        "\n"
+        "      A continuation six spaces in, still the step's own prose.\n"
+    )
+    scopes = cpr.split_scopes(skill(body))
+    assert "still the step's own prose." in scopes["prose"], scopes["prose"]
+    assert scopes["code"].strip() == "", scopes["code"]
+
+
+def test_what_a_closed_quote_left_open_decides_what_the_next_line_opens():
+    """The container boundary, in the three shapes that tell its halves apart.
+
+    A quote ends at the first line with no marker on it -- unless that line
+    would not start a block of its own, in which case it continues the quote's
+    open PARAGRAPH instead. So what the quote's last block was decides whether
+    four spaces underneath it are a code block or a wrapped line, and the
+    parent's own indented block is closed by the marker either way.
+
+    Each case below was adjudicated against markdown-it-py rather than reasoned
+    out, and each falls to a different half of `reopen`: assuming a boundary
+    always breaks the second, assuming never breaks the first, and keeping the
+    parent's indented block breaks the third.
+    """
+    for body, code_lines, prose_lines in (
+        # The quote's last block is a fence, so it leaves nothing to continue
+        # and the four spaces open a code block.
+        (
+            "Intro paragraph.\n"
+            "> ```\n"
+            "> quoted_code()\n"
+            "> ```\n"
+            "    an_indented_block()\n",
+            ["quoted_code()", "an_indented_block()"],
+            ["Intro paragraph."],
+        ),
+        # The quote's last block is a paragraph, so the next line is its own
+        # wrapped text however far it is indented.
+        (
+            "Intro paragraph.\n> - a quoted bullet\n    an_indented_block()\n",
+            [],
+            ["a quoted bullet", "an_indented_block()"],
+        ),
+        # The marker closed the indented block that was open OUTSIDE the quote,
+        # so the four spaces after it do not resume it.
+        (
+            "    code_line_one()\n> a quote\n    code_line_two()\n",
+            ["code_line_one()"],
+            ["a quote", "code_line_two()"],
+        ),
+    ):
+        scopes = cpr.split_scopes(skill(body))
+        for wanted in code_lines:
+            assert wanted in scopes["code"], (body, wanted, scopes)
+            assert wanted not in scopes["prose"], (body, wanted, scopes)
+        for wanted in prose_lines:
+            assert wanted in scopes["prose"], (body, wanted, scopes)
+            assert wanted not in scopes["code"], (body, wanted, scopes)
+
+
+def test_a_quoted_example_is_read_at_whatever_depth_it_sits():
+    """Nesting and the no-space marker are not special cases -- peeling is a
+    loop over one marker, so `> > ` costs a second turn and `>` a shorter one.
+    Spelled out anyway: each is a way somebody writes a quoted example, and a
+    reading that stopped at one level or required the space would leave the
+    evasion open one `>` further in.
+    """
+    for body, wanted in (
+        ("> > ```\n> > deeply_quoted(code)\n> > ```\n\nOutro.\n", "deeply_quoted"),
+        (">```\n>tight_quoted(code)\n>```\n\nOutro.\n", "tight_quoted"),
+    ):
+        scopes = cpr.split_scopes(skill(body))
+        assert f"{wanted}(code)" in scopes["code"], body
+        assert wanted not in scopes["prose"], body
+        assert "Outro." in scopes["prose"], body
+
+
+def test_a_line_with_no_marker_on_it_reads_exactly_as_it_did_before():
+    """The container reading must not touch a file that has no `>` in it.
+
+    Measured over 50,000 random documents built from a quote-free alphabet of
+    blanks, paragraphs, four- and eight-space indents, tabs, fences of three
+    and four characters, list markers and continuations: zero lines change
+    classification. The control, with `>` lines back in the alphabet, differs on
+    25,126 of 50,000. Pinned here on the shapes the two CommonMark rules turn
+    on, which is what the catalog is made of.
+    """
+    for body in (
+        "Intro.\n\n    the_worked(example, goes, here)\n",
+        "Intro.\n\n```\nfenced(example)\n```\n\nOutro.\n",
+        "- A step.\n\n      the_worked(example, goes, here)\n",
+        "1. Outer step.\n   - Inner bullet.\n\n     A second paragraph of it.\n",
+        "A paragraph whose second line is indented well past where it began,\n"
+        "    which markdown renders as one paragraph and not as a code block.\n",
+    ):
+        text = skill(body)
+        assert cpr.split_scopes(text) == _container_only_scopes(text), body
+
+
 SKILLS = Path(__file__).resolve().parents[1] / "skills"
 
 
-def _fence_only_scopes(text: str) -> dict[str, str]:
-    """`split_scopes` as it read before the second spelling was added: fences
-    and nothing else. Spelled out here rather than imported, because the subject
-    of the test below is that the two agree on every file that ships.
+def _split_with(text: str, read) -> dict[str, str]:
+    """`split_scopes` with some other reading of what a code line is.
+
+    Spelled out here rather than imported, because the subject of the tests
+    below is how the shipped reading differs from an older one -- so the older
+    one has to be written down, not derived from the thing under test.
     """
     text = cpr.unwrap(text)
     m = cpr.FRONTMATTER_RE.match(text)
@@ -713,9 +969,8 @@ def _fence_only_scopes(text: str) -> dict[str, str]:
     frontmatter, body = text[: m.end()], text[m.end() :]
     prose: list[str] = []
     code: list[str] = []
-    fence = cpr.Fence()
     for line in body.split("\n"):
-        (code if fence.feed(line) else prose).append(line)
+        (code if read(line) else prose).append(line)
     return {
         "frontmatter": frontmatter,
         "prose": "\n".join(prose),
@@ -723,35 +978,108 @@ def _fence_only_scopes(text: str) -> dict[str, str]:
     }
 
 
-def test_no_shipping_skill_file_changes_scope_under_the_second_spelling():
-    """THE REGRESSION THAT MATTERS. Reading indented blocks must move no line in
-    any file this catalog actually ships.
+def _fence_only_scopes(text: str) -> dict[str, str]:
+    """The reading as it FIRST shipped: fences and nothing else."""
+    return _split_with(text, cpr.Fence().feed)
 
-    Measured before the reading was written: 41 lines across these 49 files are
-    indented four spaces or more outside a fence. 38 sit inside a frontmatter
-    block -- its own scope, which never reaches this split -- and the other 3
-    are wrapped list continuations in reviewing-design-work. Measured again per
-    rule: EITHER of the two CommonMark rules keeps all 3 prose on its own, and
-    only dropping both moves them, so this test cannot stand in for either
-    rule's own case above. It stands for the catalog.
 
-    Asserted line for line against the old reading rather than as a fire count,
-    because a fire count over unchanged files is zero either way.
+def _container_only_scopes(text: str) -> dict[str, str]:
+    """The reading as it stood one round ago: both spellings, no containers.
+
+    `Container` is that reading exactly, minus the tab expansion `Code` now
+    does before it peels a marker -- so the expansion is done here instead, and
+    what is left is the container reading and nothing else.
+    """
+    container = cpr.Container()
+    return _split_with(text, lambda ln: container.feed(ln.expandtabs(cpr.TAB_STOP)))
+
+
+# The skills this catalog ships with a BLOCK-QUOTED worked example in them, and
+# therefore the only four whose scope the container reading may move. Named
+# rather than counted, because the number is what went wrong: see below.
+QUOTED_EXAMPLES = {
+    "api-contract-enforcement",
+    "brand-voice-review",
+    "pii-and-compliance",
+    "test-discipline",
+}
+
+
+def test_only_the_files_with_a_quoted_example_change_scope():
+    """THE REGRESSION THAT MATTERS, and the round that inverted what it asserts.
+
+    It used to pin the new split to the fence-only one across all 49 files, and
+    "0 of 49 move" was offered as the proof that reading a second spelling was
+    safe. It was also proof that a reading was MISSING: a block quote suppressed
+    both spellings at once, so the four files carrying a quoted example agreed
+    with the fence-only reading because both were wrong about them. A test that
+    pins a new reading to an old one goes green exactly where the old one's
+    defect is inherited.
+
+    So the assertion is not weakened to accommodate them -- it is inverted, and
+    both halves are named. These four must move; the other 45 must not. Weakening
+    this to "at most a few move" is how the defect survived seven rounds.
     """
     files = sorted(SKILLS.glob("*/SKILL.md"))
     assert len(files) >= 40, f"only {len(files)} SKILL.md files found -- wrong root?"
-    for path in files:
+
+    moved = {
+        path.parent.name
+        for path in files
+        if cpr.split_scopes(path.read_text(encoding="utf-8"))
+        != _fence_only_scopes(path.read_text(encoding="utf-8"))
+    }
+    assert moved == QUOTED_EXAMPLES, sorted(moved ^ QUOTED_EXAMPLES)
+
+
+def test_what_moved_in_those_four_is_the_quoted_example_itself():
+    """The other half: that they move is not enough, it has to be the bug.
+
+    A file could differ from the fence-only reading for any number of reasons.
+    In each of these four the difference is one direction only -- lines the old
+    reading scored as prose that are a code block to every renderer -- and each
+    one carries a `>` and a fence, which is the shape the container reading was
+    written for.
+    """
+    for name in sorted(QUOTED_EXAMPLES):
+        text = (SKILLS / name / "SKILL.md").read_text(encoding="utf-8")
+        now, before = cpr.split_scopes(text), _fence_only_scopes(text)
+        gained = set(now["code"].split("\n")) - set(before["code"].split("\n"))
+        gained = {ln for ln in gained if ln.strip()}
+        assert gained, name
+        assert all(ln.lstrip().startswith(">") for ln in gained), (name, gained)
+        assert any("```" in ln for ln in gained), (name, gained)
+        # Nothing went the other way: the reading only ever finds more code.
+        lost = set(before["code"].split("\n")) - set(now["code"].split("\n"))
+        assert not {ln for ln in lost if ln.strip()}, (name, lost)
+
+
+def test_the_other_45_are_unchanged_by_the_container_reading_too():
+    """The four are the whole of the difference from EITHER older reading.
+
+    Compared against the container-less reading rather than the fence-only one,
+    so this cannot pass by the two older readings happening to cancel out. The
+    45 have no `>`-marked code in them at all, so the peel must be a no-op on
+    every line of them.
+    """
+    for path in sorted(SKILLS.glob("*/SKILL.md")):
+        if path.parent.name in QUOTED_EXAMPLES:
+            continue
         text = path.read_text(encoding="utf-8")
-        assert cpr.split_scopes(text) == _fence_only_scopes(text), path
+        assert cpr.split_scopes(text) == _container_only_scopes(text), path
 
 
-def test_the_control_the_comparison_above_notices_a_planted_indented_block():
-    """The control. A comparison that could not tell the two readings apart
-    would pass the test above whatever the split did, which is the shape of a
+def test_the_control_the_comparisons_above_notice_a_planted_block():
+    """The control, one per comparison. A comparison that could not tell two
+    readings apart would pass whatever the split did, which is the shape of a
     search that finds nothing because it is the wrong search.
     """
-    planted = skill("Intro paragraph.\n\n" + INDENTED_EXAMPLE)
-    assert cpr.split_scopes(planted) != _fence_only_scopes(planted)
+    planted_indent = skill("Intro paragraph.\n\n" + INDENTED_EXAMPLE)
+    assert cpr.split_scopes(planted_indent) != _fence_only_scopes(planted_indent)
+
+    planted_quote = skill("Intro paragraph.\n\n" + SPELLINGS["quoted fence"] + "\n")
+    assert cpr.split_scopes(planted_quote) != _fence_only_scopes(planted_quote)
+    assert cpr.split_scopes(planted_quote) != _container_only_scopes(planted_quote)
 
 
 def test_a_cut_beside_an_untouched_indented_example_is_charged_to_the_prose():
