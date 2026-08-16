@@ -699,6 +699,184 @@ def test_a_fence_inside_an_indented_block_does_not_open_a_fenced_block():
     assert "Outro paragraph here." in scopes["prose"], scopes["prose"]
 
 
+# --- a blank line is ONE paragraph boundary, not the only one ----------------
+#
+# An indented block opens where no paragraph is open, and reading "no paragraph
+# is open" as "the line above was blank" was a proxy, not the rule. Every leaf
+# block below closes a paragraph on its own line, so CommonMark opens an
+# indented block underneath one with no blank line between -- and each pairs
+# with a spelling that must still be prose, because the proxy is wrong in both
+# directions and only one of them is an evasion.
+#
+# Every row was adjudicated against markdown-it-py rather than reasoned out, and
+# adjudicating refuted two candidates that had been handed over as obvious: an
+# HTML BLOCK START does not close anything (`<div>` runs to the next blank line,
+# so the line under it is still the block's own content), and a LIST MARKER does
+# not either (`- item` opens a paragraph inside the item). Each had a narrow
+# true form underneath it that assuming would have missed, and both are here.
+
+PARAGRAPH_BOUNDARIES = [
+    # (label, the line under test, does an indented line under it become code)
+    ("atx heading", "## Heading", True),
+    ("atx heading, closed form", "## Heading ##", True),
+    ("seven hashes is not a heading", "####### Heading", False),
+    ("no space after the hashes is not one either", "##Heading", False),
+    ("thematic break", "***", True),
+    ("thematic break, spaced", "* * *", True),
+    ("thematic break, underscores", "___", True),
+    ("dashes count too", "- - -", True),
+    ("a mixed run is not a thematic break", "- * -", False),
+    ("nor is this one", "*-*", False),
+    ("two is one short of a break", "**", False),
+    ("setext underline", "===", True),
+    ("setext underline, dashes", "---", True),
+    ("an empty item under a paragraph is a setext underline", "- ", True),
+    ("html block that closes on its line", "<!-- a note -->", True),
+    ("html doctype", "<!DOCTYPE html>", True),
+    ("html block that does NOT close on its line", "<div>", False),
+    ("html comment left open", "<!-- a note", False),
+    ("a list marker with content on it", "- a bullet", False),
+    ("an ordinary paragraph line", "more of the paragraph", False),
+]
+
+
+@pytest.mark.parametrize(
+    "label,line,is_code", PARAGRAPH_BOUNDARIES, ids=[b[0] for b in PARAGRAPH_BOUNDARIES]
+)
+def test_a_leaf_block_closes_a_paragraph_without_a_blank_line(label, line, is_code):
+    """The rule, one construct at a time, against what CommonMark does.
+
+    THE EVASION this exists to stop: an ATX heading closes the paragraph, so the
+    indented example under it is a code block to every renderer and was PROSE
+    here -- where it netted against deleted prose. Reproduced on the file the
+    module docstring names, deleting web-interface-guidelines-review's
+    Verification rule 5 and putting a heading-adjacent example where it stood:
+    prose -5, gate green, ledger untouched, and the file 19 bytes SMALLER so the
+    trade paid the size pressure too. One blank line further down, the identical
+    example scored prose 11 / code -16 and fired.
+
+    The `False` rows are the other direction and they are not filler: a rule
+    that closed a paragraph on any of them would move real prose into the code
+    scope, which is the false positive that costs a ledger row declaring words
+    safe to lose when none were lost.
+    """
+    body = f"An opening paragraph here.\n{line}\n    an_indented_example()\n"
+    scopes = cpr.split_scopes(skill(body))
+    where = "code" if is_code else "prose"
+    assert "an_indented_example()" in scopes[where], (label, scopes)
+    assert "an_indented_example()" not in scopes[
+        "prose" if is_code else "code"
+    ], (label, scopes)
+
+
+def test_a_leaf_block_cannot_be_spelled_inside_a_wrapped_line():
+    """The guard on the rule above: indented past the threshold with a paragraph
+    open, a line is that paragraph's WRAPPED TEXT and no block at all.
+
+    `    ## H` under a paragraph is four words of prose to CommonMark, not a
+    heading -- so it closes nothing and the line under it stays prose too.
+    Without the guard the rule fires inside every wrapped continuation that
+    happens to begin with a hash or a dash, which is a false positive on text
+    nobody edited.
+    """
+    for spelling in ("    ## H", "    ***", "    ---"):
+        body = f"An opening paragraph here.\n{spelling}\n    an_indented_example()\n"
+        scopes = cpr.split_scopes(skill(body))
+        assert "an_indented_example()" in scopes["prose"], (spelling, scopes)
+        assert "an_indented_example()" not in scopes["code"], (spelling, scopes)
+
+    # Three spaces is within CommonMark's slack, so that one IS a heading.
+    body = "An opening paragraph here.\n   ## H\n    an_indented_example()\n"
+    scopes = cpr.split_scopes(skill(body))
+    assert "an_indented_example()" in scopes["code"], scopes
+
+
+def test_a_setext_underline_needs_a_paragraph_above_it():
+    """`===` with a blank line over it is a PARAGRAPH, not an underline, so it
+    closes nothing and the line under it is its own wrapped text. Reading it as
+    an underline regardless rescopes that line into the code examples.
+    """
+    body = "Intro paragraph.\n\n===\n    an_indented_example()\n"
+    scopes = cpr.split_scopes(skill(body))
+    assert "an_indented_example()" in scopes["prose"], scopes
+    assert "an_indented_example()" not in scopes["code"], scopes
+
+
+def test_an_empty_list_item_opens_no_paragraph_and_takes_the_marker_s_column():
+    """One CommonMark rule with two halves, so one test.
+
+    An item with nothing on its opening line leaves no paragraph open AND puts
+    its content column at the marker plus one, whatever the gap after the
+    marker. Both halves have to hold or a block indented under `- ` is read as
+    the item's own wrapped text: the first half blocks the open, the second
+    raises the threshold past the block's indent.
+
+    Adjudicated per marker WIDTH, which is what makes this the column rule and
+    not a constant: the boundary is the marker plus one plus four, so under `- `
+    six spaces is code and five is not, under `1.` it is seven and six, and
+    `-    ` -- four spaces of gap, no content -- measures from the same column
+    as `- ` rather than from the end of its gap.
+    """
+    for marker, code_at, prose_at in (
+        ("- ", 6, 5),
+        ("-", 6, 5),
+        ("-    ", 6, 5),
+        ("1.", 7, 6),
+        ("10.", 8, 7),
+    ):
+        body = f"Intro paragraph.\n\n{marker}\n{' ' * code_at}an_indented_example()\n"
+        scopes = cpr.split_scopes(skill(body))
+        assert "an_indented_example()" in scopes["code"], (marker, scopes)
+
+        # One column short of it, so it is the item's own prose.
+        body = f"Intro paragraph.\n\n{marker}\n{' ' * prose_at}the_items_own_text\n"
+        scopes = cpr.split_scopes(skill(body))
+        assert "the_items_own_text" in scopes["prose"], (marker, scopes)
+
+    # An item WITH content on its opening line opens a paragraph as before.
+    body = "Intro paragraph.\n\n- a bullet\n      wrapped continuation here\n"
+    scopes = cpr.split_scopes(skill(body))
+    assert "wrapped continuation here" in scopes["prose"], scopes
+
+
+def test_a_blank_line_inside_an_indented_block_belongs_to_the_block():
+    """The one thing `_indented` still decides on its own.
+
+    Continuing an indented block and opening one became the same condition once
+    a paragraph was modelled, so every WORD-BEARING line in a block is now
+    decided by "is a paragraph open" -- which is why the flag survives only to
+    say that the gap between two chunks of one block is part of it, as
+    CommonMark has it. That is a wordless line and it moves no score, which is
+    exactly why it needs asserting here: nothing else in this file would notice
+    if it stopped being true, and a flag nothing constrains is a flag the next
+    edit is free to get wrong.
+
+    The second case is the same property across a container boundary, where a
+    quote closed the block the marker sat above.
+    """
+    body = "Intro.\n\n    chunk_one()\n\n    chunk_two()\nOutro paragraph.\n"
+    scopes = cpr.split_scopes(skill(body))
+    assert scopes["code"].split("\n") == ["    chunk_one()", "", "    chunk_two()"], (
+        scopes["code"]
+    )
+
+    body = "    code_line_one()\n> a quote\n\nOutro paragraph.\n"
+    scopes = cpr.split_scopes(skill(body))
+    assert scopes["code"].split("\n") == ["    code_line_one()"], scopes["code"]
+
+
+def test_a_line_that_closed_a_paragraph_is_not_also_a_list_marker():
+    """`- ` under a paragraph is a setext underline, and reading it as a marker
+    as well pushes a content column that raises the threshold and re-hides the
+    block the underline just exposed. A closing leaf block is one block, not
+    two.
+    """
+    body = "An opening paragraph here.\n- \n    an_indented_example()\n"
+    scopes = cpr.split_scopes(skill(body))
+    assert "an_indented_example()" in scopes["code"], scopes
+    assert "an_indented_example()" not in scopes["prose"], scopes
+
+
 # --- a block quote is a CONTAINER, not a third spelling ---------------------
 #
 # Reading both spellings still left them both invisible behind a `>`: every rule
@@ -715,16 +893,36 @@ EXAMPLE_LINES = [
     "```",
 ]
 
-# The same example in every way markdown can spell it, INCLUDING the container.
-# The fence carries no info string, so all six reduce to the same word stream
-# and any difference in the score is a difference in the reading alone.
+# Every spelling carries the SAME heading above it, so the heading's own words
+# cancel and the only thing left to differ is the reading.
+HEADING = "## Worked example"
+
+# The same example in every way markdown can spell it -- the container included,
+# and the GAP ABOVE IT included. The fence carries no info string, so all eight
+# reduce to the same word stream and any difference in the score is a difference
+# in the reading alone.
+#
+# The last two sit directly under the heading, and they are here because the
+# first six all sat under a BLANK line and that was the hole. An ATX heading is
+# a leaf block: it closes the paragraph, so CommonMark opens an indented block
+# on the very next line and renders the two placements to identical HTML. A
+# detector that reads only a blank line as a boundary banks that line as prose
+# instead -- and the six spellings above, every one of them blank-separated,
+# could not see it. The fixture had the blind spot baked in, so the equivalence
+# it asserts was true and narrow at the same time.
 SPELLINGS = {
-    "fenced": "\n".join(EXAMPLE_LINES),
-    "indented": "\n".join("    " + ln for ln in EXAMPLE_LINES[1:-1]),
-    "quoted fence": "\n".join("> " + ln for ln in EXAMPLE_LINES),
-    "quoted indent": "\n".join(">     " + ln for ln in EXAMPLE_LINES[1:-1]),
-    "nested quote": "\n".join("> > " + ln for ln in EXAMPLE_LINES),
-    "no space after the marker": "\n".join(">" + ln for ln in EXAMPLE_LINES),
+    "fenced": f"{HEADING}\n\n" + "\n".join(EXAMPLE_LINES),
+    "indented": f"{HEADING}\n\n"
+    + "\n".join("    " + ln for ln in EXAMPLE_LINES[1:-1]),
+    "quoted fence": f"{HEADING}\n\n" + "\n".join("> " + ln for ln in EXAMPLE_LINES),
+    "quoted indent": f"{HEADING}\n\n"
+    + "\n".join(">     " + ln for ln in EXAMPLE_LINES[1:-1]),
+    "nested quote": f"{HEADING}\n\n" + "\n".join("> > " + ln for ln in EXAMPLE_LINES),
+    "no space after the marker": f"{HEADING}\n\n"
+    + "\n".join(">" + ln for ln in EXAMPLE_LINES),
+    "heading-adjacent indent": f"{HEADING}\n"
+    + "\n".join("    " + ln for ln in EXAMPLE_LINES[1:-1]),
+    "heading-adjacent fence": f"{HEADING}\n" + "\n".join(EXAMPLE_LINES),
 }
 
 CLOSING_PARAGRAPH = (
@@ -742,10 +940,19 @@ def test_a_worked_example_scores_the_same_in_every_container():
     byte the same example, it scored as prose, netted against the cut, and the
     gate passed the removal it fires on in the other spelling.
 
-    Asserted as "all six spellings score identically" rather than as six
+    Asserted as "all eight spellings score identically" rather than as eight
     separate fire counts, because the defect is precisely that one of them
     scored differently -- and an equivalence cannot be satisfied by a detector
     that has stopped firing at all, which the floor assertion underneath pins.
+
+    The last two spellings are the second round of this: the same trade written
+    with the example sitting directly under the heading rather than under a
+    blank line. It scored prose -25 against the other six's prose 22 / code -15
+    and the gate passed it -- on the real file, deleting
+    web-interface-guidelines-review's Verification rule 5, the #197 casualty the
+    detector's own docstring names as why it exists. Adding them here rather
+    than writing a bespoke test is the point: the equivalence was already the
+    right assertion, and the fixture set was what could not see the class.
     """
     before = skill("Intro paragraph here.\n\n" + CLOSING_PARAGRAPH)
     scored = {}
@@ -775,7 +982,7 @@ def test_wrapping_an_example_in_a_block_quote_is_free():
     Both directions of the wrap, because the gate is symmetric and unwrapping
     is the same edit backwards.
     """
-    plain = "\n".join(EXAMPLE_LINES)
+    plain = SPELLINGS["fenced"]
     quoted = SPELLINGS["quoted fence"]
     loose = skill("Intro paragraph here.\n\n" + plain + "\n\nOutro.\n")
     wrapped = skill("Intro paragraph here.\n\n" + quoted + "\n\nOutro.\n")

@@ -148,8 +148,8 @@ MUTATIONS = [
         # and the gate goes green. Same byte arbitrage as the fenced case above,
         # through the spelling that costs MORE bytes per word.
         "indented_code_blocks_not_read",
-        "        opens_block = self._after_blank and indent >= self._threshold()",
-        "        opens_block = False",
+        "        if not self._paragraph and indent >= self._threshold():",
+        "        if False and indent >= self._threshold():",
     ),
     (
         # The false-positive direction of the same reading. An indented block
@@ -157,8 +157,8 @@ MUTATIONS = [
         # the catalog moves into the code scope -- real prose, charged against
         # the wrong floor and payable by the wrong additions.
         "an_indented_block_may_interrupt_a_paragraph",
-        "        opens_block = self._after_blank and indent >= self._threshold()",
-        "        opens_block = indent >= self._threshold()",
+        "        if not self._paragraph and indent >= self._threshold():",
+        "        if indent >= self._threshold():",
     ),
     (
         # The four spaces are measured from the left margin rather than from the
@@ -182,9 +182,14 @@ MUTATIONS = [
         # opens a fenced block that swallows every line to the end of the file.
         # That is worse than not reading indented blocks at all: text nobody
         # edited changes scope.
+        #
+        # Reached by claiming a paragraph is open INSIDE the block, which is the
+        # only way left: continuing a block and opening one are now one
+        # condition, so there is no separate continuation branch to delete.
         "an_indented_block_ends_after_its_first_line",
-        "        if self._indented and indent >= self._threshold():",
-        "        if False:",
+        "            self._indented = True\n            return True",
+        "            self._indented = True\n"
+        "            self._paragraph = True\n            return True",
     ),
     (
         # Tabs stop being expanded before the indent is measured, leaving the
@@ -245,9 +250,7 @@ MUTATIONS = [
         # fence leaves nothing to continue, so four spaces under it are a code
         # block, and this reads them as the previous paragraph's wrapped text.
         "a_container_boundary_never_reopens_the_parent",
-        "        self._indented = False\n"
-        "        if not lazy:\n"
-        "            self._after_blank = True",
+        "        self._indented = False\n        self._paragraph = lazy",
         "        self._indented = False",
     ),
     (
@@ -255,19 +258,133 @@ MUTATIONS = [
         # line lazily continuing a quote's open PARAGRAPH opens an indented code
         # block instead. Real prose, rescoped, charged against the wrong floor.
         "a_container_boundary_always_reopens_the_parent",
-        "        self._indented = False\n"
-        "        if not lazy:\n"
-        "            self._after_blank = True",
-        "        self._indented = False\n        self._after_blank = True",
+        "        self._indented = False\n        self._paragraph = lazy",
+        "        self._indented = False\n        self._paragraph = False",
     ),
     (
         # The indented block open OUTSIDE the quote survives it, so the lines
         # after a quote resume a code block the marker already closed.
+        #
+        # What that costs shrank when the paragraph model landed, and the
+        # comment says so rather than the name outliving the defect: a
+        # WORD-BEARING line after the quote is now decided by whether a
+        # paragraph is open, not by the leaked flag, so what leaks is the blank
+        # line's own scope. Measured: 4380 of 60000 quote-heavy documents read
+        # differently and NONE of them differ on a line carrying words. The
+        # test below pins the one thing left.
         "the_parents_indented_block_survives_a_closed_quote",
-        "        self._indented = False\n"
-        "        if not lazy:\n"
-        "            self._after_blank = True",
-        "        if not lazy:\n            self._after_blank = True",
+        "        self._indented = False\n        self._paragraph = lazy",
+        "        self._paragraph = lazy",
+    ),
+    # -- the paragraph model: a blank line is one boundary, not the only one --
+    (
+        # The whole of it: no leaf block closes a paragraph any more, so the
+        # blank line goes back to being the only boundary. An indented example
+        # written directly under a heading then scores as PROSE and nets against
+        # deleted prose -- reproduced on the real file, deleting
+        # web-interface-guidelines-review's Verification rule 5 while the file
+        # SHRANK, with every check green.
+        "no_leaf_block_closes_a_paragraph",
+        "        if ATX_RE.match(body) or BREAK_RE.match(body):\n"
+        "            return True",
+        "        if False:\n            return True",
+    ),
+    (
+        # Only the heading half. The same evasion one construct along, and the
+        # reason the set is a set: patching the shape the last review happened
+        # to try is what this module names as the fifth round of patching.
+        "an_atx_heading_does_not_close_a_paragraph",
+        r'ATX_RE = re.compile(r"^#{1,6}(?:[ \t].*)?$")',
+        r'ATX_RE = re.compile(r"^(?!)")',
+    ),
+    (
+        # A heading needs whitespace after its hashes, so `##Heading` and seven
+        # hashes are paragraphs. Dropped, an ordinary `#comment` line inside a
+        # worked example would close a paragraph that is still open.
+        "a_heading_does_not_need_whitespace_after_its_hashes",
+        r'ATX_RE = re.compile(r"^#{1,6}(?:[ \t].*)?$")',
+        r'ATX_RE = re.compile(r"^#{1,6}.*$")',
+    ),
+    (
+        # The thematic break half.
+        "a_thematic_break_does_not_close_a_paragraph",
+        r'BREAK_RE = re.compile(r"^([-*_])[ \t]*(?:\1[ \t]*){2,}$")',
+        r'BREAK_RE = re.compile(r"^(?!)")',
+    ),
+    (
+        # A break stops requiring the same character throughout, so `- * -` is
+        # one -- and so is the start of any list whose marker repeats.
+        "a_thematic_break_may_mix_its_characters",
+        r'BREAK_RE = re.compile(r"^([-*_])[ \t]*(?:\1[ \t]*){2,}$")',
+        r'BREAK_RE = re.compile(r"^[-*_][ \t]*(?:[-*_][ \t]*){2,}$")',
+    ),
+    (
+        # The setext half -- which is also the `- ` case, because an empty item
+        # cannot interrupt a paragraph and CommonMark reads that line as an
+        # underline rather than as a marker.
+        "a_setext_underline_does_not_close_a_paragraph",
+        r'SETEXT_RE = re.compile(r"^(?:=+|-+)[ \t]*$")',
+        r'SETEXT_RE = re.compile(r"^(?!)")',
+    ),
+    (
+        # A setext underline stops needing a paragraph above it, so `===` with a
+        # blank line over it -- a paragraph of its own to CommonMark -- closes
+        # something that was never open and rescopes the line under it.
+        "a_setext_underline_needs_no_paragraph_above_it",
+        "        return self._paragraph and SETEXT_RE.match(body) is not None",
+        "        return SETEXT_RE.match(body) is not None",
+    ),
+    (
+        # The HTML blocks that begin and end on one line stop closing anything,
+        # which is the heading evasion spelled `<!-- x -->`.
+        "a_one_line_html_block_does_not_close_a_paragraph",
+        "        if any(o.match(body) and c.search(body) for o, c in "
+        "HTML_ONE_LINE):",
+        "        if False:",
+    ),
+    (
+        # The other direction: an HTML block stops having to CLOSE on its line,
+        # so `<div>` closes the paragraph and the indented line under it -- the
+        # HTML block's own content to CommonMark -- moves into the code scope.
+        "an_html_block_need_not_close_on_its_own_line",
+        "        if any(o.match(body) and c.search(body) for o, c in "
+        "HTML_ONE_LINE):",
+        "        if any(o.match(body) for o, c in HTML_ONE_LINE):",
+    ),
+    (
+        # The lazy-continuation guard. A line indented past the threshold with a
+        # paragraph open is that paragraph's wrapped text, and no leaf block can
+        # be spelled inside one -- so `    ## H` under a paragraph is four words
+        # of prose, not a heading. Dropped, it closes the paragraph and rescopes
+        # everything under it.
+        "a_leaf_block_may_be_spelled_inside_a_wrapped_line",
+        "        if indent < self._threshold() and self._closes(line[indent:]):",
+        "        if self._closes(line[indent:]):",
+    ),
+    (
+        # An item with nothing on its opening line opens a paragraph again, so a
+        # code block indented under `- ` reads as that item's wrapped text.
+        "an_empty_list_item_opens_a_paragraph",
+        "            self._paragraph = not empty",
+        "            self._paragraph = True",
+    ),
+    (
+        # ...and the column half of the same rule: an empty item's content
+        # column stops being the marker plus one, so `-    ` measures the four
+        # spaces from column 5 and hides a block that CommonMark reads at 6.
+        "an_empty_list_items_content_column_follows_its_gap",
+        "                + (1 if empty or not 1 <= gap <= CODE_INDENT else gap)",
+        "                + (gap if 1 <= gap <= CODE_INDENT else 1)",
+    ),
+    (
+        # A line that closed a paragraph goes on to be read as a list marker
+        # too, so `- ` under a paragraph pushes a content column that raises the
+        # threshold and re-hides the block the setext rule just exposed.
+        "a_closing_leaf_block_is_also_read_as_a_list_marker",
+        "            self._paragraph = False\n            return False\n"
+        "        self._paragraph = True",
+        "            self._paragraph = False\n        else:\n"
+        "            self._paragraph = True",
     ),
     (
         # Replacements stop offsetting removals, so every reword and typo fix

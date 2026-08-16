@@ -175,6 +175,48 @@ LIST_ITEM_RE = re.compile(r"^( *)([-*+]|\d{1,9}[.)])( +|$)")
 #   happens when there is no space to eat.
 QUOTE_RE = re.compile(r"^ {0,3}> ?")
 
+# The leaf blocks that CLOSE an open paragraph on their own line, matched with
+# the indent already stripped -- see `Container._closes`. Each is CommonMark's
+# own shape and the bound in it is load-bearing:
+#
+#   ATX      one to six hashes, then whitespace or the end of the line. Seven
+#            hashes is a paragraph and so is `##Heading`, which is why the
+#            trailing group is required rather than optional-and-empty.
+#
+#   BREAK    three or more of ONE character, with nothing but spaces and tabs
+#            between them. Three is CommonMark's minimum, and requiring the
+#            same character throughout is what keeps `- item` a list.
+#
+#   SETEXT   a run of `=` or `-` alone on the line -- but only underneath an
+#            open paragraph, because that is the only place a setext heading
+#            exists. With no paragraph above it `===` is a paragraph of its
+#            own and closes nothing, while `---` is a thematic break and is
+#            already matched as one.
+ATX_RE = re.compile(r"^#{1,6}(?:[ \t].*)?$")
+BREAK_RE = re.compile(r"^([-*_])[ \t]*(?:\1[ \t]*){2,}$")
+SETEXT_RE = re.compile(r"^(?:=+|-+)[ \t]*$")
+
+# CommonMark's five HTML blocks that can begin AND end on the same line, as
+# (what opens one, what closes it). Types 6 and 7 -- `<div>`, `<table>`, a bare
+# complete tag -- are deliberately absent: they end only at a BLANK line, so
+# the indented line under one is still the HTML block's own content and closing
+# a paragraph there would move real prose into the code scope. Measured both
+# ways; see `Container._closes`.
+#
+# Each pair is the spec's own condition, and the close is searched across the
+# whole line because that is how the spec words it -- which is why `<!-->` ends
+# on the line it starts, its closer overlapping its opener.
+HTML_ONE_LINE = (
+    (
+        re.compile(r"^<(?:script|pre|style|textarea)(?:[ \t>]|$)", re.I),
+        re.compile(r"</(?:script|pre|style|textarea)>", re.I),
+    ),
+    (re.compile(r"^<!--"), re.compile(r"-->")),
+    (re.compile(r"^<\?"), re.compile(r"\?>")),
+    (re.compile(r"^<![A-Za-z]"), re.compile(r">")),
+    (re.compile(r"^<!\[CDATA\["), re.compile(r"\]\]>")),
+)
+
 # CommonMark's indent for a code block, and its tab stop. Tabs are expanded
 # before the indent is measured: a tab-indented block is the same block, and
 # leaving it unmeasured would be the same hole in a third spelling.
@@ -364,8 +406,24 @@ class Container:
     Two CommonMark rules keep this off ordinary prose, and a rule that read
     four spaces as code without them would rescope real content:
 
-      AN INDENTED BLOCK CANNOT INTERRUPT A PARAGRAPH -- it opens only after a
-      blank line.
+      AN INDENTED BLOCK CANNOT INTERRUPT A PARAGRAPH -- it opens only where no
+      paragraph is open. A BLANK LINE IS NOT THAT TEST, it is a proxy for it,
+      and the difference is a live evasion rather than a rounding error. An ATX
+      heading closes the paragraph without a blank line, so CommonMark opens an
+      indented block on the line under it while a blank-line proxy reads that
+      line as the paragraph's own wrapped text -- in the PROSE scope, where it
+      nets against deleted prose. Reproduced on the founding case: deleting
+      web-interface-guidelines-review's Verification rule 5, the cross-
+      reference rule the module docstring above names as the #197 casualty this
+      gate exists to prevent, and putting a heading-adjacent indented example
+      where it stood scored prose -5 and passed, while the same example one
+      blank line further down scored prose 11 against code -16 and fired. The
+      file SHRANK doing it, 9039 bytes to 9020, so the trade paid the byte
+      pressure that caused the defect as well. markdown-it-py renders the two
+      spellings to the same HTML, byte for byte: they are one document to every
+      reader, and they were two verdicts here. So `_closes` asks CommonMark's
+      question -- did the last line leave a paragraph open -- and the blank line
+      is one answer to it rather than the whole of it.
 
       THE FOUR SPACES ARE MEASURED FROM THE ENCLOSING LIST ITEM'S CONTENT
       COLUMN, not from the left margin, so a nested bullet's continuation is
@@ -378,19 +436,59 @@ class Container:
     reviewing-design-work, and EITHER rule alone keeps all 3 prose -- measured
     by dropping each in turn, which rescopes nothing, and both together, which
     rescopes that one file. So THIS reclassification moves nothing that ships.
+
+    Neither does the paragraph model, measured the same way and after the fact
+    rather than assumed: split all 49 shipping SKILL.md files with it and
+    without it and the two readings agree on every line of every one, the
+    ledger's 119 slots included. The catalog carries 9 headings with a non-blank
+    line under them -- 8 in skillforge, 1 in token-frugal-tooling -- and not one
+    of those lines is indented, so the class is present here and costs nothing
+    here. The four files whose split differs from the fence-only reading are
+    still exactly the four block-quoted ones; that set did not have to grow.
     The container reading in `Code` does, in exactly 4 files, and that is the
     point of it -- do not read the sentence above as a claim about the split.
 
     Even where it did move something it could not cost a false positive on an
     unchanged file: base and head are split by the same rules, so a line nobody
     edited lands in the same scope on both sides and nets to zero there.
+
+    WHAT IS STILL WRONG, and it is an evasion rather than a rounding error, so
+    it is written down where the next round can find it. Measured the same way
+    the last two residuals were -- generated documents scored against
+    markdown-it-py, disagreements shrunk to a minimal form and grouped -- the
+    reading disagrees with CommonMark in the dangerous direction (CommonMark
+    says code, this says PROSE, which is where a cut can be paid for) on 0.28%
+    of documents, down from 12.83%. Twelve minimal forms remain and they are two
+    classes:
+
+      A LIST COLUMN SURVIVES A CONTAINER BOUNDARY THAT CLOSED THE LIST.
+      `reopen` keeps this container's list nesting, which is right when the
+      quote sat INSIDE an item and wrong when it sat at the margin: a `>` in
+      column 0 closes an item whose content starts in column 2, so CommonMark
+      measures the next line's four spaces from the margin and calls it code
+      while this measures them from column 2 and calls it prose. Weaponised, to
+      be sure rather than assumed: `* item` and `> ` above an indented example
+      deletes web-interface-guidelines-review's Verification rule 5 for prose
+      -6, net 0, exit 0, and the file 20 bytes SMALLER -- where the identical
+      example with those two lines removed scores prose 11 / code -16 and
+      fires. It is a narrower hole than the heading was, because those two lines
+      are visible: an orphan bullet and an empty block quote render, so the two
+      spellings are NOT the same document to a reader, which the heading pair
+      was. Closing it means telling `reopen` which column the marker sat in,
+      against the measured reason the nesting is kept at all -- a different
+      predicate, and deliberately not this round's.
+
+      A TRAILING BLANK LINE. markdown-it-py trims blank lines off the end of a
+      code block and this keeps them. It cannot move a score in either
+      direction, because a blank line carries no words -- see the blank-line
+      test in the suite, which is the only thing that observes it at all.
     """
 
     def __init__(self) -> None:
         self._fence = Fence()
         self._lists: list[int] = []
         self._indented = False
-        self._after_blank = True
+        self._paragraph = False
 
     @property
     def fenced(self) -> bool:
@@ -413,7 +511,7 @@ class Container:
         `Code` asks the container that is ending, because the answer decides
         what the next line may open in the container underneath it.
         """
-        return not self._after_blank and not self._indented and not self._fence.open
+        return self._paragraph and not self._indented and not self._fence.open
 
     def reopen(self, lazy: bool) -> None:
         """A child container just ended. Take up where this one left off.
@@ -422,12 +520,14 @@ class Container:
         `>` that opened the child sat at this container's own margin, and a
         marker at the margin is a block start: it closed the block under it.
 
-        Whether a new block may OPEN on the next line is the lazy-continuation
+        Whether a paragraph is open here afterwards IS the lazy-continuation
         question, and it is why `lazy` is passed in rather than assumed. A quote
         whose last block was a fence or a list leaves nothing to continue, so
         the line after it starts a block and four spaces there are a code
         block. A quote whose last block was a PARAGRAPH is continued by that
-        line instead, and the same four spaces are the paragraph's own wrapped
+        line instead -- the paragraph the line continues is an open paragraph in
+        THIS container, which is why `lazy` is the state rather than a veto on
+        changing it, and the same four spaces are that paragraph's own wrapped
         text. Assuming either way costs a real disagreement with CommonMark:
         measured over 20,000 generated documents, always reopening scores 3467
         disagreements and never reopening 3485, against 2755 for asking.
@@ -440,13 +540,51 @@ class Container:
         CommonMark rule above exists to stop.
         """
         self._indented = False
-        if not lazy:
-            self._after_blank = True
+        self._paragraph = lazy
 
     def _threshold(self) -> int:
         """The column at which an indented code block starts here -- four past
         the innermost open list item's content, or four past the margin."""
         return (self._lists[-1] if self._lists else 0) + CODE_INDENT
+
+    def _closes(self, body: str) -> bool:
+        """Does this line leave no paragraph open behind it?
+
+        Every block matched here begins AND ends on its own line, so whatever
+        paragraph was open is closed and the next line starts fresh. `body`
+        arrives with the indent stripped; the caller has already established it
+        is small enough for a block to be spelled here at all.
+
+        Which shapes belong in this set is MEASURED against markdown-it-py, not
+        reasoned from the list of block types, and measuring refuted two of the
+        four candidates as stated -- each of which turned out to have a narrow
+        true form underneath it that assuming would have missed:
+
+          AN HTML BLOCK START DOES NOT CLOSE ANYTHING. `<div>` opens a block
+          that runs to the next BLANK line, so the indented line under it is
+          still that block's own content and CommonMark does not call it code.
+          Adding types 6 and 7 here would have moved real prose into the code
+          scope and disagreed where this already agrees. What DOES close is an
+          HTML block that also ENDS on its line -- `<!-- c -->`, `<!DOCTYPE
+          html>`, `<?php ?>`, `<![CDATA[x]]>`, `<pre>x</pre>` -- and each of
+          those was checked against its unterminated twin, which closes
+          nothing. Hence HTML_ONE_LINE rather than a list of tag names.
+
+          A LIST MARKER DOES NOT CLOSE ANYTHING EITHER. `- item` opens a
+          paragraph inside the item, and `- ` under a paragraph is not an empty
+          item at all: an empty item cannot interrupt a paragraph, so
+          CommonMark reads that line as a SETEXT UNDERLINE. It is already in
+          this set, and reading it as a marker instead would push a list
+          content column that raises the threshold and re-hides the block --
+          which is why a line that closes here never reaches `LIST_ITEM_RE`.
+          The empty item is real where a paragraph is NOT open, and it is
+          handled where the column it also moves is set, in `feed`.
+        """
+        if ATX_RE.match(body) or BREAK_RE.match(body):
+            return True
+        if any(o.match(body) and c.search(body) for o, c in HTML_ONE_LINE):
+            return True
+        return self._paragraph and SETEXT_RE.match(body) is not None
 
     def feed(self, line: str) -> bool:
         """Advance one line. True if the line is part of a code block of either
@@ -458,50 +596,77 @@ class Container:
         """
         if self._fence.open:
             self._fence.feed(line)
-            # A closing fence ends a block rather than a paragraph, so the line
-            # after it may open an indented one without a blank line between.
-            self._after_blank = not self._fence.open
+            # Nothing inside a fence is a paragraph, and a closing fence leaves
+            # none open either, so the line after it may open an indented block
+            # with no blank line between.
+            self._paragraph = False
             return True
 
         if not line.strip():
             # A gap ends nothing. An indented block survives a blank line
             # between its chunks, and a list item survives one between its
-            # paragraphs -- but a blank line is what lets the NEXT one open a
-            # block, which is the first rule above.
-            self._after_blank = True
+            # paragraphs -- but it does close a paragraph, which is what lets
+            # the NEXT line open a block.
+            self._paragraph = False
             return self._indented
 
         indent = len(line) - len(line.lstrip(" "))
 
-        if self._indented and indent >= self._threshold():
-            self._after_blank = False
-            return True
+        # No separate rule continues an open indented block. CONTINUING one and
+        # OPENING one are the same condition once a paragraph is modelled --
+        # deep enough, with no paragraph open -- and inside a block there is no
+        # paragraph open, so the test below carries both. It did not while a
+        # blank line stood in for the paragraph: the opening line set the proxy
+        # false, and a separate `self._indented and indent >= self._threshold()`
+        # branch was what kept the block's later lines in it. Measured after
+        # removing that branch: identical readings over 40,000 generated
+        # documents and all 49 shipping files, because a line deep enough to be
+        # in the block is also deep enough to open one and pops no list column
+        # on the way.
         self._indented = False
 
         # A line shallower than an open item's content column is outside it.
         while self._lists and indent < self._lists[-1]:
             self._lists.pop()
 
-        opens_block = self._after_blank and indent >= self._threshold()
-        self._after_blank = False
-        if opens_block:
+        if not self._paragraph and indent >= self._threshold():
             self._indented = True
             return True
 
         if self._fence.feed(line):
+            self._paragraph = False
             return True
+
+        # Deep enough to be an indented block and yet still here means a
+        # paragraph is open and this line is its wrapped text, which no leaf
+        # block can be spelled inside -- CommonMark's own "up to three spaces",
+        # measured from this container's content column.
+        if indent < self._threshold() and self._closes(line[indent:]):
+            self._paragraph = False
+            return False
+        self._paragraph = True
 
         m = LIST_ITEM_RE.match(line)
         if m:
             gap = len(m.group(3))
+            empty = not line[m.end() :].strip()
             # More than four spaces after the marker is an indented block INSIDE
             # the item rather than a wider marker, so the content starts one
-            # column on. So does an item with nothing on its opening line.
+            # column on. So does an item with NOTHING on its opening line,
+            # whatever the gap: `-` and `-    ` both put their content at the
+            # same column, because there is no content on the line to measure
+            # the marker's width against.
             self._lists.append(
                 len(m.group(1))
                 + len(m.group(2))
-                + (gap if 1 <= gap <= CODE_INDENT else 1)
+                + (1 if empty or not 1 <= gap <= CODE_INDENT else gap)
             )
+            # ...and an item with nothing on its opening line opens no
+            # paragraph either, so a deep enough line under it is a code block
+            # rather than the item's own wrapped text. Adjudicated: `- ` then
+            # six spaces is code, five spaces is not, and the boundary is this
+            # item's content column, so both halves of the rule are one rule.
+            self._paragraph = not empty
         return False
 
 
