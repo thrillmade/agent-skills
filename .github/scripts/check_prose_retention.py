@@ -377,7 +377,9 @@ class Container:
     split; the other 3 are wrapped continuations of a nested bullet in
     reviewing-design-work, and EITHER rule alone keeps all 3 prose -- measured
     by dropping each in turn, which rescopes nothing, and both together, which
-    rescopes that one file. So this reclassification moves nothing that ships.
+    rescopes that one file. So THIS reclassification moves nothing that ships.
+    The container reading in `Code` does, in exactly 4 files, and that is the
+    point of it -- do not read the sentence above as a claim about the split.
 
     Even where it did move something it could not cost a false positive on an
     unchanged file: base and head are split by the same rules, so a line nobody
