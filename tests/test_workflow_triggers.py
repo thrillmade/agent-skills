@@ -29,7 +29,16 @@ WORKFLOWS = REPO_ROOT / ".github" / "workflows"
 # Gates whose result is (or is intended to be) a merge condition. A filter on
 # one of these is the failure described above. Workflows NOT listed here are
 # free to filter — a scheduled refresh or a notifier has no such constraint.
-UNCONDITIONAL_GATES = ["validate-skills.yml", "test.yml"]
+UNCONDITIONAL_GATES = [
+    "validate-skills.yml",
+    "test.yml",
+    # A prose-retention filter would be the same mistake twice over: the gate
+    # reads every SKILL.md plus docs/prose-removals.md, and that ledger is its
+    # escape hatch — a filter omitting it would let a change edit the hatch
+    # without running the gate the hatch configures, which is exactly how the
+    # size gate came to be blind to its own budget file.
+    "check-prose-retention.yml",
+]
 
 
 def _load(name):
@@ -92,4 +101,25 @@ def test_validator_inputs_are_reachable():
         "validate-skills.yml filters `pull_request`, so these inputs are no "
         f"longer guaranteed reachable: {reads}. Either drop the filter or "
         "prove every one of them is covered."
+    )
+
+
+def test_prose_retention_checks_out_full_history():
+    """A comparison gate cannot run on a shallow clone.
+
+    `check-prose-retention` reads each SKILL.md at two revisions. The default
+    `actions/checkout` depth of 1 has neither the base nor the merge base, so
+    the gate would fail to resolve its base on every run — and the fix would
+    look like "the gate is flaky" rather than "the checkout is wrong". Assert
+    the depth here so it cannot be dropped in passing.
+    """
+    doc, _ = _load("check-prose-retention.yml")
+    steps = doc["jobs"]["prose-retention"]["steps"]
+    checkout = next(s for s in steps if str(s.get("uses", "")).startswith("actions/checkout"))
+    # `with:` YAML-loads as None once its last key is removed, so coalesce
+    # rather than letting this fail with an AttributeError and no explanation.
+    assert (checkout.get("with") or {}).get("fetch-depth") == 0, (
+        "check-prose-retention.yml checks out shallow. The gate compares a "
+        "base revision against a head revision; without the full history it "
+        "cannot resolve the base and refuses to report success."
     )

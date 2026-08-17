@@ -1,6 +1,6 @@
 ---
 name: wcag-contrast
-description: Use when verifying a color pair meets WCAG 2.2 AA contrast requirements as a cross-check on APCA-driven generation, or when auditing a token catalog or design for legal-baseline accessibility compliance. Names the 4.5:1 normal-text rule, the 3:1 large-text rule, the size threshold for "large" stated in points (≥ 18 pt regular ≈ 24 CSS px, OR ≥ 14 pt bold ≈ 18.67 CSS px — not pixels), the SC 1.4.11 non-text rule, SC 2.4.13 focus appearance (AA in 2.2), and the role this check plays alongside APCA. Cite when an agent treats WCAG as the *primary* contrast model, or writes the large-text threshold as "14 px bold / 18 px regular" — UDTS uses WCAG as a cross-check with APCA as primary, and WCAG sizes are in points.
+description: Use when verifying a color pair meets WCAG 2.2 AA contrast requirements as a cross-check on APCA-driven generation, or when auditing a token catalog or design for legal-baseline accessibility compliance. Names the 4.5:1 normal-text rule, the 3:1 large-text rule, the size threshold for "large" stated in points (≥ 18 pt regular ≈ 24 CSS px, OR ≥ 14 pt bold ≈ 18.67 CSS px — not pixels), the SC 1.4.11 non-text rule, SC 2.4.13 focus appearance (AAA — the AA hooks are 1.4.11 and 2.4.11), and the role this check plays alongside APCA. Cite when an agent treats WCAG as the *primary* contrast model, or writes the large-text threshold as "14 px bold / 18 px regular" — UDTS uses WCAG as a cross-check with APCA as primary, and WCAG sizes are in points.
 ---
 
 # WCAG 2.2 AA contrast
@@ -25,8 +25,9 @@ WCAG 2.2 Level AA is the **legal-baseline** contrast standard for most jurisdict
 | 1.4.3 | AA | Normal text | **4.5:1** | Text < 18 pt (24 CSS px) regular OR < 14 pt (~18.67 CSS px) bold |
 | 1.4.3 | AA | Large text | **3:1** | Text ≥ 18 pt (24 CSS px) regular OR ≥ 14 pt (~18.67 CSS px) bold |
 | 1.4.11 | AA | Non-text contrast | **3:1** | UI components, focus indicators, graphical objects |
-| 2.4.13 | **AA** (added in 2.2) | Focus appearance | Specific minimums | Verify the focus indicator is ≥ 2 px and meets 3:1 contrast against the focused control and adjacent background |
-| 2.4.12 | AAA (added in 2.2) | Focus not obscured (enhanced) | n/a | Focus indicator must not be obscured by author content |
+| 2.4.11 | **AA** (added in 2.2) | Focus not obscured (minimum) | n/a | The focused control must not be **entirely** hidden by author content — sticky headers, cookie bars, drawers |
+| 2.4.13 | **AAA** (added in 2.2) | Focus appearance | Specific minimums | Indicator ≥ 2 px perimeter and 3:1 against unfocused. **AAA — cite as an enhancement, never as an AA failure** |
+| 2.4.12 | AAA (added in 2.2) | Focus not obscured (enhanced) | n/a | Focus indicator must not be obscured **at all** by author content |
 
 **WCAG sizes are in points, not pixels** — a frequent miss. 1 pt = 1.333 CSS px, so:
 
@@ -75,6 +76,7 @@ For each contrast-bound pairing:
 
 - [WCAG 2.2 Recommendation — SC 1.4.3](https://www.w3.org/TR/WCAG22/#contrast-minimum) — text contrast.
 - [SC 1.4.11 — non-text contrast](https://www.w3.org/TR/WCAG22/#non-text-contrast).
-- [SC 2.4.13 — focus appearance (AA, added in 2.2)](https://www.w3.org/TR/WCAG22/#focus-appearance).
+- [SC 2.4.11 — focus not obscured, minimum (AA, added in 2.2)](https://www.w3.org/TR/WCAG22/#focus-not-obscured-minimum) — the AA hook for a focus ring being covered.
+- [SC 2.4.13 — focus appearance (**AAA**, added in 2.2)](https://www.w3.org/TR/WCAG22/#focus-appearance). Verified against the published Recommendation 2026-08-15; this skill previously said AA.
 - [SC 2.4.12 — focus not obscured, enhanced (AAA, added in 2.2)](https://www.w3.org/TR/WCAG22/#focus-not-obscured-enhanced).
 - [Contrast Checker, WebAIM](https://webaim.org/resources/contrastchecker/) — sanity-check tool that matches the spec.
