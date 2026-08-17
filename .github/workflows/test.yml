@@ -1,17 +1,33 @@
 name: test
 
 # The repo's test suite. `tests/` characterizes .github/scripts/ -- today
-# that is validate_skills.py, the `validate-skills` gate, whose rules and
-# message text are pinned there so a change to the gate has to be a
+# that is validate_skills.py (the `validate-skills` gate) and
+# check_prose_retention.py (the `check-prose-retention` gate), whose rules
+# and message text are pinned there so a change to either gate has to be a
 # deliberate one.
 #
-# NO `paths:` filter, deliberately: `test` is the org ruleset's required
-# status check, and a filtered workflow reports nothing rather than success
-# on the PRs it skips. It also means the catalog's own SKILL.md files are
-# checked on every PR, not only the ones validate-skills.yml's filter
-# matches.
+# NOT A REQUIRED CHECK -- AND NEITHER IS ANYTHING ELSE, TODAY. Measured, not
+# assumed: all three active rulesets (org-baseline, org-default-protection,
+# reporulez-default) carry only deletion, non_fast_forward,
+# required_linear_history and pull_request rules, none of them
+# required_status_checks, and every one is scoped to the default branch;
+# `gh api repos/thrillmade/agent-skills/rules/branches/dev` -- the branch this
+# repository's PRs actually target -- returns an empty list, and neither `main`
+# nor `dev` carries legacy branch protection either. So this reports without
+# blocking. check-prose-retention.yml says the same thing about itself; if that
+# ever stops being true, it stops being true in both places at once.
 #
-# The job id stays `test` -- the ruleset requires it by that name.
+# NO `paths:` filter, deliberately, and being unrequired is not a reason to add
+# one: a filter-skipped check reports as expected-but-never-reported and blocks
+# a merge forever the day it IS required, and the path list rots -- this
+# repository already shipped a size gate that could not see edits to its own
+# budget file. tests/test_workflow_triggers.py asserts the filter stays absent.
+# It also means the catalog's own SKILL.md files are checked on every PR, not
+# only the ones validate-skills.yml's filter matches.
+#
+# The job id stays `test`: it is the name a required_status_checks rule would
+# have to name, and renaming it after that rule exists is the same
+# expected-but-never-reported failure by another route.
 
 on:
   pull_request:

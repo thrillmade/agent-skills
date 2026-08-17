@@ -23,6 +23,7 @@ agent-skills
 │   ├── file-structure.md
 │   ├── integrating-with-agent-skills.md
 │   ├── placement-map.json
+│   ├── prose-removals.md
 │   └── timeline.md
 ├── skills
 │   ├── apca-contrast
@@ -75,7 +76,10 @@ agent-skills
 │   ├── wcag-contrast
 │   └── web-interface-guidelines-review
 ├── tests
+│   ├── fixtures
 │   ├── conftest.py
+│   ├── test_check_prose_retention.py
+│   ├── test_prose_retention_mutations.py
 │   ├── test_validate_skills.py
 │   ├── test_validate_skills_cli.py
 │   └── test_workflow_triggers.py

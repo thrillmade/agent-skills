@@ -1,0 +1,130 @@
+name: check-prose-retention
+
+# Fail a change that removes prose from a SKILL.md without declaring it.
+#
+# The defect: a catalog-wide sweep converting backticked skill names to
+# markdown links (#197) pushed three files past validate-skills' hard
+# 8192-byte cap, and in all three the converting agent made room by deleting
+# content -- a Verification rule, an entire agent-invocation section, and the
+# two lines establishing session-heartbeat as the mechanism and
+# unattended-operation as the policy. Every check went green, because deleting
+# content is *how* they went green. The size gate cannot catch it: shrinking is
+# what it asks for. check-doc-links cannot: it only proves links resolve -- and
+# one of the three deletions was justified in its own commit by the claim that
+# check-doc-links "enforces it mechanically", which it does not.
+#
+# Every rule lives in .github/scripts/check_prose_retention.py, characterized
+# by tests/test_check_prose_retention.py against the three real deletions
+# (vendored under tests/fixtures/prose-retention/), and proven able to fail by
+# tests/test_prose_retention_mutations.py -- both run by the `test` workflow.
+#
+# Frontmatter, prose and fenced code are scored separately and never netted
+# against each other, because the pressure that caused the defect does not
+# price every byte the same: the size cap measures the body only, so padding
+# the `description:` bought the deletion of a body section for nothing, and
+# fenced code costs 2-3x prose per word, so a sentence of filler bought the
+# deletion of a worked example. Both were reproduced against whole-file
+# scoring, and both passed it.
+#
+# Renamed skills are paired by git's own rename detection rather than by path.
+# Keyed on paths, a rename dropped the file out of both sides at once and the
+# gate printed "0 changed SKILL.md file(s)" over a real deletion.
+#
+# A SKILL.md whose frontmatter cannot be located gets no verdict rather than one
+# merged scope -- merging is the evasion the scope split exists to stop, and a
+# CRLF file reaches it through validate-skills rather than around it.
+#
+# The escape hatch is a row in docs/prose-removals.md, added by the same
+# change. Deleting prose is ordinary and allowed; doing it silently is not.
+# Every LINE of that ledger occupies a slot, whether or not it parses as a row,
+# so a row parked somewhere unreadable and made readable later declares nothing
+# in the change that reveals it. Counted over parsed rows alone, each of the
+# eight ways a line could go unread was somewhere to stage a declaration.
+#
+# Run it locally with no arguments. It defaults to the merge base with `dev`,
+# falling back to `main` -- every branch here forks from and targets `dev`, so
+# that is usually the base this workflow computes below too. CI always derives
+# its base from the PR's actual target, though, so pass --base explicitly if
+# yours is something else.
+
+# NO `paths:` FILTER, DELIBERATELY. Do not add one back. Same two reasons
+# validate-skills.yml sets out at length: a filter-skipped check reports as
+# expected-but-never-reported and blocks a merge forever once required, and the
+# path list rots -- this repository already shipped a size gate that could not
+# see edits to its own budget file. A committed test asserts this stays absent.
+#
+# NOT A REQUIRED CHECK -- AND NEITHER IS ANYTHING ELSE, TODAY. Measured
+# directly rather than assumed: `gh api repos/thrillmade/agent-skills/rules/
+# branches/main` lists four active rule types (deletion, non_fast_forward,
+# pull_request, required_linear_history) and none of them is
+# required_status_checks, and `.../rules/branches/dev` -- the branch this
+# repository's PRs actually target -- returns an empty list, no ruleset at
+# all. So this reports without blocking, and so does `test`. Making this (or
+# anything) a required status check is an org-ruleset change, out of this
+# file's scope.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  prose-retention:
+    name: check prose retention
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # This gate is a comparison, not an inspection: it reads each
+          # SKILL.md at two revisions. A shallow clone has neither the base nor
+          # the merge base, and the script refuses to report success over a
+          # comparison it could not make.
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Resolve the revisions to compare
+        id: revs
+        env:
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+
+          if [ -n "${PR_HEAD:-}" ]; then
+            # The MERGE BASE, not the base branch tip. `pull_request` checks
+            # out a merge commit, and comparing against the moving tip would
+            # attribute main's own edits to this branch -- prose added on main
+            # after this branch forked would read here as prose this branch
+            # deleted. Comparing head against the common ancestor asks only
+            # what this branch did.
+            head="$PR_HEAD"
+            base="$(git merge-base "$PR_BASE" "$PR_HEAD")"
+          else
+            head="$GITHUB_SHA"
+            base="${PUSH_BEFORE:-}"
+            # A first push, or a branch created at this commit, reports an
+            # all-zero `before` that resolves to nothing. Fall back to the
+            # parent rather than failing the run for a reason unrelated to
+            # prose.
+            if ! git rev-parse --verify -q "${base}^{commit}" >/dev/null 2>&1; then
+              base="${head}^"
+            fi
+          fi
+
+          echo "base=$base" >> "$GITHUB_OUTPUT"
+          echo "head=$head" >> "$GITHUB_OUTPUT"
+          echo "Comparing $base -> $head"
+
+      - name: Check every changed SKILL.md for undeclared prose removal
+        # Run from the repo root: the script resolves skills/ and the ledger
+        # cwd-relative, and reads both out of git rather than the worktree.
+        run: |
+          python .github/scripts/check_prose_retention.py \
+            --base "${{ steps.revs.outputs.base }}" \
+            --head "${{ steps.revs.outputs.head }}"

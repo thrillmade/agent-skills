@@ -161,6 +161,25 @@ Whichever pattern applies, prefer the **collection layout** (`skills/<name>/SKIL
 2. Add a row to the table above.
 3. Open a PR.
 
+## Editing an existing skill
+
+Two gates apply on every PR, and the second one surprises people:
+
+- **`validate-skills`** — frontmatter shape, and a hard size cap on the body with no exception path. [`.github/scripts/validate_skills.py`](.github/scripts/validate_skills.py) owns the limit and the argument for it.
+- **`check-prose-retention`** — fails a change that removes content from a `SKILL.md` without saying so. Reformatting is free: rewrapping, reordering, converting `` `spacing-system` `` to a markdown link or back, and de-linking a reference that rotted all score zero. Losing words that were saying something does not. [`.github/scripts/check_prose_retention.py`](.github/scripts/check_prose_retention.py) owns the rule.
+
+The second exists because the first pushes the other way. A catalog-wide link conversion grew three files past the size cap, and all three bought the room by deleting prose — a review rule, an agent-invocation section, and the lines routing `session-heartbeat` to `unattended-operation`. Every check went green, because deleting content is *how* they went green.
+
+Frontmatter, prose and fenced code are scored separately, and a gain in one never pays for a loss in another — otherwise padding the `description:` buys a deleted body section for nothing, since the size cap does not measure the frontmatter at all.
+
+To see what it will say before you push:
+
+```sh
+python .github/scripts/check_prose_retention.py
+```
+
+**Deleting prose is allowed.** Skills get trimmed, superseded and merged. Declare it: add the row the failure prints to [`docs/prose-removals.md`](docs/prose-removals.md) in the same change. That file explains the rules that keep a row a declaration rather than a standing exemption.
+
 ## Vendored skills (✨ in the table above)
 
 Skills marked with ✨ are **vendored verbatim from upstream authors** — kept here so they install alongside the thrillmade catalog and stay reachable from the same `npx skills add` command, but with original author + spec metadata preserved in the SKILL.md frontmatter.
