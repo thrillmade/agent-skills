@@ -55,6 +55,7 @@ import skill_version
 # `enumerate_history` -- a zero here is never allowed to be reported as a
 # result.
 REFSPEC = "origin/*"
+PUBLISHING_REF = "origin/main"
 OUT = Path("docs/skill-versions.json")
 
 README = (
@@ -69,14 +70,24 @@ README = (
 )
 
 
-def git(*args: str) -> str:
-    return subprocess.run(
-        ["git", *args], capture_output=True, text=True, check=True
-    ).stdout
+def git(*args: str, check: bool = True) -> str:
+    p = subprocess.run(["git", *args], capture_output=True, text=True)
+    if check and p.returncode != 0:
+        raise SystemExit(f"error: `git {' '.join(args)}` failed: {p.stderr.strip()}")
+    return p.stdout
 
 
-def enumerate_history() -> tuple[dict[str, list[tuple[str, str, str]]], dict]:
-    """{slug: [(digest, short_sha, date)]} oldest-first, plus provenance."""
+def enumerate_history() -> tuple[dict[str, list[tuple[str, str, str]]], set[str], dict]:
+    """{slug: [(digest, short_sha, when)]} oldest-first, the slugs that have
+    ever been on the PUBLISHING branch, and provenance.
+
+    Those two sets are not the same and the difference matters. A slug on a
+    feature branch has not been published; a slug that was on `main` and is
+    gone from the tree has been retired. Collapsing them makes the index
+    announce "the catalog no longer publishes this skill" about skills it has
+    never published -- which is what it did, about five of arlyn-working's own
+    locally-authored skills, the moment a nomination branch appeared on origin.
+    """
     commits = git("rev-list", f"--remotes={REFSPEC}").split()
     if not commits:
         raise SystemExit(
@@ -85,6 +96,17 @@ def enumerate_history() -> tuple[dict[str, list[tuple[str, str, str]]], dict]:
             "`origin` -- not an empty history. Refusing to publish an index "
             "built from nothing. Run in a full clone with a fetched origin."
         )
+
+    # `check=False`: a missing ref is a git error, and the message below says
+    # what to do about it rather than surfacing a traceback.
+    published = set(git("rev-list", PUBLISHING_REF, check=False).split())
+    if not published:
+        raise SystemExit(
+            f"error: `git rev-list {PUBLISHING_REF}` reached 0 commits, so the "
+            "publishing branch cannot be told from a feature branch. Fetch "
+            f"{PUBLISHING_REF} before regenerating."
+        )
+    on_main: set[str] = set()
 
     # (slug, blob_sha) -> the OLDEST commit that carried it. rev-list is
     # newest-first, so the last write wins.
@@ -104,24 +126,28 @@ def enumerate_history() -> tuple[dict[str, list[tuple[str, str, str]]], dict]:
                 continue
             seen[(parts[1], obj)] = (sha[:7], when)
             blobs.add(obj)
+            if sha in published:
+                on_main.add(parts[1])
 
     contents = _batch_read(sorted(blobs))
 
-    history: dict[str, list[tuple[str, str, str]]] = {}
+    # Rows are (digest, short_sha, published date, sort key). The last two
+    # differ once a row has been published: see `merge_published`.
+    history: dict[str, list[tuple[str, str, str, str]]] = {}
     for (slug, obj), (sha, when) in seen.items():
         history.setdefault(slug, []).append(
-            (skill_version.digest(contents[obj]), sha, when)
+            (skill_version.digest(contents[obj]), sha, when[:10], when)
         )
 
-    out: dict[str, list[tuple[str, str, str]]] = {}
+    out: dict[str, list[tuple[str, str, str, str]]] = {}
     for slug, rows in history.items():
-        rows.sort(key=lambda r: r[2])
+        rows.sort(key=lambda r: r[3])
         # Two blobs can normalise to one digest (they differed only in a
         # `version:` line, which is elided). Keep the earliest appearance.
-        dedup: dict[str, tuple[str, str, str]] = {}
+        dedup: dict[str, tuple[str, str, str, str]] = {}
         for row in rows:
             dedup.setdefault(row[0], row)
-        out[slug] = sorted(dedup.values(), key=lambda r: r[2])
+        out[slug] = sorted(dedup.values(), key=lambda r: r[3])
 
     if not blobs:
         raise SystemExit(
@@ -130,8 +156,13 @@ def enumerate_history() -> tuple[dict[str, list[tuple[str, str, str]]], dict]:
             "way an index with no history is not a finding."
         )
 
-    provenance = {"refs": f"refs/remotes/{REFSPEC}", "commits": len(commits), "blobs": len(blobs)}
-    return out, provenance
+    provenance = {
+        "refs": f"refs/remotes/{REFSPEC}",
+        "publishing_ref": PUBLISHING_REF,
+        "commits": len(commits),
+        "blobs": len(blobs),
+    }
+    return out, on_main, provenance
 
 
 def _batch_read(shas: list[str]) -> dict[str, bytes]:
@@ -155,8 +186,46 @@ def _batch_read(shas: list[str]) -> dict[str, bytes]:
     return result
 
 
+def merge_published(history: dict[str, list], root: Path) -> dict[str, list]:
+    """Union in whatever the committed index already publishes.
+
+    History is APPEND-ONLY, and that is not a nicety. Two people regenerate
+    from different fetch states -- one has fetched a branch the other has
+    not -- so a generator that replaces history lets whoever has fetched less
+    silently delete rows the other published. A subscriber holding one of the
+    deleted versions then reads `DIVERGED` instead of `STALE n`.
+
+    Making the generator monotone is also why there is no "never decreases"
+    ratchet in CI. A ratchet is a rule that detects the loss after it is
+    written and that nobody can satisfy across machines; this makes the loss
+    unrepresentable instead.
+    """
+    path = root / OUT
+    if not path.exists():
+        return history
+    published = json.loads(path.read_text(encoding="utf-8")).get("skills", {})
+    for slug, entry in published.items():
+        # A published row WINS over a freshly derived one. Once a date is out
+        # there a subscriber may have read it, and re-deriving it from a
+        # different set of refs can move it. Correcting a published row is
+        # then an explicit edit to this file, which is visible in review --
+        # rather than something that happens to whoever regenerates next.
+        rows = {r[0]: r for r in history.get(slug, [])}
+        for old in entry.get("history", []):
+            # Keep the enumerated SORT key where there is one. A published row
+            # carries a date, an enumerated row a full timestamp, and mixing
+            # the two as strings reorders versions that landed on the same
+            # day -- which this catalog already has.
+            was = rows.get(old["v"])
+            rows[old["v"]] = (old["v"], old["commit"], old["date"],
+                              was[3] if was else old["date"])
+        history[slug] = sorted(rows.values(), key=lambda r: r[3])
+    return history
+
+
 def build(root: Path) -> dict:
-    history, provenance = enumerate_history()
+    history, on_main, provenance = enumerate_history()
+    history = merge_published(history, root)
     live = {p.parent.name: p for p in sorted((root / "skills").glob("*/SKILL.md"))}
     if not live:
         raise SystemExit(f"error: no SKILL.md under {root / 'skills'}")
@@ -177,12 +246,18 @@ def build(root: Path) -> dict:
             # no value rather than a plausible one.
             if slug in placement:
                 entry["authoring_home"] = placement[slug]["authoring_home"]
-        else:
+        elif slug in on_main:
             # Published once, gone from the tree. `current: null` says so, and
             # the checker must not tell anyone to reinstall it.
             entry["current"] = None
             entry["retired"] = True
-        entry["history"] = [{"v": v, "commit": c, "date": w[:10]} for v, c, w in rows]
+        else:
+            # Seen only on a feature branch. It has never been published, so
+            # this index has nothing true to say about it and says nothing:
+            # the checker then reports `local-skill`, which is exactly right
+            # for a skill somebody else authored and nominated.
+            continue
+        entry["history"] = [{"v": v, "commit": c, "date": d} for v, c, d, _ in rows]
         skills[slug] = entry
 
     rows_total = sum(len(s["history"]) for s in skills.values())

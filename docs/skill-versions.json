@@ -4,14 +4,15 @@
  "generated_from": "remotes-exhaustive",
  "enumeration": {
   "refs": "refs/remotes/origin/*",
-  "commits": 103,
-  "blobs": 146
+  "publishing_ref": "origin/main",
+  "commits": 104,
+  "blobs": 156
  },
- "versions_enumerated": 146,
+ "versions_enumerated": 151,
  "verification": {
   "current": "GATED. validate_skills.py recomputes every `current` from skills/<slug>/SKILL.md on every pull request. Needs no git history, so it holds at the depth-1 checkout CI uses.",
   "history": "NOT GATED. History is derived from git and validate-skills.yml checks out at fetch-depth 1, so CI cannot recompute these rows. Regenerate them in a full clone with `.github/scripts/gen_skill_versions.py --write`.",
-  "history_rows_ungated": 97
+  "history_rows_ungated": 102
  },
  "skills": {
   "apca-contrast": {
@@ -310,6 +311,11 @@
      "v": "825fefa5297c",
      "commit": "b7b5a7e",
      "date": "2026-08-15"
+    },
+    {
+     "v": "545064d853e0",
+     "commit": "f552f6e",
+     "date": "2026-08-17"
     }
    ]
   },
@@ -570,6 +576,11 @@
      "v": "194d5a350e51",
      "commit": "b7b5a7e",
      "date": "2026-08-15"
+    },
+    {
+     "v": "7eebf3cfc4dd",
+     "commit": "f552f6e",
+     "date": "2026-08-17"
     }
    ]
   },
@@ -644,6 +655,11 @@
      "v": "3e3f9dcb092c",
      "commit": "b7b5a7e",
      "date": "2026-08-15"
+    },
+    {
+     "v": "be3f7dadd266",
+     "commit": "f552f6e",
+     "date": "2026-08-17"
     }
    ]
   },
@@ -665,6 +681,11 @@
      "v": "7be39b0ee26b",
      "commit": "b7b5a7e",
      "date": "2026-08-15"
+    },
+    {
+     "v": "b2d7a06203fa",
+     "commit": "f552f6e",
+     "date": "2026-08-17"
     }
    ]
   },
@@ -977,6 +998,11 @@
     {
      "v": "8b62a28d94d9",
      "commit": "e33ad45",
+     "date": "2026-08-17"
+    },
+    {
+     "v": "b470bbfb49da",
+     "commit": "f552f6e",
      "date": "2026-08-17"
     }
    ]
