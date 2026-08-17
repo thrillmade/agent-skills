@@ -61,7 +61,9 @@ upgrade (the trim, the token, the missing cell), never just the verdict.
    the gap inside a group must be visibly smaller than the gap between groups. When both
    land on the *same* legal step, every value passes and the hierarchy is gone — a form
    where each label looks equidistant from its own field and the next one. Fix: two
-   distinct steps. [spacing-system](../spacing-system/SKILL.md) owns the scale; this lens
+   distinct steps, far enough apart to read — the ratio they must clear is
+   [empirical-design-principles](../empirical-design-principles/SKILL.md)'s, not this
+   lens's. [spacing-system](../spacing-system/SKILL.md) owns the scale; this lens
    owns whether the chosen steps read.
 4. **The state and content matrix.** Two axes, both usually under-covered. States: rest,
    hover, focus-visible, active, disabled, loading, error. Content: empty, one item, long

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-08-14",
+  "updated": "2026-08-17",
   "families": [
     {"id": "review-discipline", "title": "Reviewing a pull request", "routes": "What a review flags, what it lets go, and what a claim has to cite."},
     {"id": "orchestration", "title": "Running agents", "routes": "Handing work out, gating what comes back, surviving a long session."},
@@ -415,6 +415,46 @@
       "family": "catalog-and-tooling",
       "owns": "this directory",
       "notes": "the generated catalog directory (#229). Every repo holding ANY catalog skill should hold this one -- it is the only artifact that travels and names the rest -- so all eight census-visible consumers are declared here and none subscribes yet: the weekly placement cross-check will file `missing` until each runs `npx skills add ... --skill finding-a-catalog-skill`. Measured 2026-08-18: `npx skills update` refreshes but never ADDS, so that is one PR per repo and nothing in this catalog performs it; six of the eight carry no skills-lock at all and receive catalog skills only as vendored clud-bug baselines, so those rows clear by adopting the CLI rather than by regenerating anything here. thrillmade/arlyn-working is deliberately NOT declared: it holds 23 catalog subscriptions but is absent from census_counters.CONSUMER_REPOS, so the census structurally cannot observe it and a declaration there would be a verdict that can never clear. Adding it to CONSUMER_REPOS is its own change"
+    },
+    "empirical-design-principles": {
+      "family": "design-primitives",
+      "owns": "which design laws hold",
+      "authoring_home": "catalog",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "L0 primitive; the falsifiable half of the design-principle literature. The only skill in the catalog shipping a references/ subdirectory (3 files, ~112 KB), so its SKILL.md links them by ABSOLUTE URL - skills.sh renders SKILL.md alone and 404s a relative reference link. Two consequences to keep in view on any re-sync: the references ship as a straight copy with no cleaning step in their path, so a future re-sync from a consumer repo needs one; and a reviewer that reads SKILL.md alone never loads them."
+    },
+    "usability-heuristics": {
+      "family": "design-primitives",
+      "owns": "what the heuristics say",
+      "authoring_home": "catalog",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "L0 primitive; the judgement half, paired with empirical-design-principles - Nielsen/Norman/Shneiderman by source and edition. Deliberately carries no kind: or applies_to:, matching the other 12 L0 universal primitives: its own trigger includes a findings write-up in .md, which a rendered-surface glob would gate out."
+    },
+    "proving-an-absence": {
+      "family": "review-discipline",
+      "owns": "claiming a thing is missing",
+      "authoring_home": "catalog",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "verification-discipline skill; the control-test primitive that guarding-a-regression and retiring-a-superseded-decision both build on"
+    },
+    "guarding-a-regression": {
+      "family": "review-discipline",
+      "owns": "trusting a regression test",
+      "authoring_home": "catalog",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "verification-discipline skill; one guard, one regression, and whether it can be driven red. The boundary against test-discipline is in the description, where a runtime reads it. test-discipline has 1 byte of headroom, so the reciprocal clause could not be added there without deleting prose - filed, not done."
+    },
+    "retiring-a-superseded-decision": {
+      "family": "catalog-and-tooling",
+      "owns": "retiring a stale ruling",
+      "authoring_home": "catalog",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "documentation-discipline skill; hunting the old value after a reversal. Pairs with semver-design-tokens for the versioned token case"
     }
   }
 }
