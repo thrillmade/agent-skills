@@ -64,7 +64,7 @@ commonest false pass here.
    persistent (**SC 1.4.13, AA**).
 3. **Hit area, as laid out.** **SC 2.5.8, AA — 24 by 24 CSS px**, then the spacing
    exception: a 24 px circle on each **undersized** target must miss **another target's
-   box** — not its circle — or another undersized target's circle. So a 20 px button 1 px
+   box** — not its circle — and another undersized target's circle. So a 20 px button 1 px
    from a 40 px one fails. Dense icon toolbars fail on spacing more than size; measure the
    gap. Touch surfaces have a higher
    platform floor; read that platform's HIG. The ladder behind the height is
