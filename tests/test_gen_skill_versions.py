@@ -175,7 +175,11 @@ def test_no_origin_refs_is_fatal_not_an_empty_index(repo: Repo) -> None:
     assert repo.git("rev-parse", "HEAD")  # control: there IS history to find
     with pytest.raises(SystemExit) as e:
         build(repo)
-    assert "0 commits" in str(e.value)
+    # Match text unique to THIS guard. `"0 commits"` also appears in the
+    # publishing-ref guard immediately below it, so asserting on that passed
+    # with this guard deleted -- the test was green on the next guard's
+    # message, which is not a pass about this one.
+    assert "Refusing to publish an index built from nothing" in str(e.value)
 
 
 def test_no_publishing_ref_is_fatal(repo: Repo) -> None:

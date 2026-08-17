@@ -58,15 +58,21 @@ REFSPEC = "origin/*"
 PUBLISHING_REF = "origin/main"
 OUT = Path("docs/skill-versions.json")
 
+# Every stamped SKILL.md points a reader here, so this file has to answer the
+# question on its own rather than assume they arrived knowing what it is.
 README = (
     "Content identity for every SKILL.md this catalog has published. "
-    "To check a copy you hold: normalise CRLF to LF, delete the `version:` "
-    "line from its frontmatter, sha256 the rest, take the first 12 hex "
-    "characters -- then find your skill's slug below. If your digest is "
-    "`current`, you are up to date. If it appears in `history`, you are that "
-    "many versions behind. If it appears nowhere, your copy was edited "
-    "locally. Reinstall with `npx skills add thrillmade/agent-skills "
-    "--skill <slug>`."
+    "To check a copy you hold, by hand: normalise CRLF to LF, delete the "
+    "`version:` line from its frontmatter, sha256 the rest, take the first 12 "
+    "hex characters -- then find your skill's slug below. Matching `current` "
+    "means you are up to date; a match in `history` means you are that many "
+    "versions behind; no match means your copy was edited locally. To check a "
+    "whole repo at once, run "
+    "https://raw.githubusercontent.com/thrillmade/agent-skills/main/"
+    ".github/scripts/skills_current.py -- stdlib only, no install. Update "
+    "with `npx skills add thrillmade/agent-skills --skill <slug>`. The "
+    "`history` rows are not gated by CI and the `current` values are: see "
+    "`verification` below."
 )
 
 
