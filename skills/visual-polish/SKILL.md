@@ -1,4 +1,5 @@
 ---
+version: "8b62a28d94d9"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: visual-polish
 description: >-
   Use when judging execution craft on a RENDERED surface — screenshots or a live

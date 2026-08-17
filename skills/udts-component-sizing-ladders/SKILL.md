@@ -1,4 +1,5 @@
 ---
+version: "3aaa13374fc8"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: udts-component-sizing-ladders
 description: "[L2 stub — incubating] UDTS's concrete per-density component-height and icon-size ladders — its instantiation of component-sizing-principles. Full content is being authored in thrillmade/tokenomics and lands here via an upstream PR once the UDTS spec stabilizes; do not treat this stub as guidance yet."
 ---

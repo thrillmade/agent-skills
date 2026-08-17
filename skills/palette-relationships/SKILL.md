@@ -1,4 +1,5 @@
 ---
+version: "e382b4c2b6ac"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: palette-relationships
 description: Use when proposing a palette around a single seed hue and needing to pick which relationship model (monochromatic / analogous / complementary / split-complementary / triadic / tetradic / compound) fits the brief. Names the hue-angle math for each, when each is appropriate (analogous for restraint; triadic for vibrance; complementary for tension), and the role assignment heuristic.
 ---

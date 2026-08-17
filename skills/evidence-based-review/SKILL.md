@@ -1,4 +1,5 @@
 ---
+version: "f7b9b5572200"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: evidence-based-review
 description: Every PR review claim must quote the specific code being criticized. No hand-waving.
 ---

@@ -1,4 +1,5 @@
 ---
+version: "70f22a464c82"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: chroma-harmonization
 description: Use when constructing or auditing a multi-hue palette where all hues should appear equally saturated at each contrast stop. Names the per-stop chroma cap rule (take the minimum achievable chroma across hues at the stop), the gamut bottleneck pattern (blue at mid-L is the classic limiter in sRGB; Display P3 — UDTS's default compose gamut — reshapes it), and the relationship to UDTS's default `harmony` palette variant. Generalizes Evil Martians' Harmony algorithm.
 ---
