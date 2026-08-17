@@ -99,11 +99,23 @@ def test_every_version_line_shape_elides_to_the_same_digest(line):
 def test_elision_is_frontmatter_only():
     """An indented `metadata.version` -- or a `version:` line in the BODY --
     is somebody else's field and must survive into the hash.
+
+    The assertion is that CHANGING the nested value changes the digest, not
+    merely that adding the block does. Anchoring elision to column 0 is what
+    makes that true, and a version of this test that only compared against
+    `BASE` passed with the anchor relaxed to `^[ \\t]*version:` -- the nested
+    line was being eaten and the surviving `metadata:` line still made the
+    two files differ.
     """
-    nested = _with(b"metadata:\n  version: 3\n")
-    assert skill_version.digest(nested) != skill_version.digest(BASE)
-    in_body = BASE + b"\nversion: 3\n"
-    assert skill_version.digest(in_body) != skill_version.digest(BASE)
+    three = _with(b"metadata:\n  version: 3\n")
+    four = _with(b"metadata:\n  version: 4\n")
+    assert skill_version.digest(three) != skill_version.digest(four)
+    assert skill_version.digest(three) != skill_version.digest(BASE)
+
+    body_three = BASE + b"\nversion: 3\n"
+    body_four = BASE + b"\nversion: 4\n"
+    assert skill_version.digest(body_three) != skill_version.digest(body_four)
+    assert skill_version.digest(body_three) != skill_version.digest(BASE)
 
 
 def test_crlf_input_digests_the_same_as_lf():
