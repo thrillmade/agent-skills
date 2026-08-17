@@ -63,7 +63,13 @@ def restamp(raw: bytes) -> bytes:
         assert new_meta.get(key) == old_meta.get(key), f"stamping changed `{key}`"
     assert new_meta.get("version") == skill_version.digest(new), "stamp does not re-parse"
 
-    assert skill_version.stamped_value(new) == skill_version.digest(new), "not a fixed point"
+    # Idempotence, and nothing weaker. `stamp(new) == new` holds only if `new`
+    # already carries exactly the canonical line for its own digest, so it
+    # implies the fixed point -- a separate
+    # `stamped_value(new) == digest(new)` assertion sat here until a mutation
+    # run showed no sabotage could reach it without tripping this line first.
+    # An assertion nothing can falsify is not a check, it is a comment that
+    # costs a call.
     assert skill_version.stamp(new) == new, "not idempotent"
     return new
 

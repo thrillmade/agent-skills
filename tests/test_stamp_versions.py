@@ -42,16 +42,25 @@ def test_restamp_stamps_a_clean_file() -> None:
 
 
 def _sabotage(monkeypatch, corrupt) -> None:
-    """Replace `stamp` with one that corrupts its own output.
+    """Replace `stamp` with one that corrupts its output -- ONCE.
 
-    `stamp_versions.skill_version` and `skill_version` are the same module
-    object, so the replacement has to close over the ORIGINAL function --
-    calling `skill_version.stamp` from inside it recurses forever.
+    Two things bite here. `stamp_versions.skill_version` and `skill_version`
+    are the same module object, so the replacement has to close over the
+    ORIGINAL function or it recurses forever. And `restamp` calls `stamp`
+    twice -- once to produce the file, once to check idempotence -- so a
+    sabotage that fires on every call corrupts both sides of that comparison
+    and they agree again. The idempotence test passed for that reason before
+    the counter was added.
     """
     real = skill_version.stamp
-    monkeypatch.setattr(
-        stamp_versions.skill_version, "stamp", lambda raw: corrupt(real(raw), raw)
-    )
+    calls = {"n": 0}
+
+    def patched(raw: bytes) -> bytes:
+        calls["n"] += 1
+        out = real(raw)
+        return corrupt(out, raw) if calls["n"] == 1 else out
+
+    monkeypatch.setattr(stamp_versions.skill_version, "stamp", patched)
 
 
 def test_restamp_refuses_a_stamp_that_changed_the_body(monkeypatch) -> None:
@@ -74,11 +83,19 @@ def test_restamp_refuses_a_stamp_that_changed_the_name(monkeypatch) -> None:
         stamp_versions.restamp(BASE)
 
 
-def test_restamp_refuses_a_stamp_that_is_not_a_fixed_point(monkeypatch) -> None:
-    _sabotage(monkeypatch, lambda out, raw: out.replace(
-        skill_version.digest(raw).encode(), b"deadbeefcafe"
-    ))
-    with pytest.raises(AssertionError):
+def test_restamp_refuses_a_stamp_that_is_not_idempotent(monkeypatch) -> None:
+    """Drop the quotes and the YAML value is still the right digest, so the
+    re-parse check above is satisfied -- only idempotence catches it. That is
+    why idempotence is the assertion kept: `stamp(new) == new` holds only if
+    `new` already carries exactly the canonical line, so it implies the fixed
+    point rather than restating it.
+    """
+    def unquote(out: bytes, raw: bytes) -> bytes:
+        d = skill_version.digest(out).encode()
+        return out.replace(b'version: "' + d + b'"', b"version: " + d)
+
+    _sabotage(monkeypatch, unquote)
+    with pytest.raises(AssertionError, match="not idempotent"):
         stamp_versions.restamp(BASE)
 
 
