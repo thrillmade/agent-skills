@@ -46,8 +46,10 @@ Exit codes:
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
+import urllib.parse
 from pathlib import Path
 
 import yaml
@@ -139,6 +141,361 @@ SUPERSEDED_RE = re.compile(r"SUPERSEDED\b")
 # still hand-written prose; this reconciles its MEMBERSHIP only -- see
 # `readme_errors`.
 README_SKILL_LINK_RE = re.compile(r"\(skills/([a-z0-9-]+)/SKILL\.md\)")
+
+# --- markdown link integrity gate (skills/) ---------------------------------
+#
+# #234: `check-links` (the logmind-installed required status check) is blind
+# to skills/ -- it walks docs/ only, so a merge gate reports green over the
+# one directory the catalog exists to protect, and that green is
+# indistinguishable from a real all-clear. Reproduced with a control in the
+# issue: an identical broken link in a skill body passes; the same break in
+# README.md is caught.
+#
+# Built HERE rather than routed through `.github/workflows/check-doc-links.yml`
+# for two measured reasons (issue #234):
+#   1. That workflow's Go linkchecker install hardcodes its roots, and its own
+#      source defers config support -- setting `linkcheck.roots` is a silent
+#      no-op, so it cannot be pointed at skills/ by configuration.
+#   2. Its self-heal job can push commits to a PR branch with the instruction
+#      "either remove the link line or fix the target path", aimed at a
+#      `## Cross-references` block -- which silently deletes the content this
+#      gate exists to protect, on the branch it is supposed to be protecting.
+#
+# SCOPE, decided and stated rather than left for a reader to infer: ONLY
+# relative links are resolved against the filesystem. Absolute http(s) links
+# are counted (`link_stats`) but never fetched -- network access from CI is
+# flaky and slow, and a reference file's absolute GitHub URL legitimately
+# 404s until ITS OWN PR merges (issue #234 names PR #233's three
+# `references/` links as the live case); a checker that fetches would block
+# its own PR. `main()` prints the scope line below unconditionally, so a
+# reader of green output is told the bound rather than assuming "all links".
+#
+# Also handled, because a false positive here fires on every PR and is worse
+# than the gap being closed:
+#   - same-page anchors (`[x](#section)`) -- no path component, nothing to
+#     resolve, never flagged;
+#   - link-shaped text inside fenced code blocks and inline code spans (a
+#     skill SHOWING markdown link syntax as an example) -- blanked out
+#     before the link regex runs, so it is never seen as a real link;
+#   - link-shaped text inside a CommonMark 4-SPACE-INDENTED code block, the
+#     spelling with no fence to match against. `_indented_code_lines` reads
+#     it directly rather than via a regex: whether a given 4-space indent
+#     actually opens one depends on whether a paragraph is already open
+#     (an indented block can never INTERRUPT one -- CommonMark) and on the
+#     content column of whatever list item it may sit inside (measured FROM
+#     that column, not from the left margin, so a nested bullet's own
+#     wrapped continuation is never misread as its sibling's code). Getting
+#     either wrong in the "blank real list prose" direction is worse than
+#     this whole gate: it hides a real link inside ordinary text from every
+#     check below, silently, rather than merely mis-scoping an example.
+#     Checked against markdown-it-py over 60,000+ generated documents
+#     (dev-time oracle only, never imported here): the dangerous direction
+#     -- CommonMark says prose, this says code -- is 0/60,000; a difference
+#     remains in the SAFE direction (this under-blanks a small number of
+#     documents built from several coincident, deeply-nested restarting
+#     list markers, none of which the shipping catalog's 49 SKILL.md files
+#     contain even one instance of), which just narrows this gate's
+#     coverage back toward the ORIGINAL false-positive risk on that shape
+#     rather than opening a new one. Blockquoted content is explicitly OUT
+#     OF SCOPE for indented-code detection, the same bound `FENCE_RE` above
+#     already has (neither reads a `>` marker), and raw HTML blocks are not
+#     modelled either -- a fence or an indented block written inside a
+#     quote, or content that would only be excluded by tracking an open
+#     HTML block, is not blanked by this gate at all.
+#
+# NOT checked: whether a `#fragment` heading actually exists in the target
+# file. The control in #234 (and every case measured) is a missing FILE, not
+# a missing heading; verifying headings too would need a markdown-heading
+# parser per target file for a case nothing here has hit yet. Scope stated,
+# not silently assumed.
+#
+# ALSO NOT checked: reference-style links (`[text][ref]` plus a `[ref]: url`
+# definition elsewhere). `LINK_RE` below matches only the inline `(...)`
+# form; no skill in this catalog uses the reference form today. A known
+# bound, not an oversight -- stated here rather than left for the next
+# reader to discover by a link that silently never gets resolved.
+
+FENCE_RE = re.compile(r"^([ \t]*)(```|~~~).*?^\1\2[ \t]*$", re.DOTALL | re.MULTILINE)
+INLINE_CODE_RE = re.compile(r"`[^`\n]*`")
+LINK_RE = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
+ABSOLUTE_LINK_SCHEMES = ("http://", "https://", "mailto:")
+
+# CommonMark's indent for a code block, and the tab stop it is measured
+# after -- a tab-indented block is the same block, and leaving it unmeasured
+# would be the same construct in a spelling `_indented_code_lines` cannot see.
+CODE_INDENT = TAB_STOP = 4
+
+# A line that opens (or is the same shape as) an ATX heading, a thematic
+# break, or a setext heading underline -- the constructs `_indented_code_lines`
+# needs to recognise because each interacts with an open paragraph or an open
+# list differently. Definitions match check_prose_retention.py's own
+# ATX_RE/BREAK_RE/SETEXT_RE/LIST_ITEM_RE byte for byte (that module's
+# adjudication against markdown-it-py is the source for the shapes; this
+# gate's needs are a strict subset of that module's, so it is reimplemented
+# here rather than imported -- this gate stays Stdlib + PyYAML only, and a
+# change to that module's own scoring logic must not silently change what
+# gets blanked here).
+_ATX_RE = re.compile(r"^#{1,6}(?:[ \t].*)?$")
+_BREAK_RE = re.compile(r"^([-*_])[ \t]*(?:\1[ \t]*){2,}$")
+_SETEXT_RE = re.compile(r"^(?:=+|-+)[ \t]*$")
+_LIST_ITEM_RE = re.compile(r"^( *)([-*+]|\d{1,9}[.)])( +|$)")
+
+
+def _indented_code_lines(text: str) -> set[int]:
+    """1-based line numbers of `text` that open a CommonMark 4-space-indented
+    code block.
+
+    Assumes fenced blocks have ALREADY been blanked out of `text` (their
+    backtick/tilde runs gone) -- see `_strip_code`, which runs `FENCE_RE`
+    first for exactly this reason -- so no fence tracking happens here.
+
+    Tracks two pieces of state a naive `^    ` regex does not: whether a
+    PARAGRAPH is currently open (an indented block can never interrupt one,
+    so the same four spaces right under an open paragraph are that
+    paragraph's own wrapped text, not code), and a stack of enclosing LIST
+    ITEM content columns (the four spaces are measured from there, not from
+    the left margin, so a nested bullet's own continuation is never
+    misread as its sibling's code).
+
+    A line that LAZILY CONTINUES an open paragraph does not close any list
+    it sits inside however shallow it is written -- only a line that would
+    itself START a block ends a lazy continuation, and starting one
+    requires meeting a column a lazy line does not have to meet. Within
+    that: a heading or a thematic break is NOT eligible for lazy
+    continuation at all (CommonMark lets either interrupt a paragraph
+    outright, so a shallow one still closes the list it fails to indent
+    into); a setext underline is the opposite -- it can never interrupt a
+    paragraph, so a shallow one reached only by laziness stays literal
+    continuation text rather than closing anything. And a list MARKER on a
+    lazy-continuation line only opens a genuine new item if CommonMark
+    would let it interrupt the paragraph it sits under: an ordered marker
+    must start at 1, and no marker may open an empty item -- reading either
+    one as real here leaves a phantom list column on the stack that
+    outlives it and raises the threshold for a later, unrelated block.
+    """
+    lists: list[int] = []
+    paragraph = False
+    indented = False
+    out: set[int] = set()
+
+    for i, raw in enumerate(text.split("\n"), start=1):
+        line = raw.expandtabs(TAB_STOP)
+
+        if not line.strip():
+            paragraph = False
+            if indented:
+                out.add(i)
+            continue
+
+        indent = len(line) - len(line.lstrip(" "))
+        was_paragraph = paragraph
+        indented = False
+        threshold_before_pop = (lists[-1] if lists else 0) + CODE_INDENT
+
+        lazy_ineligible = False
+        if was_paragraph and indent < threshold_before_pop:
+            probe = line[indent:]
+            if _ATX_RE.match(probe) or _BREAK_RE.match(probe):
+                lazy_ineligible = True
+        if not was_paragraph or lazy_ineligible:
+            while lists and indent < lists[-1]:
+                lists.pop()
+
+        threshold = (lists[-1] if lists else 0) + CODE_INDENT
+        if not was_paragraph and indent >= threshold:
+            indented = True
+            out.add(i)
+            continue
+
+        body = line[indent:] if indent < threshold else line
+        closes = False
+        if indent < threshold:
+            if _ATX_RE.match(body) or _BREAK_RE.match(body):
+                closes = True
+            elif (
+                was_paragraph
+                and indent >= (lists[-1] if lists else 0)
+                and _SETEXT_RE.match(body)
+            ):
+                closes = True
+
+        if closes:
+            paragraph = False
+            continue
+
+        paragraph = True
+
+        m = _LIST_ITEM_RE.match(line)
+        if m:
+            gap = len(m.group(3))
+            empty = not line[m.end():].strip()
+            marker = m.group(2)
+            interrupts = marker[:-1] == "1" if marker[-1] in ".)" else True
+            if was_paragraph and (empty or not interrupts):
+                continue
+            lists.append(
+                len(m.group(1))
+                + len(m.group(2))
+                + (1 if empty or not 1 <= gap <= CODE_INDENT else gap)
+            )
+
+    return out
+
+
+def _blank_out(match: re.Match) -> str:
+    """Replace a matched span with same-length whitespace (newlines kept),
+    so line numbers computed from the SCANNED text still line up with the
+    original file -- deletion would shift every subsequent line number.
+    """
+    return re.sub(r"[^\n]", " ", match.group(0))
+
+
+def _blank_lines(text: str, line_numbers: set[int]) -> str:
+    """Blank whole LINES (whitespace, not deletion, so the split/join stays
+    lossless and every line number after it is unchanged) at the given
+    1-based numbers.
+    """
+    if not line_numbers:
+        return text
+    out = text.split("\n")
+    for n in line_numbers:
+        out[n - 1] = " " * len(out[n - 1])
+    return "\n".join(out)
+
+
+def _strip_code(text: str) -> str:
+    """Blank fenced code blocks, then 4-space-indented code blocks, then
+    inline code spans, so link-shaped text used as a documentation EXAMPLE
+    is never read as a real link.
+
+    Order matters twice over. Fences first: a fenced block can itself
+    contain single backticks, so `INLINE_CODE_RE` would eat into it if run
+    first, AND `_indented_code_lines` assumes fences are already gone (see
+    its docstring) -- feeding it un-blanked fence markers would let its own
+    (much narrower) fence-shaped checks misfire on them. Indented blocks
+    before inline code: a `` ` `` inside a genuine indented block is the
+    author's own text, not an inline-code delimiter, and blanking the
+    block first removes it from `INLINE_CODE_RE`'s view entirely rather
+    than relying on the regex to leave it alone.
+    """
+    scan = FENCE_RE.sub(_blank_out, text)
+    scan = _blank_lines(scan, _indented_code_lines(scan))
+    return INLINE_CODE_RE.sub(_blank_out, scan)
+
+
+def _link_target(raw: str) -> str:
+    """The URL/path portion of a `(...)` link destination, with an optional
+    trailing `"title"` or `'title'` stripped off.
+    """
+    raw = raw.strip()
+    m = re.match(r'^(\S+)(?:\s+["\'].*["\'])?$', raw)
+    return m.group(1) if m else raw
+
+
+def _iter_links(root: Path, errors: list[str] | None = None):
+    """Yield (md_path, line_no, path_part, is_absolute) for every markdown
+    link found under `root`, fenced code / inline code excluded and any
+    `#fragment` split off. Same-page anchors (`[x](#foo)`, no path before
+    the `#`) are never yielded -- there is nothing to classify or resolve.
+
+    A file that cannot be READ -- non-UTF-8 content, or a dangling symlink
+    ending `.md` -- has that failure appended to `errors` as a proper
+    `::error file=` annotation and is then skipped, rather than letting the
+    exception propagate. Uncaught, it would crash mid-generator and unwind
+    through every caller's `for` loop, discarding whatever OTHER validation
+    errors `run()`'s per-skill loop had already collected before printing an
+    unhandled traceback instead of this gate's normal annotation form --
+    still a non-zero exit (no false green), just an uglier and less useful
+    one. `errors=None` (the default, and what `link_stats` passes) means
+    "count what is readable and say nothing about the rest" -- safe only
+    because `link_errors` below always passes its OWN list, so the failure
+    is never silently dropped from every caller at once.
+    """
+    for md_path in sorted(root.glob("**/*.md")):
+        try:
+            text = md_path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError) as e:
+            if errors is not None:
+                errors.append(
+                    f"::error file={md_path}::could not read {md_path} to "
+                    f"check its links: {e}"
+                )
+            continue
+        scan = _strip_code(text)
+        for m in LINK_RE.finditer(scan):
+            target = _link_target(m.group(1))
+            path_part = target.split("#", 1)[0]
+            if not path_part:
+                continue
+            is_absolute = path_part.startswith(ABSOLUTE_LINK_SCHEMES)
+            line_no = scan.count("\n", 0, m.start()) + 1
+            yield md_path, line_no, path_part, is_absolute
+
+
+def _resolve_relative(md_path: Path, root: Path, path_part: str) -> Path:
+    """A relative link resolves against the LINKING FILE's own directory
+    (markdown convention); a leading-`/` link resolves against the repo
+    root (`root.parent`, since `root` itself is `skills/`).
+
+    `path_part` arrives percent-encoded exactly as written (`_iter_links`
+    splits the `#fragment` off BEFORE any decoding, so a literal `#` in a
+    filename -- spelled `%23` in the link -- is never mistaken for the
+    fragment separator). Decoded here, once, right before it touches the
+    filesystem: `Path.exists()` compares against real bytes on disk, which
+    are never percent-encoded, so `with%20space.txt` has to become
+    `with space.txt` before the check or a real file at that name reads as
+    a broken link.
+    """
+    decoded = urllib.parse.unquote(path_part)
+    base = root.parent if decoded.startswith("/") else md_path.parent
+    return Path(os.path.normpath(base / decoded.lstrip("/")))
+
+
+def link_errors(root: Path) -> list[str]:
+    """Broken relative markdown links under `root` -- the #234 gate.
+
+    Absolute http(s) links are never included here (see the module comment
+    above); `link_stats` reports how many were seen instead.
+
+    `errors` is created here and handed to `_iter_links`, so an unreadable
+    file's annotation lands in the SAME list this function returns -- the
+    caller sees one combined, ordered set of failures rather than a read
+    failure reported through a side channel nothing here gates on.
+
+    `target_path.is_file()`, not `.exists()`: `.exists()` is also true for
+    a DIRECTORY, so `[x](references)` read as clean even though nothing at
+    that path is a document a reader can open.
+    """
+    errors: list[str] = []
+    for md_path, line_no, path_part, is_absolute in _iter_links(root, errors):
+        if is_absolute:
+            continue
+        target_path = _resolve_relative(md_path, root, path_part)
+        if not target_path.is_file():
+            reason = (
+                "is a directory, not a file"
+                if target_path.is_dir()
+                else "does not exist"
+            )
+            errors.append(
+                f"::error file={md_path}::line {line_no}: broken relative "
+                f"link -> {path_part} (resolved: {target_path}) {reason}"
+            )
+    return errors
+
+
+def link_stats(root: Path) -> tuple[int, int]:
+    """(relative_count, absolute_count) markdown links seen under `root` --
+    what `main()`'s scope line reports, so a reader of green CI output is
+    told the bound rather than assuming every link was verified.
+    """
+    relative = absolute = 0
+    for _md_path, _line_no, _path_part, is_absolute in _iter_links(root):
+        if is_absolute:
+            absolute += 1
+        else:
+            relative += 1
+    return relative, absolute
 
 
 def _is_superseded(meta: dict) -> bool:
@@ -678,6 +1035,7 @@ def run(root: Path) -> list[str]:
 
     errors.extend(directory_errors(root, placement_map_path))
     errors.extend(readme_errors(root, skill_dirs))
+    errors.extend(link_errors(root))
     # --- docs/skill-versions.json currency gate ------------------------
     #
     # The published index is what a subscriber reads to answer "am I
@@ -881,6 +1239,20 @@ def coverage_errors(root: Path, validated: int) -> list[str]:
 
 def main() -> int:
     errors = run(ROOT)
+
+    # Printed on every completed run, pass or fail (#234) -- but AFTER
+    # `run(ROOT)`, which exits the process directly for the two infra-fatal
+    # conditions (no skills/ dir; skills/ with no subdirectories) where
+    # there is no tree to state a bound about. A reader of green CI output
+    # is TOLD the bound the link gate checked -- relative links resolved on
+    # disk, absolute http(s) links counted but never fetched -- rather than
+    # left to assume "all links" from silence.
+    relative, absolute = link_stats(ROOT)
+    print(
+        f"link scope: {relative} relative link(s) checked against the "
+        f"filesystem; {absolute} absolute http(s)/mailto link(s) found and "
+        "counted, not fetched (no network access in this gate)."
+    )
 
     if errors:
         for e in errors:

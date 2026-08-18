@@ -13,10 +13,10 @@ PR's CI run, so this file is always coherent with current `main`.
 ---
 
 
-## 2026-08 (31 decisions)
+## 2026-08 (36 decisions)
 
-- **2026-08-18** — Correct the Departed posture to point at the version stamp, and log the L0 back-reference change *(b246)* — [decisions-branches/b246.md](decisions-branches/b246.md)
-- *... 29 more decisions ...*
+- **2026-08-18** — Add a relative-markdown-link gate to validate_skills.py, scoped to skills/ *(feat/link-gate-for-skills)* — [decisions-branches/feat__link-gate-for-skills.md](decisions-branches/feat__link-gate-for-skills.md)
+- *... 34 more decisions ...*
 - **2026-08-14** — Gate skill size with a shrink-only ratchet, and deprecate skillforge into the three skills that own its job *(feat/skill-depth-and-interlinking)* — [decisions-branches/feat__skill-depth-and-interlinking.md](decisions-branches/feat__skill-depth-and-interlinking.md)
 
 ## 2026-07 (13 decisions)

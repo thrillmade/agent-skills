@@ -1286,6 +1286,31 @@ def test_a_quote_inside_a_list_item_keeps_the_item_s_content_column():
     assert scopes["code"].strip() == "", scopes["code"]
 
 
+def test_a_quote_at_the_margin_closes_a_list_it_did_not_sit_inside():
+    """#226. A quote marker written AT THE PARENT'S OWN MARGIN -- not indented
+    to the list item's content column -- is not nested inside that item, so it
+    closes the list the way any other block at the margin would. `reopen`
+    already drops the LEAF state unconditionally; this is the same rule
+    applied to the list nesting, which stayed no matter where the marker sat.
+
+    Adjudicated against markdown-it-py: the honest rendering of this body is
+    `<pre><code>`, not a paragraph indented to a list column that no longer
+    encloses it.
+    """
+    body = (
+        "A paragraph of ordinary prose.\n"
+        "\n"
+        "* item\n"
+        ">\n"
+        "\n"
+        "    rule    sc      file      line  fix\n"
+        "    apca    1.4.11  nav.tsx   12    raise Lc\n"
+    )
+    scopes = cpr.split_scopes(skill(body))
+    assert "raise Lc" in scopes["code"], scopes
+    assert "raise Lc" not in scopes["prose"], scopes
+
+
 def test_what_a_closed_quote_left_open_decides_what_the_next_line_opens():
     """The container boundary, in the three shapes that tell its halves apart.
 
