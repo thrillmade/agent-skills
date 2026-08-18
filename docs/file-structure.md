@@ -7,8 +7,6 @@ agent-skills
 ├── .claude
 │   ├── commands
 │   ├── skills
-│   ├── worktrees
-│   ├── scheduled_tasks.lock
 │   └── settings.json
 ├── .github
 │   ├── ISSUE_TEMPLATE
