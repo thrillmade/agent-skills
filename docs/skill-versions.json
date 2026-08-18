@@ -5,14 +5,14 @@
  "enumeration": {
   "refs": "refs/remotes/origin/*",
   "publishing_ref": "origin/main",
-  "commits": 106,
-  "blobs": 156
+  "commits": 131,
+  "blobs": 213
  },
- "versions_enumerated": 151,
+ "versions_enumerated": 156,
  "verification": {
   "current": "GATED. validate_skills.py recomputes every `current` from skills/<slug>/SKILL.md on every pull request. Needs no git history, so it holds at the depth-1 checkout CI uses.",
   "history": "NOT GATED. History is derived from git and validate-skills.yml checks out at fetch-depth 1, so CI cannot recompute these rows. Regenerate them in a full clone with `.github/scripts/gen_skill_versions.py --write`.",
-  "history_rows_ungated": 102
+  "history_rows_ungated": 105
  },
  "skills": {
   "apca-contrast": {
@@ -179,6 +179,17 @@
      "v": "737120806c13",
      "commit": "b7b5a7e",
      "date": "2026-08-15"
+    }
+   ]
+  },
+  "composing-a-screen": {
+   "current": "39d2e1377a44",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "39d2e1377a44",
+     "commit": "2cf6868",
+     "date": "2026-08-18"
     }
    ]
   },
@@ -369,6 +380,32 @@
      "v": "71038850b10d",
      "commit": "4bfce75",
      "date": "2026-05-27"
+    }
+   ]
+  },
+  "finding-a-catalog-skill": {
+   "current": "b1752e52d6c9",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "3350df67c4f7",
+     "commit": "405b6c1",
+     "date": "2026-08-18"
+    },
+    {
+     "v": "6650f12ccd85",
+     "commit": "1da9f08",
+     "date": "2026-08-18"
+    },
+    {
+     "v": "b1752e52d6c9",
+     "commit": "d7825e2",
+     "date": "2026-08-18"
+    },
+    {
+     "v": "6eb19042e021",
+     "commit": "d1f0f4d",
+     "date": "2026-08-18"
     }
    ]
   },
