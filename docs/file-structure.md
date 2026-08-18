@@ -7,8 +7,6 @@ agent-skills
 ├── .claude
 │   ├── commands
 │   ├── skills
-│   ├── worktrees
-│   ├── scheduled_tasks.lock
 │   └── settings.json
 ├── .github
 │   ├── ISSUE_TEMPLATE
@@ -98,9 +96,6 @@ agent-skills
 ├── .cursorrules
 ├── .gitattributes
 ├── .gitignore
-├── .merge_file_G3ir6r
-├── .merge_file_pLeeLK
-├── .merge_file_Vb2iwO
 ├── AGENTS.md
 ├── CLAUDE.md
 ├── LICENSE
