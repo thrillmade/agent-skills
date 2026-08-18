@@ -1,4 +1,5 @@
 ---
+version: "a91cade05131"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: brand-voice-review
 description: Review user-facing strings for brand-voice consistency. Catch dead phrases ("click here", "you should"), accidental shouting (exclamation marks, ALL CAPS), and jargon that leaks past the design team. Apply to button labels, error messages, marketing copy, headings — not to internal code identifiers or logs.
 applies_to:

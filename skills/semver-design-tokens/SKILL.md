@@ -1,4 +1,5 @@
 ---
+version: "7be39b0ee26b"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: semver-design-tokens
 description: |
   Use when applying SemVer to a design-token release, computing a version bump from a token-tree diff, or auditing a release for correct severity. Names the compute-from-the-diff policy (major = remove / rename / type-change / class-change; minor = add or deprecate; patch = value-only or alias-rebind-preserving-value), the alias-chain awareness rule (compute by resolved values, not source paths), the snapshot-per-release convention, the deprecation cycle (warn in a minor, remove in the next major), and the pattern of documenting an explicit pre-1.0 relaxation. Cite when an agent picks a bump by intuition rather than computing it from the diff. For one system's concrete policy choices see udts-semver-defaults.

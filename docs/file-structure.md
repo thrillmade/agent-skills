@@ -24,6 +24,7 @@ agent-skills
 │   ├── integrating-with-agent-skills.md
 │   ├── placement-map.json
 │   ├── prose-removals.md
+│   ├── skill-versions.json
 │   └── timeline.md
 ├── skills
 │   ├── apca-contrast
@@ -82,10 +83,15 @@ agent-skills
 │   ├── conftest.py
 │   ├── test_check_prose_retention.py
 │   ├── test_gen_skill_directory.py
+│   ├── test_gen_skill_versions.py
 │   ├── test_prose_retention_mutations.py
 │   ├── test_skill_directory_mutations.py
+│   ├── test_skill_version.py
+│   ├── test_skills_current.py
+│   ├── test_stamp_versions.py
 │   ├── test_validate_skills.py
 │   ├── test_validate_skills_cli.py
+│   ├── test_validate_skills_version.py
 │   └── test_workflow_triggers.py
 ├── .cursorrules
 ├── .gitattributes

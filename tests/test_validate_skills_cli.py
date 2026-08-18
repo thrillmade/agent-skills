@@ -74,6 +74,11 @@ def test_main_reports_success_on_a_clean_tree(
 ) -> None:
     tree.valid_skill("alpha")
     tree.valid_skill("beta")
+    # `main()` reads `docs/skill-versions.json` itself now (absence is an
+    # error -- see `test_an_absent_index_is_rejected`), and `main()` here is
+    # called directly rather than through `tree.validate()`, so it does not
+    # get that method's auto-provisioned index. Seed one that matches.
+    tree.validate()
     assert validate_skills.main() == 0
     assert capsys.readouterr().out == "OK: 2 skills validated cleanly.\n"
 

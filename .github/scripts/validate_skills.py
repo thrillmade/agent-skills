@@ -74,6 +74,7 @@ except ImportError as _import_error:
         "still pass, and an unverifiable directory reads exactly like a verified one."
     )
     sys.exit(1)
+import skill_version
 
 ROOT = Path("skills")
 FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
@@ -198,6 +199,9 @@ def run(root: Path) -> list[str]:
     # than re-read in the placement-map block below, so the two can never
     # disagree about which skills those are.
     superseded: set[str] = set()
+    # slug -> content digest, filled in as each skill is read, so the index
+    # gate below compares against bytes this run actually saw.
+    digests: dict[str, str] = {}
 
     if not root.exists() or not root.is_dir():
         print("::error::skills/ directory not found at repo root")
@@ -217,7 +221,8 @@ def run(root: Path) -> list[str]:
             errors.append(f"::error file={prefix}::missing SKILL.md")
             continue
 
-        content = skill_md.read_text(encoding="utf-8")
+        raw = skill_md.read_bytes()
+        content = raw.decode("utf-8")
         m = FRONTMATTER_RE.match(content)
         if not m:
             errors.append(
@@ -266,6 +271,68 @@ def run(root: Path) -> list[str]:
             errors.append(
                 f"::error file={prefix}::frontmatter is missing a non-empty `description:` field"
             )
+
+        # --- Content identity (`version:`) ---------------------------------
+        #
+        # Checked against the file's own bytes, so it is not a promise a human
+        # has to keep. A stale stamp is worse than none: every subscriber
+        # comparing against it is told they are current when they are not.
+        #
+        # ENFORCED WHEN PRESENT, NOT REQUIRED -- the same posture `source` and
+        # `kind` already have here. The protocol SPEC owns the frontmatter
+        # schema (live §2.1 "The skill file"), and its table already marks
+        # `source` REQUIRED against 0 of 49 adopters. Declaring a second
+        # required key from inside the catalog would widen that divergence
+        # rather than close it. Ratification is protocol#39's to grant; until
+        # it does, an unstamped file is not an error and a WRONG stamp is.
+        #
+        # Read from the RAW line, never from the YAML parse: unquoted, an
+        # all-digit digest is coerced to int -- `766941312459` is a real
+        # historical digest of this catalog's own frontend-a11y, and
+        # `000000123456` is read as octal (42798) and does not round-trip.
+        expected = skill_version.digest(raw)
+        digests[dir_name] = expected
+        expected_line = skill_version.version_line(expected)
+        lines = skill_version.version_lines(raw)
+
+        if len(lines) > 1:
+            # Two `version:` lines make identity a question of which reader
+            # you ask. A `search`-based gate takes the FIRST and passes; every
+            # YAML consumer takes the LAST (last key wins) and reads something
+            # else. Neither is wrong about its own rule, so the file has to be
+            # rejected rather than adjudicated.
+            errors.append(
+                f"::error file={prefix}::frontmatter has {len(lines)} `version:` "
+                f"lines, and there must be exactly one -- this gate would read "
+                f"{lines[0].split()[1] if len(lines[0].split()) > 1 else '?'} while "
+                f"`yaml.safe_load` reads the last one. Keep one line: "
+                f"`{expected_line}`"
+            )
+        elif len(lines) == 1:
+            claimed = skill_version.stamped_value(raw)
+            if claimed is None:
+                errors.append(
+                    f"::error file={prefix}::`{lines[0]}` is not a well-formed "
+                    f'stamp. It must be `version: "<12 lowercase hex>"` -- the '
+                    f"quotes are REQUIRED, because unquoted an all-digit digest "
+                    f"parses as an integer. Never type this by hand; run "
+                    f"`python3 .github/scripts/stamp_versions.py --write`."
+                )
+            elif claimed != expected:
+                errors.append(
+                    f"::error file={prefix}::`version` claims {claimed} but this "
+                    f"file's content digest is {expected}. The stamp is stale, so "
+                    f"every subscriber comparing against it reads a wrong "
+                    f"identity. Run `python3 .github/scripts/stamp_versions.py "
+                    f"--write`."
+                )
+            elif lines[0] != expected_line:
+                errors.append(
+                    f"::error file={prefix}::the `version:` line is generated in "
+                    f"full -- digest and route home have one owner between them. "
+                    f"Expected exactly:\n{expected_line}\nGot:\n{lines[0]}\n"
+                    f"Run `python3 .github/scripts/stamp_versions.py --write`."
+                )
 
         # Require an H1 (Markdown title) somewhere in the body after the frontmatter
         body = content[m.end():]
@@ -608,6 +675,62 @@ def run(root: Path) -> list[str]:
 
     errors.extend(directory_errors(root, placement_map_path))
     errors.extend(readme_errors(root, skill_dirs))
+    # --- docs/skill-versions.json currency gate ------------------------
+    #
+    # The published index is what a subscriber reads to answer "am I
+    # current?", so a `current` that has fallen behind the tree tells them
+    # they are up to date when they are not -- the exact failure this whole
+    # mechanism exists to remove, relocated one hop away.
+    #
+    # This half needs NO git history: `current` is recomputed from the bytes
+    # in the checkout, so it holds at the depth-1 checkout
+    # validate-skills.yml uses. The history rows are NOT gated here and
+    # cannot be at that depth; the index says so in its own `verification`
+    # block rather than leaving a reader to assume otherwise.
+    #
+    # NOT gated on `.exists()`, unlike the placement map above -- that gate's
+    # posture is "authored by a parallel agent, may not exist yet"; this
+    # index is checked into the repo and generated by this catalog's own
+    # tooling, so its absence is not a file some other process hasn't gotten
+    # to yet. It is every `skills.<slug>` entry missing at once, and
+    # `skills_current.py` already treats an unreadable index as UNCERTAIN
+    # rather than a pass -- this matches that stance by falling into the same
+    # "could not read" branch below rather than skipping it.
+
+    versions_path = root.parent / "docs" / "skill-versions.json"
+    sv_prefix = str(versions_path)
+    try:
+        index = json.loads(versions_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as e:
+        errors.append(f"::error file={sv_prefix}::could not read {versions_path}: {e}")
+        index = None
+
+    if index is not None and not isinstance(index.get("skills"), dict):
+        errors.append(
+            f"::error file={sv_prefix}::`skills` must be an object mapping "
+            "skill name -> {current, history}"
+        )
+    elif index is not None:
+        published = index["skills"]
+        for slug, want in sorted(digests.items()):
+            entry = published.get(slug)
+            if not isinstance(entry, dict):
+                errors.append(
+                    f"::error file={sv_prefix}::skills.{slug} is missing. Every "
+                    "skill in skills/ must be published, or a subscriber "
+                    "looking it up gets nothing and cannot tell that from "
+                    "being current. Run "
+                    "`python3 .github/scripts/gen_skill_versions.py --write`."
+                )
+            elif entry.get("current") != want:
+                errors.append(
+                    f"::error file={sv_prefix}::skills.{slug}.current is "
+                    f"{entry.get('current')!r} but skills/{slug}/SKILL.md digests "
+                    f"to {want}. The index is stale, so every subscriber it "
+                    "answers is told the wrong thing. Run "
+                    "`python3 .github/scripts/gen_skill_versions.py --write`."
+                )
+
     return errors
 
 

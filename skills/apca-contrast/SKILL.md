@@ -1,4 +1,5 @@
 ---
+version: "2c0f7ee8768a"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: apca-contrast
 description: Use when picking text-on-surface contrast, auditing an accessibility budget, or generating a color against a specific contrast target. Names the APCA Lc target table (Lc 90 fluent body, 75 body minimum, 60 secondary, 45 large, 30 spot, 15 non-text), the APCACH inverse-composition rule, and the cross-check policy with WCAG 2.2 AA. Cite when an agent reaches for WCAG 2.x as the primary contrast model — APCA is the perceptual model UDTS composes against; WCAG is the cross-check.
 ---

@@ -1,4 +1,5 @@
 ---
+version: "56be4995fc2f"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: frontend-a11y
 description: >-
   Use when judging accessibility on a RENDERED surface — screenshots or a live

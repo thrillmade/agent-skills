@@ -91,6 +91,39 @@ For a repo that predates this system (all current thrillmade repos):
 5. **Subscribe deliberately.** Check the open `placement:` issues on this repo — the census may already have recommendations for you.
 6. **Protect your seams:** never hand-edit subscribed copies (updaters overwrite them); publishers must never let refresh automation write their shipped source (e.g. clud-bug's `templates/skills/**` — that's an npm release, not a cron); preserve symlink topology (`.claude/skills/` → `.agents/skills/`); automation commits use `[skip-logmind]` or file a decision entry (protocol SPEC §15).
 
+## Am I current?
+
+Answerable from inside your own repo, with no access to this one. Until now it wasn't: `npx skills add` copies a `SKILL.md` wholesale and records a `computedHash` produced by the CLI's own normalisation, and the lock stores no version, ref, commit or date — so a subscriber holding a months-old copy had nothing to compare and nothing told them. The first run of the checker below found 21 of `arlyn-working`'s 23 subscribed skills behind, some by three versions and some since May.
+
+Every `SKILL.md` here now opens with its own content digest:
+
+```yaml
+version: "56be4995fc2f"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+```
+
+**The rule, in full, and it is meant to be re-derivable by hand:** normalise CRLF to LF, delete the `version:` line from the frontmatter, `sha256` the remaining bytes, take the first 12 hex characters. Deleting the line before hashing is what makes the value stable — a file's digest does not depend on what its stamp already claimed, so a wrong stamp, a malformed one and a missing one all name the same expected value. Everything else is inside the hash, `description:` included: it is the trigger surface, so a body-only digest would call a rewritten description "current".
+
+The quotes are not decoration. Unquoted, an all-digit digest stops being a string — `766941312459` is a real historical digest of this catalog's own `frontend-a11y`, and `000000123456` parses as octal `42798` and does not round-trip.
+
+**[`docs/skill-versions.json`](skill-versions.json)** publishes `current` plus the full history for every slug. One GET, no auth:
+
+```bash
+curl -fsSLO https://raw.githubusercontent.com/thrillmade/agent-skills/main/.github/scripts/skills_current.py
+python3 skills_current.py           # run from your repo root
+```
+
+Stdlib only, one HTTPS GET, reads nothing but your own files — no git, no lock, no `npx`. It finds skills under **both** `.agents/skills` and `.claude/skills`, counting a symlink and its target once, because neither root is a safe default: across the repos here `.agents/skills` exists in three of twenty and `.claude/skills` in twelve, and where both exist the second is usually symlinks into the first.
+
+Verdicts are `current`, `STALE n`, `DIVERGED`, `unpublished` (a version this catalog carries that isn't what `main` publishes — a branch build, so you are not behind), `mirrored` (authored elsewhere; this catalog only mirrors it and is not the authority), `retired`, and `local-skill` (not a catalog slug, so nothing is said about it). It exits `0` current, `1` stale-or-diverged, and **`2` whenever it examined nothing** — an unreadable index, an empty index, a root that isn't there. A run that looked at nothing reports success exactly as loudly as one that looked at thirty files, which is the failure this whole mechanism exists to remove.
+
+**What is checked, and what isn't.** Each `current` is recomputed from the file on disk by `validate-skills` on every pull request, so it cannot drift from the tree. The **history** rows are derived from git, and `validate-skills.yml` checks out at depth 1, so CI cannot recompute them; nothing gates them. That is most of the index by row count, and the index carries the split — and the exact count — in its own `verification` block rather than leaving you to assume. Regenerate them in a full clone with `.github/scripts/gen_skill_versions.py --write`, which enumerates from `refs/remotes/origin/*` — exactly what a fresh clone has, so anyone can reproduce the output.
+
+`version:` is **enforced when present, not required**, and it is not in the SPEC's frontmatter table at all. That is the sanctioned way to add one: protocol SPEC §2.1 says an unrecognised key "MUST NOT cause a failure" and MUST round-trip unchanged, "so the schema can grow without every consumer being upgraded first". Requiring it would be the unsanctioned half. The same table already marks `source` REQUIRED against **0 of 49** adopters in this catalog (control: `kind` has 5) — the catalog already diverges from the owner it cites, and declaring a second required key from inside it would widen that rather than close it. Ratification is [protocol#39](https://github.com/thrillmade/protocol/issues/39)'s to grant.
+
+**Pinning, if you want an exact answer instead of a comparison.** `npx skills add thrillmade/agent-skills#<sha>` records the ref in your lock, so a later install is reproducible. That works today and costs this catalog nothing — but it reaches only repos that have a lock (four of the twenty here), which is why the index exists rather than a lock convention.
+
+**This is pull-only.** It makes staleness *knowable*, not *known*: nothing here opens a PR in your repo, and this catalog still does not know who its subscribers are — [`placement-map.json`](placement-map.json) carries an empty `subscribers` list on most entries. Run the checker, or wire it into your own CI.
+
 ### The placement map
 
 [`docs/placement-map.json`](placement-map.json) is the per-skill ground truth the census reads as **signal 1**. For every skill in `skills/`, it records `authoring_home` (`catalog` / `repo-mirrored:<repo>` / `undecided`), `distribution` (`default-on` / `opt-in` / `catalog-only`), and `subscribers` (the repos that actually pull it) — the verdicts a prior editorial round already reached, so each new census cycle starts from a baseline instead of re-litigating placement from zero.

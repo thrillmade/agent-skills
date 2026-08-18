@@ -1,4 +1,5 @@
 ---
+version: "edf49c1e4dc2"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: consuming-a-design-system
 description: |
   Entry-point dispatcher for CONSUMING a design system in a product — installing its tokens, wiring CSS variables, theming, upgrading across token releases, or deciding whether to extend or fork. Routes to token discipline (reference tokens, never raw hex/px — token-naming-conventions), composition rules (semantic over primitive; themes swap role-to-palette bindings), install patterns (dtcg-format to CSS variables and framework primitives), and migration discipline (semver-design-tokens, token-diff reading, deprecation cycles). Use when the task is using an existing system; for building one load designing-a-design-system; for reviewing design output load reviewing-design-work.

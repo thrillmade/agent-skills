@@ -1,4 +1,5 @@
 ---
+version: "14afd0862089"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: pii-and-compliance
 description: Catch PRs that ship PII into logs, error messages, exception traces, analytics events, or third-party services. Flag emails, phone numbers, addresses, full names, government IDs, credit card numbers, IP addresses, and secret material that should never leave the application boundary. Apply to logging calls, telemetry events, error-handler payloads, debug statements, and external API calls.
 ---
