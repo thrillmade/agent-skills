@@ -7,6 +7,8 @@ agent-skills
 ├── .claude
 │   ├── commands
 │   ├── skills
+│   ├── worktrees
+│   ├── scheduled_tasks.lock
 │   └── settings.json
 ├── .github
 │   ├── ISSUE_TEMPLATE
@@ -33,6 +35,7 @@ agent-skills
 │   ├── clud-bug-collaboration
 │   ├── component-sizing
 │   ├── component-sizing-principles
+│   ├── composing-a-screen
 │   ├── consuming-a-design-system
 │   ├── conventions-template
 │   ├── critical-issues-only
@@ -89,6 +92,9 @@ agent-skills
 ├── .cursorrules
 ├── .gitattributes
 ├── .gitignore
+├── .merge_file_Ggwrba
+├── .merge_file_OVMET7
+├── .merge_file_QRUAns
 ├── AGENTS.md
 ├── CLAUDE.md
 ├── LICENSE
