@@ -276,6 +276,32 @@ MUTATIONS = [
         "        self._indented = False\n        self._paragraph = lazy",
         "        self._paragraph = lazy",
     ),
+    (
+        # #226. The LIST half of the same boundary, dropped: a quote written at
+        # the parent's own margin -- not indented to the list item's content
+        # column, so the item never contained it -- leaves the item's column
+        # alive anyway. `* item` then `>` at column 0 above an indented example
+        # scores it as the item's own wrapped prose. markdown-it-py renders the
+        # example `<pre><code>`; this reads it as text four columns short of
+        # code, netting against a real deletion the same way the class before
+        # it did.
+        "list_nesting_survives_a_margin_quote",
+        "        self._paragraph = lazy\n"
+        "        while self._lists and col < self._lists[-1]:\n"
+        "            self._lists.pop()",
+        "        self._paragraph = lazy",
+    ),
+    (
+        # The boundary the column is compared against moves one column short,
+        # so a quote sitting exactly AT a list item's content column -- inside
+        # it, by the same rule the CommonMark comment above states -- reads as
+        # outside it. A nested item's own continuation, quoted properly at
+        # exactly its content column, then loses its column and rescopes into
+        # code -- caught by the control this fix already carries.
+        "list_pop_boundary_is_off_by_one",
+        "        while self._lists and col < self._lists[-1]:",
+        "        while self._lists and col <= self._lists[-1]:",
+    ),
     # -- the paragraph model: a blank line is one boundary, not the only one --
     (
         # The whole of it: no leaf block closes a paragraph any more, so the

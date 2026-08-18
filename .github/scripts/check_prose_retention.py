@@ -525,29 +525,29 @@ class Container:
     The three classes after it do not appear in those alphabets at all and are
     each pinned by a case of its own:
 
-      A LIST COLUMN SURVIVES A CONTAINER BOUNDARY THAT CLOSED THE LIST, and the
-      same rule read at the margin: a leaf block in column 0 closes a paragraph
-      whose content starts in column 2, where CommonMark reads it as that
-      paragraph's LAZY continuation and closes nothing. `reopen` keeps this
-      container's list nesting, which is right when the quote sat INSIDE an item
-      and wrong when it sat at the margin, so CommonMark measures the next
-      line's four spaces from the margin and calls it code while this measures
-      them from column 2 and calls it prose. Weaponised, to be sure rather than
-      assumed: `* item` and `> ` above an indented example deletes
-      web-interface-guidelines-review's Verification rule 5 for prose -6, net 0,
-      exit 0, and the file 20 bytes SMALLER -- where the identical example with
-      those two lines removed scores prose 11 / code -16 and fires. It is a
-      narrower hole than the heading was, because those two lines are visible:
-      an orphan bullet and an empty block quote render, so the two spellings are
-      NOT the same document to a reader, which the heading pair was. Closing it
-      means telling `reopen` which column the marker sat in, against the
-      measured reason the nesting is kept at all -- a different predicate, and
-      still not this round's. Two of the 45 minimal forms are this class reached
-      THROUGH the HTML model, where the wrongly-closed paragraph then lets a
-      type 7 block open: `- item`, `===`, `</pre>` and `---` above an indented
-      example. Both agreed by accident before the block was modelled and
-      disagree now, inside a residual an order of magnitude smaller in both
-      directions -- stated rather than netted away.
+      A LIST COLUMN SURVIVED A CONTAINER BOUNDARY THAT CLOSED THE LIST -- #226,
+      CLOSED for the disclosed weaponisation: `reopen` now takes the column the
+      closing marker sat in and pops any list whose content column the marker
+      did not reach, the same rule this docstring already applies to the LEAF
+      state, read for the list nesting too. `* item` and `> ` above an indented
+      example no longer nets against a real cut; the construct is pinned at
+      `test_a_quote_at_the_margin_closes_a_list_it_did_not_sit_inside`, and the
+      quote-INSIDE-an-item case the fix must not break is pinned beside it at
+      `test_a_quote_inside_a_list_item_keeps_the_item_s_content_column`, exactly
+      at the boundary column the two rules now share. Checked against
+      markdown-it-py 4.2.0 over 128 generated documents crossing four marker
+      widths, four quote columns, four shapes for the quote's last block and
+      the presence or absence of a blank line before the indented example: 0
+      disagreements, 128 of 128 -- a scoped corpus for the predicate this fix
+      changed, not the 20,000-document alphabets above, which this round did
+      not regenerate. Whether the two minimal forms reached THROUGH the HTML
+      model close with it is NOT measured here -- both are this same wrongly-
+      kept list column reaching a type 7 block by a longer path, which is
+      reason to expect they do, but expecting is not measuring and neither was
+      re-run. The aggregate counts above (45 minimal forms, the two
+      percentages) describe the corpus BEFORE this fix and were not re-run
+      against it; they overstate what remains until the next round regenerates
+      them.
 
       A FENCE MAY BE SPELLED INSIDE A WRAPPED LINE, where no other block may.
       `FENCE_RE` allows any indent and `feed` reaches it before the guard that
@@ -610,8 +610,14 @@ class Container:
         """
         return self._paragraph and not self._indented and not self._fence.open
 
-    def reopen(self, lazy: bool) -> None:
+    def reopen(self, lazy: bool, col: int) -> None:
         """A child container just ended. Take up where this one left off.
+
+        `col` is the column, in THIS container's own margin, of the marker
+        that most recently kept the child open -- what `Code.feed` peeled to
+        reach it. It answers one question the leaf and paragraph state below
+        does not: was the child NESTED inside something open here, or did it
+        sit at this container's own margin regardless of what that was?
 
         The INDENTED block goes unconditionally. Whatever was open here, the
         `>` that opened the child sat at this container's own margin, and a
@@ -629,15 +635,22 @@ class Container:
         measured over 20,000 generated documents, always reopening scores 3467
         disagreements and never reopening 3485, against 2755 for asking.
 
-        The LIST nesting stays either way, because a list item that contained a
-        quote still contains the lines after it, and its content column is the
-        only thing keeping their continuations out of the code scope -- dropping
-        it would rescope a nested bullet's own paragraph the moment somebody
-        quoted something above it, which is the false positive the second
-        CommonMark rule above exists to stop.
+        The LIST nesting survives ONLY as far as `col` reaches: a list item
+        that contained a quote still contains the lines after it, so a column
+        the marker was indented PAST stays open -- dropping it there would
+        rescope a nested bullet's own paragraph the moment somebody quoted
+        something above it, the false positive the second CommonMark rule
+        above exists to stop. A column the marker was NOT indented past did
+        not contain it: `* item` followed by a `>` written at column 0 is the
+        same rule the margin already applies to leaf blocks, read for a list --
+        the marker closed the item, so the four spaces under it measure from
+        THIS container's own margin, not from a column the marker skipped
+        over. #226.
         """
         self._indented = False
         self._paragraph = lazy
+        while self._lists and col < self._lists[-1]:
+            self._lists.pop()
 
     def _threshold(self) -> int:
         """The column at which an indented code block starts here -- four past
@@ -891,6 +904,12 @@ class Code:
 
     def __init__(self) -> None:
         self._containers = [Container()]
+        # `_marker_col[d]` is the column, in container `d`'s own margin, of
+        # the most recent `>` that peeled to reach container `d + 1` -- set
+        # every line that marker is matched, so by the time the child closes
+        # it holds where the LAST one sat rather than the first. `reopen`
+        # reads it to tell a nested quote from one at the parent's margin.
+        self._marker_col: list[int] = []
 
     def feed(self, raw: str) -> bool:
         """Advance one line. True if the line is part of a code block of either
@@ -903,6 +922,9 @@ class Code:
             m = QUOTE_RE.match(line)
             if not m:
                 break
+            while len(self._marker_col) <= depth:
+                self._marker_col.append(0)
+            self._marker_col[depth] = len(line) - len(line.lstrip(" "))
             line = line[m.end() :]
             depth += 1
 
@@ -916,10 +938,17 @@ class Code:
                 depth < len(self._containers) - 1
                 and self._containers[-1].paragraph
             )
+            # The column the marker that opened the now-closed child sat at,
+            # in container `depth`'s own margin -- 0 when `depth` is a
+            # container just created rather than one a child closed back
+            # into, where no list of its own exists yet for the column to
+            # matter to.
+            col = self._marker_col[depth] if depth < len(self._marker_col) else 0
             del self._containers[depth + 1 :]
+            del self._marker_col[depth + 1 :]
             while len(self._containers) <= depth:
                 self._containers.append(Container())
-            self._containers[depth].reopen(lazy)
+            self._containers[depth].reopen(lazy, col)
 
         return self._containers[depth].feed(line)
 
