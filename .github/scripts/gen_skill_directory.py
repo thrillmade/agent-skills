@@ -195,8 +195,13 @@ NOT_HERE_PROBES = [
     ),
     ("test-driven", "**The same discipline under its other name**"),
     (
-        "forcing function",
-        "**Norman's design primitives** -- forcing functions, mapping, the two gulfs",
+        # Narrowed 2026-08-18: `empirical-design-principles` (#233) filled the
+        # forcing-functions and mapping half of this gap, so the old probe term
+        # started matching and the generator correctly refused to publish a
+        # stale claim. The gulfs are still uncovered -- measured 0 files, with
+        # `contrast` -> 20 as the control that the matcher works. See #225.
+        "gulf of execution",
+        "**Norman's two gulfs** -- execution and evaluation",
     ),
 ]
 
