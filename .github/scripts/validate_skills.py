@@ -46,6 +46,7 @@ Exit codes:
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -139,6 +140,140 @@ SUPERSEDED_RE = re.compile(r"SUPERSEDED\b")
 # still hand-written prose; this reconciles its MEMBERSHIP only -- see
 # `readme_errors`.
 README_SKILL_LINK_RE = re.compile(r"\(skills/([a-z0-9-]+)/SKILL\.md\)")
+
+# --- markdown link integrity gate (skills/) ---------------------------------
+#
+# #234: `check-links` (the logmind-installed required status check) is blind
+# to skills/ -- it walks docs/ only, so a merge gate reports green over the
+# one directory the catalog exists to protect, and that green is
+# indistinguishable from a real all-clear. Reproduced with a control in the
+# issue: an identical broken link in a skill body passes; the same break in
+# README.md is caught.
+#
+# Built HERE rather than routed through `.github/workflows/check-doc-links.yml`
+# for two measured reasons (issue #234):
+#   1. That workflow's Go linkchecker install hardcodes its roots, and its own
+#      source defers config support -- setting `linkcheck.roots` is a silent
+#      no-op, so it cannot be pointed at skills/ by configuration.
+#   2. Its self-heal job can push commits to a PR branch with the instruction
+#      "either remove the link line or fix the target path", aimed at a
+#      `## Cross-references` block -- which silently deletes the content this
+#      gate exists to protect, on the branch it is supposed to be protecting.
+#
+# SCOPE, decided and stated rather than left for a reader to infer: ONLY
+# relative links are resolved against the filesystem. Absolute http(s) links
+# are counted (`link_stats`) but never fetched -- network access from CI is
+# flaky and slow, and a reference file's absolute GitHub URL legitimately
+# 404s until ITS OWN PR merges (issue #234 names PR #233's three
+# `references/` links as the live case); a checker that fetches would block
+# its own PR. `main()` prints the scope line below unconditionally, so a
+# reader of green output is told the bound rather than assuming "all links".
+#
+# Also handled, because a false positive here fires on every PR and is worse
+# than the gap being closed:
+#   - same-page anchors (`[x](#section)`) -- no path component, nothing to
+#     resolve, never flagged;
+#   - link-shaped text inside fenced code blocks and inline code spans (a
+#     skill SHOWING markdown link syntax as an example) -- blanked out
+#     before the link regex runs, so it is never seen as a real link.
+#
+# NOT checked: whether a `#fragment` heading actually exists in the target
+# file. The control in #234 (and every case measured) is a missing FILE, not
+# a missing heading; verifying headings too would need a markdown-heading
+# parser per target file for a case nothing here has hit yet. Scope stated,
+# not silently assumed.
+
+FENCE_RE = re.compile(r"^([ \t]*)(```|~~~).*?^\1\2[ \t]*$", re.DOTALL | re.MULTILINE)
+INLINE_CODE_RE = re.compile(r"`[^`\n]*`")
+LINK_RE = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
+ABSOLUTE_LINK_SCHEMES = ("http://", "https://", "mailto:")
+
+
+def _blank_out(match: re.Match) -> str:
+    """Replace a matched span with same-length whitespace (newlines kept),
+    so line numbers computed from the SCANNED text still line up with the
+    original file -- deletion would shift every subsequent line number.
+    """
+    return re.sub(r"[^\n]", " ", match.group(0))
+
+
+def _strip_code(text: str) -> str:
+    """Blank fenced code blocks then inline code spans, so link-shaped text
+    used as a documentation EXAMPLE is never read as a real link. Order
+    matters: a fenced block can itself contain single backticks, so fences
+    have to go first or `INLINE_CODE_RE` would eat into them.
+    """
+    return INLINE_CODE_RE.sub(_blank_out, FENCE_RE.sub(_blank_out, text))
+
+
+def _link_target(raw: str) -> str:
+    """The URL/path portion of a `(...)` link destination, with an optional
+    trailing `"title"` or `'title'` stripped off.
+    """
+    raw = raw.strip()
+    m = re.match(r'^(\S+)(?:\s+["\'].*["\'])?$', raw)
+    return m.group(1) if m else raw
+
+
+def _iter_links(root: Path):
+    """Yield (md_path, line_no, path_part, is_absolute) for every markdown
+    link found under `root`, fenced code / inline code excluded and any
+    `#fragment` split off. Same-page anchors (`[x](#foo)`, no path before
+    the `#`) are never yielded -- there is nothing to classify or resolve.
+    """
+    for md_path in sorted(root.glob("**/*.md")):
+        text = md_path.read_text(encoding="utf-8")
+        scan = _strip_code(text)
+        for m in LINK_RE.finditer(scan):
+            target = _link_target(m.group(1))
+            path_part = target.split("#", 1)[0]
+            if not path_part:
+                continue
+            is_absolute = path_part.startswith(ABSOLUTE_LINK_SCHEMES)
+            line_no = scan.count("\n", 0, m.start()) + 1
+            yield md_path, line_no, path_part, is_absolute
+
+
+def _resolve_relative(md_path: Path, root: Path, path_part: str) -> Path:
+    """A relative link resolves against the LINKING FILE's own directory
+    (markdown convention); a leading-`/` link resolves against the repo
+    root (`root.parent`, since `root` itself is `skills/`).
+    """
+    base = root.parent if path_part.startswith("/") else md_path.parent
+    return Path(os.path.normpath(base / path_part.lstrip("/")))
+
+
+def link_errors(root: Path) -> list[str]:
+    """Broken relative markdown links under `root` -- the #234 gate.
+
+    Absolute http(s) links are never included here (see the module comment
+    above); `link_stats` reports how many were seen instead.
+    """
+    errors: list[str] = []
+    for md_path, line_no, path_part, is_absolute in _iter_links(root):
+        if is_absolute:
+            continue
+        target_path = _resolve_relative(md_path, root, path_part)
+        if not target_path.exists():
+            errors.append(
+                f"::error file={md_path}::line {line_no}: broken relative "
+                f"link -> {path_part} (resolved: {target_path}) does not exist"
+            )
+    return errors
+
+
+def link_stats(root: Path) -> tuple[int, int]:
+    """(relative_count, absolute_count) markdown links seen under `root` --
+    what `main()`'s scope line reports, so a reader of green CI output is
+    told the bound rather than assuming every link was verified.
+    """
+    relative = absolute = 0
+    for _md_path, _line_no, _path_part, is_absolute in _iter_links(root):
+        if is_absolute:
+            absolute += 1
+        else:
+            relative += 1
+    return relative, absolute
 
 
 def _is_superseded(meta: dict) -> bool:
@@ -678,6 +813,7 @@ def run(root: Path) -> list[str]:
 
     errors.extend(directory_errors(root, placement_map_path))
     errors.extend(readme_errors(root, skill_dirs))
+    errors.extend(link_errors(root))
     # --- docs/skill-versions.json currency gate ------------------------
     #
     # The published index is what a subscriber reads to answer "am I
@@ -881,6 +1017,20 @@ def coverage_errors(root: Path, validated: int) -> list[str]:
 
 def main() -> int:
     errors = run(ROOT)
+
+    # Printed on every completed run, pass or fail (#234) -- but AFTER
+    # `run(ROOT)`, which exits the process directly for the two infra-fatal
+    # conditions (no skills/ dir; skills/ with no subdirectories) where
+    # there is no tree to state a bound about. A reader of green CI output
+    # is TOLD the bound the link gate checked -- relative links resolved on
+    # disk, absolute http(s) links counted but never fetched -- rather than
+    # left to assume "all links" from silence.
+    relative, absolute = link_stats(ROOT)
+    print(
+        f"link scope: {relative} relative link(s) checked against the "
+        f"filesystem; {absolute} absolute http(s)/mailto link(s) found and "
+        "counted, not fetched (no network access in this gate)."
+    )
 
     if errors:
         for e in errors:
