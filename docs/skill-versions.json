@@ -5,14 +5,14 @@
  "enumeration": {
   "refs": "refs/remotes/origin/*",
   "publishing_ref": "origin/main",
-  "commits": 150,
+  "commits": 163,
   "blobs": 252
  },
- "versions_enumerated": 176,
+ "versions_enumerated": 177,
  "verification": {
   "current": "GATED. validate_skills.py recomputes every `current` from skills/<slug>/SKILL.md on every pull request. Needs no git history, so it holds at the depth-1 checkout CI uses.",
   "history": "NOT GATED. History is derived from git and validate-skills.yml checks out at fetch-depth 1, so CI cannot recompute these rows. Regenerate them in a full clone with `.github/scripts/gen_skill_versions.py --write`.",
-  "history_rows_ungated": 120
+  "history_rows_ungated": 121
  },
  "skills": {
   "apca-contrast": {
@@ -451,7 +451,7 @@
    ]
   },
   "frontend-a11y": {
-   "current": "56be4995fc2f",
+   "current": "ec171fa67568",
    "authoring_home": "catalog",
    "history": [
     {
@@ -822,6 +822,11 @@
      "v": "b2d7a06203fa",
      "commit": "f552f6e",
      "date": "2026-08-17"
+    },
+    {
+     "v": "15eb93208c7d",
+     "commit": "7efd6b5",
+     "date": "2026-08-18"
     }
    ]
   },
