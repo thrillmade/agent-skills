@@ -13,10 +13,10 @@ PR's CI run, so this file is always coherent with current `main`.
 ---
 
 
-## 2026-08 (19 decisions)
+## 2026-08 (21 decisions)
 
-- **2026-08-15** — Choose the gate's remedy from the ledger the author actually has, not from a constant *(feat/prose-retention-gate)* — [decisions-branches/feat__prose-retention-gate.md](decisions-branches/feat__prose-retention-gate.md)
-- *... 17 more decisions ...*
+- **2026-08-18** — Close the review's four real holes in the catalog directory: a retired skill filed as live, a probe scan that reddened foreign PRs, growth numbers with no owner, and a README nothing reconciled *(feat/catalog-directory)* — [decisions-branches/feat__catalog-directory.md](decisions-branches/feat__catalog-directory.md)
+- *... 19 more decisions ...*
 - **2026-08-14** — Gate skill size with a shrink-only ratchet, and deprecate skillforge into the three skills that own its job *(feat/skill-depth-and-interlinking)* — [decisions-branches/feat__skill-depth-and-interlinking.md](decisions-branches/feat__skill-depth-and-interlinking.md)
 
 ## 2026-07 (13 decisions)

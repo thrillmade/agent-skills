@@ -36,8 +36,16 @@ pytest tests/ -q                             # the gates' own regression guard
 logmind log "…" -r "…" -a "…" -i "…"         # the commit primitive (see above)
 ```
 
-The first two run in about a second. **Neither is optional before opening a PR** — CI runs
-the same two, unconditionally.
+The validator runs in about a second. The suite takes minutes: most of its wall clock is the
+two mutation files (`test_prose_retention_mutations.py`, `test_skill_directory_mutations.py`),
+which each run the real suites in a subprocess once per mutation — that is what makes "this
+guard can fail" a fact rather than a claim, and it is worth the wait. Run the fast subset while
+iterating —
+`pytest tests/ -q --ignore=tests/test_prose_retention_mutations.py --ignore=tests/test_skill_directory_mutations.py`
+— and the whole thing before you push. **Neither command is optional before opening a PR** — CI
+runs the same two, unconditionally. (No test count or duration is quoted here on purpose: a
+hand-kept number with no gate reads as true until one quietly isn't. Run it and read the
+output.)
 
 ## The `dev` branch
 

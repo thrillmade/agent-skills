@@ -6,8 +6,21 @@ These skills run inside any agent that loads skills.sh — Claude Code, Cursor, 
 
 ## Skills in this collection
 
+**The catalog has a directory, and it is a skill** — the only kind of artifact that can leave this repo. [`finding-a-catalog-skill`](skills/finding-a-catalog-skill/SKILL.md) is this table's job done as a skill, so an agent in a subscriber repo can see what the catalog covers without opening fifty files. It is generated from [`docs/placement-map.json`](docs/placement-map.json) and gated: add a skill without regenerating and `validate-skills` goes red on your PR. Regenerate with `python3 .github/scripts/gen_skill_directory.py --write`.
+
+**It does not install itself.** Measured: `npx skills update` refreshes the skills a repo already has and never adds one, so each repo opts in once —
+
+```bash
+npx skills add https://github.com/thrillmade/agent-skills --skill finding-a-catalog-skill
+```
+
+— and from then on every regeneration arrives with a plain `npx skills update`. That is the claim worth making: the one-time `add` is the whole cost, and the map cannot go stale in a repo that has it.
+
+The table below is the same list in long form — it has no byte cap, so it can afford sentences the directory cannot. Its **membership** is gated: `validate-skills` reconciles the `skills/<name>/SKILL.md` links here 1:1 against the tree, so a skill cannot be added without a row and a row cannot outlive its skill. The purpose column is hand-written prose on purpose — [#229](https://github.com/thrillmade/agent-skills/issues/229) proposed generating the table, and generating it from a 32-byte fragment would make it worse in order to make it derived.
+
 | Skill | Purpose |
 |---|---|
+| [`finding-a-catalog-skill`](skills/finding-a-catalog-skill/SKILL.md) | The generated directory of the whole catalog — every skill, grouped by family, with what each one owns, plus the gaps the catalog deliberately does not cover. Load it before authoring any rule or convention, and before concluding nothing covers something. |
 | [`logmind`](skills/logmind/SKILL.md) | Teach agents when and how to log architectural decisions in projects using [logmind](https://logmind.dev). Activates whenever an agent works in a project with `.logmind/config.yml` or an `AGENTS.md`/`CLAUDE.md` mentioning logmind. |
 | [`critical-issues-only`](skills/critical-issues-only/SKILL.md) | PR review discipline — flag only correctness, security, and performance issues. Skip style nits and naming preferences. Ships as a baseline with [clud-bug](https://github.com/thrillmade/clud-bug). |
 | [`evidence-based-review`](skills/evidence-based-review/SKILL.md) | Every PR review claim must quote the specific code being criticized. No hand-waving, no vague "might cause issues." Cite or delete. Ships as a baseline with clud-bug. |
@@ -24,7 +37,7 @@ These skills run inside any agent that loads skills.sh — Claude Code, Cursor, 
 | [`unattended-operation`](skills/unattended-operation/SKILL.md) | Policy for a session a human explicitly handed over to run **unattended** (often called "night mode", but the trigger is the handover, never the clock) — the handover contract, the reversible-and-invisible boundary on action, "a scheduled wake is never consent", named hard stops, and the handback digest. Layers on [`session-heartbeat`](skills/session-heartbeat/SKILL.md). Not dark mode. |
 | [`curating-a-skill-catalog`](skills/curating-a-skill-catalog/SKILL.md) | The skill-census rubric — lifecycle states, the five verdict kinds with evidence standards, the top-5-plus-digest noise budget, and the human-editor gate. Applied weekly by the census workflow; recursive (the rubric censuses itself). |
 | [`token-frugal-tooling`](skills/token-frugal-tooling/SKILL.md) | Quick-reference for the org's token-frugal CLI conventions in repos running both logmind and clud-bug — quiet-mode env vars, artifact defaults, agent-mode flags. Detail lives in the per-tool skills. |
-| [`skillforge`](skills/skillforge/SKILL.md) ✨ | Create or update a reusable agent skill. Use when you notice a repeated pattern, when a workflow should be persisted for future sessions, or when asked to forge/create/scaffold a new skill. **Vendored from [zakelfassi/skills-driven-development](https://github.com/zakelfassi/skills-driven-development) with attribution** — the canonical SkDD meta-skill (the skill that creates skills). MIT, Zak El Fassi. |
+| [`skillforge`](skills/skillforge/SKILL.md) ✨ | **Superseded** ([#203](https://github.com/thrillmade/agent-skills/issues/203)) — skill authoring is now split three ways: `skill-creator` owns measurement, `superpowers:writing-skills` owns wording form, and the studio's `skill-smith` agent owns house rules. Kept unchanged during the migration window; new work should load the successors. **Vendored from [zakelfassi/skills-driven-development](https://github.com/zakelfassi/skills-driven-development) with attribution** — the canonical SkDD meta-skill. MIT, Zak El Fassi. |
 
 ## Design & design-system skills — three layers
 
@@ -185,7 +198,7 @@ python .github/scripts/check_prose_retention.py
 Skills marked with ✨ are **vendored verbatim from upstream authors** — kept here so they install alongside the thrillmade catalog and stay reachable from the same `npx skills add` command, but with original author + spec metadata preserved in the SKILL.md frontmatter.
 
 Current vendored skills:
-- `skillforge` — from Zak El Fassi's [skills-driven-development](https://github.com/zakelfassi/skills-driven-development) repo. The canonical SkDD meta-skill (the skill that creates skills). MIT licensed. Vendored at v2.0; we'll sync on his releases.
+- `skillforge` — from Zak El Fassi's [skills-driven-development](https://github.com/zakelfassi/skills-driven-development) repo. The canonical SkDD meta-skill (the skill that creates skills). MIT licensed. Vendored at v2.0. **Superseded here** ([#203](https://github.com/thrillmade/agent-skills/issues/203)) and filed under `deprecated` in the directory, so no listing routes work to it; the vendored copy stays for the migration window.
 
 **Why vendor:** the upstream skill is canonical for its methodology; reimplementing would fragment. Vendoring with attribution keeps users on the canonical artifact + makes it installable through the same channel as the rest of our catalog. Both source-of-truth (upstream) and local-copy (here) stay in sync via periodic refresh PRs.
 

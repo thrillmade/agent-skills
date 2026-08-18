@@ -19,6 +19,7 @@ if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
 import validate_skills  # noqa: E402  -- import needs the sys.path line above
+import gen_skill_directory  # noqa: E402  -- same
 
 
 # A SKILL.md that passes every rule. Tests break exactly one thing at a time
@@ -72,6 +73,47 @@ class SkillTree:
         path = d / "placement-map.json"
         path.write_text(raw if raw is not None else json.dumps(obj), encoding="utf-8")
         return path
+
+    def control_skill(self, name: str = "control") -> Path:
+        """A skill whose DESCRIPTION carries the "deliberately not here"
+        section's CONTROL term. The generator refuses to render without one --
+        an uncontrolled zero is not a measurement -- so any tree holding the
+        directory needs this. It is a fixture requirement that exists because
+        the guard is real, not a workaround for it.
+
+        In the description and not the body: the probe scan reads each skill's
+        trigger surface (name + frontmatter), because that is what decides
+        whether an agent ever finds a skill -- and because scanning bodies let
+        one skill's cross-reference redden the whole gate.
+        """
+        return self.skill(
+            name,
+            VALID_SKILL.format(name=name).replace(
+                "description: What this skill does",
+                "description: What this skill does about "
+                f"{gen_skill_directory.NOT_HERE_CONTROL},",
+            ),
+        )
+
+    def directory(self, body: str | None = None) -> Path:
+        """Create `skills/<DIRECTORY_SLUG>/SKILL.md`.
+
+        `body=None` writes what the generator renders for the tree AS IT IS AT
+        THIS MOMENT -- so a test that adds a skill afterwards has a stale
+        directory, which is precisely the case the gate exists for. Order the
+        calls accordingly.
+        """
+        # The directory dir has to exist BEFORE the render: the directory is a
+        # skill like any other and lists itself, so rendering first and
+        # creating second produces a body that is stale the instant it is
+        # written. Same self-reference the real generator handles.
+        self.skill(gen_skill_directory.DIRECTORY_SLUG)
+        if body is None:
+            body = gen_skill_directory.render(
+                self.base / "skills", self.base / "docs" / "placement-map.json"
+            )
+        head = f"---\nname: {gen_skill_directory.DIRECTORY_SLUG}\ndescription: d\n---"
+        return self.skill(gen_skill_directory.DIRECTORY_SLUG, head + body)
 
     def validate(self) -> list[str]:
         """Run the gate over this tree and return its error annotations."""
