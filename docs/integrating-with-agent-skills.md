@@ -25,7 +25,18 @@ A departed repo is not Subscribed, Published, or Local — it was Subscribed and
 - **No migration window.** A deprecation's SUPERSEDED period exists so a *listening* repo has time to re-point before removal. A departed repo doesn't see the marker land and doesn't see the removal either — it just keeps whatever slug it had at handoff, forever.
 - **`skills-lock.json` still commits, but changes role.** "Manifests are repo content" still holds — don't delete or gitignore it. It stops meaning "what I'm subscribed to" and starts meaning "what I was given, and at what version": provenance a future paid-subscription product would attach to, not a live pointer this repo's automation still resolves.
 
-What a departed repo **can** still do, unaided: verify currency for itself. `computedHash` in `skills-lock.json` is a plain content hash, computable with nothing beyond the Python standard library (`hashlib`); `thrillmade/agent-skills` is a public repo, so the corresponding file is fetchable with `curl` alone, no org membership or token required. Recomputing the hash and diffing it against the catalog's current copy works from anywhere, on demand — it just never happens automatically, and nothing tells the repo when it's worth doing.
+What a departed repo **can** still do, unaided: verify currency for itself — but **via the `version:` stamp, not via `computedHash`.**
+
+Each skill's frontmatter carries a `version:` line holding a content digest of that file, computed with the line itself elided so the stamp is a fixed point. It is reproducible from bytes with nothing beyond the Python standard library, and `thrillmade/agent-skills` is public, so both the checker and the index it reads are fetchable with `curl` alone — no org membership, no token, no install:
+
+```bash
+curl -fsSLO https://raw.githubusercontent.com/thrillmade/agent-skills/main/.github/scripts/skills_current.py
+python3 skills_current.py            # from the repo root
+```
+
+**Do not try this with `skills-lock.json`'s `computedHash`.** That hash is produced by the skills.sh CLI and its normalisation is not reproducible from the standard library: this catalog tried roughly forty candidate algorithms against real stored values and none matched, which is why `census_counters.py` leaves `CATALOG_HASH_ALGO` at `None` and reports every subscription `indeterminate` rather than claiming drift it cannot prove. `computedHash` is provenance you keep; it is not a check you can run.
+
+It works from anywhere, on demand — it just never happens automatically, and nothing tells the repo when it is worth doing.
 
 What it **cannot** do: receive a refresh PR, get flagged by the census, or see a migration window. Those all require the org to still be able to read or write the repo, and a departed repo is, by definition, a repo the org no longer touches.
 
