@@ -92,6 +92,7 @@ agent-skills
 │   ├── test_gen_skill_versions.py
 │   ├── test_gitignore_covers_local_state.py
 │   ├── test_prose_retention_mutations.py
+│   ├── test_skill_census_digest_closure.py
 │   ├── test_skill_directory_mutations.py
 │   ├── test_skill_version.py
 │   ├── test_skills_current.py
