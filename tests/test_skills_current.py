@@ -232,10 +232,37 @@ def test_a_repo_mirrored_skill_is_not_accused_of_diverging() -> None:
     assert "logmind" in why
 
 
+def test_a_repo_mirrored_skill_already_in_history_is_still_mirrored_not_stale() -> None:
+    """The defect: an authoring repo's own digest can land in THIS catalog's
+    history (a mirror sync captured it once), which put the `mine in history
+    and current in history` branch ahead of the `repo-mirrored:` branch and
+    made this classify STALE -- telling the authoring repo to
+    `npx skills add` its own source from a mirror that is, by the module
+    docstring's own words, "not the authority".
+    """
+    entry = {
+        "current": "cccccccccccc",
+        "authoring_home": "repo-mirrored:logmind",
+        "history": [
+            {"v": "aaaaaaaaaaaa", "date": "2026-01-01", "commit": "1111111"},
+            {"v": "cccccccccccc", "date": "2026-02-01", "commit": "2222222"},
+        ],
+    }
+    verdict, why = _classify("aaaaaaaaaaaa", entry)
+    assert verdict == "mirrored"
+    assert "logmind" in why
+
+
 def test_a_retired_skill_never_produces_an_install_instruction(tmp_path: Path) -> None:
     """A slug the catalog no longer publishes has no version to install.
     Printing `npx skills add ... <slug>` for it is an instruction that
     cannot succeed.
+
+    It DOES exit nonzero, though: `retired` means a copy is behind a skill
+    the catalog dropped entirely, and the exit-code table says so -- a
+    docstring promising 1 "for something stale or diverged" while the code
+    folded this into the silent-0 bucket was the exact silent all-clear this
+    mechanism exists to close.
     """
     write_skill(tmp_path / ".claude" / "skills", "alpha")
     index = write_index(tmp_path, {
@@ -245,7 +272,25 @@ def test_a_retired_skill_never_produces_an_install_instruction(tmp_path: Path) -
     p = run("--repo", str(tmp_path), "--index", str(index))
     assert "retired" in p.stdout
     assert "npx skills add" not in p.stdout
-    assert p.returncode == 0, p.stdout
+    assert p.returncode == 1, p.stdout
+
+
+def test_an_unpublished_branch_build_still_exits_0(tmp_path: Path) -> None:
+    """`unpublished` is explicitly NOT behind (see the docstring) -- a
+    feature-branch build ahead of what `current` names. Unlike `retired`,
+    this one stays in the exit-0 bucket, and the docstring says so.
+    """
+    p = write_skill(tmp_path / ".claude" / "skills", "alpha", n=1)
+    mine = skill_version.digest(p.read_bytes())
+    index = write_index(tmp_path, {
+        "alpha": {"current": "aaaaaaaaaaaa", "history": [
+            {"v": "aaaaaaaaaaaa", "date": "2026-01-01", "commit": "1111111"},
+            {"v": mine, "date": "2026-02-01", "commit": "2222222"},
+        ]},
+    })
+    r = run("--repo", str(tmp_path), "--index", str(index))
+    assert "unpublished" in r.stdout
+    assert r.returncode == 0, r.stdout
 
 
 # --- end to end ------------------------------------------------------------

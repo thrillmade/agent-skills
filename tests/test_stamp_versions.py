@@ -83,19 +83,54 @@ def test_restamp_refuses_a_stamp_that_changed_the_name(monkeypatch) -> None:
         stamp_versions.restamp(BASE)
 
 
-def test_restamp_refuses_a_stamp_that_is_not_idempotent(monkeypatch) -> None:
-    """Drop the quotes and the YAML value is still the right digest, so the
-    re-parse check above is satisfied -- only idempotence catches it. That is
-    why idempotence is the assertion kept: `stamp(new) == new` holds only if
-    `new` already carries exactly the canonical line, so it implies the fixed
-    point rather than restating it.
+def test_restamp_refuses_a_one_time_unquoting_sabotage(monkeypatch) -> None:
+    """Drop the quotes on the FIRST call only and the YAML value is still the
+    right digest, so the re-parse check above is satisfied. This is the shape
+    the fixed-point assertion below was mutation-tested against before it was
+    deleted: `new` itself is malformed (unquoted), so `stamped_value(new)`
+    disagrees with `digest(new)` and the fixed-point assertion fires first --
+    idempotence never gets a turn.
+
+    A one-time sabotage is a narrower case than a real regression, though --
+    see `test_restamp_refuses_a_persistent_unquoting_regression` below for
+    the shape that was missed.
     """
     def unquote(out: bytes, raw: bytes) -> bytes:
         d = skill_version.digest(out).encode()
         return out.replace(b'version: "' + d + b'"', b"version: " + d)
 
     _sabotage(monkeypatch, unquote)
-    with pytest.raises(AssertionError, match="not idempotent"):
+    with pytest.raises(AssertionError, match="not a fixed point"):
+        stamp_versions.restamp(BASE)
+
+
+def test_restamp_refuses_a_persistent_unquoting_regression(monkeypatch) -> None:
+    """A regression inside `version_line` itself -- not at the `stamp` call
+    site -- fires on EVERY call, including the idempotence self-check two
+    lines below. Both sides of `stamp(new) == new` come out unquoted the same
+    way and agree with each other while both are wrong, so idempotence is
+    blind to it.
+
+    Only the fixed-point assertion (`stamped_value(new) == digest(new)`)
+    catches this: `stamped_value` reads the STRICT, quote-requiring
+    `STAMP_RE` and comes back `None` for an unquoted line. This is the
+    assertion `cbb3eff` deleted on the strength of a mutation that sabotaged
+    `stamp` only once -- a one-time sabotage is exactly the shape idempotence
+    *does* catch, so it proved nothing about a persistent one.
+    """
+    def unquoted_version_line(value: str) -> str:
+        return f"version: {value}  {skill_version.COMMENT}"
+
+    monkeypatch.setattr(skill_version, "version_line", unquoted_version_line)
+
+    # Control: under the regression, idempotence alone does NOT notice --
+    # both calls to `stamp` are corrupted the same persistent way.
+    new = skill_version.stamp(BASE)
+    assert skill_version.stamp(new) == new  # "idempotent" and still wrong
+    assert skill_version.stamped_value(new) is None
+    assert skill_version.digest(new) is not None
+
+    with pytest.raises(AssertionError, match="not a fixed point"):
         stamp_versions.restamp(BASE)
 
 

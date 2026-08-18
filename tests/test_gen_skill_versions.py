@@ -14,6 +14,7 @@ appeared on origin. They were another repo's own local skills.
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 from pathlib import Path
 
@@ -52,9 +53,14 @@ class Repo:
         p.write_text(SKILL.format(name=name, body=body), encoding="utf-8")
         return p
 
-    def commit(self, msg: str) -> str:
+    def commit(self, msg: str, date: str | None = None) -> str:
         self.git("add", "-A")
-        self.git("commit", "-q", "-m", msg)
+        args = ["commit", "-q", "-m", msg]
+        env = None
+        if date is not None:
+            env = {**os.environ, "GIT_AUTHOR_DATE": date, "GIT_COMMITTER_DATE": date}
+        p = subprocess.run(["git", *args], cwd=self.base, capture_output=True, text=True, env=env)
+        assert p.returncode == 0, f"git {args}: {p.stderr}"
         return self.git("rev-parse", "HEAD")
 
     def publish(self, ref: str, sha: str | None = None) -> None:
@@ -198,6 +204,36 @@ def test_no_skills_directory_is_fatal(repo: Repo) -> None:
     with pytest.raises(SystemExit) as e:
         build(repo)
     assert "0 SKILL.md blobs" in str(e.value)
+
+
+# --- history row order is the meaning, and nothing else pins it -----------
+
+
+def test_history_rows_are_ascending_chronological_order(repo: Repo) -> None:
+    """`skills_current.classify` computes `STALE n` from `history.index()` --
+    the row order IS what "n versions behind" means, oldest first. Nothing
+    else in this file asserts it: three sort sites (`enumerate_history`
+    twice, `merge_published` once) all key on the same timestamp, and a
+    `reverse=True` at any of them silently turns a two-versions-behind copy
+    into `unpublished`, which reads as fine.
+    """
+    p = repo.skill("alpha", body="Body 1.")
+    v1 = skill_version.digest(p.read_bytes())
+    repo.commit("v1", date="2024-01-01T00:00:00")
+
+    p = repo.skill("alpha", body="Body 2.")
+    v2 = skill_version.digest(p.read_bytes())
+    repo.commit("v2", date="2024-06-01T00:00:00")
+
+    p = repo.skill("alpha", body="Body 3.")
+    v3 = skill_version.digest(p.read_bytes())
+    repo.commit("v3", date="2025-01-01T00:00:00")
+    repo.publish("main")
+
+    index = build(repo)
+    rows = [h["v"] for h in index["skills"]["alpha"]["history"]]
+    assert len({v1, v2, v3}) == 3  # control: three genuinely distinct versions
+    assert rows == [v1, v2, v3]
 
 
 # --- provenance is recorded, not asserted ---------------------------------

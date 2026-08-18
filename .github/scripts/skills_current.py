@@ -37,8 +37,10 @@ Verdicts:
 
 Exit codes:
 
-    0  everything is current (or local, or mirrored)
-    1  something is stale or diverged
+    0  everything is current, local, mirrored, or unpublished (a branch
+       build -- by definition not behind, so not a failure)
+    1  something is stale, diverged, or retired (a copy that is behind, or
+       one whose skill the catalog no longer carries at all)
     2  UNCERTAIN -- the index could not be read, or no skills were found.
        Never 0: a run that examined nothing reports success exactly as loudly
        as one that examined thirty files, and that is the failure this whole
@@ -145,6 +147,16 @@ def classify(slug: str, mine: str, index: dict) -> tuple[str, str]:
     if mine == current:
         return "current", ""
 
+    # ABOVE the history checks below on purpose: a mirrored skill's
+    # AUTHORING repo is not this catalog, so a digest here that predates
+    # `current` is still not this catalog's to call stale -- the source of
+    # truth is the authoring repo, and this index only mirrors what it last
+    # saw there. Checking history first would tell an authoring repo to
+    # overwrite its own source from the mirror the docstring above says is
+    # "not the authority".
+    if home.startswith("repo-mirrored:"):
+        return "mirrored", f"authored in {home.split(':', 1)[1]}; the catalog only mirrors it"
+
     if mine in history and current in history:
         i, j = history.index(current), history.index(mine)
         if j < i:
@@ -153,9 +165,6 @@ def classify(slug: str, mine: str, index: dict) -> tuple[str, str]:
                 f"yours {mine} ({dates[mine]}), catalog {current} ({dates[current]})",
             )
         return "unpublished", f"yours {mine} ({dates[mine]}) is not on the published branch"
-
-    if home.startswith("repo-mirrored:"):
-        return "mirrored", f"authored in {home.split(':', 1)[1]}; the catalog only mirrors it"
 
     if mine in history:
         return f"STALE {len(history) - history.index(mine)}", (
@@ -202,7 +211,7 @@ def main(argv: list[str] | None = None) -> int:
         f"\n{len(dirs)} skill(s) checked: "
         + ", ".join(f"{tally[k]} {k}" for k in order if k in tally)
     )
-    return 1 if tally.get("STALE") or tally.get("DIVERGED") else 0
+    return 1 if tally.get("STALE") or tally.get("DIVERGED") or tally.get("retired") else 0
 
 
 if __name__ == "__main__":

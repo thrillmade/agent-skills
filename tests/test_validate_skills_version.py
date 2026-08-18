@@ -24,6 +24,8 @@ from pathlib import Path
 
 import pytest
 import skill_version
+import stamp_versions
+import validate_skills
 
 from conftest import SCRIPTS, SkillTree
 
@@ -77,6 +79,44 @@ def test_an_unstamped_skill_is_not_an_error(tree: SkillTree) -> None:
 def test_a_correctly_stamped_skill_is_clean(tree: SkillTree) -> None:
     stamped(tree)
     assert tree.validate() == []
+
+
+# --- the gate reads the same bytes `stamp_versions` and `skill_version` do -
+#
+# `read_text()` universal-newline-decodes BOTH `\r\n` and a lone `\r` to
+# `\n`; `skill_version._lf()` only elides `\r\n` pairs. A gate built on the
+# text path can therefore call a file clean that the digest rule (and
+# `stamp_versions --write`) disagrees with, and the remedy it prints is then
+# a no-op.
+
+
+def test_a_cr_only_file_fails_missing_frontmatter(tree: SkillTree) -> None:
+    """No `\\n` anywhere -- the frontmatter fences aren't `---\\n` any more,
+    so there is nothing here `FRONTMATTER_RE` can match. This has to be an
+    error, not a silently-skipped file.
+    """
+    path = tree.valid_skill()
+    assert tree.validate() == []  # control: clean before the corruption
+    raw = (path / "SKILL.md").read_bytes()
+    cr_only = raw.replace(b"\n", b"\r")
+    assert b"\n" not in cr_only and b"\r" in cr_only  # control: genuinely CR-only
+    (path / "SKILL.md").write_bytes(cr_only)
+    assert "missing YAML frontmatter" in only(tree.validate())
+
+
+def test_a_lone_cr_in_the_body_is_tolerated(tree: SkillTree) -> None:
+    """A lone CR that never pairs with an LF, sitting in the BODY where it
+    doesn't touch the frontmatter fences, must not stop the frontmatter from
+    matching -- and the digest this gate checks against must be the same one
+    `stamp_versions.py` computes for the same bytes.
+    """
+    path = tree.frontmatter(body="\n# Title\n\nBody one.\rBody two.\n")
+    raw = (path / "SKILL.md").read_bytes()
+    assert b"\r" in raw and b"\r\n" not in raw  # control: a lone CR, not a pair
+    stamped_raw = skill_version.stamp(raw)
+    (path / "SKILL.md").write_bytes(stamped_raw)
+    assert tree.validate() == []
+    assert stamp_versions.restamp(stamped_raw) == stamped_raw  # agrees with --check
 
 
 # --- the stamp is checked against the file's own bytes ---------------------
@@ -254,12 +294,21 @@ def test_a_skill_missing_from_the_index_is_rejected(tree: SkillTree) -> None:
     assert error.startswith(INDEX + "skills.beta is missing")
 
 
-def test_an_absent_index_is_tolerated(tree: SkillTree) -> None:
-    """Same posture as the placement map: presence-with-defects fails,
-    absence does not."""
+def test_an_absent_index_is_rejected(tree: SkillTree) -> None:
+    """NOT the placement map's posture. The placement map may be authored by
+    a parallel agent and legitimately not exist yet; this index is generated
+    by this catalog's own tooling and checked in, so its absence is every
+    `skills.<slug>` entry missing at once -- deleting it must not silently
+    disarm the gate that exists to catch exactly that.
+
+    `validate_skills.run()` directly, not `tree.validate()` -- the latter
+    auto-provisions a matching index for tests that don't care about this
+    gate (see its docstring), which would defeat the one test that does.
+    """
     stamped(tree)
     assert not (tree.base / "docs" / "skill-versions.json").exists()
-    assert tree.validate() == []
+    error = only(validate_skills.run(Path("skills")))
+    assert error.startswith(INDEX + "could not read")
 
 
 def test_a_malformed_index_is_rejected(tree: SkillTree) -> None:

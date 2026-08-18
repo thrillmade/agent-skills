@@ -18,6 +18,7 @@ SCRIPTS = REPO_ROOT / ".github" / "scripts"
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
+import skill_version  # noqa: E402  -- import needs the sys.path line above
 import validate_skills  # noqa: E402  -- import needs the sys.path line above
 import gen_skill_directory  # noqa: E402  -- same
 
@@ -116,7 +117,36 @@ class SkillTree:
         return self.skill(gen_skill_directory.DIRECTORY_SLUG, head + body)
 
     def validate(self) -> list[str]:
-        """Run the gate over this tree and return its error annotations."""
+        """Run the gate over this tree and return its error annotations.
+
+        `docs/skill-versions.json` absence is now an error to the gate
+        itself (presence-with-defects is not the only failure any more --
+        see `test_an_absent_index_is_rejected`), but most tests in this
+        suite exercise a per-skill rule that has nothing to do with that
+        gate. So: auto-provision a matching index, computed fresh at THIS
+        call from whatever `skills/` currently holds -- a mutation made
+        after the skill was created is reflected too, so this never trips a
+        spurious currency error -- UNLESS a test already wrote its own (see
+        `index_for()` in test_validate_skills_version.py, always called
+        after every skill() call so it always wins). A test that wants to
+        see the gate with no scaffolding at all calls `validate_skills.run()`
+        directly instead of going through here.
+        """
+        import json
+
+        versions_path = self.base / "docs" / "skill-versions.json"
+        if not versions_path.exists():
+            skills = {
+                md.parent.name: {
+                    "current": skill_version.digest(md.read_bytes()),
+                    "history": [],
+                }
+                for md in sorted((self.base / "skills").glob("*/SKILL.md"))
+            }
+            versions_path.parent.mkdir(parents=True, exist_ok=True)
+            versions_path.write_text(
+                json.dumps({"version": 1, "skills": skills}), encoding="utf-8"
+            )
         return validate_skills.run(Path("skills"))
 
 

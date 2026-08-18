@@ -63,13 +63,18 @@ def restamp(raw: bytes) -> bytes:
         assert new_meta.get(key) == old_meta.get(key), f"stamping changed `{key}`"
     assert new_meta.get("version") == skill_version.digest(new), "stamp does not re-parse"
 
-    # Idempotence, and nothing weaker. `stamp(new) == new` holds only if `new`
-    # already carries exactly the canonical line for its own digest, so it
-    # implies the fixed point -- a separate
-    # `stamped_value(new) == digest(new)` assertion sat here until a mutation
-    # run showed no sabotage could reach it without tripping this line first.
-    # An assertion nothing can falsify is not a check, it is a comment that
-    # costs a call.
+    assert skill_version.stamped_value(new) == skill_version.digest(new), "not a fixed point"
+    # Idempotence is a DIFFERENT property from the fixed point above, not a
+    # stronger restatement of it: it was believed to imply the fixed point
+    # because `restamp` calls `stamp` twice, but a regression that lives
+    # inside `version_line` itself -- not in the call site -- fires
+    # identically on both calls, corrupting both sides of `stamp(new) == new`
+    # the same way and leaving them equal to each other while both are wrong.
+    # An unquoted `version_line` is exactly that: `stamped_value(new)` comes
+    # back `None` while `stamp(new) == new` still holds, so only the
+    # fixed-point assertion above catches it. Verified by mutation on
+    # `skill_version.version_line`, not on `stamp` -- see
+    # `test_restamp_refuses_a_persistent_unquoting_regression`.
     assert skill_version.stamp(new) == new, "not idempotent"
     return new
 
