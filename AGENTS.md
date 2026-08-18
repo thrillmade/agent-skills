@@ -32,12 +32,18 @@ This project uses [logmind](https://logmind.dev). What counts as a decision, bra
 
 ```bash
 python3 .github/scripts/validate_skills.py   # the skill gate — run it before you push
-pytest tests/ -q                             # 112 tests; the gates' own regression guard
+pytest tests/ -q                             # the gates' own regression guard
 logmind log "…" -r "…" -a "…" -i "…"         # the commit primitive (see above)
 ```
 
-The first two run in about a second. **Neither is optional before opening a PR** — CI runs
-the same two, unconditionally.
+The validator runs in about a second. The suite does not: most of its wall clock is the two
+mutation files (`test_prose_retention_mutations.py`, `test_skill_directory_mutations.py`),
+which each run the real suites in a subprocess once per mutation — that is what makes "this
+guard can fail" a fact rather than a claim, and it is worth the minutes. Measured on this
+tree: `670 passed in 253.46s`. Run the fast subset while iterating —
+`pytest tests/ -q --ignore=tests/test_prose_retention_mutations.py --ignore=tests/test_skill_directory_mutations.py`
+(measured: `558 passed in 21.59s`) — and the whole thing before you push. **Neither command is optional before opening a PR** —
+CI runs the same two, unconditionally.
 
 ## The `dev` branch
 

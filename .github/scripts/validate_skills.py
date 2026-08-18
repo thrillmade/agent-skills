@@ -46,6 +46,16 @@ from pathlib import Path
 
 import yaml
 
+# The directory generator. Imported rather than shelled out to so the gate
+# renders in-process and compares the WHOLE body: unlike the version index,
+# which mixes git-derived fields it cannot recompute at fetch-depth 1, the
+# directory is a pure function of this checkout. Nothing weaker than byte
+# identity is needed, so nothing weaker is used.
+#
+# `.github/scripts` is sys.path[0] when this file is run as a script, and
+# tests/conftest.py puts it there for the import path.
+import gen_skill_directory  # noqa: E402
+
 ROOT = Path("skills")
 FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
 
@@ -333,6 +343,50 @@ def run(root: Path) -> list[str]:
                         f"::error file={pm_prefix}::`updated` must be a non-empty string"
                     )
 
+                # --- `families`: the directory's grouping, ordered ---
+                #
+                # An ordered list rather than an object because the order IS
+                # the document order of the generated directory, and a JSON
+                # object's key order is not a thing a reviewer should have to
+                # trust.
+                families = pm.get("families")
+                family_ids: set[str] = set()
+                if not isinstance(families, list) or not families:
+                    errors.append(
+                        f"::error file={pm_prefix}::`families` must be a non-empty list "
+                        "of {id, title, routes} objects. It is the directory's grouping; "
+                        "without it every skill's `family` is unresolvable and the "
+                        "generated directory is a flat list of names."
+                    )
+                else:
+                    for i, fam in enumerate(families):
+                        if not isinstance(fam, dict):
+                            errors.append(
+                                f"::error file={pm_prefix}::families[{i}] must be an "
+                                "object with `id`, `title` and `routes`"
+                            )
+                            continue
+                        fid = fam.get("id")
+                        if not isinstance(fid, str) or not NAME_SLUG_RE.match(fid):
+                            errors.append(
+                                f"::error file={pm_prefix}::families[{i}].id={fid!r} must "
+                                r"match ^[a-z][a-z0-9-]{0,62}$"
+                            )
+                        elif fid in family_ids:
+                            errors.append(
+                                f"::error file={pm_prefix}::families[{i}].id={fid!r} is "
+                                "declared twice; a skill naming it would be listed twice"
+                            )
+                        else:
+                            family_ids.add(fid)
+                        for key in ("title", "routes"):
+                            val = fam.get(key)
+                            if not isinstance(val, str) or not val.strip():
+                                errors.append(
+                                    f"::error file={pm_prefix}::families[{i}].{key} must "
+                                    "be a non-empty string"
+                                )
+
                 skills_map = pm.get("skills")
                 if not isinstance(skills_map, dict):
                     errors.append(
@@ -340,6 +394,7 @@ def run(root: Path) -> list[str]:
                         "mapping skill name -> metadata"
                     )
                 else:
+                    malformed_entry = False
                     for slug, meta in skills_map.items():
                         if not isinstance(meta, dict):
                             errors.append(
@@ -347,6 +402,7 @@ def run(root: Path) -> list[str]:
                                 "an object (unknown per-skill keys are tolerated; "
                                 "the value itself must still be a mapping)"
                             )
+                            malformed_entry = True
                             continue
 
                         authoring_home = meta.get("authoring_home")
@@ -376,6 +432,81 @@ def run(root: Path) -> list[str]:
                                 "must be a list of strings"
                             )
 
+                        # --- the directory's two editorial keys ---
+                        #
+                        # These are REQUIRED, and that is the whole point: the
+                        # map is already reconciled 1:1 against skills/ below,
+                        # so requiring them here means a skill cannot be added
+                        # without saying which family it belongs to and what it
+                        # owns. The README table has never had that property --
+                        # it is complete by diligence, and the next skill added
+                        # is the one that breaks it silently (#229).
+                        family = meta.get("family")
+                        if not isinstance(family, str) or not family.strip():
+                            errors.append(
+                                f"::error file={pm_prefix}::skills.{slug}.family must be "
+                                "a non-empty string naming one of the `families` ids. It "
+                                "is what puts this skill in the generated directory "
+                                f"(skills/{gen_skill_directory.DIRECTORY_SLUG}/SKILL.md); "
+                                "without it the skill exists and the catalog's own map "
+                                "does not show it."
+                            )
+                        elif family not in family_ids:
+                            errors.append(
+                                f"::error file={pm_prefix}::skills.{slug}.family="
+                                f"{family!r} is not a declared family. Declared: "
+                                f"{', '.join(sorted(family_ids)) or '(none)'}"
+                            )
+
+                        owns = meta.get("owns")
+                        if not isinstance(owns, str) or not owns.strip():
+                            errors.append(
+                                f"::error file={pm_prefix}::skills.{slug}.owns must be a "
+                                "non-empty string -- the fragment naming what this skill "
+                                "OWNS, not what it is about, as it appears in the "
+                                "directory."
+                            )
+                        elif len(owns.encode("utf-8")) > gen_skill_directory.OWNS_MAX_BYTES:
+                            errors.append(
+                                f"::error file={pm_prefix}::skills.{slug}.owns is "
+                                f"{len(owns.encode('utf-8'))} bytes, over the "
+                                f"{gen_skill_directory.OWNS_MAX_BYTES}-byte cap by "
+                                f"{len(owns.encode('utf-8')) - gen_skill_directory.OWNS_MAX_BYTES}"
+                                ". The cap is what keeps the directory itself under the "
+                                "skill body limit as the catalog grows -- every byte here "
+                                "is paid once per skill. Cut it to a fragment; the "
+                                "family's routing line carries the context."
+                            )
+
+                    # Every declared family must have at least one skill. A
+                    # family with none renders as nothing, so the map would
+                    # claim a grouping the directory does not show -- the same
+                    # divergence the 1:1 reconcile below exists to stop, in the
+                    # one direction it does not cover.
+                    #
+                    # Suppressed when an entry was not even a mapping: that
+                    # skill's `family` is unknowable, so "no skill lists it"
+                    # would be a second annotation derived from the first
+                    # defect rather than a finding of its own.
+                    # `isinstance(..., str)` is load-bearing, not defensive:
+                    # a `family: []` in the JSON is unhashable, and building
+                    # this set without the guard raised TypeError out of the
+                    # whole gate -- a malformed map taking the validator down
+                    # instead of being reported by it.
+                    used = {
+                        m.get("family")
+                        for m in skills_map.values()
+                        if isinstance(m, dict) and isinstance(m.get("family"), str)
+                    }
+                    dead = [] if malformed_entry else sorted(family_ids - used)
+                    if dead:
+                        errors.append(
+                            f"::error file={pm_prefix}::`families` declares "
+                            f"{', '.join(dead)} but no skill lists "
+                            f"{'them' if len(dead) > 1 else 'it'}. Delete the family or "
+                            "give a skill that `family`."
+                        )
+
                     # Map keys must EXACTLY equal the skills/ directory names.
                     map_names = set(skills_map.keys())
                     dir_names = {d.name for d in skill_dirs}
@@ -392,7 +523,61 @@ def run(root: Path) -> list[str]:
                             f"for non-existent skills/ dir(s): {', '.join(extra_in_map)}"
                         )
 
+    errors.extend(directory_errors(root, placement_map_path))
     return errors
+
+
+def directory_errors(root: Path, placement_map_path: Path) -> list[str]:
+    """The generated catalog directory must equal what the generator renders.
+
+    This is the half that makes drift unrepresentable rather than merely
+    reconciled. The 1:1 reconcile above catches a skill that never got a map
+    entry; this catches the entry that exists and the DIRECTORY that was not
+    regenerated -- which is the same class of defect one level down, and the
+    one a hand-kept skill body would have reintroduced.
+
+    Runs only when the directory skill is present. Its absence is not an error:
+    a tree without it is a tree that does not publish a directory, and the
+    per-skill rules above already cover everything else. Its presence WITHOUT a
+    usable source is, though -- an unverifiable directory reads exactly like a
+    verified one.
+    """
+    path = root / gen_skill_directory.DIRECTORY_SLUG / "SKILL.md"
+    if not path.exists():
+        return []
+
+    prefix = str(path)
+    try:
+        rendered = gen_skill_directory.render(root, placement_map_path)
+    except SystemExit as e:
+        return [
+            f"::error file={prefix}::the directory cannot be rendered, so it cannot be "
+            f"verified -- and an unverifiable directory reads exactly like a current "
+            f"one to the agent holding it: {e}"
+        ]
+
+    size = gen_skill_directory.size_error(rendered)
+    if size:
+        return [f"::error file={prefix}::{size}"]
+
+    content = path.read_text(encoding="utf-8")
+    m = FRONTMATTER_RE.match(content)
+    if not m:
+        # The per-skill loop already filed "missing YAML frontmatter"; adding a
+        # second annotation for the same defect would only make the count lie.
+        return []
+
+    if content[m.end():] != rendered:
+        return [
+            f"::error file={prefix}::this body is GENERATED and no longer matches what "
+            "docs/placement-map.json plus the skills/ tree render. Either a skill was "
+            "added, removed or re-described without regenerating, or the body was "
+            "hand-edited -- and a directory that has quietly stopped listing a skill is "
+            "read as evidence that skill does not exist. Run "
+            "`python3 .github/scripts/gen_skill_directory.py --write` and commit the "
+            "result; edit the prose in the generator, never here."
+        ]
+    return []
 
 
 def coverage_errors(root: Path, validated: int) -> list[str]:

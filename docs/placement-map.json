@@ -1,295 +1,412 @@
 {
   "version": 1,
   "updated": "2026-08-14",
+  "families": [
+    {"id": "review-discipline", "title": "Reviewing a pull request", "routes": "What a review flags, what it lets go, and what a claim has to cite."},
+    {"id": "orchestration", "title": "Running agents", "routes": "Handing work out, gating what comes back, surviving a long session."},
+    {"id": "catalog-and-tooling", "title": "The catalog itself", "routes": "Finding, censusing and authoring skills; the org's CLI conventions."},
+    {"id": "design-dispatchers", "title": "Design: start here (L1)", "routes": "Three entry points. Each routes to the primitives below in work order."},
+    {"id": "design-primitives", "title": "Design primitives (L0)", "routes": "Math and standards any design system can build on. No product opinions."},
+    {"id": "design-critic-lenses", "title": "Design review lenses (L0)", "routes": "Judging the rendered surface, not only the code that produced it."},
+    {"id": "udts-stubs", "title": "UDTS stances (L2)", "routes": "Parity stubs for skills being authored in tokenomics. Not guidance yet."},
+    {"id": "deprecated", "title": "Deprecated (migration window)", "routes": "Superseded, kept unchanged until tokenomics migrates off them."},
+    {"id": "templates", "title": "Templates", "routes": "Copy-and-edit scaffolds. They fail the slug check until you customise."}
+  ],
   "skills": {
     "critical-issues-only": {
+      "family": "review-discipline",
+      "owns": "correctness, security, perf only",
       "authoring_home": "catalog",
       "distribution": "default-on",
       "subscribers": ["clud-bug", "clud-bug-app", "logmind", "tokenomics", "protocol", "reporulez", "rezgen"]
     },
     "evidence-based-review": {
+      "family": "review-discipline",
+      "owns": "quote the code or cut the claim",
       "authoring_home": "catalog",
       "distribution": "default-on",
       "subscribers": ["clud-bug", "clud-bug-app", "logmind", "tokenomics", "protocol", "reporulez", "rezgen"]
     },
     "respect-existing-conventions": {
+      "family": "review-discipline",
+      "owns": "a review is not a redesign",
       "authoring_home": "catalog",
       "distribution": "default-on",
       "subscribers": ["clud-bug", "clud-bug-app", "logmind", "tokenomics", "protocol", "reporulez", "rezgen"]
     },
     "clud-bug-collaboration": {
+      "family": "review-discipline",
+      "owns": "living with the review bot",
       "authoring_home": "catalog",
       "distribution": "default-on",
       "subscribers": ["clud-bug", "clud-bug-app", "logmind", "tokenomics", "protocol", "reporulez", "rezgen"]
     },
     "logmind": {
+      "family": "catalog-and-tooling",
+      "owns": "when and how to log a decision",
       "authoring_home": "repo-mirrored:logmind",
       "distribution": "opt-in",
       "subscribers": ["tokenomics"],
       "notes": "release-sync: logmind's release workflow PRs its skill update here"
     },
     "brand-voice-review": {
+      "family": "review-discipline",
+      "owns": "voice in user-facing strings",
       "authoring_home": "catalog",
       "distribution": "opt-in",
       "subscribers": ["tokenomics"]
     },
     "designing-elite-ui": {
+      "family": "design-critic-lenses",
+      "owns": "the visual standard to build to",
       "authoring_home": "catalog",
       "distribution": "opt-in",
       "subscribers": [],
       "notes": "authoring-home decided (clud-bug#243 Ruling 2): catalog is the edit point; clud-bug's templates/skills/design/ is a vendored mirror refreshed only by an explicit release PR, never by automation"
     },
     "design-system-consistency": {
+      "family": "design-critic-lenses",
+      "owns": "rendered drift from the tokens",
       "authoring_home": "catalog",
       "distribution": "opt-in",
       "subscribers": [],
       "notes": "authoring-home decided (clud-bug#243 Ruling 2): catalog is the edit point; clud-bug's templates/skills/design/ is a vendored mirror refreshed only by an explicit release PR, never by automation"
     },
     "frontend-a11y": {
+      "family": "design-critic-lenses",
+      "owns": "contrast, focus, targets, motion",
       "authoring_home": "catalog",
       "distribution": "opt-in",
       "subscribers": [],
       "notes": "authoring-home decided (clud-bug#243 Ruling 2): catalog is the edit point; clud-bug's templates/skills/design/ is a vendored mirror refreshed only by an explicit release PR, never by automation"
     },
     "visual-polish": {
+      "family": "design-critic-lenses",
+      "owns": "the fine-but-not-elite lens",
       "authoring_home": "catalog",
       "distribution": "opt-in",
       "subscribers": [],
       "notes": "authoring-home decided (clud-bug#243 Ruling 2): catalog is the edit point; clud-bug's templates/skills/design/ is a vendored mirror refreshed only by an explicit release PR, never by automation"
     },
     "orchestrating-elite-agent-qa": {
+      "family": "orchestration",
+      "owns": "the panel and design-critic gate",
       "authoring_home": "catalog",
       "distribution": "opt-in",
       "subscribers": [],
       "notes": "tokenomics flip from authored-here to subscribed is pending (nomination in flight); tokenomics census says it would subscribe once accepted"
     },
     "udts-component-sizing-ladders": {
+      "family": "udts-stubs",
+      "owns": "per-density size ladders",
       "authoring_home": "repo-mirrored:tokenomics",
       "distribution": "catalog-only",
       "subscribers": [],
       "notes": "incubating — deliberately unwritten; tokenomics is holding K2 incubation until the Phase R tier-model rewrite (feat/udts-color-polarity) lands so it doesn't encode the old model"
     },
     "udts-dtcg-extensions": {
+      "family": "udts-stubs",
+      "owns": "namespaced DTCG extensions",
       "authoring_home": "repo-mirrored:tokenomics",
       "distribution": "catalog-only",
       "subscribers": [],
       "notes": "incubating — deliberately unwritten; tokenomics is holding K2 incubation until the Phase R tier-model rewrite (feat/udts-color-polarity) lands so it doesn't encode the old model"
     },
     "udts-linter-rules": {
+      "family": "udts-stubs",
+      "owns": "machine-enforceable lint rules",
       "authoring_home": "repo-mirrored:tokenomics",
       "distribution": "catalog-only",
       "subscribers": [],
       "notes": "incubating — deliberately unwritten; tokenomics is holding K2 incubation until the Phase R tier-model rewrite (feat/udts-color-polarity) lands so it doesn't encode the old model"
     },
     "udts-naming-convention": {
+      "family": "udts-stubs",
+      "owns": "the concrete naming convention",
       "authoring_home": "repo-mirrored:tokenomics",
       "distribution": "catalog-only",
       "subscribers": [],
       "notes": "incubating — deliberately unwritten; tokenomics is holding K2 incubation until the Phase R tier-model rewrite (feat/udts-color-polarity) lands so it doesn't encode the old model"
     },
     "udts-review": {
+      "family": "udts-stubs",
+      "owns": "the system-specific lens",
       "authoring_home": "repo-mirrored:tokenomics",
       "distribution": "catalog-only",
       "subscribers": [],
       "notes": "incubating — deliberately unwritten; tokenomics census names this a gap (clud-bug lens for UDTS R7-R10 rules), but holding K2 incubation until the Phase R tier-model rewrite lands"
     },
     "udts-semver-defaults": {
+      "family": "udts-stubs",
+      "owns": "SemVer policy choices",
       "authoring_home": "repo-mirrored:tokenomics",
       "distribution": "catalog-only",
       "subscribers": [],
       "notes": "incubating — deliberately unwritten; tokenomics is holding K2 incubation until the Phase R tier-model rewrite (feat/udts-color-polarity) lands so it doesn't encode the old model"
     },
     "udts-spacing-defaults": {
+      "family": "udts-stubs",
+      "owns": "density-mode spacing units",
       "authoring_home": "repo-mirrored:tokenomics",
       "distribution": "catalog-only",
       "subscribers": [],
       "notes": "incubating — deliberately unwritten; tokenomics is holding K2 incubation until the Phase R tier-model rewrite (feat/udts-color-polarity) lands so it doesn't encode the old model"
     },
     "udts-token-model": {
+      "family": "udts-stubs",
+      "owns": "taxonomy and resolution",
       "authoring_home": "repo-mirrored:tokenomics",
       "distribution": "catalog-only",
       "subscribers": [],
       "notes": "incubating — deliberately unwritten; tokenomics is holding K2 incubation until the Phase R tier-model rewrite (feat/udts-color-polarity) lands so it doesn't encode the old model"
     },
     "design-token-naming": {
+      "family": "deprecated",
+      "owns": "use token-naming-conventions",
       "authoring_home": "catalog",
       "distribution": "catalog-only",
       "subscribers": [],
       "notes": "deprecated — migration window; SUPERSEDED by token-naming-conventions (L0) + udts-naming-convention (L2, incubating); kept unchanged until downstream migrations land"
     },
     "component-sizing": {
+      "family": "deprecated",
+      "owns": "use component-sizing-principles",
       "authoring_home": "catalog",
       "distribution": "catalog-only",
       "subscribers": [],
       "notes": "deprecated — migration window; SUPERSEDED by component-sizing-principles (L0) + udts-component-sizing-ladders (L2, incubating); kept unchanged until downstream migrations land"
     },
     "consuming-a-design-system": {
+      "family": "design-dispatchers",
+      "owns": "using a system in a product",
       "authoring_home": "catalog",
       "distribution": "catalog-only",
       "subscribers": [],
       "notes": "L1 dispatcher — entry point that routes to the L0 primitives; a repo consumes what it routes to, not the dispatcher itself as a standing subscription"
     },
     "designing-a-design-system": {
+      "family": "design-dispatchers",
+      "owns": "building or extending a system",
       "authoring_home": "catalog",
       "distribution": "catalog-only",
       "subscribers": [],
       "notes": "L1 dispatcher — entry point that routes to the L0 primitives; a repo consumes what it routes to, not the dispatcher itself as a standing subscription"
     },
     "reviewing-design-work": {
+      "family": "design-dispatchers",
+      "owns": "critiquing design output",
       "authoring_home": "catalog",
       "distribution": "catalog-only",
       "subscribers": [],
       "notes": "L1 dispatcher — entry point that routes to review lenses; a repo consumes what it routes to, not the dispatcher itself as a standing subscription"
     },
     "curating-a-skill-catalog": {
+      "family": "catalog-and-tooling",
+      "owns": "the census rubric and verdicts",
       "authoring_home": "catalog",
       "distribution": "catalog-only",
       "subscribers": [],
       "notes": "catalog-steward tooling for running/judging the census cycle itself, not a downstream repo's review discipline"
     },
     "skill-frontmatter-quality": {
+      "family": "review-discipline",
+      "owns": "judging a SKILL.md's frontmatter",
       "authoring_home": "catalog",
       "distribution": "catalog-only",
       "subscribers": [],
       "notes": "nomination-time gate scoped to skills/*/SKILL.md edits in this repo; not applicable to a downstream repo's product code"
     },
     "skillforge": {
+      "family": "catalog-and-tooling",
+      "owns": "scaffolding a new skill",
       "authoring_home": "catalog",
       "distribution": "catalog-only",
       "subscribers": [],
       "notes": "skill-authoring tool (vendored, author: zakelfassi); catalog-side utility rather than a per-repo subscription"
     },
     "spacing-system": {
+      "family": "design-primitives",
+      "owns": "minor+major units, 24px floor",
       "authoring_home": "catalog",
       "distribution": "opt-in",
       "subscribers": [],
       "notes": "L0 primitive; a repo building or extending its own token system might subscribe directly"
     },
     "test-discipline": {
+      "family": "review-discipline",
+      "owns": "test edits that hollow a suite",
       "authoring_home": "catalog",
       "distribution": "opt-in",
       "subscribers": [],
       "notes": "review-discipline skill (review_mode: dedicated, applies_to test paths) a repo might subscribe to"
     },
     "token-frugal-tooling": {
+      "family": "catalog-and-tooling",
+      "owns": "quiet flags for the org's CLIs",
       "authoring_home": "catalog",
       "distribution": "opt-in",
       "subscribers": [],
       "notes": "quick-reference for repos running both logmind and clud-bug; a repo with both installed might subscribe"
     },
     "token-naming-conventions": {
+      "family": "design-primitives",
+      "owns": "what belongs in a token name",
       "authoring_home": "catalog",
       "distribution": "opt-in",
       "subscribers": [],
       "notes": "L0 primitive; successor to deprecated design-token-naming; a repo building or extending its own token system might subscribe directly"
     },
     "type-scale": {
+      "family": "design-primitives",
+      "owns": "modular ratios and rounding",
       "authoring_home": "catalog",
       "distribution": "opt-in",
       "subscribers": [],
       "notes": "L0 primitive; a repo building or extending its own token system might subscribe directly"
     },
     "wcag-contrast": {
+      "family": "design-primitives",
+      "owns": "ratios, the legal cross-check",
       "authoring_home": "catalog",
       "distribution": "opt-in",
       "subscribers": [],
       "notes": "L0 primitive; a repo building or extending its own token system might subscribe directly"
     },
     "web-interface-guidelines-review": {
+      "family": "design-critic-lenses",
+      "owns": "the code and markup lens",
       "authoring_home": "catalog",
       "distribution": "opt-in",
       "subscribers": [],
       "notes": "review-discipline skill (review_mode: dedicated) for UI code a repo might subscribe to"
     },
     "apca-contrast": {
+      "family": "design-primitives",
+      "owns": "Lc targets, the primary model",
       "authoring_home": "catalog",
       "distribution": "opt-in",
       "subscribers": [],
       "notes": "L0 primitive; tokenomics census names this as a would-subscribe (build-agent grounding), not yet subscribed"
     },
     "api-contract-enforcement": {
+      "family": "review-discipline",
+      "owns": "public API shape changes",
       "authoring_home": "catalog",
       "distribution": "opt-in",
       "subscribers": [],
       "notes": "review-discipline skill (review_mode: dedicated, applies_to api paths) a repo might subscribe to"
     },
     "chroma-harmonization": {
+      "family": "design-primitives",
+      "owns": "per-stop cross-hue chroma caps",
       "authoring_home": "catalog",
       "distribution": "opt-in",
       "subscribers": [],
       "notes": "L0 primitive; a repo building or extending its own token system might subscribe directly"
     },
     "component-sizing-principles": {
+      "family": "design-primitives",
+      "owns": "curated height and icon ladders",
       "authoring_home": "catalog",
       "distribution": "opt-in",
       "subscribers": [],
       "notes": "L0 primitive; successor to deprecated component-sizing; a repo building or extending its own token system might subscribe directly"
     },
     "conventions-template": {
+      "family": "templates",
+      "owns": "a review-like-me scaffold",
       "authoring_home": "catalog",
       "distribution": "catalog-only",
       "subscribers": [],
       "notes": "template — copy + customize per maintainer's applies_to.author, not a live subscription"
     },
     "dtcg-format": {
+      "family": "design-primitives",
+      "owns": "the W3C DTCG interchange file",
       "authoring_home": "catalog",
       "distribution": "opt-in",
       "subscribers": [],
       "notes": "L0 primitive; a repo building or extending its own token system might subscribe directly"
     },
     "line-height-grid": {
+      "family": "design-primitives",
+      "owns": "two-track line height on grid",
       "authoring_home": "catalog",
       "distribution": "opt-in",
       "subscribers": [],
       "notes": "L0 primitive; a repo building or extending its own token system might subscribe directly"
     },
     "oklch-color-space": {
+      "family": "design-primitives",
+      "owns": "OKLCH ranges and gamut mapping",
       "authoring_home": "catalog",
       "distribution": "opt-in",
       "subscribers": [],
       "notes": "L0 primitive; tokenomics census names this as a would-subscribe (build-agent grounding), not yet subscribed"
     },
     "orchestrating-a-multi-agent-run": {
+      "family": "orchestration",
+      "owns": "start here: the four obligations",
       "authoring_home": "catalog",
       "distribution": "catalog-only",
       "subscribers": [],
       "notes": "L1 dispatcher — entry point that routes the run's four obligations to orchestrating-agent-delegation, orchestrating-elite-agent-qa, logmind, clud-bug-collaboration, token-frugal-tooling, session-heartbeat and unattended-operation; a repo consumes what it routes to, not the dispatcher itself as a standing subscription"
     },
     "orchestrating-agent-delegation": {
+      "family": "orchestration",
+      "owns": "the brief, model tiering, verify",
       "authoring_home": "catalog",
       "distribution": "opt-in",
       "subscribers": [],
       "notes": "agent-orchestration discipline a repo doing multi-agent build/review work might subscribe to"
     },
     "session-heartbeat": {
+      "family": "orchestration",
+      "owns": "beats, checkpoints, resuming",
       "authoring_home": "catalog",
       "distribution": "opt-in",
       "subscribers": [],
       "notes": "temporal-continuity mechanism for long autonomous runs; sibling of orchestrating-agent-delegation, a repo running multi-hour agent pipelines might subscribe to"
     },
     "unattended-operation": {
+      "family": "orchestration",
+      "owns": "what a handover permits",
       "authoring_home": "catalog",
       "distribution": "opt-in",
       "subscribers": [],
       "notes": "policy layered on session-heartbeat; only fires on an explicit human handover, so opt-in rather than default-on. Renamed from night-mode before merge — the mode is never inferred from the clock, and the old name collided with dark-mode/UI night themes"
     },
     "palette-relationships": {
+      "family": "design-primitives",
+      "owns": "hue-angle palette relationships",
       "authoring_home": "catalog",
       "distribution": "opt-in",
       "subscribers": [],
       "notes": "L0 primitive; a repo building or extending its own token system might subscribe directly"
     },
     "pii-and-compliance": {
+      "family": "review-discipline",
+      "owns": "PII and secrets in logs",
       "authoring_home": "catalog",
       "distribution": "opt-in",
       "subscribers": [],
       "notes": "review-discipline skill (review_mode: dedicated) a repo might subscribe to"
     },
     "semver-design-tokens": {
+      "family": "design-primitives",
+      "owns": "SemVer from the value diff",
       "authoring_home": "catalog",
       "distribution": "opt-in",
       "subscribers": [],
       "notes": "L0 primitive; a repo building or extending its own token system might subscribe directly"
+    },
+    "finding-a-catalog-skill": {
+      "authoring_home": "catalog",
+      "distribution": "opt-in",
+      "subscribers": ["clud-bug", "clud-bug-app", "logmind", "tokenomics", "protocol", "reporulez", "rezgen", "skdd"],
+      "family": "catalog-and-tooling",
+      "owns": "this directory",
+      "notes": "the generated catalog directory (#229). Every repo holding ANY catalog skill should hold this one -- it is the only artifact that travels and names the rest -- so all eight census-visible consumers are declared here and none subscribes yet: the weekly placement cross-check will file `missing` until each runs `npx skills add ... --skill finding-a-catalog-skill`. thrillmade/arlyn-working is deliberately NOT declared: it holds 23 catalog subscriptions but is absent from census_counters.CONSUMER_REPOS, so the census structurally cannot observe it and a declaration there would be a verdict that can never clear. Adding it to CONSUMER_REPOS is its own change"
     }
   }
 }

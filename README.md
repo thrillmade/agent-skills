@@ -6,8 +6,13 @@ These skills run inside any agent that loads skills.sh — Claude Code, Cursor, 
 
 ## Skills in this collection
 
+**The catalog has a directory, and it travels.** [`finding-a-catalog-skill`](skills/finding-a-catalog-skill/SKILL.md) is this table's job done as a *skill*, so it installs into `.claude/skills/` alongside the rest and an agent in a subscriber repo can see what the catalog covers without opening fifty files. It is generated from [`docs/placement-map.json`](docs/placement-map.json) and gated: add a skill without regenerating and `validate-skills` goes red on your PR. Regenerate with `python3 .github/scripts/gen_skill_directory.py --write`.
+
+The table below is the same list in long form — it has no byte cap, so it can afford sentences the directory cannot. It is still hand-kept; generating it from the same source is [#229](https://github.com/thrillmade/agent-skills/issues/229)'s remaining half.
+
 | Skill | Purpose |
 |---|---|
+| [`finding-a-catalog-skill`](skills/finding-a-catalog-skill/SKILL.md) | The generated directory of the whole catalog — every skill, grouped by family, with what each one owns, plus the gaps the catalog deliberately does not cover. Load it before authoring any rule or convention, and before concluding nothing covers something. |
 | [`logmind`](skills/logmind/SKILL.md) | Teach agents when and how to log architectural decisions in projects using [logmind](https://logmind.dev). Activates whenever an agent works in a project with `.logmind/config.yml` or an `AGENTS.md`/`CLAUDE.md` mentioning logmind. |
 | [`critical-issues-only`](skills/critical-issues-only/SKILL.md) | PR review discipline — flag only correctness, security, and performance issues. Skip style nits and naming preferences. Ships as a baseline with [clud-bug](https://github.com/thrillmade/clud-bug). |
 | [`evidence-based-review`](skills/evidence-based-review/SKILL.md) | Every PR review claim must quote the specific code being criticized. No hand-waving, no vague "might cause issues." Cite or delete. Ships as a baseline with clud-bug. |

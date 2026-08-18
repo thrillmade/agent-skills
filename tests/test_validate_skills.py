@@ -348,11 +348,28 @@ def test_errors_accumulate_across_rules_and_skills(tree: SkillTree) -> None:
 # --- docs/placement-map.json -----------------------------------------------
 
 PM = "::error file=docs/placement-map.json::"
-ENTRY = {"authoring_home": "catalog", "distribution": "default-on", "subscribers": ["logmind"]}
+
+# `family` and `owns` joined ENTRY when the generated catalog directory landed
+# (#229). They are REQUIRED, so a baseline without them is not a valid map --
+# which is the point: a skill cannot be added without saying where it sits in
+# the directory and what it owns.
+ENTRY = {
+    "authoring_home": "catalog",
+    "distribution": "default-on",
+    "subscribers": ["logmind"],
+    "family": "fam",
+    "owns": "a fragment",
+}
+FAMILIES = [{"id": "fam", "title": "A family", "routes": "What this family covers."}]
 
 
 def valid_map(**skills: dict) -> dict:
-    return {"version": 1, "updated": "2026-08-14", "skills": skills or {"alpha": ENTRY}}
+    return {
+        "version": 1,
+        "updated": "2026-08-14",
+        "families": FAMILIES,
+        "skills": skills or {"alpha": ENTRY},
+    }
 
 
 def test_absent_placement_map_is_tolerated(tree: SkillTree) -> None:
@@ -387,20 +404,28 @@ def test_placement_map_top_level_must_be_an_object(tree: SkillTree) -> None:
 def test_placement_map_version_must_be_an_int(tree: SkillTree, version: object) -> None:
     # `True` is an int to Python, so the rule excludes bools explicitly.
     tree.valid_skill()
-    tree.placement_map({"version": version, "updated": "2026-08-14", "skills": {"alpha": ENTRY}})
+    tree.placement_map(
+        {"version": version, "updated": "2026-08-14", "families": FAMILIES,
+         "skills": {"alpha": ENTRY}}
+    )
     assert only(tree.validate()) == PM + "`version` must be an int"
 
 
 @pytest.mark.parametrize("updated", ["", "   ", 20260814, None])
 def test_placement_map_updated_must_be_a_non_empty_string(tree: SkillTree, updated: object) -> None:
     tree.valid_skill()
-    tree.placement_map({"version": 1, "updated": updated, "skills": {"alpha": ENTRY}})
+    tree.placement_map(
+        {"version": 1, "updated": updated, "families": FAMILIES,
+         "skills": {"alpha": ENTRY}}
+    )
     assert only(tree.validate()) == PM + "`updated` must be a non-empty string"
 
 
 def test_placement_map_skills_must_be_an_object(tree: SkillTree) -> None:
     tree.valid_skill()
-    tree.placement_map({"version": 1, "updated": "2026-08-14", "skills": []})
+    tree.placement_map(
+        {"version": 1, "updated": "2026-08-14", "families": FAMILIES, "skills": []}
+    )
     assert only(tree.validate()) == (
         PM + "`skills` must be an object mapping skill name -> metadata"
     )
@@ -506,3 +531,302 @@ def test_malformed_placement_map_json_skips_the_shape_rules(tree: SkillTree) -> 
     tree.valid_skill("beta")
     tree.placement_map(raw="{not json")
     assert len(tree.validate()) == 1
+
+
+# --- the generated catalog directory (#229) ---------------------------------
+#
+# Two gates, and they catch different halves. The `families`/`family`/`owns`
+# rules stop a skill from being ADDED without a directory line; the staleness
+# rule stops the directory from being left behind once one is. Either alone
+# leaves the drift representable.
+
+import gen_skill_directory  # noqa: E402  -- conftest put .github/scripts on the path
+
+DIR_MD = f"::error file=skills/{gen_skill_directory.DIRECTORY_SLUG}/SKILL.md::"
+
+
+def test_families_must_be_a_non_empty_list(tree: SkillTree) -> None:
+    tree.valid_skill()
+    m = valid_map()
+    del m["families"]
+    tree.placement_map(m)
+    # The skill's own `family` becomes unresolvable, so two errors is correct:
+    # the missing list, and the entry that now names nothing.
+    assert tree.validate() == [
+        PM + "`families` must be a non-empty list of {id, title, routes} objects. "
+        "It is the directory's grouping; without it every skill's `family` is "
+        "unresolvable and the generated directory is a flat list of names.",
+        PM + "skills.alpha.family='fam' is not a declared family. Declared: (none)",
+    ]
+
+
+@pytest.mark.parametrize("families", [[], {}, "fam", None])
+def test_families_rejects_non_lists_and_empties(tree: SkillTree, families: object) -> None:
+    tree.valid_skill()
+    tree.placement_map({**valid_map(), "families": families})
+    assert tree.validate()[0].startswith(PM + "`families` must be a non-empty list")
+
+
+def test_family_entry_must_be_an_object(tree: SkillTree) -> None:
+    tree.valid_skill()
+    tree.placement_map({**valid_map(), "families": ["fam"]})
+    assert tree.validate() == [
+        PM + "families[0] must be an object with `id`, `title` and `routes`",
+        PM + "skills.alpha.family='fam' is not a declared family. Declared: (none)",
+    ]
+
+
+@pytest.mark.parametrize("fid", ["Fam", "1fam", "fam_ily", "", None, 7])
+def test_family_id_must_match_the_slug_regex(tree: SkillTree, fid: object) -> None:
+    tree.valid_skill()
+    tree.placement_map(
+        {**valid_map(), "families": [{"id": fid, "title": "T", "routes": "R"}]}
+    )
+    assert tree.validate()[0] == (
+        PM + f"families[0].id={fid!r} must match ^[a-z][a-z0-9-]{{0,62}}$"
+    )
+
+
+def test_a_family_id_declared_twice_is_rejected(tree: SkillTree) -> None:
+    # Two entries with one id would list every skill in it twice.
+    tree.valid_skill()
+    tree.placement_map(
+        {
+            **valid_map(),
+            "families": [
+                {"id": "fam", "title": "T", "routes": "R"},
+                {"id": "fam", "title": "T2", "routes": "R2"},
+            ],
+        }
+    )
+    assert only(tree.validate()) == (
+        PM + "families[1].id='fam' is declared twice; a skill naming it would be "
+        "listed twice"
+    )
+
+
+@pytest.mark.parametrize("key", ["title", "routes"])
+@pytest.mark.parametrize("val", ["", "   ", None, 7])
+def test_family_title_and_routes_must_be_non_empty_strings(
+    tree: SkillTree, key: str, val: object
+) -> None:
+    tree.valid_skill()
+    fam = {"id": "fam", "title": "T", "routes": "R", key: val}
+    tree.placement_map({**valid_map(), "families": [fam]})
+    assert only(tree.validate()) == (
+        PM + f"families[0].{key} must be a non-empty string"
+    )
+
+
+def test_no_family_may_be_declared_without_a_skill(tree: SkillTree) -> None:
+    tree.valid_skill()
+    tree.placement_map(
+        {
+            **valid_map(),
+            "families": [
+                {"id": "fam", "title": "T", "routes": "R"},
+                {"id": "ghost", "title": "T", "routes": "R"},
+                {"id": "phantom", "title": "T", "routes": "R"},
+            ],
+        }
+    )
+    assert only(tree.validate()) == (
+        PM + "`families` declares ghost, phantom but no skill lists them. Delete "
+        "the family or give a skill that `family`."
+    )
+
+
+def test_a_malformed_entry_suppresses_the_dead_family_report(tree: SkillTree) -> None:
+    # That entry's `family` is unknowable, so "no skill lists it" would be a
+    # second annotation derived from the first defect rather than a finding.
+    tree.valid_skill()
+    tree.placement_map(valid_map(alpha="catalog"))
+    assert only(tree.validate()) == (
+        PM + "skills.alpha must be an object (unknown per-skill keys are "
+        "tolerated; the value itself must still be a mapping)"
+    )
+
+
+@pytest.mark.parametrize("family", ["", "   ", None, 7, []])
+def test_family_is_required_on_every_entry(tree: SkillTree, family: object) -> None:
+    tree.valid_skill()
+    tree.valid_skill("beta")  # keeps `fam` alive, so only the one rule fires
+    tree.placement_map(valid_map(alpha={**ENTRY, "family": family}, beta=ENTRY))
+    assert only(tree.validate()).startswith(
+        PM + "skills.alpha.family must be a non-empty string"
+    )
+
+
+def test_family_must_name_a_declared_family(tree: SkillTree) -> None:
+    tree.valid_skill()
+    tree.valid_skill("beta")
+    tree.placement_map(valid_map(alpha={**ENTRY, "family": "nowhere"}, beta=ENTRY))
+    assert only(tree.validate()) == (
+        PM + "skills.alpha.family='nowhere' is not a declared family. Declared: fam"
+    )
+
+
+@pytest.mark.parametrize("owns", ["", "   ", None, 7, []])
+def test_owns_is_required_on_every_entry(tree: SkillTree, owns: object) -> None:
+    tree.valid_skill()
+    tree.placement_map(valid_map(alpha={**ENTRY, "owns": owns}))
+    assert only(tree.validate()).startswith(
+        PM + "skills.alpha.owns must be a non-empty string"
+    )
+
+
+def test_owns_at_exactly_the_cap_is_allowed(tree: SkillTree) -> None:
+    # The boundary either side, in one pair -- a cap tested only from the far
+    # side does not pin where it is.
+    tree.valid_skill()
+    tree.placement_map(
+        valid_map(alpha={**ENTRY, "owns": "x" * gen_skill_directory.OWNS_MAX_BYTES})
+    )
+    assert tree.validate() == []
+
+
+def test_owns_one_byte_over_the_cap_is_rejected(tree: SkillTree) -> None:
+    tree.valid_skill()
+    over = "x" * (gen_skill_directory.OWNS_MAX_BYTES + 1)
+    tree.placement_map(valid_map(alpha={**ENTRY, "owns": over}))
+    assert only(tree.validate()).startswith(
+        PM + f"skills.alpha.owns is {gen_skill_directory.OWNS_MAX_BYTES + 1} bytes, "
+        f"over the {gen_skill_directory.OWNS_MAX_BYTES}-byte cap by 1"
+    )
+
+
+def test_owns_is_measured_in_bytes_not_characters(tree: SkillTree) -> None:
+    # The cap exists to bound the RENDERED body, which is bytes. An em dash is
+    # three of them, so a character count would let a line through 2x over.
+    tree.valid_skill()
+    owns = "—" * gen_skill_directory.OWNS_MAX_BYTES  # 32 chars, 96 bytes
+    tree.placement_map(valid_map(alpha={**ENTRY, "owns": owns}))
+    assert only(tree.validate()).startswith(
+        PM + f"skills.alpha.owns is {3 * gen_skill_directory.OWNS_MAX_BYTES} bytes"
+    )
+
+
+# --- staleness -------------------------------------------------------------
+
+
+def test_absent_directory_skill_is_tolerated(tree: SkillTree) -> None:
+    # A tree that publishes no directory is not in breach of anything.
+    tree.valid_skill()
+    tree.placement_map(valid_map())
+    assert tree.validate() == []
+
+
+def test_a_current_directory_passes(tree: SkillTree) -> None:
+    tree.valid_skill()
+    tree.control_skill()
+    tree.placement_map(
+        valid_map(
+            alpha=ENTRY,
+            control=ENTRY,
+            **{gen_skill_directory.DIRECTORY_SLUG: ENTRY},
+        )
+    )
+    tree.directory()
+    assert tree.validate() == []
+
+
+def test_a_skill_added_without_regenerating_fails(tree: SkillTree) -> None:
+    """The case the gate exists for, and the one the README table never had."""
+    tree.valid_skill()
+    tree.control_skill()
+    tree.placement_map(
+        valid_map(
+            alpha=ENTRY,
+            control=ENTRY,
+            **{gen_skill_directory.DIRECTORY_SLUG: ENTRY},
+        )
+    )
+    tree.directory()
+    assert tree.validate() == []  # control: current before the skill lands
+
+    tree.valid_skill("beta")
+    tree.placement_map(
+        valid_map(
+            alpha=ENTRY,
+            beta=ENTRY,
+            control=ENTRY,
+            **{gen_skill_directory.DIRECTORY_SLUG: ENTRY},
+        )
+    )
+    assert only(tree.validate()).startswith(
+        DIR_MD + "this body is GENERATED and no longer matches"
+    )
+
+
+def test_a_hand_edited_directory_fails(tree: SkillTree) -> None:
+    tree.valid_skill()
+    tree.control_skill()
+    tree.placement_map(
+        valid_map(
+            alpha=ENTRY,
+            control=ENTRY,
+            **{gen_skill_directory.DIRECTORY_SLUG: ENTRY},
+        )
+    )
+    body = gen_skill_directory.render(
+        tree.base / "skills", tree.base / "docs" / "placement-map.json"
+    )
+    tree.directory(body=body.replace("- `alpha`", "- `alpha-renamed-by-hand`"))
+    assert only(tree.validate()).startswith(
+        DIR_MD + "this body is GENERATED and no longer matches"
+    )
+
+
+def test_a_directory_with_no_source_cannot_be_verified(tree: SkillTree) -> None:
+    # Presence without a usable source is the worst state: an unverifiable
+    # directory reads exactly like a verified one.
+    tree.valid_skill()
+    tree.control_skill()
+    tree.directory(body="\n# Directory\n\nHand-written.\n")
+    assert only(tree.validate()).startswith(
+        DIR_MD + "the directory cannot be rendered, so it cannot be verified"
+    )
+
+
+def test_a_directory_without_frontmatter_is_reported_once(tree: SkillTree) -> None:
+    # The per-skill loop already files "missing YAML frontmatter"; a second
+    # annotation for the same defect would only make the count lie.
+    tree.valid_skill()
+    tree.control_skill()
+    tree.placement_map(
+        valid_map(
+            alpha=ENTRY,
+            control=ENTRY,
+            **{gen_skill_directory.DIRECTORY_SLUG: ENTRY},
+        )
+    )
+    tree.skill(gen_skill_directory.DIRECTORY_SLUG, "# Directory\n\nNo frontmatter.\n")
+    assert only(tree.validate()) == (
+        DIR_MD + "missing YAML frontmatter (must start with --- ... --- block)"
+    )
+
+
+def test_an_oversized_directory_is_reported_by_the_gate(
+    tree: SkillTree, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The gate carries the size refusal too, not only the generator.
+
+    Without it the only thing between the catalog and a truncated directory is
+    somebody remembering to run the generator by hand -- and the failure the
+    truncation causes is skills that look like they do not exist, which is the
+    failure this skill exists to prevent.
+    """
+    tree.valid_skill()
+    tree.control_skill()
+    tree.placement_map(
+        valid_map(
+            alpha=ENTRY,
+            control=ENTRY,
+            **{gen_skill_directory.DIRECTORY_SLUG: ENTRY},
+        )
+    )
+    tree.directory()
+    assert tree.validate() == []  # control: fine at the real reserve
+
+    monkeypatch.setattr(gen_skill_directory, "MAX_BODY_BYTES", 10)
+    assert only(tree.validate()).startswith(DIR_MD + "the rendered directory is")

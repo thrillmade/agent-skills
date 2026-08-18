@@ -97,6 +97,16 @@ For a repo that predates this system (all current thrillmade repos):
 
 Divergence from live state — a repo's `skills-lock.json` or `.clud-bug.json` subscribing to something the map marks `catalog-only`, or authoring a copy of something the map homes at `catalog` — isn't silently reconciled. It *files* a placement verdict: the census raises it as a `placement:` issue for a human to resolve, either by correcting the repo or by updating the map.
 
+It also carries the two editorial fields the catalog directory is generated from: `family` (which group the skill is listed under, an id declared in the map's top-level `families` array) and `owns` (a ≤32-byte fragment naming what that skill owns, as it appears in the directory line). Both are **required on every entry**, and that is deliberate: the map is already reconciled 1:1 against `skills/`, so requiring them here means a skill cannot be added without saying where it belongs and what it is for. The README table has never had that property — it is complete by diligence, and the next skill added is the one that breaks it silently ([#229](https://github.com/thrillmade/agent-skills/issues/229)).
+
+The directory itself — [`skills/finding-a-catalog-skill`](../skills/finding-a-catalog-skill/SKILL.md) — is **generated, never hand-edited**. `validate-skills` re-renders it in process and fails on any difference, so a skill added without regenerating goes red on its own PR. Regenerate with:
+
+```bash
+python3 .github/scripts/gen_skill_directory.py --write
+```
+
+Prose lives in the generator, not in the SKILL.md. Its own docstring carries the byte arithmetic behind the format and the measured ceiling (74 skills) with the ladder for the day it binds.
+
 Editing the map is a normal PR through the same gate as any other catalog change — `validate-skills.yml`, strict-mode clud-bug review, human approval. There's no separate authority for it.
 
 ## Publishing a skill (nomination flow)
