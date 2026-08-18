@@ -194,15 +194,13 @@ NOT_HERE_PROBES = [
         "the `superpowers` plugin, not here",
     ),
     ("test-driven", "**The same discipline under its other name**"),
-    (
-        # Narrowed 2026-08-18: `empirical-design-principles` (#233) filled the
-        # forcing-functions and mapping half of this gap, so the old probe term
-        # started matching and the generator correctly refused to publish a
-        # stale claim. The gulfs are still uncovered -- measured 0 files, with
-        # `contrast` -> 20 as the control that the matcher works. See #225.
-        "gulf of execution",
-        "**Norman's two gulfs** -- execution and evaluation",
-    ),
+    # Closed 2026-08-18 (#225): `composing-a-screen` now names both gulfs in its
+    # trigger surface and carries a checkable step for each (DOET rev. ed. 2013
+    # ch. 1), so `gulf of execution` stopped matching 0 and the probe was
+    # removed rather than narrowed -- nothing in this pair is still uncovered.
+    # Norman's constraints, forcing functions and natural mapping remain a real
+    # gap (declared in `empirical-design-principles`, not probed here because
+    # that skill's own disclaimer text would make the matcher self-trigger).
 ]
 
 # The control. A probe set that matches nothing proves nothing unless

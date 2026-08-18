@@ -1,5 +1,5 @@
 ---
-version: "6eb19042e021"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1c15601a0087"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: finding-a-catalog-skill
 description: >-
   The directory of the thrillmade/agent-skills catalog — that catalog only,
@@ -144,7 +144,6 @@ go on advertising itself:
 
 - **TDD mechanics** -- red before green, one failing test at a time. In the `superpowers` plugin, not here -- `red before green` matches **0** skills.
 - **The same discipline under its other name** -- `test-driven` matches **0** skills.
-- **Norman's two gulfs** -- execution and evaluation -- `gulf of execution` matches **0** skills.
 
 (Control: `APCA` matches 8, so the probe finds what is there.)
 
