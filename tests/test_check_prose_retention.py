@@ -3298,9 +3298,13 @@ def test_cli_a_byte_identical_rename_is_not_counted_as_a_change(repo, capsys):
 
 
 def test_cli_ignores_a_new_skill_and_a_deleted_one(repo, capsys):
-    """Whole-file adds and deletes are out of scope -- git renders them as a
-    file appearing or disappearing, which review cannot miss -- but the gate
-    says how many it skipped rather than printing a bare OK over them.
+    """A whole-file DELETION is still out of scope -- git renders it as a file
+    disappearing, which review cannot miss, and a dead file has nothing left
+    to protect. A whole-file ADD is different: it is now compared against the
+    commit that introduced it, same as any other case -- see the block below.
+    Here gamma is touched by exactly one commit, so that comparison is against
+    itself and finds nothing to declare, correctly. The gate still says what
+    it did with each rather than printing a bare OK over them.
     """
     (repo / "skills" / "alpha" / "SKILL.md").write_text(BODY)
     base = commit(repo, "base")
@@ -3322,7 +3326,221 @@ def test_cli_ignores_a_new_skill_and_a_deleted_one(repo, capsys):
 
     assert cpr.main(["--base", base, "--head", "HEAD"]) == 0
     out = capsys.readouterr().out
-    assert "1 added and 1 deleted whole" in out, out
+    assert "1 added, each compared against its first version within this range" in out, out
+    assert "1 deleted whole, which this gate does not compare" in out, out
+
+
+# --- added files: compared against their first appearance in the range -----
+#
+# The gap this closes: `run()` and `collect()` only ever compared a file to
+# `base`. A skill that does not exist at `base` has nothing there to diff
+# against, so a whole-file add was skipped outright -- and an author could add
+# a skill in one commit and gut it in the very next commit on the same
+# branch, and the gate certified nothing about it. Found live on a real PR
+# that added five skills in one commit each: `OK: 0 changed SKILL.md file(s),
+# plus 5 added ... which this gate does not compare`, exit 0, on a branch
+# whose own history could have gutted any one of them right back.
+
+
+def test_cli_catches_a_skill_added_then_gutted_on_the_same_branch(repo, capsys):
+    """THE GAP ITSELF, reproduced and then closed: gamma does not exist at
+    `base` at all -- there is nothing there to compare it to -- and is added
+    in full by one commit and gutted by the very next commit, both on the
+    same branch. Before this fix this exact history printed "OK: 0 changed
+    SKILL.md file(s), plus 1 added ... which this gate does not compare" and
+    exited 0; the gate has to compare the gutting commit against the commit
+    that introduced the file, not against `base`, where the file is not
+    there to be compared against.
+    """
+    (repo / "skills" / "alpha" / "SKILL.md").write_text(LONG_BODY.format(name="alpha"))
+    base = commit(repo, "base -- gamma does not exist yet")
+
+    (repo / "skills" / "gamma").mkdir()
+    (repo / "skills" / "gamma" / "SKILL.md").write_text(LONG_BODY.format(name="gamma"))
+    commit(repo, "add gamma in full")
+
+    cut = LONG_BODY.format(name="gamma").replace(
+        "The second paragraph gives the worked example and the counter-example.\n\n", ""
+    )
+    (repo / "skills" / "gamma" / "SKILL.md").write_text(cut)
+    commit(repo, "gut gamma on the very next commit, same branch")
+
+    assert cpr.main(["--base", base, "--head", "HEAD"]) == 1
+    out = capsys.readouterr().out
+    assert "::error file=skills/gamma/SKILL.md::" in out, out
+    assert "worked example" in out, "the error should quote what got cut"
+
+
+def test_cli_control_a_skill_added_then_only_grown_stays_quiet(repo, capsys):
+    """The control for the test above: a gate that fires on any later touch to
+    a freshly added file is unusable for a skill built across more than one
+    commit, so pure growth after the add must stay silent.
+    """
+    (repo / "skills" / "alpha" / "SKILL.md").write_text(LONG_BODY.format(name="alpha"))
+    base = commit(repo, "base")
+
+    (repo / "skills" / "gamma").mkdir()
+    (repo / "skills" / "gamma" / "SKILL.md").write_text(LONG_BODY.format(name="gamma"))
+    commit(repo, "add gamma")
+
+    grown = LONG_BODY.format(name="gamma") + (
+        "\nA fourth paragraph, written on the next commit, that only ever adds "
+        "words and takes none away.\n"
+    )
+    (repo / "skills" / "gamma" / "SKILL.md").write_text(grown)
+    commit(repo, "grow gamma on the next commit, same branch")
+
+    assert cpr.main(["--base", base, "--head", "HEAD"]) == 0
+    assert "No undeclared prose removal" in capsys.readouterr().out
+
+
+def test_cli_is_quiet_on_a_skill_added_once_and_never_touched_again(repo, capsys):
+    """A file added and never modified again has nothing to compare -- that is
+    correct and must stay quiet, not become noise. Its only appearance in
+    `base..head` is the commit that added it, so it is compared against
+    itself and the loss is zero by construction.
+    """
+    (repo / "skills" / "alpha" / "SKILL.md").write_text(BODY)
+    base = commit(repo, "base")
+
+    (repo / "skills" / "gamma").mkdir()
+    (repo / "skills" / "gamma" / "SKILL.md").write_text(LONG_BODY.format(name="gamma"))
+    commit(repo, "add gamma, touched exactly once")
+
+    assert cpr.main(["--base", base, "--head", "HEAD"]) == 0
+    out = capsys.readouterr().out
+    assert "No undeclared prose removal" in out, out
+    assert "OK: 0 changed SKILL.md file(s)" in out, out
+    assert "1 added, each compared against its first version within this range" in out, out
+
+
+def test_cli_compares_an_added_file_against_its_first_appearance_not_its_predecessor(
+    repo, capsys
+):
+    """Multiple commits touching the file within the range: compare against
+    the FIRST appearance, not the commit immediately before head. The last
+    commit here only rewraps what survived the cut before it -- against its
+    own immediate predecessor it loses nothing -- so a gate that compared each
+    added file to its most recent prior commit would stay silent. Compared to
+    the commit that actually introduced the file, the cut two commits back is
+    still there to be caught.
+    """
+    (repo / "skills" / "alpha" / "SKILL.md").write_text(LONG_BODY.format(name="alpha"))
+    base = commit(repo, "base")
+
+    full = LONG_BODY.format(name="gamma")
+    (repo / "skills" / "gamma").mkdir()
+    (repo / "skills" / "gamma" / "SKILL.md").write_text(full)
+    commit(repo, "add gamma in full")
+
+    cut = full.replace(
+        "The second paragraph gives the worked example and the counter-example.\n\n", ""
+    )
+    (repo / "skills" / "gamma" / "SKILL.md").write_text(cut)
+    commit(repo, "cut the second paragraph")
+
+    rewrapped = cut.replace(
+        "The third paragraph says what to do when the rule does not apply here.\n",
+        "The third\nparagraph says what to do when the rule does not apply here.\n",
+    )
+    assert collections.Counter(cpr.words(cut)) == collections.Counter(
+        cpr.words(rewrapped)
+    ), "the last commit must be a pure rewrap, or this test proves nothing"
+    (repo / "skills" / "gamma" / "SKILL.md").write_text(rewrapped)
+    commit(repo, "rewrap the remaining paragraph, nothing else, same branch")
+
+    # Pinned rather than a bare non-zero: the excerpt heuristic only quotes a
+    # clean DELETE opcode (see `Loss.excerpt`), and the rewrap sitting right
+    # next to the cut can merge the two into one REPLACE block that names
+    # nothing -- that is a property of the excerpt, not of whether the cut was
+    # caught, so the count is what this test pins.
+    assert cpr.Loss(full, rewrapped).net == 10
+    assert cpr.main(["--base", base, "--head", "HEAD"]) == 1
+    out = capsys.readouterr().out
+    assert "::error file=skills/gamma/SKILL.md::this SKILL.md lost 10 words" in out, out
+
+
+def test_cli_is_silent_on_a_skill_added_then_deleted_within_the_same_branch(repo, capsys):
+    """A file added in the range and then deleted in the range exists at
+    neither `base` nor `head`, so `git diff base head` renders NOTHING for
+    that path -- the same as it would for a human looking at the pull
+    request's own Files view. This gate reads off that same two-tree diff, so
+    the file is as invisible to it as it is to review: not compared, not
+    counted as added, not counted as deleted.
+    """
+    (repo / "skills" / "alpha" / "SKILL.md").write_text(BODY)
+    base = commit(repo, "base")
+
+    (repo / "skills" / "gamma").mkdir()
+    (repo / "skills" / "gamma" / "SKILL.md").write_text(LONG_BODY.format(name="gamma"))
+    commit(repo, "add gamma")
+    (repo / "skills" / "gamma" / "SKILL.md").unlink()
+    (repo / "skills" / "gamma").rmdir()
+    commit(repo, "delete gamma again, same branch")
+
+    assert cpr.main(["--base", base, "--head", "HEAD"]) == 0
+    out = capsys.readouterr().out
+    assert "gamma" not in out, out
+    assert out.strip() == "OK: 0 changed SKILL.md file(s). No undeclared prose removal."
+
+
+def test_cli_refuses_to_pass_when_an_added_files_history_cannot_be_walked(
+    repo, capsys, monkeypatch
+):
+    """Shallow clones / unreachable revisions: the base-resolution guard in
+    `main` already hard-errors on an unresolvable base rather than skipping
+    silently. This is the same stance for a path whose OWN history within
+    `base..head` cannot be walked -- a clone too shallow to enumerate the
+    commits that touched it. Never a silent OK, and never silently treated as
+    brand new (nothing lost) when whether anything was lost could not be
+    determined at all.
+    """
+    (repo / "skills" / "alpha" / "SKILL.md").write_text(BODY)
+    base = commit(repo, "base")
+
+    (repo / "skills" / "gamma").mkdir()
+    (repo / "skills" / "gamma" / "SKILL.md").write_text(LONG_BODY.format(name="gamma"))
+    commit(repo, "add gamma")
+
+    monkeypatch.setattr(cpr, "_first_appearance", lambda base, head, path: None)
+    assert cpr.main(["--base", base, "--head", "HEAD"]) == 1
+    out = capsys.readouterr().out
+    assert "skills/gamma/SKILL.md" in out, out
+    assert "OK:" not in out, out
+    assert "fetch-depth" in out, out
+
+
+def test_first_appearance_finds_the_earliest_commit_touching_the_path(repo):
+    """Unit-level: the helper itself, not through `main`."""
+    (repo / "skills" / "alpha" / "SKILL.md").write_text(BODY)
+    base = commit(repo, "base")
+
+    (repo / "skills" / "gamma").mkdir()
+    (repo / "skills" / "gamma" / "SKILL.md").write_text(LONG_BODY.format(name="gamma"))
+    first = commit(repo, "add gamma")
+
+    (repo / "skills" / "gamma" / "SKILL.md").write_text(
+        LONG_BODY.format(name="gamma") + "\nmore\n"
+    )
+    commit(repo, "touch gamma again")
+
+    assert (
+        cpr._first_appearance(base, "HEAD", "skills/gamma/SKILL.md") == first
+    )
+
+
+def test_first_appearance_returns_none_when_the_range_cannot_be_walked(repo):
+    """The real failure path, not a mock: an unresolvable revision on one end
+    of the range makes `git log` itself fail, and the helper reports that as
+    `None` rather than raising or silently returning an empty result that
+    would read the same as "no commits touched this path".
+    """
+    (repo / "skills" / "alpha" / "SKILL.md").write_text(BODY)
+    commit(repo, "base")
+
+    assert cpr._first_appearance(
+        "nope-not-a-ref", "HEAD", "skills/alpha/SKILL.md"
+    ) is None
 
 
 def test_cli_ignores_a_shrinking_file_that_is_not_a_skill(repo, capsys):

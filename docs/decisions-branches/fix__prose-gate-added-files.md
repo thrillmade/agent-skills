@@ -1,0 +1,15 @@
+← back to [docs/timeline.md](../timeline.md)
+
+## 2026-08-18 04:24 - Compare a within-range added SKILL.md against its first-appearance commit, not base, so a same-branch add-then-gut is caught
+
+**Reasoning:** check_prose_retention.py only ever diffed against base, so a file that did not exist at base (git status A) was recorded in diff.added and never compared at all. An author could add a skill in one commit and gut it in the next commit on the same branch and the gate printed OK -- reproduced live: 5 skills added on feat/nominate-thrill-studio-skills (PR #233) get zero content verdict from this gate today. The gate's own OK line was honest about the gap ('which this gate does not compare'), which is what let a reviewer's control catch it before the gate did.
+
+**Alternatives considered:** Diff added files against base with an empty-string 'before' -- rejected: base has no version of the file at all, so every word in a new skill would score as a fabricated loss the moment anyone touched it again, false-firing on ordinary iteration (see test_cli_control_a_skill_added_then_only_grown_stays_quiet)., Compare against the immediately preceding commit on the branch instead of the first appearance -- rejected: a gutting commit followed by an innocuous rewrap-only commit would net to zero against its immediate predecessor while still being a real loss against what the branch actually introduced (see test_cli_compares_an_added_file_against_its_first_appearance_not_its_predecessor, which pins exactly this discriminator)., Silently fall back to 'no verdict' when an added file's within-range history cannot be walked (shallow clone) -- rejected: that is reporting success over a comparison that was never made, the exact failure main()'s own base-resolution guard already refuses on. Hard-errors instead via a new unresolved_added / UNWALKABLE_ADDITION path, mirroring the existing UNREADABLE_BLOB stance.
+
+**Implications:**
+- A file added and never touched again now compares against itself via _first_appearance and finds nothing -- correctly silent, not a second special case.
+- A file added then deleted within the same range never enters git's two-tree diff at all (absent from both base and head), so it stays exactly as invisible to this gate as it is to a human reviewing the PR's Files view -- documented in Diff's docstring and pinned by test_cli_is_silent_on_a_skill_added_then_deleted_within_the_same_branch rather than left implicit.
+- The OK-line summary changed shape: an added file is no longer lumped with deleted files under 'which this gate does not compare' -- it now says 'compared against its first version within this range', so the message stays true of what the gate actually did. tests/test_check_prose_retention.py and tests/test_prose_retention_mutations.py both updated; 3 new mutation entries added for the new guard (added_files_stop_being_compared_to_their_first_appearance, first_appearance_compares_against_the_last_touch_not_the_first, unwalkable_added_history_silently_treated_as_unchanged).
+
+---
+

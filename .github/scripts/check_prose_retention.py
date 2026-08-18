@@ -1403,12 +1403,14 @@ def hatch_state(before: str, after: str, skill: str, net: int) -> str:
 # The one phrase that identifies each failure mode's annotation, owned here so
 # the message and the guidance `main` prints under it cannot drift apart --
 # `run` also annotates the ledger itself and any file it could not scope, and
-# `main` annotates any blob that would not come back. Those are four different
-# findings and they do not share a remedy. LOST_PROSE additionally carries the
-# count of undeclared removals.
+# `main` annotates any blob that would not come back and any added file whose
+# own history could not be walked. Those are five different findings and they
+# do not share a remedy. LOST_PROSE additionally carries the count of
+# undeclared removals.
 LOST_PROSE = "::this SKILL.md lost "
 UNSCOPABLE_FILE = "::this SKILL.md's YAML frontmatter could not be located"
 UNREADABLE_BLOB = "::git lists this file as changed"
+UNWALKABLE_ADDITION = "::this SKILL.md was added within this range, but the commit"
 LEDGER_REWOUND = "::this change takes "
 SLOTS_WITHDRAWN = f"back OUT of {LEDGER}"
 
@@ -1440,13 +1442,19 @@ def run(
 ) -> list[str]:
     """Check every (path -> (before, after)) pair. Returns error annotations.
 
-    `cases` carries every SKILL.md modified between the two revisions, renames
-    included, keyed by its path at head. Whole-file additions and deletions are
-    deliberately out of scope: git renders those as a file appearing or
-    disappearing, which review cannot miss, and `main` says out loud how many
-    it skipped. This gate exists for the removal that hides inside an
-    otherwise-ordinary edit -- which is how all three historical cases got
-    through.
+    `cases` carries every SKILL.md this gate could compare between the two
+    revisions -- modified, renamed, and added-then-changed within the range,
+    keyed by its path at head. A file added and never touched again has
+    nothing in `cases` for it: compared against the commit that introduced
+    it, its own first version, the loss is zero by construction, and that
+    silence is correct rather than a gap this function has.
+
+    Whole-file DELETIONS alone stay deliberately out of scope: a dead file has
+    nothing left to protect, git renders the deletion as a file disappearing,
+    which review cannot miss, and `main` says out loud how many it skipped.
+    This gate exists for the removal that hides inside an otherwise-ordinary
+    edit or an add -- which is how all three historical cases, and the gap
+    that let a whole-file add through undeclared, got through.
     """
     ledger = LedgerDiff(ledger_before, ledger_after)
     errors: list[str] = []
@@ -1596,6 +1604,14 @@ REMEDIES = [
         False,
     ),
     (
+        UNWALKABLE_ADDITION,
+        "Each file named above was listed as added, and the commit that first "
+        "introduced it inside the range could not be found, so it was never "
+        "compared against that first version. Check the checkout step sets "
+        "`fetch-depth: 0`.",
+        False,
+    ),
+    (
         SLOTS_WITHDRAWN,
         f"Put back every line this change took out of {LEDGER}. While anything "
         f"is missing from that file, no row the change adds counts at all.",
@@ -1703,13 +1719,50 @@ def _show(rev: str, path: str) -> str | None:
         raise Undecodable(rev, path) from None
 
 
+def _first_appearance(base: str, head: str, path: str) -> str | None:
+    """The earliest commit in `base..head` that touched `path`.
+
+    Called only for a path git's own diff already calls ADDED between `base`
+    and `head` -- the file does not exist at `base`, so some commit inside the
+    range must have created it, and that commit's own version of the file is
+    what a whole-file add should be compared against instead of `base`, where
+    it is not there to compare against at all. `base` itself was never a
+    candidate: comparing to the version at `base` is exactly what a plain
+    modification does, and this path does not have one.
+
+    None only when the range could not be walked at all -- a clone too
+    shallow to enumerate `base..head` for this path. That is the same
+    shallow-clone failure `main`'s own base-resolution guard already refuses
+    on rather than silently passing over, so a caller gets `None` back rather
+    than an empty result it could mistake for "no commits touched this path",
+    which cannot happen for a path git itself calls added.
+    """
+    got = _git("log", "--reverse", "--format=%H", f"{base}..{head}", "--", path)
+    if got.returncode != 0:
+        return None
+    shas = [ln for ln in got.stdout.splitlines() if ln]
+    return shas[0] if shas else None
+
+
 class Diff:
     """What changed between two revisions, split into what this gate can judge.
 
-    `cases` are the modified and renamed SKILL.md files, keyed by their path at
-    head. `added` and `deleted` are counted but not compared, and `main` says
-    so out loud: a gate that prints OK without mentioning what it left out is
-    reporting success over a comparison it did not make.
+    `cases` are the modified, renamed and added-then-changed SKILL.md files,
+    keyed by their path at head. A file added within the range is compared
+    against the commit that first introduced it, not against `base`, where it
+    does not exist -- so a skill added in one commit and gutted in a later one
+    on the same branch is still caught. A file added and never touched again
+    compares against itself and has nothing in `cases` for it, which is
+    correct: the loss is zero by construction, not a comparison skipped.
+
+    `deleted` is counted but not compared -- a dead file has nothing left to
+    protect. `unresolved_added` is the one whole-file-add case still out of
+    scope on purpose: a path git calls added whose own history inside
+    `base..head` could not be walked, the shallow-clone failure `main`'s own
+    base-resolution guard already refuses on rather than passes over. `main`
+    says so out loud for both `deleted` and `unresolved_added`: a gate that
+    prints OK without mentioning what it left out is reporting success over a
+    comparison it did not make.
     """
 
     def __init__(self) -> None:
@@ -1718,6 +1771,7 @@ class Diff:
         self.deleted: list[str] = []
         self.renamed: list[tuple[str, str]] = []
         self.unreadable: list[tuple[str, str]] = []
+        self.unresolved_added: list[str] = []
 
     def pair(self, base: str, old: str, head: str, new: str) -> None:
         """Record one before/after comparison, whatever the paths were called.
@@ -1778,11 +1832,14 @@ def collect(base: str, head: str) -> Diff:
     large enough cut drops a real rename below the default, turning it back
     into an add plus a delete.
 
-    A cut deep enough to fall below 25% still lands there, and this gate does
-    not compare it -- but `main` prints the count of files added and deleted
-    whole rather than a bare OK, so the run says what it did not look at. At
-    that depth git itself renders the change as a file disappearing, which is
-    the out-of-scope class review cannot miss.
+    A cut deep enough to fall below 25% still lands there as an add plus a
+    delete rather than a rename, and the delete half of that split is not
+    compared -- the file this gate would compare the new path's ADD half
+    against, in turn, is the commit within `base..head` that first introduced
+    it, not `base` itself, where a wholly new path never has a version to
+    diff against. `main` prints the count of files added and deleted whole
+    rather than a bare OK either way, so the run says what it did and did not
+    look at.
     """
     diff = Diff()
     got = _git(
@@ -1803,7 +1860,13 @@ def collect(base: str, head: str) -> Diff:
             diff.renamed.append((old, new))
             diff.pair(base, old, head, new)
         elif status.startswith("A"):
-            diff.added.append(skill_paths[0])
+            path = skill_paths[0]
+            diff.added.append(path)
+            first = _first_appearance(base, head, path)
+            if first is None:
+                diff.unresolved_added.append(path)
+            else:
+                diff.pair(first, path, head, path)
         elif status.startswith("D"):
             diff.deleted.append(skill_paths[0])
         else:  # M, and anything else git reports as a content change
@@ -1889,6 +1952,15 @@ def main(argv: list[str] | None = None) -> int:
         f"compared and no verdict is reported for it."
         for rev, path in diff.unreadable
     ]
+    errors += [
+        f"::error file={path}{UNWALKABLE_ADDITION} that first introduced it "
+        f"could not be found by walking {base}..{args.head}, so it was not "
+        f"compared against its first version and no verdict is reported for "
+        f"it. git lists this path as added, which means some commit inside "
+        f"that range must have created it -- check the checkout step sets "
+        f"`fetch-depth: 0`."
+        for path in diff.unresolved_added
+    ]
     errors += run(diff.cases, ledger_before, ledger_after)
 
     if errors:
@@ -1925,12 +1997,22 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 1
 
-    skipped = ""
-    if diff.added or diff.deleted:
-        skipped = (
-            f", plus {len(diff.added)} added and {len(diff.deleted)} deleted "
-            "whole, which this gate does not compare"
+    # `added` is no longer "which this gate does not compare" -- it is, against
+    # the commit that introduced each one, which is why it gets its own clause
+    # rather than sharing `deleted`'s. Reaching this line at all means
+    # `diff.unresolved_added` was empty, so every added file WAS compared.
+    noted = []
+    if diff.added:
+        noted.append(
+            f"{len(diff.added)} added, each compared against its first "
+            "version within this range"
         )
+    if diff.deleted:
+        noted.append(
+            f"{len(diff.deleted)} deleted whole, which this gate does not "
+            "compare"
+        )
+    skipped = f", plus {'; '.join(noted)}" if noted else ""
     print(
         f"OK: {len(diff.cases)} changed SKILL.md file(s){skipped}. "
         "No undeclared prose removal."
