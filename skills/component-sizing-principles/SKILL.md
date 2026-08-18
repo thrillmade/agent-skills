@@ -1,5 +1,5 @@
 ---
-version: "737120806c13"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "08a07d2f7635"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: component-sizing-principles
 description: |
   Use when picking a control height (button / input / chip / badge), proposing a component-height or icon-size ladder for a density mode, or auditing one-off heights drifting across a codebase. Names the universal principles: ladders are curated, not formula-derived — formula-clean values render poorly and blur rung distinctions; every interactive control clears the WCAG 2.5.8 AA 24 CSS px target-size floor, with the smallest rung reserved for non-interactive elements; each rung pairs its height with a type-scale font size and a curated icon size; sibling controls in one surface share a rung. Cite when an agent derives heights from a ratio, picks an off-ladder height, or puts an interactive control below 24 px. For one system's concrete rung sets see udts-component-sizing-ladders.
