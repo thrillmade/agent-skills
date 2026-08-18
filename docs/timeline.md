@@ -13,10 +13,10 @@ PR's CI run, so this file is always coherent with current `main`.
 ---
 
 
-## 2026-08 (32 decisions)
+## 2026-08 (36 decisions)
 
-- **2026-08-18** — Pass the quote marker's column through reopen() so a list column doesn't survive a container boundary the marker never reached (#226) *(fix/prose-gate-list-column)* — [decisions-branches/fix__prose-gate-list-column.md](decisions-branches/fix__prose-gate-list-column.md)
-- *... 30 more decisions ...*
+- **2026-08-18** — Add a relative-markdown-link gate to validate_skills.py, scoped to skills/ *(feat/link-gate-for-skills)* — [decisions-branches/feat__link-gate-for-skills.md](decisions-branches/feat__link-gate-for-skills.md)
+- *... 34 more decisions ...*
 - **2026-08-14** — Gate skill size with a shrink-only ratchet, and deprecate skillforge into the three skills that own its job *(feat/skill-depth-and-interlinking)* — [decisions-branches/feat__skill-depth-and-interlinking.md](decisions-branches/feat__skill-depth-and-interlinking.md)
 
 ## 2026-07 (13 decisions)
