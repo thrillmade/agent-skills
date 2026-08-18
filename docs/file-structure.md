@@ -92,9 +92,6 @@ agent-skills
 ├── .cursorrules
 ├── .gitattributes
 ├── .gitignore
-├── .merge_file_Ggwrba
-├── .merge_file_OVMET7
-├── .merge_file_QRUAns
 ├── AGENTS.md
 ├── CLAUDE.md
 ├── LICENSE

@@ -201,6 +201,8 @@
       "notes": "L1 dispatcher — entry point that routes to review lenses; a repo consumes what it routes to, not the dispatcher itself as a standing subscription"
     },
     "composing-a-screen": {
+      "family": "design-dispatchers",
+      "owns": "laying out a screen",
       "authoring_home": "catalog",
       "distribution": "opt-in",
       "subscribers": [],
