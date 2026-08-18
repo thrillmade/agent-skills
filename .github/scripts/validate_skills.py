@@ -355,8 +355,11 @@ def run(root: Path) -> list[str]:
                 f"Fixes, in order: cut narration and duplication; replace anything a "
                 f"neighbouring skill already owns with a relative markdown link to it; "
                 f"split ONLY if this is genuinely two topics, never to hit the number. "
-                f"Do NOT move prose into references/ -- that consumer reads SKILL.md and "
-                f"nothing else, so the move deletes it. There is no exception list."
+                f"Do NOT move instruction prose into references/ to buy bytes -- "
+                f"that consumer reads SKILL.md and nothing else, so the move deletes "
+                f"it for the reader it was written for. Shipping source material "
+                f"there is fine and unaffected; the rule is about relocating what "
+                f"the reader needs. There is no exception list for the limit."
             )
 
         # --- SPEC §1.10.1 OPTIONAL-field validation ---
