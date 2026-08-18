@@ -13,10 +13,10 @@ PR's CI run, so this file is always coherent with current `main`.
 ---
 
 
-## 2026-08 (26 decisions)
+## 2026-08 (30 decisions)
 
-- **2026-08-18** — Compare a within-range added SKILL.md against its first-appearance commit, not base, so a same-branch add-then-gut is caught *(fix/prose-gate-added-files)* — [decisions-branches/fix__prose-gate-added-files.md](decisions-branches/fix__prose-gate-added-files.md)
-- *... 24 more decisions ...*
+- **2026-08-18** — Add skdd to the four default-on review-discipline subscriber arrays in placement-map.json *(fix/placement-map-subscribers)* — [decisions-branches/fix__placement-map-subscribers.md](decisions-branches/fix__placement-map-subscribers.md)
+- *... 28 more decisions ...*
 - **2026-08-14** — Gate skill size with a shrink-only ratchet, and deprecate skillforge into the three skills that own its job *(feat/skill-depth-and-interlinking)* — [decisions-branches/feat__skill-depth-and-interlinking.md](decisions-branches/feat__skill-depth-and-interlinking.md)
 
 ## 2026-07 (13 decisions)
