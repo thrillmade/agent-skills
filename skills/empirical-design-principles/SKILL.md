@@ -15,13 +15,12 @@ description: Use when a layout decision is about to be defended by naming a prin
 ## When NOT to use
 
 - **Reaching for a usability heuristic rather than an empirical principle.**
-  Nielsen's ten, Norman's affordances and signifiers, Shneiderman's eight golden
-  rules, progressive disclosure, recognition over recall — none of these are
-  here, deliberately. They make a different *kind* of claim, so they fail
-  differently: a heuristic is accumulated judgement organised for inspection, and
-  it fails by missing a problem. A principle here predicts, and fails by
-  predicting wrongly. Applying one is an act of judgement you defend; applying
-  the other produces a number you test. That absence is declared, not covered —
+  Nielsen's ten, Shneiderman's eight and the rest are not here, deliberately.
+  They make a different *kind* of claim, so they fail differently: a heuristic is
+  accumulated judgement organised for inspection, and it fails by missing a
+  problem. A principle here predicts, and fails by predicting wrongly. Applying
+  one is an act of judgement you defend; applying the other produces a number you
+  test. That absence is declared, not covered —
   see [usability-heuristics](../usability-heuristics/SKILL.md).
 - **Reaching for Norman's constraints, forcing functions, natural mapping, or
   the gulfs of execution and evaluation.** Neither skill covers them. That one is
@@ -48,10 +47,8 @@ then build it and check. Backward: ship the layout, then name a principle that
 sounds like what you did. The second is the dominant failure and it is invisible,
 because a post-hoc citation is always available for any arrangement — a card grid
 with 12/16/20px spacing gets defended as "grouping by proximity" when applied
-forward the same principle predicts it fails.
-
-A principle used before the layout produces a number you can test. Used after, it
-produces only a name for what already exists.
+forward the same principle predicts it fails. Used before, a principle produces
+a number you can test; used after, only a name for what already exists.
 
 ## The one that changes how you space things
 
@@ -70,10 +67,19 @@ was meant to protect.
 Check ratios, not pixels. 24 against 32 is 1.33 — near-bistable, and readers will
 parse it differently on different visits.
 
+## Two that hold, inside a stated scope
+
+- **Fitts's** — movement time rises with distance and falls with target size,
+  logarithmically. It models movement to a target of *known* location, not
+  finding one, and its edge corollary needs a pointer to pin against, not a
+  finger.
+- **Jakob's** — users arrive with a model built on other sites, so an unfamiliar
+  convention costs errors on first encounter. The measured support is control
+  placement and behaviour only; the visual half is Nielsen's opinion.
+
 ## Four that do not say what design writing says
 
-Read [interaction-laws](https://github.com/thrillmade/agent-skills/blob/main/skills/empirical-design-principles/references/interaction-laws.md)
-before citing any of these.
+Read [interaction-laws](references/interaction-laws.md) before citing any of these.
 
 - **Hick's Law** — "reduce the number of options and nest them into categories"
   is not supported, and on the law's own maths is backwards: nesting charges an
@@ -123,20 +129,22 @@ For spacing claims, compute the ratio between competing gaps and quote it.
 - [apca-contrast](../apca-contrast/SKILL.md) — figure/ground separation as a
   measured contrast obligation rather than an intuition.
 - [consuming-a-design-system](../consuming-a-design-system/SKILL.md), plus your
-  own project's design-system skill if it has one — which token to reach for
-  once the arrangement is decided. This skill settles the arrangement; the
-  system settles the value.
+  own project's design-system skill if it has one — this skill settles the
+  arrangement, the system settles the value.
 
-Detail, as absolute URLs so they resolve installed, on GitHub and on skills.sh
-alike — a relative link to `references/` 404s on the last of those:
-[gestalt](https://github.com/thrillmade/agent-skills/blob/main/skills/empirical-design-principles/references/gestalt.md) ·
-[interaction-laws](https://github.com/thrillmade/agent-skills/blob/main/skills/empirical-design-principles/references/interaction-laws.md) ·
-[convention-and-memory](https://github.com/thrillmade/agent-skills/blob/main/skills/empirical-design-principles/references/convention-and-memory.md).
+Detail sits beside this file on disk — `npx skills add` copies `references/`
+wholesale — so read it there, not over the network:
+[gestalt](references/gestalt.md) ·
+[interaction-laws](references/interaction-laws.md) ·
+[convention-and-memory](references/convention-and-memory.md).
+No `blob/main` URL is given: that promises a path that never moves.
 
 ## Sources
 
-Primary sources per principle are in the three reference files linked above.
-Attributions there were verified against the original publications, and several
-corrections to widely repeated citations are recorded inline — including who
-actually established figure/ground, common region and element connectedness,
-none of whom is Wertheimer.
+The three reference files linked above hold 78 source entries. Verification is
+partial and the scope is the claim: about 20 were opened and read against the
+original — those marked `[read in full]`, plus the ones the inline corrections
+turn on — and the rest are DOI- or URL-resolved only. A resolving DOI shows a
+work exists, not that it says what the citing line claims. Corrections are
+recorded inline, including who actually established figure/ground, common region
+and element connectedness, none of whom is Wertheimer.

@@ -63,16 +63,30 @@ beside it; search top-right; cart top-right; links visually distinct and
 underlined in body copy; submit at the end of the form; browser back working. On
 a marketing site for an unfamiliar product, where nearly every visitor is a
 first-time visitor who will never climb the learning curve, this is where the law
-bites hardest. It constrains layout and interaction, not visual identity.
+bites hardest. We apply it to layout and interaction, not to visual identity —
+a narrowing argued in Misapplied as, and not Nielsen's own scope.
 
 **Misapplied as** — A veto on differentiation of any kind: "Jakob's Law says look
-like everyone else." The law covers interaction conventions and the location and
-behaviour of controls. It says nothing about typeface, colour, motion,
-illustration, copy voice or composition, and Nielsen's own article puts the
-remaining creative work in task analysis and content strategy, not in visual
-sameness. Second misapplication: quoting "you can kiss about 80% of your
-potential customer base goodbye" as a measured figure. It is uncited in his own
-article and no study stands behind it.
+like everyone else." We narrow it to interaction conventions and the location and
+behaviour of controls, and treat it as silent on typeface, colour, motion,
+illustration, copy voice and composition.
+
+**That narrowing is ours, and Nielsen does not agree.** "End of Web Design" opens
+by asking that sites "tone down their individual appearance and distinct design"
+across four named layers — *visual design*; terminology and labeling; interaction
+design and workflow; information architecture — and prefaces its "What Remains in
+Web Design" section with "Even as websites become more similar and appearance
+design becomes more simplified…". Task analysis and content design are what he
+says remains, but not in contrast to visual sameness; he asks for visual sameness
+too. We drop the visual half because the empirical support NN/g offers is
+control-placement-specific (see Predicts), so the visual half is his opinion
+carrying none of the cited evidence. Cite the narrowing as an editorial position
+of this file, never as what Nielsen wrote.
+
+Second misapplication: quoting "you can kiss about 80% of your potential customer
+base goodbye" as a measured figure. That sentence is in the 2023 UX Tigers
+restatement, not the 2000 Alertbox piece, and it carries no citation, footnote or
+link there; no study stands behind it.
 
 **Limits** — Formulated in 2000 for the desktop web, when conventions were young
 and switching cost was a page load. It is silent on which convention to follow
@@ -442,8 +456,10 @@ separated. Jakob's Law governs the *location and behaviour* of controls — wher
 the cart icon lives, that the logo goes home, that back works. Von Restorff
 governs *emphasis within a composition* — which thing on this screen is loudest.
 Moving the cart icon costs real errors; making it the only accented element costs
-nothing. Jakob's Law invoked against a visual decision is an interaction law
-applied to a layer it never covered.
+nothing. Jakob's Law invoked against a visual decision is, on the narrowing
+this file argues for, an interaction law applied to a layer its evidence never
+covered — though Nielsen himself asked for visual sameness as well, so cite the
+evidence gap and not his authority.
 
 **Jakob's Law vs. peak-end.** A peak is by construction unusual, and the unusual
 is what Jakob's Law prices. Resolve it with Budiu's power-law framing: put the
@@ -462,8 +478,9 @@ each.
 Aesthetic-usability gets used to argue distinctive visual treatment pays; Jakob's
 Law gets used to argue it costs. Both are misstated. Aesthetic-usability predicts
 ratings, not task success, so it cannot be cashed in as usability. Jakob's Law
-prices interaction deviation, not visual deviation, so it cannot be cashed in
-against a typeface or a palette. Correctly stated, they do not meet.
+has measured support only for interaction deviation, not visual deviation, so it
+cannot be cashed in against a typeface or a palette — Nielsen's article does ask
+for visual restraint, but offers no study for that half. Correctly stated, they do not meet.
 
 **Postel's Law vs. unambiguous feedback.** Silent tolerance and clear
 communication pull opposite ways: the more formats accepted without comment, the

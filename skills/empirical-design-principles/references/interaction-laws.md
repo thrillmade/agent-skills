@@ -24,7 +24,7 @@ seventy-year-old replicated equation.
 
 | Law | Is the finding supported? | Is the popular design application supported? |
 |---|---|---|
-| Fitts | Yes — equation, seventy years of replication, an ISO standard | Yes, for pointer movement to a known target. The touchscreen edge corollary is not. |
+| Fitts | Yes — equation, seventy years of replication, an ISO method (Part 9 as a full standard until 2012, since then a Technical Specification) | Yes, for pointer movement to a known target. The touchscreen edge corollary is not. |
 | Hick–Hyman | Yes — one of the better-replicated results in experimental psychology | **No.** Its preconditions are almost never met in an interface, and "less is better" is the opposite of what the current work concludes. |
 | Miller | Yes — absolute judgment and chunking are real results | **No.** "7±2 items in a menu" appears nowhere in the paper in any form. |
 | Doherty | Partly — uncontrolled 1982 field observation, sub-second, from an IBM sales document | **No.** The 400 ms figure is not in the source. |
@@ -48,11 +48,22 @@ The regression form everyone quotes — MT = a + b·ID — is not in that paper,
 either. MacKenzie (2018, *The Wiley Handbook of Human Computer Interaction*, ch. 17) states: "The
 prediction form of Fitts' law (Eq. 17.4) does not appear in Fitts' original 1954 publication," and
 names no originator. Welford (1960; 1968, p. 147) is credited with something else — the index
-variant ID = log2(A/W + 0.5), which fixes the negative-ID problem at low difficulty. The regression
-form's usual first appearance is Fitts & Peterson (1964), "Information capacity of discrete motor
-responses," *Journal of Experimental Psychology*, 67, 103–112; who first wrote it down is not
-cleanly established, so do not attribute it. The Shannon variant ID = log2(A/W + 1) is MacKenzie
-(1992), and is what ISO 9241-9:2000 (renumbered ISO 9241-411:2012) standardises.
+variant ID = log2(A/W + 0.5), which fixes the negative-ID problem at low difficulty.
+
+Who first wrote the regression form down is not established, so do not attribute it to anyone.
+Fitts & Peterson (1964), "Information capacity of discrete motor responses," *Journal of
+Experimental Psychology*, 67, 103–112, is the paper usually reached for, but MacKenzie ch. 17 cites
+it (p. 110) only for Fitts *using the Welford formulation*, not for stating MT = a + b·ID. We could
+not retrieve Fitts & Peterson 1964 to read it ourselves, so treat "it starts there" as unverified
+folklore too.
+
+The Shannon variant ID = log2(A/W + 1) is MacKenzie (1992), and is what ISO 9241-9:2000
+standardises. That part was cancelled and replaced — together with ISO 9241-400, -410 and -420 — by
+ISO/TS 9241-411:2012, which is a Technical Specification, not an International Standard: its own
+Foreword says a TS "must either be transformed into an International Standard or be withdrawn."
+Write the pair, not "renumbered": the 2012 document also absorbed the withdrawn Part 4, so it is a
+four-document cancel-and-replace. ISO/TS 9241-411 §3.6 does carry the Shannon form,
+ID = log2((d + w)/w).
 
 **Predicts** — Movement time rises with distance and falls with target size, logarithmically, so
 doubling target size buys progressively less each time. Fitts measured Ip at roughly 10–12 bits per
@@ -81,9 +92,11 @@ last click — to the next target, not from the viewport centre.
 4. Citing it as a general "make things easy" principle rather than a model of aimed pointer
    movement.
 
-**Limits** — Fitts's own, verbatim: "rate of performance is approximately constant over a
-considerable range of movement amplitudes and tolerance limits, but falls off outside this optimum
-range." His conditions covered Id of 1 to 10 bits. Movements of 1 and 2 inches were "consistently
+**Limits** — Fitts's own, verbatim, emphasis added: "The results indicate that rate of performance
+*in a given type of task* is approximately constant over a considerable range of movement amplitudes
+and tolerance limits, but falls off outside this optimum range." Those four emphasised words are the
+whole limit and are routinely dropped: the constant is constant *within* a task, not across tasks.
+His conditions covered Id of 1 to 10 bits. Movements of 1 and 2 inches were "consistently
 less efficient than movements of 4 to 8 in.", and the smallest tolerance (1/32 in.) gave low rates.
 The index "is insensitive to the weight of the stylus used in the first experiment and hence to the physical work required by the task" and
 "insensitive to the information required for specifying the direction of a movement, or for
@@ -349,7 +362,10 @@ cannot be removed by design, only relocated between the user, the application de
 platform developer.
 
 **Provenance** — Larry Tesler, ca. 1984, at Apple. Primary source is Tesler's own site, nomodes.com,
-"Tesler's Theorem and other adages and coinages": "Tesler's Law of Conservation of Complexity (ca.
+"Tesler's Theorem and other adages and coinages". The live site no longer negotiates TLS, but the
+page is intact in the Internet Archive and was read there in full
+(`web.archive.org/web/20230616044128id_/http://www.nomodes.com/Larry_Tesler_Consulting/Adages_and_Coinages.html`,
+HTTP 200). It reads: "Tesler's Law of Conservation of Complexity (ca.
 1984). 'Every application has an inherent amount of irreducible complexity. The only question is:
 Who will have to deal with it—the user, the application developer, or the platform developer?'"
 
@@ -360,20 +376,27 @@ software vendors. Do not pair that year with the subtitle *Creating Innovative A
 Devices* — that is the second edition (2009/2010, ISBN 9780321643391), and the interview is in the
 first.
 
-Provenance correction: design sources routinely place this at Xerox PARC. lawsofux writes that the
-law's origins "can be traced back to the mid-1980s, when Larry Tesler, a computer scientist at Xerox
-PARC, was helping to develop the language of interaction design" — which puts him at PARC in the
-mid-1980s. He was not: Tesler was at PARC from 1973 to 1980 and at Apple from July 1980 until 1997
-(per Wikipedia; note the IEEE Spectrum obituary of 20 Feb 2020 is often cited for this and does not
-in fact give those years — it says only that he "spent nearly two decades at Apple"). His own dating
+Provenance correction: design sources routinely place this at Xerox PARC. lawsofux writes: "While
+working for Xerox PARC in the mid-1980s, Larry Tesler realized that the way users interact with
+applications was just as important as the application itself" — which puts him at PARC in the
+mid-1980s. He was not, and his own CV settles it without recourse to Wikipedia: nomodes.com's
+`1962-1980` page gives "1973 to 1980 — Research Staff, Xerox Corporation Palo Alto Research Center
+(PARC)", and its `1980-1997` page gives "7/80-8/97 — VP and Chief Scientist, Apple Computer, Inc."
+(The IEEE Spectrum obituary of 20 Feb 2020 is often cited for these dates and does not give them —
+it says only that he "spent nearly two decades at Apple".) His own dating
 of ca. 1984 therefore places the formulation at Apple, in the MacApp context, not at PARC.
 
-Unverified: Tesler's page is said to collect independent formulations by Norman (*The Design of
-Future Things*, 2007, p. 112: "what is complex in digital representation and computation can only
-be simplified at the expense of what is explicitly represented"), Esposito and Colborne.
-nomodes.com could not be reached to confirm, and the Wikipedia article that lawsofux gives as its
-own source contains no Norman quote at all. Tesler's wording and his ca. 1984 dating were confirmed
-independently; the Norman page reference was not. Do not quote it as verified.
+Attribution correction, resolved against the archived page: design writing credits an independent
+formulation of the law to **Norman**, *The Design of Future Things*, 2007, p. 112 — "what is
+complex in digital representation and computation can only be simplified at the expense of what is
+explicitly represented". **That is not Norman.** Tesler's page credits that exact sentence to *Fundamentals
+of Software Integration* by Kay Hammer and Tina Timmerman, p. 112, 11 December 2007 — the "p. 112"
+and the "2007" that make the Norman citation look precise are Hammer & Timmerman's page and year.
+*The Design of Future Things* appears nowhere on the page. Norman is on it once, with an unrelated
+quotation from *Living with Complexity* (2010), p. 224, and is not marked as an independent
+formulation. Only two entries are so marked: Hammer & Timmerman (2007) and Esposito & Saltarello,
+*Microsoft .NET: Architecting Applications for the Enterprise*, p. 368 (2008). Colborne (*Simple and
+Usable*, p. 180, 2010) is quoted but not flagged. Do not repeat the Norman attribution.
 
 **Predicts** — Any simplification of the user's task shows up as work somewhere else: in
 engineering effort, in platform capability, or in constrained flexibility. A UI that looks
@@ -443,7 +466,7 @@ Primary sources, read directly unless marked.
 - MacKenzie, I. S. (2018). Fitts' Law. In *The Wiley Handbook of Human Computer Interaction*, ch. 17.
 - MacKenzie, I. S., & Buxton, W. (1992). Extending Fitts' law to two-dimensional tasks. *Proc. CHI '92*, 219–226.
 - Bi, X., Li, Y., & Zhai, S. (2013). FFitts law: Modeling finger touch with Fitts' law. *Proc. CHI 2013*, 1363–1372.
-- ISO 9241-9:2000, renumbered ISO 9241-411:2012 — standard method for Fitts-based input device evaluation.
+- ISO 9241-9:2000, cancelled and replaced (with ISO 9241-400/410/420, and absorbing the withdrawn Part 4) by ISO/TS 9241-411:2012 — method for Fitts-based input device evaluation. Note the category change: 9241-9 was an International Standard, 9241-411 is a Technical Specification. [Foreword read in the ISO sample PDF]
 - Hick, W. E. (1952). On the rate of gain of information. *Quarterly Journal of Experimental Psychology*, 4(1), 11–26.
 - Hyman, R. (1953). Stimulus information as a determinant of reaction time. *Journal of Experimental Psychology*, 45(3), 188–196.
 - Proctor, R. W., & Schneider, D. W. (2018). Hick's law for choice reaction time: A review. *Quarterly Journal of Experimental Psychology*, 71(6), 1281–1299.
@@ -456,7 +479,10 @@ Primary sources, read directly unless marked.
 - Doherty, W. J., & Thadani, A. J. (1982, November). The Economic Value of Rapid Response Time. IBM technical report, CHM cat. 102751398. [read in full and text-searched]
 - Thadhani, A. J. (1981). Interactive user productivity. *IBM Systems Journal*, 20(4), 407–423.
 - Doherty, W. J., & Kelisky, R. P. (1979). Managing VM/CMS systems for user effectiveness. *IBM Systems Journal*, 18(1), 143–163.
-- Tesler, L. Tesler's Theorem and other adages and coinages. nomodes.com. [not reachable at time of check; wording confirmed independently]
+- Tesler, L. Tesler's Theorem and other adages and coinages. nomodes.com. [live site dead — TLS negotiation fails; read in full from the Internet Archive capture of 16 June 2023, HTTP 200, and quoted from there] · Tesler, L. Career pages `1962-1980` and `1980-1997`, same site and same capture set, for the PARC and Apple date ranges.
+- Hammer, K., & Timmerman, T. (2007). *Fundamentals of Software Integration*. Jones & Bartlett. [cited only as the true source of the p. 112 sentence widely misattributed to Norman]
+- Esposito, D., & Saltarello, A. (2008). *Microsoft .NET: Architecting Applications for the Enterprise*, p. 368. [the second of the two independent formulations Tesler's page flags]
+- Colborne, G. (2010). *Simple and Usable*, p. 180. [on Tesler's page, not flagged as an independent formulation]
 - Saffer, D. (2006). *Designing for Interaction: Creating Smart Applications and Clever Devices*. New Riders.
 - Nielsen, J. (2009, 6 December). Short-Term Memory and Web Usability. Nielsen Norman Group.
 - Budiu, R. (2022, 31 July). Fitts's Law and Its Applications in UX. Nielsen Norman Group.

@@ -12,8 +12,8 @@ sentences you were thinking about.
 
 Divergence is the predicted result of a second copy. DRY, as Hunt & Thomas state
 it, demands "a single, unambiguous, authoritative representation" per piece of
-knowledge — docs and the build, not only code. It says don't make the second
-copy; it is silent on a repo that already has them.
+knowledge — docs and the build, not only code. It says don't make the copy; it
+is silent on a repo that has them.
 
 ## When to use
 
@@ -36,21 +36,21 @@ copy; it is silent on a repo that already has them.
 
 The step that gets skipped, and skipping it is invisible. The new value is
 already where you put it; grepping it returns your own edit and reads as
-confirmation. Only the **old** value shows where the tree still disagrees.
+confirmation. Only the **old** value shows where the tree disagrees.
 
 The pull toward the wrong search is documented, not sloppiness: Klayman & Ha's
 *positive test strategy* — testing cases expected to have the property, not those
 expected to lack it. They defend it as usually a good heuristic, so claim only
-the narrow thing: here it is uninformative **by construction**, since the
-instances it returns are the ones you just made.
+the narrow thing: here it is uninformative **by construction** — the instances
+it returns are the ones you just made.
 
 ```sh
 git grep -nIi -- 'OldValue'   # whole repo: code, comments, fixtures, config
 ```
 
 Scope it to the repo, not `docs/` — stale prose hides in READMEs and comments
-under code directories. Ratol & Robillard measured this at rename scale: over
-half their identifiers left comments naming the old one, invisible to compilers.
+under code. Ratol & Robillard measured this at rename scale: over half their
+identifiers left comments naming the old one, invisible to compilers.
 
 **Never write the count into the document.** A file stating "the search finds
 five" that contains the searched string makes itself the sixth on commit — both
@@ -70,10 +70,10 @@ Read every hit and classify it. Four kinds come back.
    relevant to know that it *was* the decision, but is *no longer* the decision."
 3. **An unrelated use of the same string** — the old typeface named by a page
    that really does render in it. Deleting it breaks something, retires nothing.
-4. **The old statement is right and the new value is wrong.** iComment found 60
-   comment/code inconsistencies in four mature codebases; **33 were bugs in the
-   code**, not bad comments. Where both sides are prose, neither is authoritative
-   — resolve against the decision record, not by seniority of file.
+4. **The old statement is right and the new value is wrong.** iComment triaged 60
+   true positives (of 98 reports, two comment topics) into **33 code bugs** and 27
+   bad comments, but calls that split "much more difficult" and had 12 confirmed.
+   Where both sides are prose, resolve against the record.
 
 Type 2 reads as type 1 in a hurry, and deleting one destroys the record that
 stops the old decision returning.
@@ -83,12 +83,11 @@ stops the old decision returning.
 Never strike a line and move on; ask what remains.
 
 **If work remains, the remainder becomes the item.** Worked example: an interlink
-rule outlived the anchor it pointed at and was kept, annotated "the target has
-no such anchor now; this rule needs a real destination." The reader
-learns the rule is blocked and on what; struck, they learn nothing; left alone,
-they build the wrong link. Lethbridge et al. found out-of-date docs "remain
-useful in many circumstances" — destroying a stale statement costs the reader;
-correcting it does not.
+rule outlived its anchor and was kept, annotated "the target has no such anchor
+now; this rule needs a real destination." The reader learns the rule is blocked
+and on what; struck, they learn nothing; left alone, they build the wrong link.
+Lethbridge et al. found out-of-date docs "remain useful in many circumstances" —
+destroying a stale statement costs the reader; correcting it does not.
 
 **If nothing remains, delete it** — version control records what was built; a
 plan padded with finished history is not something to build against.
@@ -109,10 +108,11 @@ fabrication is not.
 ## An audit does not inoculate the document
 
 Corrective work is itself a change, made with attention on the change rather
-than on what it contradicts. Yin et al. measured 14.8–24.4% of post-release
-fixes in large OS codebases as themselves incorrect, 27% by developers who had
-never touched the files. A morning's cleanup does not protect a document from
-that afternoon's edits: one audit's same-day edits produced six of the eight found
+than on what it contradicts. Yin et al. sampled fixes for post-release bugs in
+large OS codebases: at least 14.8–24.4% were themselves incorrect, 27% of those
+by developers who had never touched the files. That is code, not prose — take
+the direction. A morning's cleanup does not protect a document from that
+afternoon's edits: one audit's same-day edits produced six of the eight found
 that evening.
 
 So **run the old-value search on the edit, not on the document**; Google's
