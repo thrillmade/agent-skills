@@ -12,6 +12,23 @@ Every thrillmade repo where agents work integrates with this catalog. This guide
 | **Published** | Born in your repo, promoted to the catalog | Nomination PR to agent-skills; the editor gate accepts or rejects |
 | **Local** | Repo-specific; never leaves | Lives in `.claude/skills/`, marked local-only in your census |
 
+A fourth posture exists but isn't a choice a repo makes — it's what happens when a subscribed repo **leaves the org**:
+
+| Posture | Meaning | Mechanism |
+|---|---|---|
+| **Departed** | Was Subscribed; the repo has left the org (e.g. handed off to a client) and is no longer read by any org-side automation | None — `skills-lock.json` stays committed as a frozen provenance record, not a live subscription |
+
+A departed repo is not Subscribed, Published, or Local — it was Subscribed and became a frozen copy outside the org's reach. Nothing about the repo changes at the moment it leaves; what changes is that every mechanism above assumes a listener, and this repo no longer is one:
+
+- **No refresh PRs.** Fan-out (today's per-repo crons, and the steward's future org-wide watcher) only reaches repos the org can open PRs against.
+- **No census visibility.** The weekly census reads manifests from repos the steward App is installed on; a departed repo isn't among them, so it can't appear in `gap:` / `placement:` / `demotion-candidate:` issues, for better or worse.
+- **No migration window.** A deprecation's SUPERSEDED period exists so a *listening* repo has time to re-point before removal. A departed repo doesn't see the marker land and doesn't see the removal either — it just keeps whatever slug it had at handoff, forever.
+- **`skills-lock.json` still commits, but changes role.** "Manifests are repo content" still holds — don't delete or gitignore it. It stops meaning "what I'm subscribed to" and starts meaning "what I was given, and at what version": provenance a future paid-subscription product would attach to, not a live pointer this repo's automation still resolves.
+
+What a departed repo **can** still do, unaided: verify currency for itself. `computedHash` in `skills-lock.json` is a plain content hash, computable with nothing beyond the Python standard library (`hashlib`); `thrillmade/agent-skills` is a public repo, so the corresponding file is fetchable with `curl` alone, no org membership or token required. Recomputing the hash and diffing it against the catalog's current copy works from anywhere, on demand — it just never happens automatically, and nothing tells the repo when it's worth doing.
+
+What it **cannot** do: receive a refresh PR, get flagged by the census, or see a migration window. Those all require the org to still be able to read or write the repo, and a departed repo is, by definition, a repo the org no longer touches.
+
 Two rules make the system trustworthy:
 
 1. **Nomination ≠ publication.** A promotion PR passes `validate-skills.yml`, the `skill-frontmatter-quality` review skill, strict-mode clud-bug review, and human approval. The editor can say no.
