@@ -1,5 +1,5 @@
 ---
-version: "825fefa5297c"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "545064d853e0"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: designing-a-design-system
 description: |
   Entry-point dispatcher for BUILDING or EXTENDING a design system — creating a token architecture, color system, type scale, spacing system, or component-sizing ladder from scratch, or adding a new token family to an existing system. Routes to the L0 primitives in build order: naming and taxonomy (token-naming-conventions), color (oklch-color-space, apca-contrast, wcag-contrast, palette-relationships, chroma-harmonization), non-color families (type-scale, line-height-grid, spacing-system, component-sizing-principles), interchange and versioning (dtcg-format, semver-design-tokens), and the quality bar (designing-elite-ui). Use when the task is authoring the system itself; for reviewing design output load reviewing-design-work; for using an existing system load consuming-a-design-system.

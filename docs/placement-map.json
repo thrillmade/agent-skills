@@ -422,7 +422,7 @@
       "authoring_home": "catalog",
       "distribution": "opt-in",
       "subscribers": [],
-      "notes": "L0 primitive; the falsifiable half of the design-principle literature. The only skill in the catalog shipping a references/ subdirectory (3 files, ~112 KB), so its SKILL.md links them by ABSOLUTE URL - skills.sh renders SKILL.md alone and 404s a relative reference link. Two consequences to keep in view on any re-sync: the references ship as a straight copy with no cleaning step in their path, so a future re-sync from a consumer repo needs one; and a reviewer that reads SKILL.md alone never loads them."
+      "notes": "L0 primitive; the falsifiable half of the design-principle literature. The only skill in the catalog shipping a references/ subdirectory (3 files, ~112 KB), so its SKILL.md links them by RELATIVE on-disk path (`references/gestalt.md`), because `npx skills add` copies the subdirectory wholesale and an installed reader already holds the files -- a blob/main URL would send them to the network for something on disk, and promises a path that never moves. OPEN QUESTION, not verified either way: skills.sh renders SKILL.md alone, so a relative reference link may 404 on that web surface. If it does, the answer is a web-only fallback, not reverting the on-disk form. Two consequences to keep in view on any re-sync: the references ship as a straight copy with no cleaning step in their path, so a future re-sync from a consumer repo needs one; and a reviewer that reads SKILL.md alone never loads them."
     },
     "usability-heuristics": {
       "family": "design-primitives",

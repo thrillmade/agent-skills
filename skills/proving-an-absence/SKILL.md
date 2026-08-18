@@ -1,4 +1,5 @@
 ---
+version: "878bc9780069"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: proving-an-absence
 description: Use when about to report that something is missing, unbuilt, not covered, unimplemented or broken — a grep or find that returned nothing, "no test covers this", "the route/token/file does not exist", "I could not reproduce it". Also fires when stating a count, size or measurement you did not just run the command for, and when reviewing someone else's finding that something is absent.
 ---

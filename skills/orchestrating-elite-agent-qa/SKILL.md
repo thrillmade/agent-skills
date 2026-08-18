@@ -1,5 +1,5 @@
 ---
-version: "194d5a350e51"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "7eebf3cfc4dd"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: orchestrating-elite-agent-qa
 description: Use when orchestrating multi-agent feature work (build/review/merge with subagents or workflows) and the quality bar is high — shipping UI, interactive editors, or anything where a single build pass plus a polite review would let real bugs through.
 ---

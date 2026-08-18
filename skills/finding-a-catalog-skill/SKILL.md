@@ -1,5 +1,5 @@
 ---
-version: "b1752e52d6c9"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "6eb19042e021"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: finding-a-catalog-skill
 description: >-
   The directory of the thrillmade/agent-skills catalog — that catalog only,

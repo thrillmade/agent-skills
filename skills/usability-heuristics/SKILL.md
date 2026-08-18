@@ -1,4 +1,5 @@
 ---
+version: "9d79fc250e83"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: usability-heuristics
 description: >-
   Use when a decision or review is about to cite Nielsen's ten usability
