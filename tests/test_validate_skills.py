@@ -196,7 +196,13 @@ def test_body_one_byte_over_the_size_limit_fails(tree: SkillTree) -> None:
     # The remedy text is the point of the message -- a bare limit invites a
     # bypass PR, so the reason ships with the number.
     assert "truncates the body when building its prompt" in error
-    assert "There is no exception list." in error
+    assert "There is no exception list for the limit." in error
+    # The prohibition is on relocating INSTRUCTIONS to duck the count, which is
+    # a different act from shipping source material in references/. A skill in
+    # this catalog does ship one, so a message that bans both makes the catalog
+    # contradict itself and leaves the author to pick a sentence to believe.
+    assert "Shipping source material" in error
+    assert "there is fine and unaffected" in error
 
 
 def test_size_is_measured_in_bytes_not_characters(tree: SkillTree) -> None:

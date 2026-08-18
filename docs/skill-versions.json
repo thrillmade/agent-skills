@@ -5,14 +5,14 @@
  "enumeration": {
   "refs": "refs/remotes/origin/*",
   "publishing_ref": "origin/main",
-  "commits": 131,
-  "blobs": 213
+  "commits": 148,
+  "blobs": 252
  },
- "versions_enumerated": 156,
+ "versions_enumerated": 176,
  "verification": {
   "current": "GATED. validate_skills.py recomputes every `current` from skills/<slug>/SKILL.md on every pull request. Needs no git history, so it holds at the depth-1 checkout CI uses.",
   "history": "NOT GATED. History is derived from git and validate-skills.yml checks out at fetch-depth 1, so CI cannot recompute these rows. Regenerate them in a full clone with `.github/scripts/gen_skill_versions.py --write`.",
-  "history_rows_ungated": 105
+  "history_rows_ungated": 120
  },
  "skills": {
   "apca-contrast": {
@@ -28,6 +28,11 @@
      "v": "2c0f7ee8768a",
      "commit": "b7b5a7e",
      "date": "2026-08-15"
+    },
+    {
+     "v": "2f4924f37c1d",
+     "commit": "ff61334",
+     "date": "2026-08-18"
     }
    ]
   },
@@ -91,6 +96,11 @@
      "v": "70f22a464c82",
      "commit": "b7b5a7e",
      "date": "2026-08-15"
+    },
+    {
+     "v": "bec2fc631306",
+     "commit": "ff61334",
+     "date": "2026-08-18"
     }
    ]
   },
@@ -179,6 +189,11 @@
      "v": "737120806c13",
      "commit": "b7b5a7e",
      "date": "2026-08-15"
+    },
+    {
+     "v": "08a07d2f7635",
+     "commit": "ff61334",
+     "date": "2026-08-18"
     }
    ]
   },
@@ -310,7 +325,7 @@
    ]
   },
   "designing-a-design-system": {
-   "current": "825fefa5297c",
+   "current": "545064d853e0",
    "authoring_home": "catalog",
    "history": [
     {
@@ -343,6 +358,11 @@
      "v": "49adbb982351",
      "commit": "2dc8360",
      "date": "2026-07-31"
+    },
+    {
+     "v": "cc8799744d8f",
+     "commit": "7413194",
+     "date": "2026-08-18"
     }
    ]
   },
@@ -364,6 +384,27 @@
      "v": "39ac3322d4a2",
      "commit": "b7b5a7e",
      "date": "2026-08-15"
+    },
+    {
+     "v": "9bdad1baf4f5",
+     "commit": "ff61334",
+     "date": "2026-08-18"
+    }
+   ]
+  },
+  "empirical-design-principles": {
+   "current": "69b8422f9b0a",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "69b8422f9b0a",
+     "commit": "77bdb5a",
+     "date": "2026-08-18"
+    },
+    {
+     "v": "7a0f3dd047f0",
+     "commit": "31e3d2e",
+     "date": "2026-08-18"
     }
    ]
   },
@@ -384,7 +425,7 @@
    ]
   },
   "finding-a-catalog-skill": {
-   "current": "b1752e52d6c9",
+   "current": "6eb19042e021",
    "authoring_home": "catalog",
    "history": [
     {
@@ -435,6 +476,17 @@
     }
    ]
   },
+  "guarding-a-regression": {
+   "current": "15808738e2f6",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "15808738e2f6",
+     "commit": "31e3d2e",
+     "date": "2026-08-18"
+    }
+   ]
+  },
   "line-height-grid": {
    "current": "23208556b4a2",
    "authoring_home": "catalog",
@@ -448,6 +500,11 @@
      "v": "23208556b4a2",
      "commit": "b7b5a7e",
      "date": "2026-08-15"
+    },
+    {
+     "v": "90eb1dd8eb53",
+     "commit": "ff61334",
+     "date": "2026-08-18"
     }
    ]
   },
@@ -555,6 +612,11 @@
      "v": "75e0813a2c5d",
      "commit": "b7b5a7e",
      "date": "2026-08-15"
+    },
+    {
+     "v": "bed55cea4269",
+     "commit": "ff61334",
+     "date": "2026-08-18"
     }
    ]
   },
@@ -591,7 +653,7 @@
    ]
   },
   "orchestrating-elite-agent-qa": {
-   "current": "194d5a350e51",
+   "current": "7eebf3cfc4dd",
    "authoring_home": "catalog",
    "history": [
     {
@@ -634,6 +696,11 @@
      "v": "e382b4c2b6ac",
      "commit": "b7b5a7e",
      "date": "2026-08-15"
+    },
+    {
+     "v": "36a59edf6f40",
+     "commit": "ff61334",
+     "date": "2026-08-18"
     }
    ]
   },
@@ -653,6 +720,17 @@
     }
    ]
   },
+  "proving-an-absence": {
+   "current": "878bc9780069",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "878bc9780069",
+     "commit": "31e3d2e",
+     "date": "2026-08-18"
+    }
+   ]
+  },
   "respect-existing-conventions": {
    "current": "936899cf6899",
    "authoring_home": "catalog",
@@ -669,8 +747,24 @@
     }
    ]
   },
+  "retiring-a-superseded-decision": {
+   "current": "5c55077b9a1f",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "5c55077b9a1f",
+     "commit": "77bdb5a",
+     "date": "2026-08-18"
+    },
+    {
+     "v": "6dcadc6157d5",
+     "commit": "31e3d2e",
+     "date": "2026-08-18"
+    }
+   ]
+  },
   "reviewing-design-work": {
-   "current": "3e3f9dcb092c",
+   "current": "be3f7dadd266",
    "authoring_home": "catalog",
    "history": [
     {
@@ -701,7 +795,7 @@
    ]
   },
   "semver-design-tokens": {
-   "current": "7be39b0ee26b",
+   "current": "b2d7a06203fa",
    "authoring_home": "catalog",
    "history": [
     {
@@ -718,6 +812,11 @@
      "v": "7be39b0ee26b",
      "commit": "b7b5a7e",
      "date": "2026-08-15"
+    },
+    {
+     "v": "eb6807c59000",
+     "commit": "ff61334",
+     "date": "2026-08-18"
     },
     {
      "v": "b2d7a06203fa",
@@ -792,6 +891,11 @@
      "v": "82616f8a05fa",
      "commit": "b7b5a7e",
      "date": "2026-08-15"
+    },
+    {
+     "v": "effc6349558d",
+     "commit": "ff61334",
+     "date": "2026-08-18"
     }
    ]
   },
@@ -850,6 +954,11 @@
      "v": "fd9acef59f07",
      "commit": "b7b5a7e",
      "date": "2026-08-15"
+    },
+    {
+     "v": "e89a261fddd8",
+     "commit": "ff61334",
+     "date": "2026-08-18"
     }
    ]
   },
@@ -871,6 +980,11 @@
      "v": "5aaf96092873",
      "commit": "b7b5a7e",
      "date": "2026-08-15"
+    },
+    {
+     "v": "92272bfa625d",
+     "commit": "ff61334",
+     "date": "2026-08-18"
     }
    ]
   },
@@ -1018,8 +1132,19 @@
     }
    ]
   },
+  "usability-heuristics": {
+   "current": "9d79fc250e83",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "9d79fc250e83",
+     "commit": "31e3d2e",
+     "date": "2026-08-18"
+    }
+   ]
+  },
   "visual-polish": {
-   "current": "8b62a28d94d9",
+   "current": "b470bbfb49da",
    "authoring_home": "catalog",
    "history": [
     {
@@ -1062,6 +1187,11 @@
      "v": "1d25bdeee805",
      "commit": "e33ad45",
      "date": "2026-08-17"
+    },
+    {
+     "v": "e32264ff0d6a",
+     "commit": "ff61334",
+     "date": "2026-08-18"
     }
    ]
   },

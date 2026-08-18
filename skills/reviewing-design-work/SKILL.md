@@ -1,5 +1,5 @@
 ---
-version: "3e3f9dcb092c"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "be3f7dadd266"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: reviewing-design-work
 description: |
   Entry-point dispatcher for REVIEWING or CRITIQUING design work — a PR that touches UI code, a rendered surface or screenshot, a Figma handoff, or a design spec. Routes the review through ordered lenses: code and markup rules first (web-interface-guidelines-review), then rendered-surface lenses (design-system-consistency, frontend-a11y, visual-polish), then the opinionated bar (designing-elite-ui) — with routing rules for when the browser-driven design-critic pass fires (per orchestrating-elite-agent-qa). Use when the task is judging existing design output; for building a system load designing-a-design-system; for consuming one load consuming-a-design-system.
@@ -67,6 +67,13 @@ spacing math: [oklch-color-space](../oklch-color-space/SKILL.md), [apca-contrast
 [palette-relationships](../palette-relationships/SKILL.md), [chroma-harmonization](../chroma-harmonization/SKILL.md), [type-scale](../type-scale/SKILL.md), [line-height-grid](../line-height-grid/SKILL.md),
 [token-naming-conventions](../token-naming-conventions/SKILL.md), [component-sizing-principles](../component-sizing-principles/SKILL.md).
 
+A finding justified by a **named principle** rather than by what was observed has two more
+L0 primitives behind it: [empirical-design-principles](../empirical-design-principles/SKILL.md)
+for the falsifiable ones — Gestalt proximity (it carries the ratio a grouping claim must
+clear, which the polish lens defers to), Fitts, Hick, Miller, von Restorff — and
+[usability-heuristics](../usability-heuristics/SKILL.md) for Nielsen, Norman and
+Shneiderman, where the gate is source and edition rather than prediction.
+
 ## What fires when
 
 | Situation | What fires |
@@ -87,7 +94,8 @@ marker pointing at tokenomics, not as loadable guidance yet.
 
 - **L0 primitives:** [oklch-color-space](../oklch-color-space/SKILL.md), [apca-contrast](../apca-contrast/SKILL.md), [wcag-contrast](../wcag-contrast/SKILL.md),
   [palette-relationships](../palette-relationships/SKILL.md), [chroma-harmonization](../chroma-harmonization/SKILL.md), [type-scale](../type-scale/SKILL.md), [line-height-grid](../line-height-grid/SKILL.md),
-  [token-naming-conventions](../token-naming-conventions/SKILL.md), [component-sizing-principles](../component-sizing-principles/SKILL.md).
+  [token-naming-conventions](../token-naming-conventions/SKILL.md), [component-sizing-principles](../component-sizing-principles/SKILL.md),
+  [empirical-design-principles](../empirical-design-principles/SKILL.md), [usability-heuristics](../usability-heuristics/SKILL.md).
 - **L0 critic lenses:** [web-interface-guidelines-review](../web-interface-guidelines-review/SKILL.md), [design-system-consistency](../design-system-consistency/SKILL.md),
   [frontend-a11y](../frontend-a11y/SKILL.md), [visual-polish](../visual-polish/SKILL.md), [designing-elite-ui](../designing-elite-ui/SKILL.md); and [orchestrating-elite-agent-qa](../orchestrating-elite-agent-qa/SKILL.md)
   (the QA gate that drives the browser-driven rendered pass).

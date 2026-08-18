@@ -44,9 +44,11 @@ agent-skills
 │   ├── designing-a-design-system
 │   ├── designing-elite-ui
 │   ├── dtcg-format
+│   ├── empirical-design-principles
 │   ├── evidence-based-review
 │   ├── finding-a-catalog-skill
 │   ├── frontend-a11y
+│   ├── guarding-a-regression
 │   ├── line-height-grid
 │   ├── logmind
 │   ├── oklch-color-space
@@ -55,7 +57,9 @@ agent-skills
 │   ├── orchestrating-elite-agent-qa
 │   ├── palette-relationships
 │   ├── pii-and-compliance
+│   ├── proving-an-absence
 │   ├── respect-existing-conventions
+│   ├── retiring-a-superseded-decision
 │   ├── reviewing-design-work
 │   ├── semver-design-tokens
 │   ├── session-heartbeat
@@ -75,6 +79,7 @@ agent-skills
 │   ├── udts-spacing-defaults
 │   ├── udts-token-model
 │   ├── unattended-operation
+│   ├── usability-heuristics
 │   ├── visual-polish
 │   ├── wcag-contrast
 │   └── web-interface-guidelines-review

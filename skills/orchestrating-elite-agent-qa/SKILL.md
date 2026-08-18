@@ -1,5 +1,5 @@
 ---
-version: "194d5a350e51"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "7eebf3cfc4dd"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: orchestrating-elite-agent-qa
 description: Use when orchestrating multi-agent feature work (build/review/merge with subagents or workflows) and the quality bar is high — shipping UI, interactive editors, or anything where a single build pass plus a polite review would let real bugs through.
 ---
@@ -54,6 +54,7 @@ Gate the merge on all three. Each catches a class the others miss.
 
 ## Cross-references
 
+- **For the two claims a panel most often accepts unchecked:** [guarding-a-regression](../guarding-a-regression/SKILL.md) — a fix's regression test is evidence only once someone has watched it go red, and the panel is where that gets asked; and [proving-an-absence](../proving-an-absence/SKILL.md) — "no test covers this", "I could not reproduce it" and any bare count are absence claims, and an uncontrolled probe is how a false one survives a review.
 - **For a run that outlives one sitting:** [session-heartbeat](../session-heartbeat/SKILL.md) — this skill says which gates a slice must clear, but nothing about a pipeline continuing across a usage-limit reset or a resumed session. That is where pacing, the checkpoint, and re-firing a gate whose producer was killed mid-flight live.
 
 ## Deploying This Skill (per writing-skills)

@@ -1,5 +1,5 @@
 ---
-version: "b1752e52d6c9"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "6eb19042e021"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: finding-a-catalog-skill
 description: >-
   The directory of the thrillmade/agent-skills catalog — that catalog only,
@@ -49,7 +49,9 @@ What a review flags, what it lets go, and what a claim has to cite.
 - `clud-bug-collaboration` — living with the review bot
 - `critical-issues-only` — correctness, security, perf only
 - `evidence-based-review` — quote the code or cut the claim
+- `guarding-a-regression` — trusting a regression test
 - `pii-and-compliance` — PII and secrets in logs
+- `proving-an-absence` — claiming a thing is missing
 - `respect-existing-conventions` — a review is not a redesign
 - `skill-frontmatter-quality` — judging a SKILL.md's frontmatter
 - `test-discipline` — test edits that hollow a suite
@@ -69,6 +71,7 @@ Finding, censusing and authoring skills; decision logging; CLI conventions.
 - `curating-a-skill-catalog` — the census rubric and verdicts
 - `finding-a-catalog-skill` — this directory
 - `logmind` — when and how to log a decision
+- `retiring-a-superseded-decision` — retiring a stale ruling
 - `token-frugal-tooling` — quiet flags for the org's CLIs
 
 ## Design: start here (L1)
@@ -86,6 +89,7 @@ Math and standards any design system can build on. No product opinions.
 - `chroma-harmonization` — per-stop cross-hue chroma caps
 - `component-sizing-principles` — curated height and icon ladders
 - `dtcg-format` — the W3C DTCG interchange file
+- `empirical-design-principles` — which design laws hold
 - `line-height-grid` — two-track line height on grid
 - `oklch-color-space` — OKLCH ranges and gamut mapping
 - `palette-relationships` — hue-angle palette relationships
@@ -93,6 +97,7 @@ Math and standards any design system can build on. No product opinions.
 - `spacing-system` — minor+major units, 24px floor
 - `token-naming-conventions` — what belongs in a token name
 - `type-scale` — modular ratios and rounding
+- `usability-heuristics` — what the heuristics say
 - `wcag-contrast` — ratios, the legal cross-check
 
 ## Design review lenses (L0)
@@ -139,7 +144,7 @@ go on advertising itself:
 
 - **TDD mechanics** -- red before green, one failing test at a time. In the `superpowers` plugin, not here -- `red before green` matches **0** skills.
 - **The same discipline under its other name** -- `test-driven` matches **0** skills.
-- **Norman's design primitives** -- forcing functions, mapping, the two gulfs -- `forcing function` matches **0** skills.
+- **Norman's two gulfs** -- execution and evaluation -- `gulf of execution` matches **0** skills.
 
 (Control: `APCA` matches 8, so the probe finds what is there.)
 
