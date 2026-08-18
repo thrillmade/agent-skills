@@ -69,14 +69,15 @@ reports the batch ready and hands off.
 
 **A red check is fixed, not merged past.** Read the failing step first.
 
-One *kind* of red is an artifact rather than a verdict, and only one. `check-links` and
-`check-derived-docs` check out the head branch **by name**, so a run still in flight when the
-PR merges dies at the checkout step with `A branch or tag with the name '…' could not be
-found`. Both can fail this way at once.
+**Every failing step is real** — including one where the check's own step never ran because a
+*setup* step died. A skipped verdict is not a passing verdict. Re-run it or fix it; do not
+reason your way past it.
 
-**Every other failing step is real** — including one where the check's own step never ran
-because a *setup* step died. A skipped verdict is not a passing verdict. Re-run it or fix it;
-do not reason your way past it.
+(`check-links` and `check-derived-docs` used to check out the head branch by name, so a run
+still in flight when the PR merged died at the checkout step with `A branch or tag with the
+name '…' could not be found` — a red that was an artifact, not a verdict. Fixed in #223 by
+checking out the SHA instead; if you see that exact message again, it's a regression, not a
+known quirk.)
 
 **Batching dilutes exactly one check.** `check-decisions` asks only whether *some* decision file
 is in the diff, so one entry clears a whole batch. Every change still logs its own regardless.
