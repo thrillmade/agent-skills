@@ -103,6 +103,7 @@ Failing this is one of the most common WCAG 2.2 misses in design systems. The sk
 
 ## Cross-references
 
+- **Routed here by:** [designing-a-design-system](../designing-a-design-system/SKILL.md) — the L1 dispatcher for building or extending a system.
 - **REQUIRED BACKGROUND for height + font + icon pairing:** [component-sizing-principles](../component-sizing-principles/SKILL.md) — the curated per-density component-height ladder + font-pairing + icon-size pairing.
 - **For the typography scale that pairs with spacing:** [type-scale](../type-scale/SKILL.md) and [line-height-grid](../line-height-grid/SKILL.md) — line-heights snap to the minor unit declared here.
 - **For one system's concrete density-mode unit choices (worked example):** [udts-spacing-defaults](../udts-spacing-defaults/SKILL.md) — an incubating L2 stub that instantiates this model.

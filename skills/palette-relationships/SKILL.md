@@ -71,6 +71,7 @@ After picking hues:
 
 ## Cross-references
 
+- **Routed here by:** [designing-a-design-system](../designing-a-design-system/SKILL.md) — the L1 dispatcher for building or extending a system.
 - **REQUIRED BACKGROUND:** [oklch-color-space](../oklch-color-space/SKILL.md) — hues are OKLCH angles; the relationship math operates on those.
 - **For palette balance after picking hues:** [chroma-harmonization](../chroma-harmonization/SKILL.md) — cap chroma at the cross-hue minimum.
 - **For contrast targets across stops:** [apca-contrast](../apca-contrast/SKILL.md).

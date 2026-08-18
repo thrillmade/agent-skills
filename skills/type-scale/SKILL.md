@@ -75,6 +75,7 @@ Rounding can be disabled for math-pure systems where fractional sizes are tolera
 
 ## Cross-references
 
+- **Routed here by:** [designing-a-design-system](../designing-a-design-system/SKILL.md) — the L1 dispatcher for building or extending a system.
 - **REQUIRED BACKGROUND:** [line-height-grid](../line-height-grid/SKILL.md) — every size in the scale needs a line-height; the lh-ui (× 1.20) / lh-prose (× 1.50) tracks pair with this scale.
 - **For role assignment after picking sizes:** the typography-styles spec (compound tokens combining size + lh + tracking + weight + paragraph margin).
 - **For the base size choice:** 16 px is the common base; smaller bases (14 px) are valid for dense product UI but require revisiting line-heights and tap targets.

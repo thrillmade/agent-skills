@@ -78,6 +78,7 @@ After picking a rung:
 
 ## Cross-references
 
+- **Routed here by:** [designing-a-design-system](../designing-a-design-system/SKILL.md) — the L1 dispatcher for building or extending a system.
 - **REQUIRED BACKGROUND:** [spacing-system](../spacing-system/SKILL.md) — the unit primitives drive which density ladder applies, and the 24 CSS px WCAG 2.5.8 floor is defined there.
 - **For the font sizes paired with each rung:** [type-scale](../type-scale/SKILL.md) — the per-rung font is taken from the canonical scale, not free-picked.
 - **For line-heights inside each rung:** [line-height-grid](../line-height-grid/SKILL.md) — interactive controls use `lh-ui`, not `lh-prose`.

@@ -111,6 +111,7 @@ A theme's resolved values changing is a separate axis:
 
 ## Cross-references
 
+- **Routed here by:** [designing-a-design-system](../designing-a-design-system/SKILL.md) — the L1 dispatcher for building or extending a system.
 - **REQUIRED BACKGROUND:** [dtcg-format](../dtcg-format/SKILL.md) — the snapshot format the diff operates on.
 - **For name conventions that the bump rules reference:** [token-naming-conventions](../token-naming-conventions/SKILL.md).
 - **For one system's concrete policy choices (worked example):** [udts-semver-defaults](../udts-semver-defaults/SKILL.md).

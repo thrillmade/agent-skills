@@ -156,6 +156,7 @@ For each new or modified token:
 
 ## Cross-references
 
+- **Routed here by:** [designing-a-design-system](../designing-a-design-system/SKILL.md) — the L1 dispatcher for building or extending a system.
 - **REQUIRED BACKGROUND:** [oklch-color-space](../oklch-color-space/SKILL.md) for the hue-angle convention;
   [apca-contrast](../apca-contrast/SKILL.md) for the contrast-class concept.
 - **For the metadata-extension mechanism:** [dtcg-format](../dtcg-format/SKILL.md) — how a namespaced

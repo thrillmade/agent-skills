@@ -152,6 +152,7 @@ One worked extension schema is UDTS's, documented in [udts-dtcg-extensions](../u
 
 ## Cross-references
 
+- **Routed here by:** [designing-a-design-system](../designing-a-design-system/SKILL.md) — the L1 dispatcher for building or extending a system.
 - **REQUIRED BACKGROUND:** [token-naming-conventions](../token-naming-conventions/SKILL.md) — the naming principles that extension metadata redundantly encodes.
 - **For the version-bump policy when DTCG files change:** [semver-design-tokens](../semver-design-tokens/SKILL.md).
 - **For one system's concrete extension schema:** [udts-dtcg-extensions](../udts-dtcg-extensions/SKILL.md) — the worked example.

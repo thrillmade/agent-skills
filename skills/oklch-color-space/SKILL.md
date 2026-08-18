@@ -64,6 +64,7 @@ Practical rule for picking a chroma cap: compose against the **Display P3 ceilin
 
 ## Cross-references
 
+- **Routed here by:** [designing-a-design-system](../designing-a-design-system/SKILL.md) — the L1 dispatcher for building or extending a system.
 - **REQUIRED BACKGROUND:** [apca-contrast](../apca-contrast/SKILL.md) for the Lc target table, when contrast Lc applies, and the WCAG cross-check.
 - **REQUIRED for multi-hue palettes:** [chroma-harmonization](../chroma-harmonization/SKILL.md) — cap chroma at the lowest-achievable value across all hues at the same stop, so no hue is a neon outlier.
 - **For starting-hue palette construction:** [palette-relationships](../palette-relationships/SKILL.md) — analogous, complementary, triadic, etc., as hue-angle math.

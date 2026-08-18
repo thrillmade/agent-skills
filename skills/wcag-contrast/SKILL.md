@@ -70,6 +70,7 @@ For each contrast-bound pairing:
 
 ## Cross-references
 
+- **Routed here by:** [designing-a-design-system](../designing-a-design-system/SKILL.md) — the L1 dispatcher for building or extending a system.
 - **REQUIRED BACKGROUND:** [apca-contrast](../apca-contrast/SKILL.md) — the primary contrast model. WCAG is the cross-check; APCA is the generator target.
 - **For the underlying color space:** [oklch-color-space](../oklch-color-space/SKILL.md) — OKLCH source values must be gamut-mapped to sRGB before applying the WCAG formula.
 

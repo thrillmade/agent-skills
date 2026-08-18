@@ -90,6 +90,7 @@ Rounding down can put the resolved line-height *below* the natural ratio, which 
 
 ## Cross-references
 
+- **Routed here by:** [designing-a-design-system](../designing-a-design-system/SKILL.md) — the L1 dispatcher for building or extending a system.
 - **REQUIRED BACKGROUND:** [type-scale](../type-scale/SKILL.md) — provides the font sizes this skill snaps line-heights for. The two skills are paired.
 - **For the unit primitive that drives snapping:** [spacing-system](../spacing-system/SKILL.md) — the minor / major grid is what `snap up to nearest minor-unit multiple` refers to.
 

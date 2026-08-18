@@ -69,6 +69,7 @@ If any hue clips at the ceiling or visually "pops," recompute with a tighter chr
 
 ## Cross-references
 
+- **Routed here by:** [designing-a-design-system](../designing-a-design-system/SKILL.md) — the L1 dispatcher for building or extending a system.
 - **REQUIRED BACKGROUND:** [oklch-color-space](../oklch-color-space/SKILL.md) — the OKLCH primitive, the gamut-mapping rule.
 - **For the contrast targets at each stop:** [apca-contrast](../apca-contrast/SKILL.md) — the Lc targets that fix each L value.
 - **For starting-hue palette construction before harmonization:** [palette-relationships](../palette-relationships/SKILL.md).
