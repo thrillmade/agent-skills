@@ -97,7 +97,9 @@ For a repo that predates this system (all current thrillmade repos):
 
 Divergence from live state — a repo's `skills-lock.json` or `.clud-bug.json` subscribing to something the map marks `catalog-only`, or authoring a copy of something the map homes at `catalog` — isn't silently reconciled. It *files* a placement verdict: the census raises it as a `placement:` issue for a human to resolve, either by correcting the repo or by updating the map.
 
-It also carries the two editorial fields the catalog directory is generated from: `family` (which group the skill is listed under, an id declared in the map's top-level `families` array) and `owns` (a ≤32-byte fragment naming what that skill owns, as it appears in the directory line). Both are **required on every entry**, and that is deliberate: the map is already reconciled 1:1 against `skills/`, so requiring them here means a skill cannot be added without saying where it belongs and what it is for. The README table has never had that property — it is complete by diligence, and the next skill added is the one that breaks it silently ([#229](https://github.com/thrillmade/agent-skills/issues/229)).
+It also carries the two editorial fields the catalog directory is generated from: `family` (which group the skill is listed under, an id declared in the map's top-level `families` array) and `owns` (a ≤32-byte fragment naming what that skill owns, as it appears in the directory line). Both are **required on every entry**, and that is deliberate: the map is already reconciled 1:1 against `skills/`, so requiring them here means a skill cannot be added without saying where it belongs and what it is for ([#229](https://github.com/thrillmade/agent-skills/issues/229)).
+
+That the catalog publishes a directory **at all** is owned by one test, `tests/test_gen_skill_directory.py::test_this_catalog_publishes_a_directory`, and not by the gate: `validate_skills` has to hold for any tree it is pointed at, so it tolerates a tree that publishes none. Deleting the skill alone is red at the gate (the map still has an entry for the missing dir); deleting the entry too used to be green everywhere, and is now red in the suite CI runs alongside it.
 
 The directory itself — [`skills/finding-a-catalog-skill`](../skills/finding-a-catalog-skill/SKILL.md) — is **generated, never hand-edited**. `validate-skills` re-renders it in process and fails on any difference, so a skill added without regenerating goes red on its own PR. Regenerate with:
 
@@ -105,7 +107,14 @@ The directory itself — [`skills/finding-a-catalog-skill`](../skills/finding-a-
 python3 .github/scripts/gen_skill_directory.py --write
 ```
 
-Prose lives in the generator, not in the SKILL.md. Its own docstring carries the byte arithmetic behind the format and the measured ceiling (74 skills) with the ladder for the day it binds.
+Prose lives in the generator, not in the SKILL.md. No ceiling is written down anywhere: run `python3 .github/scripts/gen_skill_directory.py` with no arguments and it prints today's headroom, measured by rendering the real tree with synthetic skills appended at the catalog's own density until the reserve binds.
+
+Two things a byte-identical re-render **cannot** catch, because both sides of the comparison agree with each other — so each has its own rule:
+
+- **A retired skill filed as live.** A skill whose `description` opens `SUPERSEDED` (or that carries `superseded_by` / `status: superseded`) must sit in the `deprecated` family. `skillforge` did not, and the directory routed agents to guidance its own author had told them to stop following.
+- **A skill missing from `README.md`.** The gate reconciles the README's `skills/<name>/SKILL.md` links 1:1 against the tree — membership only; the purpose column stays hand-written.
+
+And one thing nothing catches, stated plainly because the directory reads as though something did: `owns` is editorial text, so a skill can be rewritten from top to bottom and its fragment will still say what it said before. The rendered header tells the reader that, rather than letting them infer a freshness guarantee nothing makes.
 
 Editing the map is a normal PR through the same gate as any other catalog change — `validate-skills.yml`, strict-mode clud-bug review, human approval. There's no separate authority for it.
 

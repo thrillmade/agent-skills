@@ -172,10 +172,35 @@ def test_the_not_here_section_refuses_when_a_gap_has_been_filled(tree: SkillTree
     phrase = gen.NOT_HERE_PROBES[0][0]
     tree.skill(
         "alpha",
-        f"---\nname: alpha\ndescription: d\n---\n\n# T\n\nWe do {phrase} here.\n",
+        f"---\nname: alpha\ndescription: Use when you need {phrase}.\n---\n\n# T\n\nBody.\n",
     )
     with pytest.raises(SystemExit, match="out of date"):
         render(tree)
+
+
+def test_a_probe_phrase_in_a_body_is_not_coverage(tree: SkillTree) -> None:
+    """The scan reads the trigger surface, not bodies, and both directions of
+    that matter.
+
+    Outward: scanning bodies meant one cross-reference -- "`superpowers:
+    test-driven-development` owns that" -- reddened the whole gate, with the
+    error filed against a file the PR never touched. Nine of these skills are
+    repo-mirrored, so that was a foreign release-sync PR going red over this
+    catalog's editorial gap list.
+
+    Inward: a body mention is a pointer. A skill covers a topic when its
+    trigger surface says so, because that is what decides whether an agent
+    ever loads it. The test above is the control: the same phrase in
+    `description` still refuses.
+    """
+    a_tree(tree, "alpha")
+    phrase = gen.NOT_HERE_PROBES[1][0]
+    tree.skill(
+        "alpha",
+        "---\nname: alpha\ndescription: Unrelated.\n---\n\n# T\n\n"
+        f"Routing: `superpowers:{phrase}-development` owns that.\n",
+    )
+    assert f"`{phrase}` matches **0** skills" in render(tree)
 
 
 def test_the_not_here_section_refuses_when_its_control_matches_nothing(
@@ -205,8 +230,9 @@ def test_the_directory_does_not_probe_itself(tree: SkillTree) -> None:
     a_tree(tree, "alpha", gen.DIRECTORY_SLUG)
     tree.skill(
         gen.DIRECTORY_SLUG,
-        "---\nname: x\ndescription: d\n---\n\n# T\n\n"
-        + "\n".join(f"we do not cover {p}" for p, _ in gen.NOT_HERE_PROBES),
+        "---\nname: x\ndescription: covers none of "
+        + ", ".join(p for p, _ in gen.NOT_HERE_PROBES)
+        + "\n---\n\n# T\n\nBody.\n",
     )
     body = render(tree)  # would raise "out of date" if the directory were scanned
     assert "matches **0** skills" in body
@@ -256,6 +282,121 @@ def test_size_error_names_the_ladder() -> None:
     msg = gen.size_error("x" * (gen.MAX_BODY_BYTES + 1))
     assert "retire skills" in msg
     assert "Splitting the directory in two is NOT a lever" in msg
+
+
+def test_size_error_recites_no_measured_number() -> None:
+    """Every integer in the refusal must be derivable from the body and the
+    two limits.
+
+    The rungs used to carry measured worths typed into the string ("74 to 81",
+    "a ceiling of 87", "roughly 155"), and not one of them reproduced -- a
+    hand-kept number with no owner, inside the change whose thesis is that
+    hand-kept numbers with no owner are the defect. `levers()` measures them
+    now, on the tree in front of you, at the moment you ask.
+    """
+    import re as _re
+
+    n = gen.MAX_BODY_BYTES + 1
+    msg = gen.size_error("x" * n)
+    # 1-4 number the levers and 229 is the issue this exists for. Neither is
+    # a measurement, and nothing else is allowed to appear.
+    allowed = {n, gen.MAX_BODY_BYTES, gen.SIZE_LIMIT, n - gen.MAX_BODY_BYTES, 1, 2, 3, 4, 229}
+    found = {int(x) for x in _re.findall(r"\d+", msg)}
+    assert found <= allowed, sorted(found - allowed)
+
+
+# --- growth, measured rather than recited ----------------------------------
+
+
+def test_the_ceiling_is_where_the_reserve_actually_binds(tree: SkillTree) -> None:
+    """Self-consistency, and the property the whole function claims: render at
+    the ceiling and it fits; render at one more and it does not.
+    """
+    a_tree(tree, "alpha", "beta")
+    dirs, families, skills, nh = gen._inputs(
+        tree.base / "skills", tree.base / "docs" / "placement-map.json"
+    )
+    top = gen.ceiling(dirs, families, skills, nh, limit=3000)
+    extra = top - len(dirs)
+
+    at = gen._body(*gen._grown(dirs, families, skills, extra), nh)
+    over = gen._body(*gen._grown(dirs, families, skills, extra + 1), nh)
+    assert len(at.encode("utf-8")) <= 3000 < len(over.encode("utf-8"))
+
+
+def test_the_ceiling_pays_for_the_families_growth_needs(tree: SkillTree) -> None:
+    """New skills arrive in new families at the catalog's own density, and a
+    family costs a heading and a routing line. A ceiling that assumed families
+    were free would overstate the headroom -- which is how the docstring's
+    original table came out too generous.
+    """
+    a_tree(tree, "alpha", "beta")
+    dirs, families, skills, nh = gen._inputs(
+        tree.base / "skills", tree.base / "docs" / "placement-map.json"
+    )
+    grown_dirs, grown_fams, _ = gen._grown(dirs, families, skills, 12)
+    assert len(grown_fams) > len(families)
+    assert len(grown_dirs) == len(dirs) + 12
+
+
+def test_a_cheaper_owns_raises_the_ceiling_and_bare_names_raise_it_further(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The ladder's ORDER is the claim `size_error()` makes. Its rungs are
+    measured, so the ordering is checkable rather than asserted in prose.
+    """
+    monkeypatch.chdir(REPO_ROOT)
+    args = gen._inputs()
+    base = gen.ceiling(*args)
+    cheaper = gen.ceiling(*args, owns_max=24)
+    shorter = gen.ceiling(*args, owns_max=24, route_scale=0.5)
+    bare = gen.ceiling(*args, bare=True)
+    assert base < cheaper <= shorter < bare
+
+
+def test_the_ceiling_matches_an_independent_arithmetic_model(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A computed number is only better than a recited one if something checks
+    the computation. This re-derives the ceiling from row and family
+    arithmetic written out here, rather than from the generator's code path.
+    """
+    monkeypatch.chdir(REPO_ROOT)
+    dirs, families, skills, nh = gen._inputs()
+    n = len(gen._body(dirs, families, skills, nh).encode("utf-8"))
+
+    shown = [
+        f for f in families if any(skills.get(s, {}).get("family") == f["id"] for s in dirs)
+    ]
+    per_family = round(len(dirs) / len(shown))
+    name_len = round(sum(len(d.encode("utf-8")) for d in dirs) / len(dirs))
+    title_len = round(sum(len(f["title"].encode("utf-8")) for f in shown) / len(shown))
+    routes_len = round(sum(len(f["routes"].encode("utf-8")) for f in shown) / len(shown))
+
+    # A row is "- `" + name + "` — " + owns + "\n": 10 bytes of markup (the em
+    # dash is three) plus the name plus the fragment.
+    row = 10 + name_len + gen.OWNS_MAX_BYTES
+    # A family is "## " + title + "\n" + routes + "\n" + a blank line, plus the
+    # blank line that closes its list.
+    family = 3 + title_len + 1 + routes_len + 1 + 1 + 1
+    per_skill = row + family / per_family
+    predicted = len(dirs) + int((gen.MAX_BODY_BYTES - n) // per_skill)
+
+    measured = gen.ceiling(dirs, families, skills, nh)
+    assert abs(measured - predicted) <= 1, f"measured {measured}, predicted {predicted}"
+
+
+def test_levers_measures_every_rung_and_says_nothing_when_it_cannot(
+    tree: SkillTree, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.chdir(REPO_ROOT)
+    text = gen.levers()
+    assert "skills today" in text
+    # Four measurements: today's format and the three rungs under it.
+    assert len([c for c in text if c == ";"]) == 3
+
+    monkeypatch.chdir(tree.base)  # no skills/ at all
+    assert gen.levers() == ""  # a refusal must not become a traceback
 
 
 def test_size_error_measures_bytes_not_characters() -> None:
@@ -321,6 +462,29 @@ def test_the_default_mode_writes_nothing(tree: SkillTree) -> None:
 
 
 # --- against the real catalog ----------------------------------------------
+
+
+def test_this_catalog_publishes_a_directory(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The one owner of "this repo has a directory".
+
+    `validate_skills.directory_errors` deliberately tolerates a tree without
+    one -- its rules have to hold for any tree, and the suite drives it over
+    tmp trees that publish nothing. That left the real hole one level up:
+    deleting `skills/finding-a-catalog-skill/` AND its placement-map entry was
+    green in the gate, so the catalog's own map of itself was removable in two
+    lines with nothing reporting it. Retiring it is allowed; doing it by
+    accident is not, and this is what makes the difference visible.
+    """
+    monkeypatch.chdir(REPO_ROOT)
+    path = gen.target()
+    assert path.exists(), (
+        f"{path} is gone. If that is deliberate, delete this test in the same "
+        "change and say why; if it is not, run "
+        "`python3 .github/scripts/gen_skill_directory.py --write`."
+    )
+    pm = json.loads(Path("docs/placement-map.json").read_text(encoding="utf-8"))
+    assert gen.DIRECTORY_SLUG in pm["skills"]
+    assert "zzz-not-a-skill" not in pm["skills"]  # control: absence is detectable
 
 
 def test_the_shipped_directory_is_current(monkeypatch: pytest.MonkeyPatch) -> None:

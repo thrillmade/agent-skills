@@ -830,3 +830,151 @@ def test_an_oversized_directory_is_reported_by_the_gate(
 
     monkeypatch.setattr(gen_skill_directory, "MAX_BODY_BYTES", 10)
     assert only(tree.validate()).startswith(DIR_MD + "the rendered directory is")
+
+
+# --- retirement: the one meaning-level rule ---------------------------------
+#
+# The byte comparison above cannot see this class at all. `family` and `owns`
+# are editorial text, so the directory and the map agree with each other by
+# construction and a skill filed as live after it was retired passes every
+# rule. It shipped that way: `skillforge` sat under "The catalog itself"
+# reading "scaffolding a new skill" for the whole migration window, routing
+# agents INTO guidance its own frontmatter told them to stop following.
+
+SUPERSEDED_DESC = "SUPERSEDED by `beta` — kept for the migration window."
+
+
+def superseded_skill(tree: SkillTree, name: str = "alpha", desc: str = SUPERSEDED_DESC) -> None:
+    tree.skill(name, f"---\nname: {name}\ndescription: {desc}\n---\n\n# T\n\nBody.\n")
+
+
+def test_a_superseded_skill_filed_as_live_is_reported(tree: SkillTree) -> None:
+    superseded_skill(tree)
+    tree.placement_map(valid_map(alpha=ENTRY))
+    assert only(tree.validate()) == (
+        PM + "skills.alpha.family='fam', but skills/alpha/SKILL.md announces itself "
+        "as SUPERSEDED. A retired skill listed among live ones is a directory "
+        "routing agents to guidance its own author told them to stop following. "
+        "File it under 'deprecated' and point `owns` at the successors."
+    )
+
+
+def test_a_superseded_skill_in_the_deprecated_family_passes(tree: SkillTree) -> None:
+    """Control for the rule above: the fix the message names actually clears it."""
+    superseded_skill(tree)
+    tree.placement_map(
+        {
+            **valid_map(alpha={**ENTRY, "family": "deprecated"}),
+            "families": [{"id": "deprecated", "title": "D", "routes": "R"}],
+        }
+    )
+    assert tree.validate() == []
+
+
+def test_a_live_skill_is_not_mistaken_for_a_retired_one(tree: SkillTree) -> None:
+    """The other control. A detector that fired on everything would 'prove'
+    the rule works while telling you nothing.
+    """
+    tree.valid_skill()
+    tree.placement_map(valid_map(alpha=ENTRY))
+    assert tree.validate() == []
+
+
+@pytest.mark.parametrize(
+    "desc",
+    [
+        "SUPERSEDED by `beta`.",
+        "SUPERSEDED — see beta, which owns this now.",
+        "SUPERSEDED (see beta).",
+    ],
+)
+def test_the_superseded_marker_is_read_at_the_start_of_the_description(
+    tree: SkillTree, desc: str
+) -> None:
+    superseded_skill(tree, desc=desc)
+    tree.placement_map(valid_map(alpha=ENTRY))
+    assert "announces itself as SUPERSEDED" in only(tree.validate())
+
+
+@pytest.mark.parametrize(
+    "desc",
+    [
+        "Use when a rule was SUPERSEDED by another one.",
+        "Judging whether guidance is superseded.",
+    ],
+)
+def test_the_word_superseded_mid_sentence_is_not_a_retirement(
+    tree: SkillTree, desc: str
+) -> None:
+    """A skill ABOUT retirement is not a retired skill. The marker is a
+    headline, so it is matched as one.
+    """
+    superseded_skill(tree, desc=desc)
+    tree.placement_map(valid_map(alpha=ENTRY))
+    assert tree.validate() == []
+
+
+@pytest.mark.parametrize("extra", ["superseded_by: beta\n", "status: superseded\n"])
+def test_the_reserved_retirement_keys_count_too(tree: SkillTree, extra: str) -> None:
+    """`superseded_by` and `status` are RESERVED-and-tolerated (SPEC §1.10.1).
+    A detector that knew only the description would go quiet the first time
+    somebody used the field the spec actually provides.
+    """
+    tree.frontmatter("alpha", extra=extra)
+    tree.placement_map(valid_map(alpha=ENTRY))
+    assert "announces itself as SUPERSEDED" in only(tree.validate())
+
+
+# --- README membership (#229's first problem) -------------------------------
+#
+# The table is complete by diligence and nothing keeps it that way, in the file
+# most readers meet first. MEMBERSHIP only: the purpose column is prose with
+# room for sentences the byte-capped directory cannot afford, and generating it
+# from a 32-byte fragment would make the README worse to make it derived.
+
+
+def readme(tree: SkillTree, *names: str) -> None:
+    rows = "\n".join(f"| [`{n}`](skills/{n}/SKILL.md) | Purpose. |" for n in names)
+    (tree.base / "README.md").write_text(f"# Catalog\n\n{rows}\n", encoding="utf-8")
+
+
+def test_absent_readme_is_tolerated(tree: SkillTree) -> None:
+    tree.valid_skill()
+    assert tree.validate() == []
+
+
+def test_a_readme_naming_every_skill_passes(tree: SkillTree) -> None:
+    tree.valid_skill("alpha")
+    tree.valid_skill("beta")
+    readme(tree, "alpha", "beta")
+    assert tree.validate() == []
+
+
+def test_a_skill_missing_from_the_readme_is_reported(tree: SkillTree) -> None:
+    tree.valid_skill("alpha")
+    tree.valid_skill("beta")
+    readme(tree, "alpha")
+    assert only(tree.validate()) == (
+        "::error file=README.md::the README does not link skills/<name>/SKILL.md "
+        "for: beta. It is the first listing most readers meet, and a skill missing "
+        "from it reads as a skill that does not exist -- which is what somebody "
+        "then writes again. Add a row to the table."
+    )
+
+
+def test_a_readme_row_outliving_its_skill_is_reported(tree: SkillTree) -> None:
+    tree.valid_skill("alpha")
+    readme(tree, "alpha", "retired")
+    assert only(tree.validate()).startswith(
+        "::error file=README.md::the README links skills/<name>/SKILL.md for dir(s) "
+        "that do not exist: retired"
+    )
+
+
+def test_a_mention_without_a_link_does_not_count(tree: SkillTree) -> None:
+    """The probe is the link, not the name: prose can mention a skill it does
+    not route to, and a listing that cannot be clicked is not a listing.
+    """
+    tree.valid_skill("alpha")
+    (tree.base / "README.md").write_text("# Catalog\n\nWe have alpha.\n", encoding="utf-8")
+    assert "does not link" in only(tree.validate())

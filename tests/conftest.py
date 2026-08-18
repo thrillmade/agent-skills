@@ -75,16 +75,23 @@ class SkillTree:
         return path
 
     def control_skill(self, name: str = "control") -> Path:
-        """A skill whose body carries the "deliberately not here" section's
-        CONTROL term. The generator refuses to render without one -- an
-        uncontrolled zero is not a measurement -- so any tree holding the
+        """A skill whose DESCRIPTION carries the "deliberately not here"
+        section's CONTROL term. The generator refuses to render without one --
+        an uncontrolled zero is not a measurement -- so any tree holding the
         directory needs this. It is a fixture requirement that exists because
         the guard is real, not a workaround for it.
+
+        In the description and not the body: the probe scan reads each skill's
+        trigger surface (name + frontmatter), because that is what decides
+        whether an agent ever finds a skill -- and because scanning bodies let
+        one skill's cross-reference redden the whole gate.
         """
         return self.skill(
             name,
             VALID_SKILL.format(name=name).replace(
-                "Body.", f"Body mentioning {gen_skill_directory.NOT_HERE_CONTROL}."
+                "description: What this skill does",
+                "description: What this skill does about "
+                f"{gen_skill_directory.NOT_HERE_CONTROL},",
             ),
         )
 

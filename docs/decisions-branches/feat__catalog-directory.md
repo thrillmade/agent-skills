@@ -15,3 +15,18 @@
 
 ---
 
+## 2026-08-18 03:04 - Close the review's four real holes in the catalog directory: a retired skill filed as live, a probe scan that reddened foreign PRs, growth numbers with no owner, and a README nothing reconciled
+
+**Reasoning:** The adversarial panel refuted four claims with measurements. (1) skillforge opens its description SUPERSEDED and sat under 'The catalog itself' reading 'scaffolding a new skill' — the directory routed agents INTO retired guidance, which is #229's failure inverted inside the artifact built to prevent it; the byte re-render cannot see this class because both sides of the comparison agree. (2) The 'deliberately not here' probes scanned whole SKILL.md bodies, so one cross-reference in one skill reddened the whole gate with the error filed against a file the PR never touched — the same hazard the design rejected a required frontmatter key to avoid, walking in the other door, and nine skills are repo-mirrored. (3) The docstring's growth table (74/79/155) reproduced under none of the models it stated, was quoted in the commit message, was recited inside size_error(), and was the only guard in the change with no test. (4) #229's first problem was untouched: the README table was still ungated, so a regenerated directory could name a skill the README did not.
+
+**Alternatives considered:** Gate owns-freshness by requiring a map edit whenever a SKILL.md changes materially — rejected: check_prose_retention-shaped diff machinery for an editorial field, and the boundary is now stated in the rendered header instead, Require the directory when the map declares families — measured and rejected: 60 existing placement-map tests gain a second annotation, drowning the rule they exist to pin; one repo-level test owns the fact instead, Generate the README table from owns — rejected: a 32-byte fragment is worse prose than the sentences the table already carries, so membership is reconciled and the column stays hand-written, Keep the measured growth table and add a test asserting its numbers — rejected: the numbers move whenever the prose does, so the tool measures the ceiling on demand and nothing is written down
+
+**Implications:**
+- ceiling() renders the real tree with synthetic skills at the catalog's own density; the CLI prints today's headroom (measured: 6431 body bytes, room for 18 more skills) and size_error() names levers without their worth
+- A skill whose description opens SUPERSEDED must be in family deprecated, or the gate fails — the class, not the instance
+- README.md is reconciled 1:1 by skill link; absence of a README is tolerated as the placement map's is
+- The probe scan reads name + frontmatter (the trigger surface); a body mention is a pointer, not coverage
+- 37 mutations now, up from 26; all red, with the control still green
+
+---
+

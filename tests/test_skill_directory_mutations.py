@@ -271,6 +271,106 @@ MUTATIONS = [
         '                        if isinstance(m, dict) and isinstance(m.get("family"), str)',
         "                        if isinstance(m, dict)",
     ),
+    # --- gen_skill_directory.py: the probe surface and the growth numbers ---
+    (
+        GEN,
+        # The gap probes read whole bodies again. One cross-reference in one
+        # skill ("`superpowers:test-driven-development` owns that") then
+        # reddens the WHOLE gate, filing the error against this directory on a
+        # PR that never touched it -- including a foreign release-sync PR for
+        # one of the nine repo-mirrored skills.
+        "the_probe_scan_reads_whole_bodies",
+        '    return f"{name}\\n{front}"',
+        '    return f"{name}\\n{text}"',
+    ),
+    (
+        GEN,
+        # Growth stops paying for the families it needs. The ceiling then
+        # overstates the headroom -- which is how the original hand-typed
+        # growth table came out generous under every model it stated.
+        "the_ceiling_gets_new_families_for_free",
+        "        if k % per_family == 0:",
+        "        if False:",
+    ),
+    (
+        GEN,
+        # Off by one at the ceiling: the reported headroom includes one skill
+        # that does not fit.
+        "the_ceiling_is_off_by_one",
+        "    return len(dirs) + extra",
+        "    return len(dirs) + extra + 1",
+    ),
+    (
+        GEN,
+        # Growth prices `owns` at half the cap instead of at it. A ceiling is
+        # a promise, and a promise priced at the typical case breaks on the
+        # worst one.
+        "growth_prices_owns_below_the_cap",
+        '    owns = "x" * owns_max',
+        '    owns = "x" * (owns_max // 2)',
+    ),
+    (
+        GEN,
+        # A measured rung typed back into the refusal text. Every number of
+        # that kind this file used to carry was wrong when it was checked; the
+        # refusal names levers and the tool measures their worth on demand.
+        "the_size_refusal_recites_a_measured_number",
+        '        "(4) retire skills. At this size the cap is information about the "',
+        '        "(4) retire skills, expected at roughly 74. At this size the cap is '
+        'information about the "',
+    ),
+    # --- validate_skills.py: retirement and the README ---------------------
+    (
+        VALIDATOR,
+        # A retired skill may be filed among the live ones. The directory then
+        # routes agents INTO guidance its own author told them to stop
+        # following -- which shipped, as `skillforge`.
+        "a_retired_skill_may_be_filed_as_live",
+        "                        if (\n                            slug in superseded",
+        "                        if (\n                            False",
+    ),
+    (
+        VALIDATOR,
+        # The retirement marker stops being anchored to the start of the
+        # description, so a skill ABOUT retirement is reported as retired. A
+        # rule that fires on the innocent case is a rule somebody switches off.
+        "the_retirement_marker_is_matched_anywhere",
+        "    if isinstance(description, str) and SUPERSEDED_RE.match(description):",
+        "    if isinstance(description, str) and SUPERSEDED_RE.search(description):",
+    ),
+    (
+        VALIDATOR,
+        # The RESERVED `superseded_by` key stops counting, so the detector
+        # goes quiet the first time somebody uses the field the SPEC actually
+        # provides for this.
+        "the_reserved_retirement_key_is_ignored",
+        '    if isinstance(meta.get("superseded_by"), str) and meta["superseded_by"].strip():',
+        "    if False:",
+    ),
+    (
+        VALIDATOR,
+        # A skill can be added without a README row: #229's first problem,
+        # left exactly as it was found.
+        "a_skill_may_be_missing_from_the_readme",
+        "    missing = sorted(on_disk - linked)",
+        "    missing = []",
+    ),
+    (
+        VALIDATOR,
+        # A README row outlives its skill, sending a reader to a 404 while
+        # counting toward a completeness nobody has.
+        "a_readme_row_may_outlive_its_skill",
+        "    stale = sorted(linked - on_disk)",
+        "    stale = []",
+    ),
+    (
+        VALIDATOR,
+        # The README reconcile never runs at all. Same defect, reached without
+        # touching either direction of it.
+        "the_readme_gate_never_runs",
+        "    errors.extend(readme_errors(root, skill_dirs))",
+        "    errors.extend([])",
+    ),
 ]
 
 

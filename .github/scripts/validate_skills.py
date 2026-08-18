@@ -12,6 +12,12 @@ Also gates docs/placement-map.json (when present): valid JSON/shape, and its
 makes the placement-map guide's claim ("the map is kept in sync") actually
 true instead of aspirational.
 
+Three listings of the catalog have to agree with the tree, and each is
+reconciled here (#229): the placement map 1:1 by key; the generated directory
+skill by byte-identical re-render, plus the cross-check that a SUPERSEDED
+skill is filed under `deprecated`; and README.md by membership only, since its
+purpose column is prose no generator should flatten.
+
 This file was a `python <<'PY'` heredoc inside the workflow until it was
 extracted verbatim so it could be imported and characterized by
 `tests/test_validate_skills.py`. Every rule, message string and exit code
@@ -47,14 +53,27 @@ from pathlib import Path
 import yaml
 
 # The directory generator. Imported rather than shelled out to so the gate
-# renders in-process and compares the WHOLE body: unlike the version index,
-# which mixes git-derived fields it cannot recompute at fetch-depth 1, the
-# directory is a pure function of this checkout. Nothing weaker than byte
-# identity is needed, so nothing weaker is used.
+# renders in-process and compares the WHOLE body: the directory is a pure
+# function of this checkout and reads no git history, so nothing weaker than
+# byte identity is needed and nothing weaker is used.
 #
 # `.github/scripts` is sys.path[0] when this file is run as a script, and
 # tests/conftest.py puts it there for the import path.
-import gen_skill_directory  # noqa: E402
+#
+# The try/except is not defensive. Without it, deleting the generator takes
+# the whole gate down with an uncaught ModuleNotFoundError traceback and no
+# `::error file=` annotation -- so the one failure that means "the directory
+# can no longer be verified at all" is the one CI renders least legibly.
+try:
+    import gen_skill_directory  # noqa: E402
+except ImportError as _import_error:
+    print(
+        "::error file=.github/scripts/gen_skill_directory.py::the catalog directory "
+        f"generator could not be imported ({_import_error}), so the committed "
+        "directory cannot be re-rendered and compared. Every other rule below would "
+        "still pass, and an unverifiable directory reads exactly like a verified one."
+    )
+    sys.exit(1)
 
 ROOT = Path("skills")
 FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
@@ -107,6 +126,36 @@ SIZE_LIMIT = 8192
 AUTHORING_HOME_RE = re.compile(r"^(catalog|undecided|repo-mirrored:[a-z0-9-]+)$")
 DISTRIBUTION_VALUES = {"default-on", "opt-in", "catalog-only"}
 
+# How the catalog announces a retirement. All three retired skills open their
+# `description` with it, and no live skill does -- it is the first thing an
+# agent reads, so it is the thing the directory has to agree with. Anchored by
+# `.match()` (which starts at position 0) rather than by a `^` in the pattern:
+# with both, neither can be tested, because removing either one leaves the
+# other still anchoring. One owner for the anchoring, and a mutation proves it.
+SUPERSEDED_RE = re.compile(r"SUPERSEDED\b")
+
+# A README link to a skill, which is how the README names one. The table is
+# still hand-written prose; this reconciles its MEMBERSHIP only -- see
+# `readme_errors`.
+README_SKILL_LINK_RE = re.compile(r"\(skills/([a-z0-9-]+)/SKILL\.md\)")
+
+
+def _is_superseded(meta: dict) -> bool:
+    """Whether this skill announces itself as retired.
+
+    Three signals, because the catalog has used them at different times and a
+    detector that only knows one is a detector that goes quiet the first time
+    somebody uses another: a `description` opening `SUPERSEDED`, the RESERVED
+    `superseded_by` key, and `status: superseded`.
+    """
+    description = meta.get("description")
+    if isinstance(description, str) and SUPERSEDED_RE.match(description):
+        return True
+    if isinstance(meta.get("superseded_by"), str) and meta["superseded_by"].strip():
+        return True
+    status = meta.get("status")
+    return isinstance(status, str) and status.strip().lower() == "superseded"
+
 
 def _valid_extension_entry(e: object) -> bool:
     """An `applies_to.extensions` entry is a suffix-matched string —
@@ -145,6 +194,10 @@ def run(root: Path) -> list[str]:
     behaviour -- preserved deliberately.
     """
     errors: list[str] = []
+    # Slugs whose own frontmatter says they are retired. Collected here rather
+    # than re-read in the placement-map block below, so the two can never
+    # disagree about which skills those are.
+    superseded: set[str] = set()
 
     if not root.exists() or not root.is_dir():
         print("::error::skills/ directory not found at repo root")
@@ -186,6 +239,9 @@ def run(root: Path) -> list[str]:
                 f"::error file={prefix}::frontmatter must be a YAML mapping"
             )
             continue
+
+        if _is_superseded(meta):
+            superseded.add(dir_name)
 
         name = meta.get("name")
         if not name or not isinstance(name, str) or not name.strip():
@@ -458,6 +514,33 @@ def run(root: Path) -> list[str]:
                                 f"{', '.join(sorted(family_ids)) or '(none)'}"
                             )
 
+                        # The one meaning-level check the byte comparison
+                        # cannot make. `owns` and `family` are editorial text;
+                        # the directory and the map agree with each other by
+                        # construction, so a skill filed as live after it was
+                        # retired is invisible to every gate above -- and it
+                        # shipped that way: `skillforge` sat under "The
+                        # catalog itself" reading "scaffolding a new skill"
+                        # for the whole migration window, which routes an
+                        # agent INTO the retired guidance. That is #229's
+                        # failure inverted, inside the artifact built to
+                        # prevent it, so the class is closed rather than the
+                        # instance.
+                        if (
+                            slug in superseded
+                            and isinstance(family, str)
+                            and family != gen_skill_directory.DEPRECATED_FAMILY
+                        ):
+                            errors.append(
+                                f"::error file={pm_prefix}::skills.{slug}.family="
+                                f"{family!r}, but skills/{slug}/SKILL.md announces "
+                                "itself as SUPERSEDED. A retired skill listed among "
+                                "live ones is a directory routing agents to guidance "
+                                "its own author told them to stop following. File it "
+                                f"under '{gen_skill_directory.DEPRECATED_FAMILY}' and "
+                                "point `owns` at the successors."
+                            )
+
                         owns = meta.get("owns")
                         if not isinstance(owns, str) or not owns.strip():
                             errors.append(
@@ -524,6 +607,57 @@ def run(root: Path) -> list[str]:
                         )
 
     errors.extend(directory_errors(root, placement_map_path))
+    errors.extend(readme_errors(root, skill_dirs))
+    return errors
+
+
+def readme_errors(root: Path, skill_dirs: list[Path]) -> list[str]:
+    """Reconcile the README's skill links 1:1 against `skills/`.
+
+    #229's first problem, and the smaller half of it: the README table names
+    every skill and nothing keeps it that way, so it is complete by diligence
+    and the next skill added is the one that breaks it silently, in the file
+    most readers meet first.
+
+    MEMBERSHIP only. The purpose column is hand-written prose with room for
+    sentences the byte-capped directory cannot afford, and generating it from
+    `owns` would make the README worse to make it derived. So this gate asks
+    the one question a machine can answer without flattening it: is every
+    skill named, and is every skill it names real.
+
+    Absence of the README is tolerated, exactly as the placement map's is --
+    a tree that does not publish one has nothing to reconcile.
+    """
+    readme = root.parent / "README.md"
+    if not readme.exists():
+        return []
+
+    prefix = str(readme)
+    try:
+        text = readme.read_text(encoding="utf-8")
+    except OSError as e:
+        return [f"::error file={prefix}::could not read {readme}: {e}"]
+
+    linked = set(README_SKILL_LINK_RE.findall(text))
+    on_disk = {d.name for d in skill_dirs}
+
+    errors: list[str] = []
+    missing = sorted(on_disk - linked)
+    if missing:
+        errors.append(
+            f"::error file={prefix}::the README does not link "
+            f"skills/<name>/SKILL.md for: {', '.join(missing)}. It is the first "
+            "listing most readers meet, and a skill missing from it reads as a "
+            "skill that does not exist -- which is what somebody then writes "
+            "again. Add a row to the table."
+        )
+    stale = sorted(linked - on_disk)
+    if stale:
+        errors.append(
+            f"::error file={prefix}::the README links skills/<name>/SKILL.md for "
+            f"dir(s) that do not exist: {', '.join(stale)}. A dead row sends a "
+            "reader to a 404 and counts toward a completeness nobody has."
+        )
     return errors
 
 
@@ -536,11 +670,18 @@ def directory_errors(root: Path, placement_map_path: Path) -> list[str]:
     regenerated -- which is the same class of defect one level down, and the
     one a hand-kept skill body would have reintroduced.
 
-    Runs only when the directory skill is present. Its absence is not an error:
-    a tree without it is a tree that does not publish a directory, and the
-    per-skill rules above already cover everything else. Its presence WITHOUT a
-    usable source is, though -- an unverifiable directory reads exactly like a
-    verified one.
+    Runs only when the directory skill is present. Its absence is not an error
+    HERE: this function's rules have to hold for any tree the gate is pointed
+    at, including the tmp trees the suite drives it over, and "a directory
+    exists" is a fact about THIS repo rather than about trees in general.
+    Deleting the skill alone is already red (the map keeps an entry for a dir
+    that no longer exists); deleting the entry as well is caught by
+    `tests/test_gen_skill_directory.py::test_this_catalog_publishes_a_directory`,
+    which owns that fact and reddens the PR that removes it. One owner, and it
+    is named here so the next reader does not conclude nothing owns it.
+
+    Presence WITHOUT a usable source is always an error -- an unverifiable
+    directory reads exactly like a verified one.
     """
     path = root / gen_skill_directory.DIRECTORY_SLUG / "SKILL.md"
     if not path.exists():

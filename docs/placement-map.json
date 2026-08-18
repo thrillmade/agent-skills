@@ -4,12 +4,12 @@
   "families": [
     {"id": "review-discipline", "title": "Reviewing a pull request", "routes": "What a review flags, what it lets go, and what a claim has to cite."},
     {"id": "orchestration", "title": "Running agents", "routes": "Handing work out, gating what comes back, surviving a long session."},
-    {"id": "catalog-and-tooling", "title": "The catalog itself", "routes": "Finding, censusing and authoring skills; the org's CLI conventions."},
+    {"id": "catalog-and-tooling", "title": "The catalog itself", "routes": "Finding, censusing and authoring skills; decision logging; CLI conventions."},
     {"id": "design-dispatchers", "title": "Design: start here (L1)", "routes": "Three entry points. Each routes to the primitives below in work order."},
     {"id": "design-primitives", "title": "Design primitives (L0)", "routes": "Math and standards any design system can build on. No product opinions."},
-    {"id": "design-critic-lenses", "title": "Design review lenses (L0)", "routes": "Judging the rendered surface, not only the code that produced it."},
+    {"id": "design-critic-lenses", "title": "Design review lenses (L0)", "routes": "Judging the rendered surface -- and the standard it is judged against."},
     {"id": "udts-stubs", "title": "UDTS stances (L2)", "routes": "Parity stubs for skills being authored in tokenomics. Not guidance yet."},
-    {"id": "deprecated", "title": "Deprecated (migration window)", "routes": "Superseded, kept unchanged until tokenomics migrates off them."},
+    {"id": "deprecated", "title": "Deprecated (migration window)", "routes": "Superseded. Each one names its successors; load those, not these."},
     {"id": "templates", "title": "Templates", "routes": "Copy-and-edit scaffolds. They fail the slug check until you customise."}
   ],
   "skills": {
@@ -217,12 +217,12 @@
       "notes": "nomination-time gate scoped to skills/*/SKILL.md edits in this repo; not applicable to a downstream repo's product code"
     },
     "skillforge": {
-      "family": "catalog-and-tooling",
-      "owns": "scaffolding a new skill",
+      "family": "deprecated",
+      "owns": "use skill-creator / skill-smith",
       "authoring_home": "catalog",
       "distribution": "catalog-only",
       "subscribers": [],
-      "notes": "skill-authoring tool (vendored, author: zakelfassi); catalog-side utility rather than a per-repo subscription"
+      "notes": "SUPERSEDED (#203) -- skill authoring split three ways: skill-creator owns measurement, superpowers:writing-skills owns wording form, the skill-smith agent owns house rules. Vendored, author: zakelfassi; kept unchanged during the migration window"
     },
     "spacing-system": {
       "family": "design-primitives",
@@ -406,7 +406,7 @@
       "subscribers": ["clud-bug", "clud-bug-app", "logmind", "tokenomics", "protocol", "reporulez", "rezgen", "skdd"],
       "family": "catalog-and-tooling",
       "owns": "this directory",
-      "notes": "the generated catalog directory (#229). Every repo holding ANY catalog skill should hold this one -- it is the only artifact that travels and names the rest -- so all eight census-visible consumers are declared here and none subscribes yet: the weekly placement cross-check will file `missing` until each runs `npx skills add ... --skill finding-a-catalog-skill`. thrillmade/arlyn-working is deliberately NOT declared: it holds 23 catalog subscriptions but is absent from census_counters.CONSUMER_REPOS, so the census structurally cannot observe it and a declaration there would be a verdict that can never clear. Adding it to CONSUMER_REPOS is its own change"
+      "notes": "the generated catalog directory (#229). Every repo holding ANY catalog skill should hold this one -- it is the only artifact that travels and names the rest -- so all eight census-visible consumers are declared here and none subscribes yet: the weekly placement cross-check will file `missing` until each runs `npx skills add ... --skill finding-a-catalog-skill`. Measured 2026-08-18: `npx skills update` refreshes but never ADDS, so that is one PR per repo and nothing in this catalog performs it; six of the eight carry no skills-lock at all and receive catalog skills only as vendored clud-bug baselines, so those rows clear by adopting the CLI rather than by regenerating anything here. thrillmade/arlyn-working is deliberately NOT declared: it holds 23 catalog subscriptions but is absent from census_counters.CONSUMER_REPOS, so the census structurally cannot observe it and a declaration there would be a verdict that can never clear. Adding it to CONSUMER_REPOS is its own change"
     }
   }
 }
