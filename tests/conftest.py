@@ -116,6 +116,9 @@ class SkillTree:
         head = f"---\nname: {gen_skill_directory.DIRECTORY_SLUG}\ndescription: d\n---"
         return self.skill(gen_skill_directory.DIRECTORY_SLUG, head + body)
 
+    _auto_index: str | None = None
+    """The last index this scaffold wrote, or None. See validate()."""
+
     def validate(self) -> list[str]:
         """Run the gate over this tree and return its error annotations.
 
@@ -135,18 +138,31 @@ class SkillTree:
         import json
 
         versions_path = self.base / "docs" / "skill-versions.json"
-        if not versions_path.exists():
-            skills = {
-                md.parent.name: {
-                    "current": skill_version.digest(md.read_bytes()),
-                    "history": [],
-                }
-                for md in sorted((self.base / "skills").glob("*/SKILL.md"))
+        current = {
+            md.parent.name: {
+                "current": skill_version.digest(md.read_bytes()),
+                "history": [],
             }
+            for md in sorted((self.base / "skills").glob("*/SKILL.md"))
+        }
+        payload = json.dumps({"version": 1, "skills": current}, sort_keys=True)
+
+        # Refresh only what WE wrote. A test that writes its own index must keep
+        # it -- that is how the currency gate gets exercised at all -- so
+        # ownership is decided by content, not by a flag another helper would
+        # have to remember to clear: if the file on disk is byte-identical to
+        # the scaffold we last wrote, it is still ours.
+        #
+        # `if not exists` was not enough: a test that calls validate() twice
+        # (once as a control, then again after adding a skill) got an index
+        # frozen at the first call, so the second run failed the currency gate
+        # on scaffolding rather than on the rule under test.
+        if not versions_path.exists() or self._auto_index == versions_path.read_text(
+            encoding="utf-8"
+        ):
             versions_path.parent.mkdir(parents=True, exist_ok=True)
-            versions_path.write_text(
-                json.dumps({"version": 1, "skills": skills}), encoding="utf-8"
-            )
+            versions_path.write_text(payload, encoding="utf-8")
+            self._auto_index = payload
         return validate_skills.run(Path("skills"))
 
 

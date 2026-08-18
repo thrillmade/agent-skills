@@ -34,6 +34,12 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parents[1]
 GEN = REPO_ROOT / ".github" / "scripts" / "gen_skill_directory.py"
 VALIDATOR = REPO_ROOT / ".github" / "scripts" / "validate_skills.py"
+# Added when the per-skill versioning gate (#238) landed: both the validator
+# and tests/conftest.py import `skill_version`, so a scratch tree without it
+# dies at conftest import and every mutation below goes red for the wrong
+# reason -- which the control caught rather than the mutations.
+SKILL_VERSION = REPO_ROOT / ".github" / "scripts" / "skill_version.py"
+VERSIONS_INDEX = REPO_ROOT / "docs" / "skill-versions.json"
 CONFTEST = Path(__file__).parent / "conftest.py"
 SUITES = [
     Path(__file__).parent / "test_gen_skill_directory.py",
@@ -385,13 +391,16 @@ def _scratch(tmp_path: Path, script: Path, source: str) -> Path:
     """
     scripts = tmp_path / ".github" / "scripts"
     scripts.mkdir(parents=True)
-    for real in (GEN, VALIDATOR):
+    for real in (GEN, VALIDATOR, SKILL_VERSION):
         shutil.copy(real, scripts / real.name)
     (scripts / script.name).write_text(source, encoding="utf-8")
 
     shutil.copytree(SKILLS, tmp_path / "skills")
     (tmp_path / "docs").mkdir()
     shutil.copy(PLACEMENT_MAP, tmp_path / "docs" / "placement-map.json")
+    # The validator refuses a missing index rather than passing over it (#238),
+    # so the scratch tree needs one or every run fails on absence, not mutation.
+    shutil.copy(VERSIONS_INDEX, tmp_path / "docs" / "skill-versions.json")
 
     tests = tmp_path / "tests"
     tests.mkdir()
