@@ -73,6 +73,7 @@ Finding, censusing and authoring skills; decision logging; CLI conventions.
 ## Design: start here (L1)
 Three entry points. Each routes to the primitives below in work order.
 
+- `composing-a-screen` — laying out a screen
 - `consuming-a-design-system` — using a system in a product
 - `designing-a-design-system` — building or extending a system
 - `reviewing-design-work` — critiquing design output
@@ -139,7 +140,7 @@ go on advertising itself:
 - **The same discipline under its other name** -- `test-driven` matches **0** skills.
 - **Norman's design primitives** -- forcing functions, mapping, the two gulfs -- `forcing function` matches **0** skills.
 
-(Control: `APCA` matches 7, so the probe finds what is there.)
+(Control: `APCA` matches 8, so the probe finds what is there.)
 
 Not being named above is not evidence of absence either. Search `skills/`
 before concluding a second time -- and control the search against a term you

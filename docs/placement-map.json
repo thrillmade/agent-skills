@@ -200,6 +200,14 @@
       "subscribers": [],
       "notes": "L1 dispatcher — entry point that routes to review lenses; a repo consumes what it routes to, not the dispatcher itself as a standing subscription"
     },
+    "composing-a-screen": {
+      "family": "design-dispatchers",
+      "owns": "laying out a screen",
+      "authoring_home": "catalog",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "L1 entry point for MAKING a screen. Deliberately opt-in rather than the other L1 dispatchers' catalog-only, and that is a reasoned divergence rather than an oversight: those route to lenses a repo consumes directly, so the dispatcher itself need not travel. This one also CARRIES the principles nothing else in the catalog owns — hierarchy, proximity as a between-to-within ratio, measure, alignment axes, progressive disclosure, Jakob's and Fitts's — so catalog-only would make a subscribing repo raise a placement verdict for installing the only copy of that content. Not added to census_counters STRUCTURAL_L0: it is L1, so zero direct subscriptions is a real gap, not by design."
+    },
     "curating-a-skill-catalog": {
       "family": "catalog-and-tooling",
       "owns": "the census rubric and verdicts",
