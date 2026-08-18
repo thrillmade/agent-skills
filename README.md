@@ -54,6 +54,7 @@ The design catalog is organized in three layers (locked by the CDO; executed in 
 | [`designing-a-design-system`](skills/designing-a-design-system/SKILL.md) | Dispatcher for **building or extending** a design system — routes through naming → color → non-color families → format/versioning → the elite bar → testing, in build order. |
 | [`reviewing-design-work`](skills/reviewing-design-work/SKILL.md) | Dispatcher for **reviewing or critiquing** design output — ordered lenses (code rules → rendered-surface lenses → the opinion bar) with routing rules for when the browser-driven design-critic pass fires. |
 | [`consuming-a-design-system`](skills/consuming-a-design-system/SKILL.md) | Dispatcher for **using** a design system in a product — token discipline, composition rules, DTCG install patterns, SemVer-aware upgrades, extend-vs-fork. |
+| [`composing-a-screen`](skills/composing-a-screen/SKILL.md) | Entry point for **making** a screen — the composition sequence in dependency order (rank → group → encode → space → lay out → conventionalise → target → clear the floors → defer). Carries the principles nothing else owns: hierarchy, proximity as a between-to-within ratio, measure and column count, alignment axes, progressive disclosure, Jakob's and Fitts's. |
 
 ### L0 — universal primitives
 
