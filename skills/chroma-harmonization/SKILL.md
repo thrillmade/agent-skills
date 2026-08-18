@@ -1,5 +1,5 @@
 ---
-version: "70f22a464c82"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "bec2fc631306"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: chroma-harmonization
 description: Use when constructing or auditing a multi-hue palette where all hues should appear equally saturated at each contrast stop. Names the per-stop chroma cap rule (take the minimum achievable chroma across hues at the stop), the gamut bottleneck pattern (blue at mid-L is the classic limiter in sRGB; Display P3 — UDTS's default compose gamut — reshapes it), and the relationship to UDTS's default `harmony` palette variant. Generalizes Evil Martians' Harmony algorithm.
 ---
@@ -69,6 +69,7 @@ If any hue clips at the ceiling or visually "pops," recompute with a tighter chr
 
 ## Cross-references
 
+- **Routed here by:** [designing-a-design-system](../designing-a-design-system/SKILL.md) — the L1 dispatcher for building or extending a system.
 - **REQUIRED BACKGROUND:** [oklch-color-space](../oklch-color-space/SKILL.md) — the OKLCH primitive, the gamut-mapping rule.
 - **For the contrast targets at each stop:** [apca-contrast](../apca-contrast/SKILL.md) — the Lc targets that fix each L value.
 - **For starting-hue palette construction before harmonization:** [palette-relationships](../palette-relationships/SKILL.md).

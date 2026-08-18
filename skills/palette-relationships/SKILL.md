@@ -1,5 +1,5 @@
 ---
-version: "e382b4c2b6ac"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "36a59edf6f40"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: palette-relationships
 description: Use when proposing a palette around a single seed hue and needing to pick which relationship model (monochromatic / analogous / complementary / split-complementary / triadic / tetradic / compound) fits the brief. Names the hue-angle math for each, when each is appropriate (analogous for restraint; triadic for vibrance; complementary for tension), and the role assignment heuristic.
 ---
@@ -71,6 +71,7 @@ After picking hues:
 
 ## Cross-references
 
+- **Routed here by:** [designing-a-design-system](../designing-a-design-system/SKILL.md) — the L1 dispatcher for building or extending a system.
 - **REQUIRED BACKGROUND:** [oklch-color-space](../oklch-color-space/SKILL.md) — hues are OKLCH angles; the relationship math operates on those.
 - **For palette balance after picking hues:** [chroma-harmonization](../chroma-harmonization/SKILL.md) — cap chroma at the cross-hue minimum.
 - **For contrast targets across stops:** [apca-contrast](../apca-contrast/SKILL.md).

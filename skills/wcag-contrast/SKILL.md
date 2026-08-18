@@ -1,5 +1,5 @@
 ---
-version: "1d25bdeee805"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "e32264ff0d6a"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: wcag-contrast
 description: Use when verifying a color pair meets WCAG 2.2 AA contrast requirements as a cross-check on APCA-driven generation, or when auditing a token catalog or design for legal-baseline accessibility compliance. Names the 4.5:1 normal-text rule, the 3:1 large-text rule, the size threshold for "large" stated in points (≥ 18 pt regular ≈ 24 CSS px, OR ≥ 14 pt bold ≈ 18.67 CSS px — not pixels), the SC 1.4.11 non-text rule, SC 2.4.13 focus appearance (AAA — the AA hooks are 1.4.11 and 2.4.11), and the role this check plays alongside APCA. Cite when an agent treats WCAG as the *primary* contrast model, or writes the large-text threshold as "14 px bold / 18 px regular" — UDTS uses WCAG as a cross-check with APCA as primary, and WCAG sizes are in points.
 ---
@@ -70,6 +70,7 @@ For each contrast-bound pairing:
 
 ## Cross-references
 
+- **Routed here by:** [designing-a-design-system](../designing-a-design-system/SKILL.md) — the L1 dispatcher for building or extending a system.
 - **REQUIRED BACKGROUND:** [apca-contrast](../apca-contrast/SKILL.md) — the primary contrast model. WCAG is the cross-check; APCA is the generator target.
 - **For the underlying color space:** [oklch-color-space](../oklch-color-space/SKILL.md) — OKLCH source values must be gamut-mapped to sRGB before applying the WCAG formula.
 

@@ -1,5 +1,5 @@
 ---
-version: "82616f8a05fa"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "effc6349558d"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: spacing-system
 description: Use when designing or auditing a spacing scale for padding, gaps, icon sizes, component heights, or border radii. Names the two-unit primitive model (a minor unit — the smallest legal increment — plus a major unit — the dominant rhythm — where major divides cleanly by minor), the derivation rule (padding / gap / radius / height ladders all derive from the unit primitives, never invented per-surface), the 24 CSS px WCAG 2.5.8 AA target floor for interactive heights, and the T-shirt-vs-numeric naming options. Cite when an agent proposes a single-unit grid for a mixed-density system or invents off-grid spacing values for "this one specific case." For one system's concrete density-mode unit choices see udts-spacing-defaults.
 ---
@@ -103,6 +103,7 @@ Failing this is one of the most common WCAG 2.2 misses in design systems. The sk
 
 ## Cross-references
 
+- **Routed here by:** [designing-a-design-system](../designing-a-design-system/SKILL.md) — the L1 dispatcher for building or extending a system.
 - **REQUIRED BACKGROUND for height + font + icon pairing:** [component-sizing-principles](../component-sizing-principles/SKILL.md) — the curated per-density component-height ladder + font-pairing + icon-size pairing.
 - **For the typography scale that pairs with spacing:** [type-scale](../type-scale/SKILL.md) and [line-height-grid](../line-height-grid/SKILL.md) — line-heights snap to the minor unit declared here.
 - **For one system's concrete density-mode unit choices (worked example):** [udts-spacing-defaults](../udts-spacing-defaults/SKILL.md) — an incubating L2 stub that instantiates this model.

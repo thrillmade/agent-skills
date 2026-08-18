@@ -18,28 +18,28 @@
       "owns": "correctness, security, perf only",
       "authoring_home": "catalog",
       "distribution": "default-on",
-      "subscribers": ["clud-bug", "clud-bug-app", "logmind", "tokenomics", "protocol", "reporulez", "rezgen"]
+      "subscribers": ["clud-bug", "clud-bug-app", "logmind", "tokenomics", "protocol", "reporulez", "rezgen", "skdd"]
     },
     "evidence-based-review": {
       "family": "review-discipline",
       "owns": "quote the code or cut the claim",
       "authoring_home": "catalog",
       "distribution": "default-on",
-      "subscribers": ["clud-bug", "clud-bug-app", "logmind", "tokenomics", "protocol", "reporulez", "rezgen"]
+      "subscribers": ["clud-bug", "clud-bug-app", "logmind", "tokenomics", "protocol", "reporulez", "rezgen", "skdd"]
     },
     "respect-existing-conventions": {
       "family": "review-discipline",
       "owns": "a review is not a redesign",
       "authoring_home": "catalog",
       "distribution": "default-on",
-      "subscribers": ["clud-bug", "clud-bug-app", "logmind", "tokenomics", "protocol", "reporulez", "rezgen"]
+      "subscribers": ["clud-bug", "clud-bug-app", "logmind", "tokenomics", "protocol", "reporulez", "rezgen", "skdd"]
     },
     "clud-bug-collaboration": {
       "family": "review-discipline",
       "owns": "living with the review bot",
       "authoring_home": "catalog",
       "distribution": "default-on",
-      "subscribers": ["clud-bug", "clud-bug-app", "logmind", "tokenomics", "protocol", "reporulez", "rezgen"]
+      "subscribers": ["clud-bug", "clud-bug-app", "logmind", "tokenomics", "protocol", "reporulez", "rezgen", "skdd"]
     },
     "logmind": {
       "family": "catalog-and-tooling",
