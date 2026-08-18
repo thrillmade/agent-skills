@@ -13,10 +13,10 @@ PR's CI run, so this file is always coherent with current `main`.
 ---
 
 
-## 2026-08 (23 decisions)
+## 2026-08 (24 decisions)
 
-- **2026-08-18** — Close the review's four real holes in the catalog directory: a retired skill filed as live, a probe scan that reddened foreign PRs, growth numbers with no owner, and a README nothing reconciled *(feat/catalog-directory)* — [decisions-branches/feat__catalog-directory.md](decisions-branches/feat__catalog-directory.md)
-- *... 21 more decisions ...*
+- **2026-08-18** — Apply the panel's five fixes to PR #238: byte-identity, mirror ordering, exit-code parity, history-order pinning, and the index-absence gate *(feat/per-skill-versioning)* — [decisions-branches/feat__per-skill-versioning.md](decisions-branches/feat__per-skill-versioning.md)
+- *... 22 more decisions ...*
 - **2026-08-14** — Gate skill size with a shrink-only ratchet, and deprecate skillforge into the three skills that own its job *(feat/skill-depth-and-interlinking)* — [decisions-branches/feat__skill-depth-and-interlinking.md](decisions-branches/feat__skill-depth-and-interlinking.md)
 
 ## 2026-07 (13 decisions)
