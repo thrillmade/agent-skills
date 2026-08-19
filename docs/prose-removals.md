@@ -140,3 +140,5 @@ provenance in
 
 | skill | words | why |
 |---|---|---|
+| empirical-design-principles | 6 | Its disclaimer said Norman's two gulfs "are in neither skill and are covered nowhere yet". `composing-a-screen` now covers them (#225), so the sentence had become false about its own catalog. Corrected rather than cut — the words went because the claim did, not to make room. |
+| finding-a-catalog-skill | 12 | Generated, not authored. The directory publishes a "not here" section listing gaps the catalog does not cover, and its entry for the two gulfs was removed by `gen_skill_directory.py` because #225 filled that gap — the generator refuses to publish a "not here" claim that has become false. The removal is derived from `NOT_HERE_PROBES`; editing this file by hand is what the byte-identity gate forbids. |

@@ -1,5 +1,5 @@
 ---
-version: "bec2fc631306"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "e710f973d63c"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: chroma-harmonization
 description: Use when constructing or auditing a multi-hue palette where all hues should appear equally saturated at each contrast stop. Names the per-stop chroma cap rule (take the minimum achievable chroma across hues at the stop), the gamut bottleneck pattern (blue at mid-L is the classic limiter in sRGB; Display P3 — UDTS's default compose gamut — reshapes it), and the relationship to UDTS's default `harmony` palette variant. Generalizes Evil Martians' Harmony algorithm.
 ---
@@ -27,17 +27,23 @@ For each contrast stop in the palette (each L value):
 
 1. For each hue in the set, find the maximum in-gamut chroma at that (L, H) in the target color space (**Display P3 by default** — UDTS composes end-to-end in P3 via apcach's `colorSpace: 'p3'`; sRGB only when a catalog is deliberately constrained to legacy-only output).
 2. Take the **minimum** of those per-hue maxima. This is the stop's chroma ceiling.
-3. Emit every hue at the stop using that ceiling.
+3. **Recompose, don't just clamp:** at the shared ceiling, re-solve L per hue (apcach's constant-chroma branch) so each hue still hits the stop's target Lc against its background. Clamping chroma while leaving L untouched lets achieved Lc drift off target by up to ~5 across hues — the invariant is chroma constant AND Lc constant; hue and lightness are what's allowed to drift.
+4. Emit every hue at the stop using the recomposed (L, c_ceiling, h).
 
 ```
-for each stop L:
-  c_max_per_hue = { h: max_chroma_in_gamut(L, h)  for h in hues }
+for each stop L_target:
+  c_max_per_hue = { h: max_chroma_in_gamut(L_target, h)  for h in hues }
   c_ceiling = min(c_max_per_hue.values())
   for each h in hues:
-    emit oklch(L, c_ceiling, h)
+    l_solved = apcach_constant_chroma_solve(target_lc, h, c_ceiling, bg)
+    emit oklch(l_solved, c_ceiling, h)
 ```
 
+**Known counterexample, not a template:** UDTS's own `harmonizeChroma` does *not* recompose — it clamps chroma and leaves the original L untouched (`{ l: original.l, c: min(original.c, ceiling), h: original.h }`). That's exactly the Lc drift this rule warns about. If you're reading the shipped code as a reference, its chroma-clamp-without-recompose is the bug to fix, not the pattern to copy.
+
 The bottleneck pattern: at moderate lightness (L ≈ 0.5), **blue (~220°)** is the classic limiter in sRGB — its gamut is narrowest there. In Display P3 (the default compose gamut) the boundary is wider and reshaped, so blue is not guaranteed to be the tightest hue — treat the bottleneck as empirical per palette rather than assuming ~220° holds. At the extremes (L near 0 or 1) the gamut shrinks for all hues in either space, so the ceiling collapses naturally.
+
+**Recompose can't fix the bottleneck hue's own residual.** Recomposing corrects the *other* hues' Lc drift once they're capped to the bottleneck hue's ceiling — it can't correct the bottleneck hue itself, whose compose/measure residual (see [apca-contrast](../apca-contrast/SKILL.md)'s meter-vs-composer gamut mismatch) is a property of that one hue's own gamut edge. Only a matched meter — scoring on the same gamut the composer targeted — closes that residual; recompose alone can't.
 
 ## Why the *minimum*, not the average
 

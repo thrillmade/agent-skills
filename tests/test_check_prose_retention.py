@@ -2149,14 +2149,28 @@ def test_the_error_prints_the_exact_row_to_paste():
     assert cpr.run(cases, ledger_before=LEDGER_HEADER, ledger_after=declared(real)) == []
 
 
-def test_the_shipped_ledger_declares_nothing_yet():
-    """The file committed with this gate is a header and a rule, not a list of
-    exemptions. If a row is ever added, it was added by a change that needed it.
+def test_every_shipped_ledger_row_is_well_formed():
+    """This used to assert the ledger was EMPTY. That was right while it was,
+    and wrong the moment a change legitimately declared a removal -- which its
+    own docstring anticipated ("if a row is ever added, it was added by a change
+    that needed it"). Pinning the count would just move the breakage to the next
+    declaration, so pin the property that actually matters instead: the ledger
+    parses, and every row in it names a real skill and a positive word count.
+
+    A malformed row is the failure worth catching. It reads as a declaration to
+    a human and as nothing to the parser, so the removal it was meant to declare
+    goes back to being silent -- which is the whole defect this gate exists for.
     """
     repo_root = Path(__file__).resolve().parents[1]
     ledger = repo_root / "docs" / "prose-removals.md"
     assert ledger.exists(), "the gate names a ledger that must exist to be usable"
-    assert cpr.parse_ledger(ledger.read_text(encoding="utf-8")) == {}
+    rows = cpr.parse_ledger(ledger.read_text(encoding="utf-8"))
+    for (slug, words), count in rows.items():
+        assert (repo_root / "skills" / slug / "SKILL.md").exists(), (
+            f"ledger row declares {slug!r}, which is not a skill in this catalog"
+        )
+        assert isinstance(words, int) and words > 0, f"{slug}: bad word count {words!r}"
+        assert count > 0
 
 
 def test_the_shipped_ledger_carries_the_table_the_parser_anchors_to():
@@ -2169,7 +2183,13 @@ def test_the_shipped_ledger_carries_the_table_the_parser_anchors_to():
     repo_root = Path(__file__).resolve().parents[1]
     text = (repo_root / "docs" / "prose-removals.md").read_text(encoding="utf-8")
     probe = text.rstrip("\n") + "\n| probe-skill | 7 | control row |\n"
-    assert cpr.parse_ledger(probe) == {("probe-skill", 7): 1}
+    parsed = cpr.parse_ledger(probe)
+    # `in`, not `==`: the shipped ledger now carries real declared rows, so an
+    # equality here would re-pin the very count the test above stopped pinning.
+    assert parsed.get(("probe-skill", 7)) == 1, (
+        "the parser cannot find its table, so every row anyone adds reads as "
+        "'no declarations' forever"
+    )
 
 
 # --- a line that does not parse still occupies a slot -----------------------

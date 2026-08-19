@@ -1,7 +1,7 @@
 ---
-version: "69b8422f9b0a"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "9b90fefae38b"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: empirical-design-principles
-description: Use when a layout decision is about to be defended by naming a principle — Gestalt grouping and common region, Fitts's, Hick's, Miller's, Jakob's, von Restorff, the aesthetic-usability effect — or when a rule of thumb like "seven items max" needs checking against what the underlying work actually says. Covers the empirical tradition only, meaning principles that make a prediction which can be tested and can fail. Says which ones predict something real, which four do not say what design writing claims, and how to use one forward as a prediction rather than backward as a post-hoc justification. Does NOT cover usability heuristics — Nielsen's ten, Norman's signifiers, Shneiderman's eight, progressive disclosure, recognition over recall — which are design judgement organised for inspection, not falsifiable prediction; those are in usability-heuristics. Norman's constraints, forcing functions, natural mapping and the gulfs of execution and evaluation are in neither skill and are covered nowhere yet.
+description: Use when a layout decision is about to be defended by naming a principle — Gestalt grouping and common region, Fitts's, Hick's, Miller's, Jakob's, von Restorff, the aesthetic-usability effect — or when a rule of thumb like "seven items max" needs checking against what the underlying work actually says. Covers the empirical tradition only, meaning principles that make a prediction which can be tested and can fail. Says which ones predict something real, which four do not say what design writing claims, and how to use one forward as a prediction rather than backward as a post-hoc justification. Does NOT cover usability heuristics — Nielsen's ten, Norman's signifiers, Shneiderman's eight, progressive disclosure, recognition over recall — which are design judgement organised for inspection, not falsifiable prediction; those are in usability-heuristics. Norman's constraints, forcing functions and natural mapping are in neither skill and covered nowhere yet; the two gulfs of execution and evaluation are covered in composing-a-screen.
 ---
 
 # Empirical design principles
@@ -23,12 +23,12 @@ description: Use when a layout decision is about to be defended by naming a prin
   one is an act of judgement you defend; applying the other produces a number you
   test. That absence is declared, not covered —
   see [usability-heuristics](../usability-heuristics/SKILL.md).
-- **Reaching for Norman's constraints, forcing functions, natural mapping, or
-  the gulfs of execution and evaluation.** Neither skill covers them. That one is
-  a real gap, not a declared absence: cite the edition and page yourself — DOET
-  rev. ed. 2013 ch. 4 for constraints and forcing functions, ch. 1 and 3 for
-  mapping, Hutchins, Hollan & Norman 1985 for the gulfs — and do not read either
-  file's silence as clearance.
+- **Reaching for Norman's constraints, forcing functions, or natural
+  mapping.** Neither skill covers them. That one is a real gap, not a declared
+  absence: cite the edition and page yourself — DOET rev. ed. 2013 ch. 4 for
+  constraints and forcing functions, ch. 1 and 3 for mapping — and do not read
+  either file's silence as clearance. The two gulfs *are* covered, in
+  [composing-a-screen](../composing-a-screen/SKILL.md).
 - Picking token values. Contrast, type scale, spacing steps and control heights
   are owned by the system, not by the findings here — see Cross-references.
 - Judging craft quality. Whether something is *elite* is a separate question

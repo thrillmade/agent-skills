@@ -1,8 +1,8 @@
 ---
-version: "39d2e1377a44"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "8137c5e68601"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: composing-a-screen
 description: |
-  Entry point for MAKING a screen — deciding what is primary, what groups with what, what shares an edge, and what waits behind a click, before any pixel, token, or component is picked. Names the composition sequence (rank → group → encode → space → lay out → conventionalise → target → clear the floors → defer) and carries the principles nothing else in this catalog owns: visual hierarchy and the attribute that must separate each level on its own, proximity as a between-to-within gap ratio rather than a pixel count, column count and measure, alignment as an axis count, and progressive disclosure with the three tests anything hidden must pass — plus Jakob's Law (standard / convention / confusion) and Fitts's Law (cut the distance before you grow the target). Use when asked which design principles apply to a screen, when a layout has to be composed from scratch, when ranking actions before picking button variants, or when an interface shows more at once than the task needs. Not the visual bar (designing-elite-ui), not judging work that already exists (reviewing-design-work), not the scales themselves (spacing-system, type-scale, component-sizing-principles), and not contrast or accessibility thresholds (apca-contrast, wcag-contrast, frontend-a11y). Cite when every element on a screen carries equal weight, when every gap is the same step, when a group's inner and outer spacing match, when a paragraph runs the full width of the viewport, or when every option is visible at once.
+  Entry point for MAKING a screen — deciding what is primary, what groups with what, what shares an edge, and what waits behind a click, before any pixel, token, or component is picked. Names the composition sequence (rank → group → encode → space → lay out → conventionalise → target → clear the floors → defer) and carries the principles nothing else in this catalog owns: visual hierarchy and the attribute that must separate each level on its own, proximity as a between-to-within gap ratio rather than a pixel count, column count and measure, alignment as an axis count, and progressive disclosure with the three tests anything hidden must pass — plus Jakob's Law (standard / convention / confusion), Fitts's Law (cut the distance before you grow the target), and Norman's two gulfs (gulf of execution: is the next action findable; gulf of evaluation: is its result visible). Use when asked which design principles apply to a screen, when a layout has to be composed from scratch, when ranking actions before picking button variants, when a user can't tell what to do next or whether an action worked, or when an interface shows more at once than the task needs. Not the visual bar (designing-elite-ui), not judging work that already exists (reviewing-design-work), not the scales themselves (spacing-system, type-scale, component-sizing-principles), and not contrast or accessibility thresholds (apca-contrast, wcag-contrast, frontend-a11y). Cite when every element on a screen carries equal weight, when every gap is the same step, when a group's inner and outer spacing match, when a paragraph runs the full width of the viewport, or when every option is visible at once.
 ---
 
 # Composing a screen
@@ -43,7 +43,7 @@ Fail one and it does not get hidden. **Two levels maximum** — anything reachab
 
 ## Worked example — an invoice page
 
-Rank: 1 amount due + Pay; 2 due date and sender; 3 line items; 4 payment history → step 9. Groups: {amount, due date}, {from, to}, {line items}, {total}. Encoding: amount two size steps up and bolder (redundant, free), labels one weight down, nothing else coloured. Gaps: 8 within, 24 between → 3.0. Layout: one column at 60ch, one start axis, totals right-aligned. Deferred: "Payment history (3)" — passes all three.
+Rank: 1 amount due + Pay; 2 due date and sender; 3 line items; 4 payment history → step 9. Groups: {amount, due date}, {from, to}, {line items}, {total}. Encoding: amount two size steps up and bolder, labels one weight down, nothing else coloured. Gaps: 8 within, 24 between → 3.0. Layout: one column at 60ch, one start axis, totals right-aligned. Deferred: "Payment history (3)" — passes all three.
 
 ## Verification
 
@@ -52,6 +52,7 @@ Rank: 1 amount due + Pay; 2 due date and sender; 3 line items; 4 payment history
 3. **Axis count.** Cluster elements by the edge their computed `text-align` uses, within 1 px, skipping centred text; a cluster of one is a stray axis.
 4. **Disclosure.** Depth ≤ 2; no trigger matching `More|Advanced|Options|Details` without a noun; primary task completed without opening anything hidden.
 5. **Deviations.** Every non-standard control from step 6 carries its written reason.
+6. **Two gulfs (DOET rev. ed. 2013 ch. 2).** Execution: next action findable? Evaluation: result visible?
 
 ## Sources
 
