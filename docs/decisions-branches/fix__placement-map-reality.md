@@ -7,7 +7,7 @@
 **Alternatives considered:** leave the map as-is and treat the 8-repo census scope as the whole picture -- rejected, the map's job is to describe reality that other tooling reads, and it was already blind to 40 real subscriptions across 23 skill entries
 
 **Implications:**
-- the 17 dispatcher/lens entries that carried 'subscribers: []' with a note saying a repo shouldn't need to subscribe directly (design-dispatchers, clud-bug#243 lens notes) now show arlyn repos subscribed anyway, because that's what their locks say -- the notes describe expected behavior, not a ceiling on it. Left census_counters.py's CONSUMER_REPOS and the App token's repositories: allowlist in skill-census.yml untouched: adding arlyn-working/arlyn-delivery there without also widening the GitHub App's repo grant would just turn into a weekly permission-error row, so that's a separate, coupled change
+- the 3 dispatcher entries carrying a note that a repo shouldn't need to subscribe directly (consuming-/designing-a-design-system, reviewing-design-work; a panel measured 3, not the 17 first claimed here -- the other notes are clud-bug#243 authoring-home notes, about where edits happen, not subscription) now show arlyn repos subscribed anyway, because that's what their locks say -- the notes describe expected behavior, not a ceiling on it. Left census_counters.py's CONSUMER_REPOS and the App token's repositories: allowlist in skill-census.yml untouched: adding arlyn-working/arlyn-delivery there without also widening the GitHub App's repo grant would just turn into a weekly permission-error row, so that's a separate, coupled change
 
 ---
 
