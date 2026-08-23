@@ -13,10 +13,10 @@ PR's CI run, so this file is always coherent with current `main`.
 ---
 
 
-## 2026-08 (40 decisions)
+## 2026-08 (42 decisions)
 
-- **2026-08-18** — frontend-a11y: name SC 2.5.8's missing Inline exception, fix box-vs-target wording *(fix/sc-258-exceptions)* — [decisions-branches/fix__sc-258-exceptions.md](decisions-branches/fix__sc-258-exceptions.md)
-- *... 38 more decisions ...*
+- **2026-08-23** — Reconcile placement-map.json subscribers against real skills-lock.json files: add arlyn-working and arlyn-delivery, the two largest real consumers, to every skill entry their locks actually pin *(fix/placement-map-reality)* — [decisions-branches/fix__placement-map-reality.md](decisions-branches/fix__placement-map-reality.md)
+- *... 40 more decisions ...*
 - **2026-08-14** — Gate skill size with a shrink-only ratchet, and deprecate skillforge into the three skills that own its job *(feat/skill-depth-and-interlinking)* — [decisions-branches/feat__skill-depth-and-interlinking.md](decisions-branches/feat__skill-depth-and-interlinking.md)
 
 ## 2026-07 (13 decisions)
