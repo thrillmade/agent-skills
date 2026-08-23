@@ -1,5 +1,5 @@
 ---
-version: "bed55cea4269"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "dfcfcdfbd979"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: oklch-color-space
 description: Use when picking color values for a design-token system, constructing a palette around a starting hue, or generating colors against an accessibility contrast target. Names the OKLCH primitive ranges, the hue-angle naming convention, the gamut-mapping rule (Display P3 for computation, sRGB for the emitted fallback), and the APCACH inverse-composition approach for guaranteed-contrast color generation. Cite when an agent reaches for "pick a color then check contrast" — the inversion is the load-bearing move.
 ---
@@ -17,7 +17,7 @@ OKLCH is the canonical perceptual color space for design-token work: L (lightnes
 
 ## When NOT to use
 
-- Single one-off color picks that aren't entering a token catalog (a marketing landing-page splash, a one-time illustration). The convention overhead isn't earned.
+- No token layer on disk — no catalog for this color to enter. A marketing splash's colors, picked inside a system with a token catalog, are still in scope.
 - Color *spaces* (gradients, interpolation) where the design choice is the interpolation curve, not a fixed value — see the host platform's documentation for `color()` interpolation.
 
 ## Primitive ranges and naming

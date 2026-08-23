@@ -1,5 +1,5 @@
 ---
-version: "effc6349558d"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "cd4c96613b2b"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: spacing-system
 description: Use when designing or auditing a spacing scale for padding, gaps, icon sizes, component heights, or border radii. Names the two-unit primitive model (a minor unit — the smallest legal increment — plus a major unit — the dominant rhythm — where major divides cleanly by minor), the derivation rule (padding / gap / radius / height ladders all derive from the unit primitives, never invented per-surface), the 24 CSS px WCAG 2.5.8 AA target floor for interactive heights, and the T-shirt-vs-numeric naming options. Cite when an agent proposes a single-unit grid for a mixed-density system or invents off-grid spacing values for "this one specific case." For one system's concrete density-mode unit choices see udts-spacing-defaults.
 ---
@@ -17,7 +17,7 @@ Spacing in a token-driven design system is a **two-unit primitive** problem, not
 
 ## When NOT to use
 
-- One-off marketing surfaces where the layout is hand-tuned and not part of the system's grid.
+- No token layer on disk — no unit primitives declared anywhere, so there is no grid to be off of. A marketing surface built inside a system that has declared primitives is still in scope.
 - Print-design contexts where the grid math is pt-based and a different system applies.
 
 ## The two-unit primitive model

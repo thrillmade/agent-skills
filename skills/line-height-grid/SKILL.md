@@ -1,5 +1,5 @@
 ---
-version: "90eb1dd8eb53"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "f48e72b56887"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: line-height-grid
 description: Use when calculating line-height for any font size in a grid-aligned design system. Names the two-track model (lh-ui = ceil(font × 1.20) snapped to the minor unit; lh-prose = ceil(font × 1.50) snapped to the minor unit), the picking heuristic per role (ui-track for headings / buttons / labels; prose-track for paragraph body), and worked examples for 4/8, 2/4, and 4/16 grids. Cite when an agent picks a unitless line-height multiplier without snapping to the system's grid.
 ---
@@ -17,7 +17,7 @@ Line-height in a token-driven system is not a free multiplier — it's a snapped
 
 ## When NOT to use
 
-- One-off display elements (hero marketing splashes) where the line-height is hand-tuned by a typographer and the grid doesn't apply.
+- No token layer on disk — no grid declared, so there is nothing to snap to. A marketing splash built inside a system with a declared grid is still in scope.
 - Inline contexts where line-height inherits from the parent — the parent owns the grid alignment.
 
 ## The two-track formulas
