@@ -18,7 +18,7 @@ Component heights and icon sizes are **curated**, not formula-derived. A good la
 
 ## When NOT to use
 
-- One-off marketing CTAs designed for a specific page (e.g. hero buttons at 72 px). A ladder governs recurring controls, not single-surface designs.
+- No token layer on disk — no curated ladder to be off of. A marketing CTA built inside a system with a declared ladder is still in scope.
 - Non-rectangular controls (circular avatars, range thumbs) where the size is governed by the icon or asset, not a height token.
 
 ## Ladders are curated, not formula-derived

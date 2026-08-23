@@ -17,7 +17,7 @@ Spacing in a token-driven design system is a **two-unit primitive** problem, not
 
 ## When NOT to use
 
-- One-off marketing surfaces where the layout is hand-tuned and not part of the system's grid.
+- No token layer on disk — no unit primitives declared anywhere, so there is no grid to be off of. A marketing surface built inside a system that has declared primitives is still in scope.
 - Print-design contexts where the grid math is pt-based and a different system applies.
 
 ## The two-unit primitive model

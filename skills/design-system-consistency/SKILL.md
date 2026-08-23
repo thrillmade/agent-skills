@@ -88,9 +88,11 @@ Without the second there is no drift, only preference, and saying so is the find
    replacement — [oklch-color-space](../oklch-color-space/SKILL.md),
    [palette-relationships](../palette-relationships/SKILL.md),
    [chroma-harmonization](../chroma-harmonization/SKILL.md).
-6. **Re-implementation.** A hand-rolled button, card or input where a system component
-   exists — visible on the render as subtly different padding, radius, hover or focus ring
-   from its siblings. Fix: the component, not corrected values.
+6. **Re-implementation.** A hand-rolled button, card or input — the finding stands
+   whether or not a system component for it exists. Where one exists it's visible as
+   subtly different padding, radius, hover or focus ring from its siblings; fix: the
+   component, not corrected values. Where none exists, propose it upstream — a
+   missing part is never license to hand-roll one.
 
 ## Every mode needs a token path
 

@@ -17,7 +17,7 @@ OKLCH is the canonical perceptual color space for design-token work: L (lightnes
 
 ## When NOT to use
 
-- Single one-off color picks that aren't entering a token catalog (a marketing landing-page splash, a one-time illustration). The convention overhead isn't earned.
+- No token layer on disk — no catalog for this color to enter. A marketing splash's colors, picked inside a system with a token catalog, are still in scope.
 - Color *spaces* (gradients, interpolation) where the design choice is the interpolation curve, not a fixed value — see the host platform's documentation for `color()` interpolation.
 
 ## Primitive ranges and naming

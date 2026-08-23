@@ -17,7 +17,7 @@ description: |
 ## When NOT to use
 
 - Pure backend / non-UI PRs (skill won't fire on a server-route change).
-- Marketing-only landing pages with bespoke design that intentionally lives outside the system.
+- No token layer on disk — this checklist has nothing to check against. A marketing page built inside one is still in scope.
 - Prototype code explicitly labeled as throwaway.
 
 ## The review checklist

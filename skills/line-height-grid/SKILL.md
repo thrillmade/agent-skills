@@ -17,7 +17,7 @@ Line-height in a token-driven system is not a free multiplier — it's a snapped
 
 ## When NOT to use
 
-- One-off display elements (hero marketing splashes) where the line-height is hand-tuned by a typographer and the grid doesn't apply.
+- No token layer on disk — no grid declared, so there is nothing to snap to. A marketing splash built inside a system with a declared grid is still in scope.
 - Inline contexts where line-height inherits from the parent — the parent owns the grid alignment.
 
 ## The two-track formulas
