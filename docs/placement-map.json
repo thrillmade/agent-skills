@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-08-17",
+  "updated": "2026-08-23",
   "families": [
     {"id": "review-discipline", "title": "Reviewing a pull request", "routes": "What a review flags, what it lets go, and what a claim has to cite."},
     {"id": "orchestration", "title": "Running agents", "routes": "Handing work out, gating what comes back, surviving a long session."},
@@ -54,14 +54,14 @@
       "owns": "voice in user-facing strings",
       "authoring_home": "catalog",
       "distribution": "opt-in",
-      "subscribers": ["tokenomics"]
+      "subscribers": ["tokenomics", "arlyn-working"]
     },
     "designing-elite-ui": {
       "family": "design-critic-lenses",
       "owns": "the visual standard to build to",
       "authoring_home": "catalog",
       "distribution": "opt-in",
-      "subscribers": [],
+      "subscribers": ["arlyn-delivery", "arlyn-working"],
       "notes": "authoring-home decided (clud-bug#243 Ruling 2): catalog is the edit point; clud-bug's templates/skills/design/ is a vendored mirror refreshed only by an explicit release PR, never by automation"
     },
     "design-system-consistency": {
@@ -69,7 +69,7 @@
       "owns": "rendered drift from the tokens",
       "authoring_home": "catalog",
       "distribution": "opt-in",
-      "subscribers": [],
+      "subscribers": ["arlyn-delivery", "arlyn-working"],
       "notes": "authoring-home decided (clud-bug#243 Ruling 2): catalog is the edit point; clud-bug's templates/skills/design/ is a vendored mirror refreshed only by an explicit release PR, never by automation"
     },
     "frontend-a11y": {
@@ -77,7 +77,7 @@
       "owns": "contrast, focus, targets, motion",
       "authoring_home": "catalog",
       "distribution": "opt-in",
-      "subscribers": [],
+      "subscribers": ["arlyn-delivery", "arlyn-working"],
       "notes": "authoring-home decided (clud-bug#243 Ruling 2): catalog is the edit point; clud-bug's templates/skills/design/ is a vendored mirror refreshed only by an explicit release PR, never by automation"
     },
     "visual-polish": {
@@ -85,7 +85,7 @@
       "owns": "the fine-but-not-elite lens",
       "authoring_home": "catalog",
       "distribution": "opt-in",
-      "subscribers": [],
+      "subscribers": ["arlyn-delivery", "arlyn-working"],
       "notes": "authoring-home decided (clud-bug#243 Ruling 2): catalog is the edit point; clud-bug's templates/skills/design/ is a vendored mirror refreshed only by an explicit release PR, never by automation"
     },
     "orchestrating-elite-agent-qa": {
@@ -93,7 +93,7 @@
       "owns": "the panel and design-critic gate",
       "authoring_home": "catalog",
       "distribution": "opt-in",
-      "subscribers": [],
+      "subscribers": ["arlyn-working"],
       "notes": "tokenomics flip from authored-here to subscribed is pending (nomination in flight); tokenomics census says it would subscribe once accepted"
     },
     "udts-component-sizing-ladders": {
@@ -181,7 +181,7 @@
       "owns": "using a system in a product",
       "authoring_home": "catalog",
       "distribution": "catalog-only",
-      "subscribers": [],
+      "subscribers": ["arlyn-delivery", "arlyn-working"],
       "notes": "L1 dispatcher — entry point that routes to the L0 primitives; a repo consumes what it routes to, not the dispatcher itself as a standing subscription"
     },
     "designing-a-design-system": {
@@ -189,7 +189,7 @@
       "owns": "building or extending a system",
       "authoring_home": "catalog",
       "distribution": "catalog-only",
-      "subscribers": [],
+      "subscribers": ["arlyn-working"],
       "notes": "L1 dispatcher — entry point that routes to the L0 primitives; a repo consumes what it routes to, not the dispatcher itself as a standing subscription"
     },
     "reviewing-design-work": {
@@ -197,7 +197,7 @@
       "owns": "critiquing design output",
       "authoring_home": "catalog",
       "distribution": "catalog-only",
-      "subscribers": [],
+      "subscribers": ["arlyn-delivery", "arlyn-working"],
       "notes": "L1 dispatcher — entry point that routes to review lenses; a repo consumes what it routes to, not the dispatcher itself as a standing subscription"
     },
     "composing-a-screen": {
@@ -237,7 +237,7 @@
       "owns": "minor+major units, 24px floor",
       "authoring_home": "catalog",
       "distribution": "opt-in",
-      "subscribers": [],
+      "subscribers": ["arlyn-delivery", "arlyn-working"],
       "notes": "L0 primitive; a repo building or extending its own token system might subscribe directly"
     },
     "test-discipline": {
@@ -261,7 +261,7 @@
       "owns": "what belongs in a token name",
       "authoring_home": "catalog",
       "distribution": "opt-in",
-      "subscribers": [],
+      "subscribers": ["arlyn-delivery", "arlyn-working"],
       "notes": "L0 primitive; successor to deprecated design-token-naming; a repo building or extending its own token system might subscribe directly"
     },
     "type-scale": {
@@ -269,7 +269,7 @@
       "owns": "modular ratios and rounding",
       "authoring_home": "catalog",
       "distribution": "opt-in",
-      "subscribers": [],
+      "subscribers": ["arlyn-delivery", "arlyn-working"],
       "notes": "L0 primitive; a repo building or extending its own token system might subscribe directly"
     },
     "wcag-contrast": {
@@ -277,7 +277,7 @@
       "owns": "ratios, the legal cross-check",
       "authoring_home": "catalog",
       "distribution": "opt-in",
-      "subscribers": [],
+      "subscribers": ["arlyn-delivery", "arlyn-working"],
       "notes": "L0 primitive; a repo building or extending its own token system might subscribe directly"
     },
     "web-interface-guidelines-review": {
@@ -285,7 +285,7 @@
       "owns": "the code and markup lens",
       "authoring_home": "catalog",
       "distribution": "opt-in",
-      "subscribers": [],
+      "subscribers": ["arlyn-delivery", "arlyn-working"],
       "notes": "review-discipline skill (review_mode: dedicated) for UI code a repo might subscribe to"
     },
     "apca-contrast": {
@@ -293,7 +293,7 @@
       "owns": "Lc targets, the primary model",
       "authoring_home": "catalog",
       "distribution": "opt-in",
-      "subscribers": [],
+      "subscribers": ["arlyn-delivery", "arlyn-working"],
       "notes": "L0 primitive; tokenomics census names this as a would-subscribe (build-agent grounding), not yet subscribed"
     },
     "api-contract-enforcement": {
@@ -309,7 +309,7 @@
       "owns": "per-stop cross-hue chroma caps",
       "authoring_home": "catalog",
       "distribution": "opt-in",
-      "subscribers": [],
+      "subscribers": ["arlyn-working"],
       "notes": "L0 primitive; a repo building or extending its own token system might subscribe directly"
     },
     "component-sizing-principles": {
@@ -317,7 +317,7 @@
       "owns": "curated height and icon ladders",
       "authoring_home": "catalog",
       "distribution": "opt-in",
-      "subscribers": [],
+      "subscribers": ["arlyn-delivery", "arlyn-working"],
       "notes": "L0 primitive; successor to deprecated component-sizing; a repo building or extending its own token system might subscribe directly"
     },
     "conventions-template": {
@@ -333,7 +333,7 @@
       "owns": "the W3C DTCG interchange file",
       "authoring_home": "catalog",
       "distribution": "opt-in",
-      "subscribers": [],
+      "subscribers": ["arlyn-delivery", "arlyn-working"],
       "notes": "L0 primitive; a repo building or extending its own token system might subscribe directly"
     },
     "line-height-grid": {
@@ -341,7 +341,7 @@
       "owns": "two-track line height on grid",
       "authoring_home": "catalog",
       "distribution": "opt-in",
-      "subscribers": [],
+      "subscribers": ["arlyn-delivery", "arlyn-working"],
       "notes": "L0 primitive; a repo building or extending its own token system might subscribe directly"
     },
     "oklch-color-space": {
@@ -349,7 +349,7 @@
       "owns": "OKLCH ranges and gamut mapping",
       "authoring_home": "catalog",
       "distribution": "opt-in",
-      "subscribers": [],
+      "subscribers": ["arlyn-delivery", "arlyn-working"],
       "notes": "L0 primitive; tokenomics census names this as a would-subscribe (build-agent grounding), not yet subscribed"
     },
     "orchestrating-a-multi-agent-run": {
@@ -365,7 +365,7 @@
       "owns": "the brief, model tiering, verify",
       "authoring_home": "catalog",
       "distribution": "opt-in",
-      "subscribers": [],
+      "subscribers": ["arlyn-working"],
       "notes": "agent-orchestration discipline a repo doing multi-agent build/review work might subscribe to"
     },
     "session-heartbeat": {
@@ -389,7 +389,7 @@
       "owns": "hue-angle palette relationships",
       "authoring_home": "catalog",
       "distribution": "opt-in",
-      "subscribers": [],
+      "subscribers": ["arlyn-working"],
       "notes": "L0 primitive; a repo building or extending its own token system might subscribe directly"
     },
     "pii-and-compliance": {
@@ -405,7 +405,7 @@
       "owns": "SemVer from the value diff",
       "authoring_home": "catalog",
       "distribution": "opt-in",
-      "subscribers": [],
+      "subscribers": ["arlyn-delivery", "arlyn-working"],
       "notes": "L0 primitive; a repo building or extending its own token system might subscribe directly"
     },
     "finding-a-catalog-skill": {
