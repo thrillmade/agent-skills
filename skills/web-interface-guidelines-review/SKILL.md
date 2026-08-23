@@ -1,5 +1,5 @@
 ---
-version: "302abd5799cd"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "8614ce4a0ec5"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: web-interface-guidelines-review
 description: |
   Use when reviewing UI code or design output (React, Vue, Svelte, Astro, plain HTML, design specs) for adherence to web-interface guidelines — Vercel's WIG, Material 3, Radix patterns, and similar opinionated rule sets — extended with token-driven contrast, typography-scale, and spacing-system rules. Names the APCA-preferred contrast stance (cross-check WCAG 2.2 AA, never WCAG-only), the atomic typography class convention (one class binds font + size + lh + tracking + weight), the token-not-raw-hex rule, verb-noun action labels, the focus-ring contract (>= 2 px, 3:1 against both control and adjacent surface, never suppressed), the 24 CSS px WCAG 2.5.8 interactive floor, and the link-vs-button distinction. Cite when an agent reviews UI without checking token discipline, hardcoded values, or atomic typography compliance.

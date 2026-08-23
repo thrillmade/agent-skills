@@ -5,14 +5,14 @@
  "enumeration": {
   "refs": "refs/remotes/origin/*",
   "publishing_ref": "origin/main",
-  "commits": 168,
-  "blobs": 259
+  "commits": 169,
+  "blobs": 260
  },
- "versions_enumerated": 184,
+ "versions_enumerated": 185,
  "verification": {
   "current": "GATED. validate_skills.py recomputes every `current` from skills/<slug>/SKILL.md on every pull request. Needs no git history, so it holds at the depth-1 checkout CI uses.",
   "history": "NOT GATED. History is derived from git and validate-skills.yml checks out at fetch-depth 1, so CI cannot recompute these rows. Regenerate them in a full clone with `.github/scripts/gen_skill_versions.py --write`.",
-  "history_rows_ungated": 128
+  "history_rows_ungated": 129
  },
  "skills": {
   "apca-contrast": {
@@ -182,7 +182,7 @@
    ]
   },
   "component-sizing-principles": {
-   "current": "08a07d2f7635",
+   "current": "0be18bc0cded",
    "authoring_home": "catalog",
    "history": [
     {
@@ -220,6 +220,11 @@
      "v": "6cef496bdf66",
      "commit": "5b893cd",
      "date": "2026-08-18"
+    },
+    {
+     "v": "8137c5e68601",
+     "commit": "116ae32",
+     "date": "2026-08-19"
     }
    ]
   },
@@ -293,7 +298,7 @@
    ]
   },
   "design-system-consistency": {
-   "current": "6054c41b9c3e",
+   "current": "50253dba79e9",
    "authoring_home": "catalog",
    "history": [
     {
@@ -518,7 +523,7 @@
    ]
   },
   "line-height-grid": {
-   "current": "90eb1dd8eb53",
+   "current": "f48e72b56887",
    "authoring_home": "catalog",
    "history": [
     {
@@ -625,7 +630,7 @@
    ]
   },
   "oklch-color-space": {
-   "current": "bed55cea4269",
+   "current": "dfcfcdfbd979",
    "authoring_home": "catalog",
    "history": [
     {
@@ -909,7 +914,7 @@
    ]
   },
   "spacing-system": {
-   "current": "effc6349558d",
+   "current": "cd4c96613b2b",
    "authoring_home": "catalog",
    "history": [
     {
@@ -1236,7 +1241,7 @@
    ]
   },
   "web-interface-guidelines-review": {
-   "current": "302abd5799cd",
+   "current": "8614ce4a0ec5",
    "authoring_home": "catalog",
    "history": [
     {
