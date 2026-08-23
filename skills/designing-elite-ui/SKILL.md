@@ -1,10 +1,11 @@
 ---
+version: "cc8799744d8f"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: designing-elite-ui
 description: Visual review — hold the rendered UI to a concrete elite/Figma-grade bar (one-axis color, APCA-gated contrast, floating stable chrome, dark verified) instead of a vague "looks fine." The STANDARD a design-critic measures against.
 kind: design
 applies_to:
-  paths: ["site/**", "app/**", "**/components/**", "**/ui/**"]
-  extensions: [".tsx", ".jsx", ".css", ".scss", ".vue", ".svelte"]
+  paths: ["site/**", "app/**", "**/site/**", "**/app/**", "**/components/**", "**/ui/**", "**/styles/**"]
+  extensions: [".tsx", ".jsx", ".vue", ".svelte", ".astro", ".html", ".css", ".scss"]
 ---
 
 # Designing Elite UI

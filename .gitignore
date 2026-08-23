@@ -6,3 +6,31 @@
 # python
 __pycache__/
 *.pyc
+
+# Playwright MCP session debris (console logs, page snapshots) — never repo content
+.playwright-mcp/
+
+# Machine-local agent/runtime state (#221). This was previously kept out of
+# git only via .git/info/exclude, which is per-clone and untracked — so
+# `logmind file-structure --write` (which honours .gitignore) walked right
+# past it and leaked these paths into the tracked docs/file-structure.md.
+# Mirrored here so the generator excludes them regardless of which
+# clone/worktree it runs in.
+#
+# IMPORTANT: use plain repo-relative paths, NOT `**/`-prefixed globs.
+# logmind's own .gitignore matcher does not honour the `**/` doublestar
+# prefix even though git itself does (verified: `git check-ignore` reports
+# a `**/`-prefixed pattern as matching, but `logmind file-structure --write`
+# still lists the file anyway; the plain form below is confirmed to work).
+# Keep this block in sync with .git/info/exclude;
+# tests/test_gitignore_covers_local_state.py pins it.
+.claude/scheduled_tasks.lock
+.claude/scheduled_tasks.json
+.claude/routines/.state/
+.claude/worktrees/
+.claude/checkpoints/
+.claude/mailbox/
+.claude/agent-registry.json
+.claude/agent-memory-local
+.claude/first-run
+.claude/assistant-daemon-state.json

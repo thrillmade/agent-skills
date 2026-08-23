@@ -18,7 +18,9 @@ SCRIPTS = REPO_ROOT / ".github" / "scripts"
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
+import skill_version  # noqa: E402  -- import needs the sys.path line above
 import validate_skills  # noqa: E402  -- import needs the sys.path line above
+import gen_skill_directory  # noqa: E402  -- same
 
 
 # A SKILL.md that passes every rule. Tests break exactly one thing at a time
@@ -73,8 +75,94 @@ class SkillTree:
         path.write_text(raw if raw is not None else json.dumps(obj), encoding="utf-8")
         return path
 
+    def control_skill(self, name: str = "control") -> Path:
+        """A skill whose DESCRIPTION carries the "deliberately not here"
+        section's CONTROL term. The generator refuses to render without one --
+        an uncontrolled zero is not a measurement -- so any tree holding the
+        directory needs this. It is a fixture requirement that exists because
+        the guard is real, not a workaround for it.
+
+        In the description and not the body: the probe scan reads each skill's
+        trigger surface (name + frontmatter), because that is what decides
+        whether an agent ever finds a skill -- and because scanning bodies let
+        one skill's cross-reference redden the whole gate.
+        """
+        return self.skill(
+            name,
+            VALID_SKILL.format(name=name).replace(
+                "description: What this skill does",
+                "description: What this skill does about "
+                f"{gen_skill_directory.NOT_HERE_CONTROL},",
+            ),
+        )
+
+    def directory(self, body: str | None = None) -> Path:
+        """Create `skills/<DIRECTORY_SLUG>/SKILL.md`.
+
+        `body=None` writes what the generator renders for the tree AS IT IS AT
+        THIS MOMENT -- so a test that adds a skill afterwards has a stale
+        directory, which is precisely the case the gate exists for. Order the
+        calls accordingly.
+        """
+        # The directory dir has to exist BEFORE the render: the directory is a
+        # skill like any other and lists itself, so rendering first and
+        # creating second produces a body that is stale the instant it is
+        # written. Same self-reference the real generator handles.
+        self.skill(gen_skill_directory.DIRECTORY_SLUG)
+        if body is None:
+            body = gen_skill_directory.render(
+                self.base / "skills", self.base / "docs" / "placement-map.json"
+            )
+        head = f"---\nname: {gen_skill_directory.DIRECTORY_SLUG}\ndescription: d\n---"
+        return self.skill(gen_skill_directory.DIRECTORY_SLUG, head + body)
+
+    _auto_index: str | None = None
+    """The last index this scaffold wrote, or None. See validate()."""
+
     def validate(self) -> list[str]:
-        """Run the gate over this tree and return its error annotations."""
+        """Run the gate over this tree and return its error annotations.
+
+        `docs/skill-versions.json` absence is now an error to the gate
+        itself (presence-with-defects is not the only failure any more --
+        see `test_an_absent_index_is_rejected`), but most tests in this
+        suite exercise a per-skill rule that has nothing to do with that
+        gate. So: auto-provision a matching index, computed fresh at THIS
+        call from whatever `skills/` currently holds -- a mutation made
+        after the skill was created is reflected too, so this never trips a
+        spurious currency error -- UNLESS a test already wrote its own (see
+        `index_for()` in test_validate_skills_version.py, always called
+        after every skill() call so it always wins). A test that wants to
+        see the gate with no scaffolding at all calls `validate_skills.run()`
+        directly instead of going through here.
+        """
+        import json
+
+        versions_path = self.base / "docs" / "skill-versions.json"
+        current = {
+            md.parent.name: {
+                "current": skill_version.digest(md.read_bytes()),
+                "history": [],
+            }
+            for md in sorted((self.base / "skills").glob("*/SKILL.md"))
+        }
+        payload = json.dumps({"version": 1, "skills": current}, sort_keys=True)
+
+        # Refresh only what WE wrote. A test that writes its own index must keep
+        # it -- that is how the currency gate gets exercised at all -- so
+        # ownership is decided by content, not by a flag another helper would
+        # have to remember to clear: if the file on disk is byte-identical to
+        # the scaffold we last wrote, it is still ours.
+        #
+        # `if not exists` was not enough: a test that calls validate() twice
+        # (once as a control, then again after adding a skill) got an index
+        # frozen at the first call, so the second run failed the currency gate
+        # on scaffolding rather than on the rule under test.
+        if not versions_path.exists() or self._auto_index == versions_path.read_text(
+            encoding="utf-8"
+        ):
+            versions_path.parent.mkdir(parents=True, exist_ok=True)
+            versions_path.write_text(payload, encoding="utf-8")
+            self._auto_index = payload
         return validate_skills.run(Path("skills"))
 
 

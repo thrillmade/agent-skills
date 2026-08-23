@@ -1,0 +1,1275 @@
+{
+ "version": 1,
+ "_readme": "Content identity for every SKILL.md this catalog has published. To check a copy you hold, by hand: normalise CRLF to LF, delete the `version:` line from its frontmatter, sha256 the rest, take the first 12 hex characters -- then find your skill's slug below. Matching `current` means you are up to date; a match in `history` means you are that many versions behind; no match means your copy was edited locally. To check a whole repo at once, run https://raw.githubusercontent.com/thrillmade/agent-skills/main/.github/scripts/skills_current.py -- stdlib only, no install. Update with `npx skills add thrillmade/agent-skills --skill <slug>`. The `history` rows are not gated by CI and the `current` values are: see `verification` below.",
+ "generated_from": "remotes-exhaustive",
+ "enumeration": {
+  "refs": "refs/remotes/origin/*",
+  "publishing_ref": "origin/main",
+  "commits": 168,
+  "blobs": 259
+ },
+ "versions_enumerated": 184,
+ "verification": {
+  "current": "GATED. validate_skills.py recomputes every `current` from skills/<slug>/SKILL.md on every pull request. Needs no git history, so it holds at the depth-1 checkout CI uses.",
+  "history": "NOT GATED. History is derived from git and validate-skills.yml checks out at fetch-depth 1, so CI cannot recompute these rows. Regenerate them in a full clone with `.github/scripts/gen_skill_versions.py --write`.",
+  "history_rows_ungated": 128
+ },
+ "skills": {
+  "apca-contrast": {
+   "current": "c894961136c7",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "469a5093ff01",
+     "commit": "7caf5c2",
+     "date": "2026-05-29"
+    },
+    {
+     "v": "2c0f7ee8768a",
+     "commit": "b7b5a7e",
+     "date": "2026-08-15"
+    },
+    {
+     "v": "2f4924f37c1d",
+     "commit": "ff61334",
+     "date": "2026-08-18"
+    },
+    {
+     "v": "c894961136c7",
+     "commit": "cd2a0c5",
+     "date": "2026-08-18"
+    }
+   ]
+  },
+  "api-contract-enforcement": {
+   "current": "1dd295d6a4e8",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "a8a84b90d865",
+     "commit": "c2bb05b",
+     "date": "2026-05-18"
+    },
+    {
+     "v": "d375b405146b",
+     "commit": "c32ee23",
+     "date": "2026-05-29"
+    },
+    {
+     "v": "1dd295d6a4e8",
+     "commit": "2dc8360",
+     "date": "2026-07-31"
+    }
+   ]
+  },
+  "brand-voice-review": {
+   "current": "a91cade05131",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "f5aa9cddc162",
+     "commit": "c2bb05b",
+     "date": "2026-05-18"
+    },
+    {
+     "v": "ca6536844afe",
+     "commit": "c32ee23",
+     "date": "2026-05-29"
+    },
+    {
+     "v": "a91cade05131",
+     "commit": "2dc8360",
+     "date": "2026-07-31"
+    }
+   ]
+  },
+  "chroma-harmonization": {
+   "current": "e710f973d63c",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "b529930ec34b",
+     "commit": "7caf5c2",
+     "date": "2026-05-29"
+    },
+    {
+     "v": "bf1000507e6a",
+     "commit": "bd1b554",
+     "date": "2026-07-25"
+    },
+    {
+     "v": "70f22a464c82",
+     "commit": "b7b5a7e",
+     "date": "2026-08-15"
+    },
+    {
+     "v": "bec2fc631306",
+     "commit": "ff61334",
+     "date": "2026-08-18"
+    },
+    {
+     "v": "e710f973d63c",
+     "commit": "cd2a0c5",
+     "date": "2026-08-18"
+    }
+   ]
+  },
+  "clud-bug-collaboration": {
+   "current": "51d7ef75a679",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "81588ae0e391",
+     "commit": "a445597",
+     "date": "2026-05-15"
+    },
+    {
+     "v": "a3e542425367",
+     "commit": "436963e",
+     "date": "2026-05-26"
+    },
+    {
+     "v": "3d54e0ea64bf",
+     "commit": "4bfce75",
+     "date": "2026-05-27"
+    },
+    {
+     "v": "7183cfcfe564",
+     "commit": "d00f182",
+     "date": "2026-05-28"
+    },
+    {
+     "v": "14e884c72f99",
+     "commit": "bd1b554",
+     "date": "2026-07-25"
+    },
+    {
+     "v": "247a44375307",
+     "commit": "2dc8360",
+     "date": "2026-07-31"
+    },
+    {
+     "v": "51d7ef75a679",
+     "commit": "a144454",
+     "date": "2026-08-14"
+    }
+   ]
+  },
+  "component-sizing": {
+   "current": "4b8024eca633",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "12a8485e668b",
+     "commit": "7841261",
+     "date": "2026-05-29"
+    },
+    {
+     "v": "8f9285b74f97",
+     "commit": "149c8a2",
+     "date": "2026-07-16"
+    },
+    {
+     "v": "61d53ee793d7",
+     "commit": "02d7a69",
+     "date": "2026-07-16"
+    },
+    {
+     "v": "4b8024eca633",
+     "commit": "b7b5a7e",
+     "date": "2026-08-15"
+    }
+   ]
+  },
+  "component-sizing-principles": {
+   "current": "08a07d2f7635",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "a76d073f3831",
+     "commit": "149c8a2",
+     "date": "2026-07-16"
+    },
+    {
+     "v": "03547e757829",
+     "commit": "a144454",
+     "date": "2026-08-14"
+    },
+    {
+     "v": "737120806c13",
+     "commit": "b7b5a7e",
+     "date": "2026-08-15"
+    },
+    {
+     "v": "08a07d2f7635",
+     "commit": "ff61334",
+     "date": "2026-08-18"
+    }
+   ]
+  },
+  "composing-a-screen": {
+   "current": "8137c5e68601",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "39d2e1377a44",
+     "commit": "2cf6868",
+     "date": "2026-08-18"
+    },
+    {
+     "v": "6cef496bdf66",
+     "commit": "5b893cd",
+     "date": "2026-08-18"
+    }
+   ]
+  },
+  "consuming-a-design-system": {
+   "current": "edf49c1e4dc2",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "d849cd9c6693",
+     "commit": "149c8a2",
+     "date": "2026-07-16"
+    },
+    {
+     "v": "edf49c1e4dc2",
+     "commit": "b7b5a7e",
+     "date": "2026-08-15"
+    }
+   ]
+  },
+  "conventions-template": {
+   "current": "6963f02bb4bd",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "5fa125cf7e43",
+     "commit": "cb2a024",
+     "date": "2026-06-27"
+    },
+    {
+     "v": "6963f02bb4bd",
+     "commit": "2dc8360",
+     "date": "2026-07-31"
+    }
+   ]
+  },
+  "critical-issues-only": {
+   "current": "0527da0fc07d",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "0527da0fc07d",
+     "commit": "a445597",
+     "date": "2026-05-15"
+    },
+    {
+     "v": "92db5769989c",
+     "commit": "4bfce75",
+     "date": "2026-05-27"
+    }
+   ]
+  },
+  "curating-a-skill-catalog": {
+   "current": "2d3ef77ae21b",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "0ddc9dc0711d",
+     "commit": "dc855a3",
+     "date": "2026-07-17"
+    },
+    {
+     "v": "d6655ca17557",
+     "commit": "d0a0ced",
+     "date": "2026-07-24"
+    },
+    {
+     "v": "2d3ef77ae21b",
+     "commit": "b7b5a7e",
+     "date": "2026-08-15"
+    }
+   ]
+  },
+  "design-system-consistency": {
+   "current": "6054c41b9c3e",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "c56e62cd2329",
+     "commit": "149c8a2",
+     "date": "2026-07-16"
+    },
+    {
+     "v": "3de12554457e",
+     "commit": "2dc8360",
+     "date": "2026-07-31"
+    },
+    {
+     "v": "6054c41b9c3e",
+     "commit": "e33ad45",
+     "date": "2026-08-17"
+    }
+   ]
+  },
+  "design-token-naming": {
+   "current": "cde544a56582",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "8fc66943193f",
+     "commit": "ecbdbbc",
+     "date": "2026-05-29"
+    },
+    {
+     "v": "66ccd08a43c5",
+     "commit": "149c8a2",
+     "date": "2026-07-16"
+    },
+    {
+     "v": "d8e57d13f499",
+     "commit": "02d7a69",
+     "date": "2026-07-16"
+    },
+    {
+     "v": "cde544a56582",
+     "commit": "b7b5a7e",
+     "date": "2026-08-15"
+    }
+   ]
+  },
+  "designing-a-design-system": {
+   "current": "545064d853e0",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "592e996e3b2e",
+     "commit": "149c8a2",
+     "date": "2026-07-16"
+    },
+    {
+     "v": "825fefa5297c",
+     "commit": "b7b5a7e",
+     "date": "2026-08-15"
+    },
+    {
+     "v": "545064d853e0",
+     "commit": "f552f6e",
+     "date": "2026-08-17"
+    }
+   ]
+  },
+  "designing-elite-ui": {
+   "current": "cc8799744d8f",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "18bf7f322e12",
+     "commit": "149c8a2",
+     "date": "2026-07-16"
+    },
+    {
+     "v": "49adbb982351",
+     "commit": "2dc8360",
+     "date": "2026-07-31"
+    },
+    {
+     "v": "cc8799744d8f",
+     "commit": "7413194",
+     "date": "2026-08-18"
+    }
+   ]
+  },
+  "dtcg-format": {
+   "current": "9bdad1baf4f5",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "031ce42b0770",
+     "commit": "ecbdbbc",
+     "date": "2026-05-29"
+    },
+    {
+     "v": "aa13ce55e784",
+     "commit": "149c8a2",
+     "date": "2026-07-16"
+    },
+    {
+     "v": "39ac3322d4a2",
+     "commit": "b7b5a7e",
+     "date": "2026-08-15"
+    },
+    {
+     "v": "9bdad1baf4f5",
+     "commit": "ff61334",
+     "date": "2026-08-18"
+    }
+   ]
+  },
+  "empirical-design-principles": {
+   "current": "9b90fefae38b",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "69b8422f9b0a",
+     "commit": "77bdb5a",
+     "date": "2026-08-18"
+    },
+    {
+     "v": "7a0f3dd047f0",
+     "commit": "31e3d2e",
+     "date": "2026-08-18"
+    },
+    {
+     "v": "9b90fefae38b",
+     "commit": "5b893cd",
+     "date": "2026-08-18"
+    }
+   ]
+  },
+  "evidence-based-review": {
+   "current": "f7b9b5572200",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "f7b9b5572200",
+     "commit": "a445597",
+     "date": "2026-05-15"
+    },
+    {
+     "v": "71038850b10d",
+     "commit": "4bfce75",
+     "date": "2026-05-27"
+    }
+   ]
+  },
+  "finding-a-catalog-skill": {
+   "current": "1c15601a0087",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "3350df67c4f7",
+     "commit": "405b6c1",
+     "date": "2026-08-18"
+    },
+    {
+     "v": "6650f12ccd85",
+     "commit": "1da9f08",
+     "date": "2026-08-18"
+    },
+    {
+     "v": "b1752e52d6c9",
+     "commit": "d7825e2",
+     "date": "2026-08-18"
+    },
+    {
+     "v": "6eb19042e021",
+     "commit": "d1f0f4d",
+     "date": "2026-08-18"
+    },
+    {
+     "v": "1c15601a0087",
+     "commit": "5b893cd",
+     "date": "2026-08-18"
+    }
+   ]
+  },
+  "frontend-a11y": {
+   "current": "ec171fa67568",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "e1f286cf4729",
+     "commit": "149c8a2",
+     "date": "2026-07-16"
+    },
+    {
+     "v": "80e415b12c92",
+     "commit": "2dc8360",
+     "date": "2026-07-31"
+    },
+    {
+     "v": "766941312459",
+     "commit": "e33ad45",
+     "date": "2026-08-17"
+    },
+    {
+     "v": "56be4995fc2f",
+     "commit": "9e74682",
+     "date": "2026-08-17"
+    },
+    {
+     "v": "ec171fa67568",
+     "commit": "870f218",
+     "date": "2026-08-18"
+    }
+   ]
+  },
+  "guarding-a-regression": {
+   "current": "15808738e2f6",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "15808738e2f6",
+     "commit": "31e3d2e",
+     "date": "2026-08-18"
+    }
+   ]
+  },
+  "line-height-grid": {
+   "current": "90eb1dd8eb53",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "475ec39d811a",
+     "commit": "c92b811",
+     "date": "2026-05-29"
+    },
+    {
+     "v": "23208556b4a2",
+     "commit": "b7b5a7e",
+     "date": "2026-08-15"
+    },
+    {
+     "v": "90eb1dd8eb53",
+     "commit": "ff61334",
+     "date": "2026-08-18"
+    }
+   ]
+  },
+  "logmind": {
+   "current": "7c3fe31c3949",
+   "authoring_home": "repo-mirrored:logmind",
+   "history": [
+    {
+     "v": "f8687c12b47e",
+     "commit": "def84c0",
+     "date": "2026-05-15"
+    },
+    {
+     "v": "42e118776d47",
+     "commit": "9eafeea",
+     "date": "2026-05-26"
+    },
+    {
+     "v": "6a888b615e44",
+     "commit": "b3fb8f6",
+     "date": "2026-05-26"
+    },
+    {
+     "v": "adb7a43084a0",
+     "commit": "eece1e3",
+     "date": "2026-05-26"
+    },
+    {
+     "v": "8b502eb5b554",
+     "commit": "5eba256",
+     "date": "2026-05-27"
+    },
+    {
+     "v": "f46a363d62c3",
+     "commit": "4bfce75",
+     "date": "2026-05-27"
+    },
+    {
+     "v": "5dd5847c571b",
+     "commit": "cea740e",
+     "date": "2026-05-28"
+    },
+    {
+     "v": "94bceb0279fb",
+     "commit": "453c2ce",
+     "date": "2026-05-30"
+    },
+    {
+     "v": "bac00c5484d4",
+     "commit": "963d030",
+     "date": "2026-06-01"
+    },
+    {
+     "v": "440b0b9ce0c2",
+     "commit": "b30f31d",
+     "date": "2026-06-03"
+    },
+    {
+     "v": "faaf9eb84199",
+     "commit": "4bc7b78",
+     "date": "2026-06-03"
+    },
+    {
+     "v": "ec3781cfa328",
+     "commit": "d3a2ba9",
+     "date": "2026-07-04"
+    },
+    {
+     "v": "3febd2cf0556",
+     "commit": "0d25772",
+     "date": "2026-07-16"
+    },
+    {
+     "v": "82b9521de68d",
+     "commit": "bd1b554",
+     "date": "2026-07-25"
+    },
+    {
+     "v": "705f495387a5",
+     "commit": "2dc8360",
+     "date": "2026-07-31"
+    },
+    {
+     "v": "7c3fe31c3949",
+     "commit": "a144454",
+     "date": "2026-08-14"
+    }
+   ]
+  },
+  "oklch-color-space": {
+   "current": "bed55cea4269",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "1293da38b516",
+     "commit": "7caf5c2",
+     "date": "2026-05-29"
+    },
+    {
+     "v": "b756d787b17b",
+     "commit": "bd1b554",
+     "date": "2026-07-25"
+    },
+    {
+     "v": "75e0813a2c5d",
+     "commit": "b7b5a7e",
+     "date": "2026-08-15"
+    },
+    {
+     "v": "bed55cea4269",
+     "commit": "ff61334",
+     "date": "2026-08-18"
+    }
+   ]
+  },
+  "orchestrating-a-multi-agent-run": {
+   "current": "9f1280e7d6bc",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "9f1280e7d6bc",
+     "commit": "a5aa7d9",
+     "date": "2026-08-15"
+    }
+   ]
+  },
+  "orchestrating-agent-delegation": {
+   "current": "cd5dee298023",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "578ccabaa724",
+     "commit": "1874373",
+     "date": "2026-07-17"
+    },
+    {
+     "v": "50d0cb2297cc",
+     "commit": "2dc8360",
+     "date": "2026-07-31"
+    },
+    {
+     "v": "cd5dee298023",
+     "commit": "a144454",
+     "date": "2026-08-14"
+    }
+   ]
+  },
+  "orchestrating-elite-agent-qa": {
+   "current": "7eebf3cfc4dd",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "2f470482b84b",
+     "commit": "149c8a2",
+     "date": "2026-07-16"
+    },
+    {
+     "v": "cd3372d1dd8b",
+     "commit": "1874373",
+     "date": "2026-07-17"
+    },
+    {
+     "v": "6e0b51724cfa",
+     "commit": "afe8461",
+     "date": "2026-08-14"
+    },
+    {
+     "v": "194d5a350e51",
+     "commit": "b7b5a7e",
+     "date": "2026-08-15"
+    },
+    {
+     "v": "7eebf3cfc4dd",
+     "commit": "f552f6e",
+     "date": "2026-08-17"
+    }
+   ]
+  },
+  "palette-relationships": {
+   "current": "36a59edf6f40",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "6ca6eba59bb6",
+     "commit": "7caf5c2",
+     "date": "2026-05-29"
+    },
+    {
+     "v": "e382b4c2b6ac",
+     "commit": "b7b5a7e",
+     "date": "2026-08-15"
+    },
+    {
+     "v": "36a59edf6f40",
+     "commit": "ff61334",
+     "date": "2026-08-18"
+    }
+   ]
+  },
+  "pii-and-compliance": {
+   "current": "14afd0862089",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "433b64cb439e",
+     "commit": "c2bb05b",
+     "date": "2026-05-18"
+    },
+    {
+     "v": "14afd0862089",
+     "commit": "2dc8360",
+     "date": "2026-07-31"
+    }
+   ]
+  },
+  "proving-an-absence": {
+   "current": "878bc9780069",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "878bc9780069",
+     "commit": "31e3d2e",
+     "date": "2026-08-18"
+    }
+   ]
+  },
+  "respect-existing-conventions": {
+   "current": "936899cf6899",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "936899cf6899",
+     "commit": "a445597",
+     "date": "2026-05-15"
+    },
+    {
+     "v": "0f50b830f8e4",
+     "commit": "4bfce75",
+     "date": "2026-05-27"
+    }
+   ]
+  },
+  "retiring-a-superseded-decision": {
+   "current": "5c55077b9a1f",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "5c55077b9a1f",
+     "commit": "77bdb5a",
+     "date": "2026-08-18"
+    },
+    {
+     "v": "6dcadc6157d5",
+     "commit": "31e3d2e",
+     "date": "2026-08-18"
+    }
+   ]
+  },
+  "reviewing-design-work": {
+   "current": "be3f7dadd266",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "37e1aa026d4b",
+     "commit": "149c8a2",
+     "date": "2026-07-16"
+    },
+    {
+     "v": "ebe74c224593",
+     "commit": "02d7a69",
+     "date": "2026-07-16"
+    },
+    {
+     "v": "dfc7c6889b5c",
+     "commit": "554dd07",
+     "date": "2026-07-31"
+    },
+    {
+     "v": "3e3f9dcb092c",
+     "commit": "b7b5a7e",
+     "date": "2026-08-15"
+    },
+    {
+     "v": "be3f7dadd266",
+     "commit": "f552f6e",
+     "date": "2026-08-17"
+    }
+   ]
+  },
+  "semver-design-tokens": {
+   "current": "15eb93208c7d",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "419e7e17d6ec",
+     "commit": "ecbdbbc",
+     "date": "2026-05-29"
+    },
+    {
+     "v": "f97d603bb552",
+     "commit": "149c8a2",
+     "date": "2026-07-16"
+    },
+    {
+     "v": "7be39b0ee26b",
+     "commit": "b7b5a7e",
+     "date": "2026-08-15"
+    },
+    {
+     "v": "eb6807c59000",
+     "commit": "ff61334",
+     "date": "2026-08-18"
+    },
+    {
+     "v": "b2d7a06203fa",
+     "commit": "f552f6e",
+     "date": "2026-08-17"
+    },
+    {
+     "v": "15eb93208c7d",
+     "commit": "7efd6b5",
+     "date": "2026-08-18"
+    }
+   ]
+  },
+  "session-heartbeat": {
+   "current": "ceee4cf10ea4",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "ceee4cf10ea4",
+     "commit": "afe8461",
+     "date": "2026-08-14"
+    }
+   ]
+  },
+  "skill-frontmatter-quality": {
+   "current": "59d61f22e7e7",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "f8448a7116ca",
+     "commit": "2ebb8ec",
+     "date": "2026-05-27"
+    },
+    {
+     "v": "e29906969800",
+     "commit": "2dc8360",
+     "date": "2026-07-31"
+    },
+    {
+     "v": "59d61f22e7e7",
+     "commit": "554dd07",
+     "date": "2026-07-31"
+    }
+   ]
+  },
+  "skillforge": {
+   "current": "ea1de66ab57a",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "5a0dffb6a210",
+     "commit": "9cf2797",
+     "date": "2026-05-30"
+    },
+    {
+     "v": "ea1de66ab57a",
+     "commit": "b0cb5dd",
+     "date": "2026-08-14"
+    }
+   ]
+  },
+  "spacing-system": {
+   "current": "effc6349558d",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "b562471ba8f1",
+     "commit": "7841261",
+     "date": "2026-05-29"
+    },
+    {
+     "v": "e5c01b78ea9a",
+     "commit": "149c8a2",
+     "date": "2026-07-16"
+    },
+    {
+     "v": "82616f8a05fa",
+     "commit": "b7b5a7e",
+     "date": "2026-08-15"
+    },
+    {
+     "v": "effc6349558d",
+     "commit": "ff61334",
+     "date": "2026-08-18"
+    }
+   ]
+  },
+  "test-discipline": {
+   "current": "e606dd248a0a",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "4d593a49e742",
+     "commit": "c2bb05b",
+     "date": "2026-05-18"
+    },
+    {
+     "v": "c139ab1365c5",
+     "commit": "c32ee23",
+     "date": "2026-05-29"
+    },
+    {
+     "v": "e606dd248a0a",
+     "commit": "2dc8360",
+     "date": "2026-07-31"
+    }
+   ]
+  },
+  "token-frugal-tooling": {
+   "current": "c98ce58192b4",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "c31b44ff2bff",
+     "commit": "23e091a",
+     "date": "2026-05-28"
+    },
+    {
+     "v": "51073ab36fad",
+     "commit": "913bb13",
+     "date": "2026-05-29"
+    },
+    {
+     "v": "c98ce58192b4",
+     "commit": "2dc8360",
+     "date": "2026-07-31"
+    }
+   ]
+  },
+  "token-naming-conventions": {
+   "current": "e89a261fddd8",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "a3dd60ed7412",
+     "commit": "149c8a2",
+     "date": "2026-07-16"
+    },
+    {
+     "v": "fd9acef59f07",
+     "commit": "b7b5a7e",
+     "date": "2026-08-15"
+    },
+    {
+     "v": "e89a261fddd8",
+     "commit": "ff61334",
+     "date": "2026-08-18"
+    }
+   ]
+  },
+  "type-scale": {
+   "current": "92272bfa625d",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "f8adb57cc6a3",
+     "commit": "c92b811",
+     "date": "2026-05-29"
+    },
+    {
+     "v": "29bf989361f0",
+     "commit": "149c8a2",
+     "date": "2026-07-16"
+    },
+    {
+     "v": "5aaf96092873",
+     "commit": "b7b5a7e",
+     "date": "2026-08-15"
+    },
+    {
+     "v": "92272bfa625d",
+     "commit": "ff61334",
+     "date": "2026-08-18"
+    }
+   ]
+  },
+  "udts-component-sizing-ladders": {
+   "current": "3aaa13374fc8",
+   "authoring_home": "repo-mirrored:tokenomics",
+   "history": [
+    {
+     "v": "56c275935b2b",
+     "commit": "149c8a2",
+     "date": "2026-07-16"
+    },
+    {
+     "v": "3aaa13374fc8",
+     "commit": "02d7a69",
+     "date": "2026-07-16"
+    }
+   ]
+  },
+  "udts-dtcg-extensions": {
+   "current": "574e1d81d2fb",
+   "authoring_home": "repo-mirrored:tokenomics",
+   "history": [
+    {
+     "v": "9d3fb5186964",
+     "commit": "149c8a2",
+     "date": "2026-07-16"
+    },
+    {
+     "v": "574e1d81d2fb",
+     "commit": "02d7a69",
+     "date": "2026-07-16"
+    }
+   ]
+  },
+  "udts-linter-rules": {
+   "current": "b2fe986666fd",
+   "authoring_home": "repo-mirrored:tokenomics",
+   "history": [
+    {
+     "v": "e5fe1969e579",
+     "commit": "149c8a2",
+     "date": "2026-07-16"
+    },
+    {
+     "v": "b2fe986666fd",
+     "commit": "02d7a69",
+     "date": "2026-07-16"
+    }
+   ]
+  },
+  "udts-naming-convention": {
+   "current": "aaffc5a6e563",
+   "authoring_home": "repo-mirrored:tokenomics",
+   "history": [
+    {
+     "v": "d87f64071563",
+     "commit": "149c8a2",
+     "date": "2026-07-16"
+    },
+    {
+     "v": "aaffc5a6e563",
+     "commit": "02d7a69",
+     "date": "2026-07-16"
+    }
+   ]
+  },
+  "udts-review": {
+   "current": "2a6f6efa01bb",
+   "authoring_home": "repo-mirrored:tokenomics",
+   "history": [
+    {
+     "v": "1f1909ab2144",
+     "commit": "149c8a2",
+     "date": "2026-07-16"
+    },
+    {
+     "v": "2a6f6efa01bb",
+     "commit": "02d7a69",
+     "date": "2026-07-16"
+    }
+   ]
+  },
+  "udts-semver-defaults": {
+   "current": "4a0714f6b061",
+   "authoring_home": "repo-mirrored:tokenomics",
+   "history": [
+    {
+     "v": "679a493b441a",
+     "commit": "149c8a2",
+     "date": "2026-07-16"
+    },
+    {
+     "v": "4a0714f6b061",
+     "commit": "02d7a69",
+     "date": "2026-07-16"
+    }
+   ]
+  },
+  "udts-spacing-defaults": {
+   "current": "1887d0c306ca",
+   "authoring_home": "repo-mirrored:tokenomics",
+   "history": [
+    {
+     "v": "88dfe5aa7e80",
+     "commit": "149c8a2",
+     "date": "2026-07-16"
+    },
+    {
+     "v": "1887d0c306ca",
+     "commit": "02d7a69",
+     "date": "2026-07-16"
+    }
+   ]
+  },
+  "udts-token-model": {
+   "current": "de1736a0c81f",
+   "authoring_home": "repo-mirrored:tokenomics",
+   "history": [
+    {
+     "v": "dc0ffe2c8667",
+     "commit": "149c8a2",
+     "date": "2026-07-16"
+    },
+    {
+     "v": "de1736a0c81f",
+     "commit": "02d7a69",
+     "date": "2026-07-16"
+    }
+   ]
+  },
+  "unattended-operation": {
+   "current": "7c623d1f1b06",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "8566ddc4c8c9",
+     "commit": "afe8461",
+     "date": "2026-08-14"
+    },
+    {
+     "v": "7c623d1f1b06",
+     "commit": "b7b5a7e",
+     "date": "2026-08-15"
+    }
+   ]
+  },
+  "usability-heuristics": {
+   "current": "9d79fc250e83",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "9d79fc250e83",
+     "commit": "31e3d2e",
+     "date": "2026-08-18"
+    }
+   ]
+  },
+  "visual-polish": {
+   "current": "b470bbfb49da",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "b2657e9f979b",
+     "commit": "149c8a2",
+     "date": "2026-07-16"
+    },
+    {
+     "v": "e250e4b6739d",
+     "commit": "2dc8360",
+     "date": "2026-07-31"
+    },
+    {
+     "v": "8b62a28d94d9",
+     "commit": "e33ad45",
+     "date": "2026-08-17"
+    },
+    {
+     "v": "b470bbfb49da",
+     "commit": "f552f6e",
+     "date": "2026-08-17"
+    }
+   ]
+  },
+  "wcag-contrast": {
+   "current": "c2c3bd386622",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "463e42690ab2",
+     "commit": "7caf5c2",
+     "date": "2026-05-29"
+    },
+    {
+     "v": "bda1e9e0872e",
+     "commit": "b7b5a7e",
+     "date": "2026-08-15"
+    },
+    {
+     "v": "1d25bdeee805",
+     "commit": "e33ad45",
+     "date": "2026-08-17"
+    },
+    {
+     "v": "e32264ff0d6a",
+     "commit": "ff61334",
+     "date": "2026-08-18"
+    },
+    {
+     "v": "c2c3bd386622",
+     "commit": "cd2a0c5",
+     "date": "2026-08-18"
+    }
+   ]
+  },
+  "web-interface-guidelines-review": {
+   "current": "302abd5799cd",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "6ab47e7e59ab",
+     "commit": "6952adc",
+     "date": "2026-05-30"
+    },
+    {
+     "v": "e61441ed4615",
+     "commit": "149c8a2",
+     "date": "2026-07-16"
+    },
+    {
+     "v": "b9fd03645f49",
+     "commit": "2dc8360",
+     "date": "2026-07-31"
+    },
+    {
+     "v": "5ee475f27ce4",
+     "commit": "a144454",
+     "date": "2026-08-14"
+    },
+    {
+     "v": "5e4287460c76",
+     "commit": "b7b5a7e",
+     "date": "2026-08-15"
+    },
+    {
+     "v": "302abd5799cd",
+     "commit": "e33ad45",
+     "date": "2026-08-17"
+    }
+   ]
+  }
+ }
+}

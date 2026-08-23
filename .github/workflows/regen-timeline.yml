@@ -48,10 +48,16 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          # For internal PRs, check out the PR's head ref so we can push
-          # back to it. For forks, github.head_ref is set but we can't
-          # push to forks — handled below.
-          ref: ${{ github.head_ref || github.ref }}
+          # SHA, not branch name (#223). This step only needs the tree at
+          # the PR's head commit to compute the derived docs; the later
+          # auto-fix push (below) targets the branch by name independently
+          # of what ref this checkout used. A named ref goes stale the
+          # moment the PR merges and `delete_branch_on_merge` removes it:
+          # a run still in flight dies at this step with "A branch or tag
+          # with the name '…' could not be found", manufacturing a red X
+          # on a merged PR for a run that never touched the actual
+          # change. The SHA stays resolvable after the branch is gone.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
           # Use PAT if available so the push triggers downstream checks.
           # Falls through to GITHUB_TOKEN when absent (still allows checkout).

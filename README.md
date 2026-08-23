@@ -6,8 +6,21 @@ These skills run inside any agent that loads skills.sh — Claude Code, Cursor, 
 
 ## Skills in this collection
 
+**The catalog has a directory, and it is a skill** — the only kind of artifact that can leave this repo. [`finding-a-catalog-skill`](skills/finding-a-catalog-skill/SKILL.md) is this table's job done as a skill, so an agent in a subscriber repo can see what the catalog covers without opening fifty files. It is generated from [`docs/placement-map.json`](docs/placement-map.json) and gated: add a skill without regenerating and `validate-skills` goes red on your PR. Regenerate with `python3 .github/scripts/gen_skill_directory.py --write`.
+
+**It does not install itself.** Measured: `npx skills update` refreshes the skills a repo already has and never adds one, so each repo opts in once —
+
+```bash
+npx skills add https://github.com/thrillmade/agent-skills --skill finding-a-catalog-skill
+```
+
+— and from then on every regeneration arrives with a plain `npx skills update`. That is the claim worth making: the one-time `add` is the whole cost, and the map cannot go stale in a repo that has it.
+
+The table below is the same list in long form — it has no byte cap, so it can afford sentences the directory cannot. Its **membership** is gated: `validate-skills` reconciles the `skills/<name>/SKILL.md` links here 1:1 against the tree, so a skill cannot be added without a row and a row cannot outlive its skill. The purpose column is hand-written prose on purpose — [#229](https://github.com/thrillmade/agent-skills/issues/229) proposed generating the table, and generating it from a 32-byte fragment would make it worse in order to make it derived.
+
 | Skill | Purpose |
 |---|---|
+| [`finding-a-catalog-skill`](skills/finding-a-catalog-skill/SKILL.md) | The generated directory of the whole catalog — every skill, grouped by family, with what each one owns, plus the gaps the catalog deliberately does not cover. Load it before authoring any rule or convention, and before concluding nothing covers something. |
 | [`logmind`](skills/logmind/SKILL.md) | Teach agents when and how to log architectural decisions in projects using [logmind](https://logmind.dev). Activates whenever an agent works in a project with `.logmind/config.yml` or an `AGENTS.md`/`CLAUDE.md` mentioning logmind. |
 | [`critical-issues-only`](skills/critical-issues-only/SKILL.md) | PR review discipline — flag only correctness, security, and performance issues. Skip style nits and naming preferences. Ships as a baseline with [clud-bug](https://github.com/thrillmade/clud-bug). |
 | [`evidence-based-review`](skills/evidence-based-review/SKILL.md) | Every PR review claim must quote the specific code being criticized. No hand-waving, no vague "might cause issues." Cite or delete. Ships as a baseline with clud-bug. |
@@ -18,13 +31,16 @@ These skills run inside any agent that loads skills.sh — Claude Code, Cursor, 
 | [`api-contract-enforcement`](skills/api-contract-enforcement/SKILL.md) | Flag PRs that change the shape, semantics, or error behavior of a public API without versioning or a migration path. Catches removed fields, renamed parameters, changed status codes, broken pagination, silent enum drift across HTTP/gRPC/GraphQL/SDK/CLI surfaces. |
 | [`pii-and-compliance`](skills/pii-and-compliance/SKILL.md) | Catch PII and auth material leaking into logs, error traces, analytics events, URLs, or third-party SDKs. Apply to logging calls, telemetry, error handlers, debug statements, and committed test fixtures. |
 | [`test-discipline`](skills/test-discipline/SKILL.md) | Flag the test-edit patterns that hollow out a suite over time: deleted assertions without replacement, mocks that hide the thing being tested, snapshot churn, `.skip`/`.only` left in the diff, time-dependent assertions without frozen time, assertions on internal state instead of observable behavior. |
+| [`proving-an-absence`](skills/proving-an-absence/SKILL.md) | Before reporting that something is missing, unbuilt or unreproducible — control-test the probe against a case you know hits, ask what *generates* the value before grepping for it, name what the instrument deliberately cannot see, and report the search rather than the world. Also fires on any count or measurement stated without running the command. |
+| [`guarding-a-regression`](skills/guarding-a-regression/SKILL.md) | A guard you have not watched fail is not a guard — mutate what it protects and grep the *running* artifact to prove the mutation landed, then pin the assertion at the layer the bug report named. Covers lint rules, schema checks, validating constructors and CI steps, whose commonest failure is that nothing routes through them. Narrower than [`test-discipline`](skills/test-discipline/SKILL.md): one guard, one regression. |
+| [`retiring-a-superseded-decision`](skills/retiring-a-superseded-decision/SKILL.md) | A reversal lands when every place still asserting the old value has been found and classified, not when the new value is in place — search the **old** value, treat the grep as candidates rather than a verdict, correct the item instead of striking it, and rebuild any generated copy. Also for a decision that happened in conversation and never reached the plan of record. |
 | [`orchestrating-a-multi-agent-run`](skills/orchestrating-a-multi-agent-run/SKILL.md) | **L1 dispatcher — start here for orchestration work.** Routes the run's four obligations: hand the work out, gate what comes back, record the decision and clear the automated reviewer, survive time. Carries the four axioms every station in the family assumes, so none of them restates it. |
 | [`orchestrating-agent-delegation`](skills/orchestrating-agent-delegation/SKILL.md) | The CTO-as-orchestrator discipline for handing work to subagents — model tiering, the load-bearing agent-brief shape (with a copyable skeleton), trust-but-verify every "done" against the diff, refute-first review panels, design→rule→build separation. The general delegation mechanics beneath [`orchestrating-elite-agent-qa`](skills/orchestrating-elite-agent-qa/SKILL.md)'s UI-quality pipeline. |
 | [`session-heartbeat`](skills/session-heartbeat/SKILL.md) | Keeping a session working across a stretch longer than one sitting — the per-beat order (standing before spend), the largest-dispatch threshold instead of a round percentage, the checkpoint's required slots, and resume-as-survivor after a limit or compaction. The temporal-continuity layer under [`orchestrating-agent-delegation`](skills/orchestrating-agent-delegation/SKILL.md)'s dispatch mechanics. |
 | [`unattended-operation`](skills/unattended-operation/SKILL.md) | Policy for a session a human explicitly handed over to run **unattended** (often called "night mode", but the trigger is the handover, never the clock) — the handover contract, the reversible-and-invisible boundary on action, "a scheduled wake is never consent", named hard stops, and the handback digest. Layers on [`session-heartbeat`](skills/session-heartbeat/SKILL.md). Not dark mode. |
 | [`curating-a-skill-catalog`](skills/curating-a-skill-catalog/SKILL.md) | The skill-census rubric — lifecycle states, the five verdict kinds with evidence standards, the top-5-plus-digest noise budget, and the human-editor gate. Applied weekly by the census workflow; recursive (the rubric censuses itself). |
 | [`token-frugal-tooling`](skills/token-frugal-tooling/SKILL.md) | Quick-reference for the org's token-frugal CLI conventions in repos running both logmind and clud-bug — quiet-mode env vars, artifact defaults, agent-mode flags. Detail lives in the per-tool skills. |
-| [`skillforge`](skills/skillforge/SKILL.md) ✨ | Create or update a reusable agent skill. Use when you notice a repeated pattern, when a workflow should be persisted for future sessions, or when asked to forge/create/scaffold a new skill. **Vendored from [zakelfassi/skills-driven-development](https://github.com/zakelfassi/skills-driven-development) with attribution** — the canonical SkDD meta-skill (the skill that creates skills). MIT, Zak El Fassi. |
+| [`skillforge`](skills/skillforge/SKILL.md) ✨ | **Superseded** ([#203](https://github.com/thrillmade/agent-skills/issues/203)) — skill authoring is now split three ways: `skill-creator` owns measurement, `superpowers:writing-skills` owns wording form, and the studio's `skill-smith` agent owns house rules. Kept unchanged during the migration window; new work should load the successors. **Vendored from [zakelfassi/skills-driven-development](https://github.com/zakelfassi/skills-driven-development) with attribution** — the canonical SkDD meta-skill. MIT, Zak El Fassi. |
 
 ## Design & design-system skills — three layers
 
@@ -41,6 +57,7 @@ The design catalog is organized in three layers (locked by the CDO; executed in 
 | [`designing-a-design-system`](skills/designing-a-design-system/SKILL.md) | Dispatcher for **building or extending** a design system — routes through naming → color → non-color families → format/versioning → the elite bar → testing, in build order. |
 | [`reviewing-design-work`](skills/reviewing-design-work/SKILL.md) | Dispatcher for **reviewing or critiquing** design output — ordered lenses (code rules → rendered-surface lenses → the opinion bar) with routing rules for when the browser-driven design-critic pass fires. |
 | [`consuming-a-design-system`](skills/consuming-a-design-system/SKILL.md) | Dispatcher for **using** a design system in a product — token discipline, composition rules, DTCG install patterns, SemVer-aware upgrades, extend-vs-fork. |
+| [`composing-a-screen`](skills/composing-a-screen/SKILL.md) | Entry point for **making** a screen — the composition sequence in dependency order (rank → group → encode → space → lay out → conventionalise → target → clear the floors → defer). Carries the principles nothing else owns: hierarchy, proximity as a between-to-within ratio, measure and column count, alignment axes, progressive disclosure, Jakob's and Fitts's. |
 
 ### L0 — universal primitives
 
@@ -58,6 +75,8 @@ The design catalog is organized in three layers (locked by the CDO; executed in 
 | [`token-naming-conventions`](skills/token-naming-conventions/SKILL.md) | Universal token-naming principles — prefix-loaded, class-derivable names; physical primitive names; theme/density never in the name. |
 | [`dtcg-format`](skills/dtcg-format/SKILL.md) | W3C DTCG interchange format — reserved keys, aliases, group inheritance, composites, namespaced extensions. |
 | [`semver-design-tokens`](skills/semver-design-tokens/SKILL.md) | SemVer for token releases computed from the resolved-value diff, with snapshot and deprecation discipline. |
+| [`empirical-design-principles`](skills/empirical-design-principles/SKILL.md) | The falsifiable half of the design-principle literature — Gestalt grouping (proximity works on *ratios*, not pixels), Fitts, Hick, Miller, Jakob, von Restorff, the aesthetic-usability effect — used forward as a prediction rather than backward as a post-hoc defence, with the four whose design-writing version the source does not support. Ships three [`references/`](skills/empirical-design-principles/references/) files of per-principle primary sources. |
+| [`usability-heuristics`](skills/usability-heuristics/SKILL.md) | The judgement half — Nielsen's ten and heuristic evaluation, Norman on affordances and signifiers *by edition*, Shneiderman's eight, progressive disclosure, recognition over recall. Every row carries a year, because the gate here is provenance and inter-rater agreement, not falsification: five users, 3-5 evaluators, 85%, 7±2 and the three-click rule all say less than they are quoted as saying. |
 
 ### L0 — design-critic lenses (pair with clud-bug's dedicated design review)
 
@@ -185,7 +204,7 @@ python .github/scripts/check_prose_retention.py
 Skills marked with ✨ are **vendored verbatim from upstream authors** — kept here so they install alongside the thrillmade catalog and stay reachable from the same `npx skills add` command, but with original author + spec metadata preserved in the SKILL.md frontmatter.
 
 Current vendored skills:
-- `skillforge` — from Zak El Fassi's [skills-driven-development](https://github.com/zakelfassi/skills-driven-development) repo. The canonical SkDD meta-skill (the skill that creates skills). MIT licensed. Vendored at v2.0; we'll sync on his releases.
+- `skillforge` — from Zak El Fassi's [skills-driven-development](https://github.com/zakelfassi/skills-driven-development) repo. The canonical SkDD meta-skill (the skill that creates skills). MIT licensed. Vendored at v2.0. **Superseded here** ([#203](https://github.com/thrillmade/agent-skills/issues/203)) and filed under `deprecated` in the directory, so no listing routes work to it; the vendored copy stays for the migration window.
 
 **Why vendor:** the upstream skill is canonical for its methodology; reimplementing would fragment. Vendoring with attribution keeps users on the canonical artifact + makes it installable through the same channel as the rest of our catalog. Both source-of-truth (upstream) and local-copy (here) stay in sync via periodic refresh PRs.
 

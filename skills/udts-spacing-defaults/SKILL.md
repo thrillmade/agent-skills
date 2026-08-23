@@ -1,4 +1,5 @@
 ---
+version: "1887d0c306ca"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: udts-spacing-defaults
 description: "[L2 stub — incubating] UDTS's density-mode spacing unit choices — its instantiations of the two-unit model in spacing-system. Full content is being authored in thrillmade/tokenomics and lands here via an upstream PR once the UDTS spec stabilizes; do not treat this stub as guidance yet."
 ---

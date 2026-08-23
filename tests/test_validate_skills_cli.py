@@ -1,8 +1,12 @@
 """The `validate-skills` gate's CLI contract, and its coverage guard.
 
-CI reads three things from this script and nothing else: the
+CI reads four things from this script and nothing else: the
 `::error file=<path>::<msg>` annotations, the `::error::<N> skill validation
-errors` summary, and the exit code. Those are the contract under test here.
+errors` summary, the exit code, and (#234) the `link scope: ...` line that
+states which links the link-integrity check actually verified -- printed on
+every completed run (pass or fail), never on the two infra-fatal early exits
+below, where there is no tree yet to state a bound about. Those are the
+contract under test here.
 
 The coverage guard is the other half. `ROOT` is cwd-relative, so a run that
 walks the wrong tree reports zero errors exactly as loudly as a run that
@@ -31,6 +35,16 @@ SCRIPT = SCRIPTS / "validate_skills.py"
 # silently and the error becomes log noise nobody sees.
 ANNOTATION_RE = re.compile(r"^::error file=[^:\n]+::.+$")
 SUMMARY_RE = re.compile(r"^::error::(\d+) skill validation errors$")
+
+# #234: the scope line is printed on every completed run, as the FIRST
+# line -- so a reader of green output is told the bound (relative links
+# resolved on disk; absolute http(s)/mailto links counted, not fetched)
+# rather than left to assume "all links" from silence.
+SCOPE_RE = re.compile(
+    r"^link scope: (\d+) relative link\(s\) checked against the filesystem; "
+    r"(\d+) absolute http\(s\)/mailto link\(s\) found and counted, not "
+    r"fetched \(no network access in this gate\)\.$"
+)
 
 
 # --- Annotation + summary format -------------------------------------------
@@ -62,11 +76,15 @@ def test_main_prints_every_error_then_a_matching_summary(
     assert validate_skills.main() == 1
     lines = capsys.readouterr().out.splitlines()
 
-    assert lines[:-1] == errors
+    # #234: the scope line is now the first line printed, on every
+    # completed run -- including this error path.
+    assert SCOPE_RE.match(lines[0]), lines[0]
+    assert lines[1:-1] == errors
     summary = SUMMARY_RE.match(lines[-1])
     assert summary, lines[-1]
-    # The summary counts the lines actually printed, not something adjacent.
-    assert int(summary.group(1)) == len(lines) - 1
+    # The summary counts the error lines actually printed (excluding the
+    # scope line, which is not an error), not something adjacent.
+    assert int(summary.group(1)) == len(lines) - 2
 
 
 def test_main_reports_success_on_a_clean_tree(
@@ -74,8 +92,20 @@ def test_main_reports_success_on_a_clean_tree(
 ) -> None:
     tree.valid_skill("alpha")
     tree.valid_skill("beta")
+    # `main()` reads `docs/skill-versions.json` itself now (absence is an
+    # error -- see `test_an_absent_index_is_rejected`), and `main()` here is
+    # called directly rather than through `tree.validate()`, so it does not
+    # get that method's auto-provisioned index. Seed one that matches.
+    tree.validate()
     assert validate_skills.main() == 0
-    assert capsys.readouterr().out == "OK: 2 skills validated cleanly.\n"
+    lines = capsys.readouterr().out.splitlines()
+    # #234: neither fixture skill body carries a markdown link.
+    assert lines == [
+        "link scope: 0 relative link(s) checked against the filesystem; "
+        "0 absolute http(s)/mailto link(s) found and counted, not fetched "
+        "(no network access in this gate).",
+        "OK: 2 skills validated cleanly.",
+    ]
 
 
 # --- Infra-fatal conditions (exit 1, and deliberately no summary line) ------
@@ -187,9 +217,20 @@ def test_entrypoint_validates_the_real_catalog_from_the_repo_root() -> None:
     on_disk = len(list((REPO_ROOT / "skills").glob("*/SKILL.md")))
     assert on_disk > 0  # control: the glob really finds the catalog
 
+    # #234: measured, not recited -- the real relative/absolute link counts
+    # drift as skills are added, so the expectation is computed from the
+    # same tree the subprocess below actually walks.
+    relative, absolute = validate_skills.link_stats(REPO_ROOT / "skills")
+    assert relative > 0  # control: the catalog really does have links
+
     result = run_entrypoint(REPO_ROOT)
     assert result.returncode == 0, result.stdout + result.stderr
-    assert result.stdout == f"OK: {on_disk} skills validated cleanly.\n"
+    assert result.stdout == (
+        f"link scope: {relative} relative link(s) checked against the "
+        f"filesystem; {absolute} absolute http(s)/mailto link(s) found and "
+        "counted, not fetched (no network access in this gate).\n"
+        f"OK: {on_disk} skills validated cleanly.\n"
+    )
 
 
 def test_entrypoint_never_reports_success_from_the_wrong_directory(tmp_path: Path) -> None:

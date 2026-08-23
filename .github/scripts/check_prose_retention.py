@@ -525,29 +525,29 @@ class Container:
     The three classes after it do not appear in those alphabets at all and are
     each pinned by a case of its own:
 
-      A LIST COLUMN SURVIVES A CONTAINER BOUNDARY THAT CLOSED THE LIST, and the
-      same rule read at the margin: a leaf block in column 0 closes a paragraph
-      whose content starts in column 2, where CommonMark reads it as that
-      paragraph's LAZY continuation and closes nothing. `reopen` keeps this
-      container's list nesting, which is right when the quote sat INSIDE an item
-      and wrong when it sat at the margin, so CommonMark measures the next
-      line's four spaces from the margin and calls it code while this measures
-      them from column 2 and calls it prose. Weaponised, to be sure rather than
-      assumed: `* item` and `> ` above an indented example deletes
-      web-interface-guidelines-review's Verification rule 5 for prose -6, net 0,
-      exit 0, and the file 20 bytes SMALLER -- where the identical example with
-      those two lines removed scores prose 11 / code -16 and fires. It is a
-      narrower hole than the heading was, because those two lines are visible:
-      an orphan bullet and an empty block quote render, so the two spellings are
-      NOT the same document to a reader, which the heading pair was. Closing it
-      means telling `reopen` which column the marker sat in, against the
-      measured reason the nesting is kept at all -- a different predicate, and
-      still not this round's. Two of the 45 minimal forms are this class reached
-      THROUGH the HTML model, where the wrongly-closed paragraph then lets a
-      type 7 block open: `- item`, `===`, `</pre>` and `---` above an indented
-      example. Both agreed by accident before the block was modelled and
-      disagree now, inside a residual an order of magnitude smaller in both
-      directions -- stated rather than netted away.
+      A LIST COLUMN SURVIVED A CONTAINER BOUNDARY THAT CLOSED THE LIST -- #226,
+      CLOSED for the disclosed weaponisation: `reopen` now takes the column the
+      closing marker sat in and pops any list whose content column the marker
+      did not reach, the same rule this docstring already applies to the LEAF
+      state, read for the list nesting too. `* item` and `> ` above an indented
+      example no longer nets against a real cut; the construct is pinned at
+      `test_a_quote_at_the_margin_closes_a_list_it_did_not_sit_inside`, and the
+      quote-INSIDE-an-item case the fix must not break is pinned beside it at
+      `test_a_quote_inside_a_list_item_keeps_the_item_s_content_column`, exactly
+      at the boundary column the two rules now share. Checked against
+      markdown-it-py 4.2.0 over 128 generated documents crossing four marker
+      widths, four quote columns, four shapes for the quote's last block and
+      the presence or absence of a blank line before the indented example: 0
+      disagreements, 128 of 128 -- a scoped corpus for the predicate this fix
+      changed, not the 20,000-document alphabets above, which this round did
+      not regenerate. Whether the two minimal forms reached THROUGH the HTML
+      model close with it is NOT measured here -- both are this same wrongly-
+      kept list column reaching a type 7 block by a longer path, which is
+      reason to expect they do, but expecting is not measuring and neither was
+      re-run. The aggregate counts above (45 minimal forms, the two
+      percentages) describe the corpus BEFORE this fix and were not re-run
+      against it; they overstate what remains until the next round regenerates
+      them.
 
       A FENCE MAY BE SPELLED INSIDE A WRAPPED LINE, where no other block may.
       `FENCE_RE` allows any indent and `feed` reaches it before the guard that
@@ -610,8 +610,14 @@ class Container:
         """
         return self._paragraph and not self._indented and not self._fence.open
 
-    def reopen(self, lazy: bool) -> None:
+    def reopen(self, lazy: bool, col: int) -> None:
         """A child container just ended. Take up where this one left off.
+
+        `col` is the column, in THIS container's own margin, of the marker
+        that most recently kept the child open -- what `Code.feed` peeled to
+        reach it. It answers one question the leaf and paragraph state below
+        does not: was the child NESTED inside something open here, or did it
+        sit at this container's own margin regardless of what that was?
 
         The INDENTED block goes unconditionally. Whatever was open here, the
         `>` that opened the child sat at this container's own margin, and a
@@ -629,15 +635,22 @@ class Container:
         measured over 20,000 generated documents, always reopening scores 3467
         disagreements and never reopening 3485, against 2755 for asking.
 
-        The LIST nesting stays either way, because a list item that contained a
-        quote still contains the lines after it, and its content column is the
-        only thing keeping their continuations out of the code scope -- dropping
-        it would rescope a nested bullet's own paragraph the moment somebody
-        quoted something above it, which is the false positive the second
-        CommonMark rule above exists to stop.
+        The LIST nesting survives ONLY as far as `col` reaches: a list item
+        that contained a quote still contains the lines after it, so a column
+        the marker was indented PAST stays open -- dropping it there would
+        rescope a nested bullet's own paragraph the moment somebody quoted
+        something above it, the false positive the second CommonMark rule
+        above exists to stop. A column the marker was NOT indented past did
+        not contain it: `* item` followed by a `>` written at column 0 is the
+        same rule the margin already applies to leaf blocks, read for a list --
+        the marker closed the item, so the four spaces under it measure from
+        THIS container's own margin, not from a column the marker skipped
+        over. #226.
         """
         self._indented = False
         self._paragraph = lazy
+        while self._lists and col < self._lists[-1]:
+            self._lists.pop()
 
     def _threshold(self) -> int:
         """The column at which an indented code block starts here -- four past
@@ -891,6 +904,12 @@ class Code:
 
     def __init__(self) -> None:
         self._containers = [Container()]
+        # `_marker_col[d]` is the column, in container `d`'s own margin, of
+        # the most recent `>` that peeled to reach container `d + 1` -- set
+        # every line that marker is matched, so by the time the child closes
+        # it holds where the LAST one sat rather than the first. `reopen`
+        # reads it to tell a nested quote from one at the parent's margin.
+        self._marker_col: list[int] = []
 
     def feed(self, raw: str) -> bool:
         """Advance one line. True if the line is part of a code block of either
@@ -903,6 +922,9 @@ class Code:
             m = QUOTE_RE.match(line)
             if not m:
                 break
+            while len(self._marker_col) <= depth:
+                self._marker_col.append(0)
+            self._marker_col[depth] = len(line) - len(line.lstrip(" "))
             line = line[m.end() :]
             depth += 1
 
@@ -916,10 +938,17 @@ class Code:
                 depth < len(self._containers) - 1
                 and self._containers[-1].paragraph
             )
+            # The column the marker that opened the now-closed child sat at,
+            # in container `depth`'s own margin -- 0 when `depth` is a
+            # container just created rather than one a child closed back
+            # into, where no list of its own exists yet for the column to
+            # matter to.
+            col = self._marker_col[depth] if depth < len(self._marker_col) else 0
             del self._containers[depth + 1 :]
+            del self._marker_col[depth + 1 :]
             while len(self._containers) <= depth:
                 self._containers.append(Container())
-            self._containers[depth].reopen(lazy)
+            self._containers[depth].reopen(lazy, col)
 
         return self._containers[depth].feed(line)
 
@@ -1403,12 +1432,14 @@ def hatch_state(before: str, after: str, skill: str, net: int) -> str:
 # The one phrase that identifies each failure mode's annotation, owned here so
 # the message and the guidance `main` prints under it cannot drift apart --
 # `run` also annotates the ledger itself and any file it could not scope, and
-# `main` annotates any blob that would not come back. Those are four different
-# findings and they do not share a remedy. LOST_PROSE additionally carries the
-# count of undeclared removals.
+# `main` annotates any blob that would not come back and any added file whose
+# own history could not be walked. Those are five different findings and they
+# do not share a remedy. LOST_PROSE additionally carries the count of
+# undeclared removals.
 LOST_PROSE = "::this SKILL.md lost "
 UNSCOPABLE_FILE = "::this SKILL.md's YAML frontmatter could not be located"
 UNREADABLE_BLOB = "::git lists this file as changed"
+UNWALKABLE_ADDITION = "::this SKILL.md was added within this range, but the commit"
 LEDGER_REWOUND = "::this change takes "
 SLOTS_WITHDRAWN = f"back OUT of {LEDGER}"
 
@@ -1440,13 +1471,19 @@ def run(
 ) -> list[str]:
     """Check every (path -> (before, after)) pair. Returns error annotations.
 
-    `cases` carries every SKILL.md modified between the two revisions, renames
-    included, keyed by its path at head. Whole-file additions and deletions are
-    deliberately out of scope: git renders those as a file appearing or
-    disappearing, which review cannot miss, and `main` says out loud how many
-    it skipped. This gate exists for the removal that hides inside an
-    otherwise-ordinary edit -- which is how all three historical cases got
-    through.
+    `cases` carries every SKILL.md this gate could compare between the two
+    revisions -- modified, renamed, and added-then-changed within the range,
+    keyed by its path at head. A file added and never touched again has
+    nothing in `cases` for it: compared against the commit that introduced
+    it, its own first version, the loss is zero by construction, and that
+    silence is correct rather than a gap this function has.
+
+    Whole-file DELETIONS alone stay deliberately out of scope: a dead file has
+    nothing left to protect, git renders the deletion as a file disappearing,
+    which review cannot miss, and `main` says out loud how many it skipped.
+    This gate exists for the removal that hides inside an otherwise-ordinary
+    edit or an add -- which is how all three historical cases, and the gap
+    that let a whole-file add through undeclared, got through.
     """
     ledger = LedgerDiff(ledger_before, ledger_after)
     errors: list[str] = []
@@ -1596,6 +1633,14 @@ REMEDIES = [
         False,
     ),
     (
+        UNWALKABLE_ADDITION,
+        "Each file named above was listed as added, and the commit that first "
+        "introduced it inside the range could not be found, so it was never "
+        "compared against that first version. Check the checkout step sets "
+        "`fetch-depth: 0`.",
+        False,
+    ),
+    (
         SLOTS_WITHDRAWN,
         f"Put back every line this change took out of {LEDGER}. While anything "
         f"is missing from that file, no row the change adds counts at all.",
@@ -1703,13 +1748,50 @@ def _show(rev: str, path: str) -> str | None:
         raise Undecodable(rev, path) from None
 
 
+def _first_appearance(base: str, head: str, path: str) -> str | None:
+    """The earliest commit in `base..head` that touched `path`.
+
+    Called only for a path git's own diff already calls ADDED between `base`
+    and `head` -- the file does not exist at `base`, so some commit inside the
+    range must have created it, and that commit's own version of the file is
+    what a whole-file add should be compared against instead of `base`, where
+    it is not there to compare against at all. `base` itself was never a
+    candidate: comparing to the version at `base` is exactly what a plain
+    modification does, and this path does not have one.
+
+    None only when the range could not be walked at all -- a clone too
+    shallow to enumerate `base..head` for this path. That is the same
+    shallow-clone failure `main`'s own base-resolution guard already refuses
+    on rather than silently passing over, so a caller gets `None` back rather
+    than an empty result it could mistake for "no commits touched this path",
+    which cannot happen for a path git itself calls added.
+    """
+    got = _git("log", "--reverse", "--format=%H", f"{base}..{head}", "--", path)
+    if got.returncode != 0:
+        return None
+    shas = [ln for ln in got.stdout.splitlines() if ln]
+    return shas[0] if shas else None
+
+
 class Diff:
     """What changed between two revisions, split into what this gate can judge.
 
-    `cases` are the modified and renamed SKILL.md files, keyed by their path at
-    head. `added` and `deleted` are counted but not compared, and `main` says
-    so out loud: a gate that prints OK without mentioning what it left out is
-    reporting success over a comparison it did not make.
+    `cases` are the modified, renamed and added-then-changed SKILL.md files,
+    keyed by their path at head. A file added within the range is compared
+    against the commit that first introduced it, not against `base`, where it
+    does not exist -- so a skill added in one commit and gutted in a later one
+    on the same branch is still caught. A file added and never touched again
+    compares against itself and has nothing in `cases` for it, which is
+    correct: the loss is zero by construction, not a comparison skipped.
+
+    `deleted` is counted but not compared -- a dead file has nothing left to
+    protect. `unresolved_added` is the one whole-file-add case still out of
+    scope on purpose: a path git calls added whose own history inside
+    `base..head` could not be walked, the shallow-clone failure `main`'s own
+    base-resolution guard already refuses on rather than passes over. `main`
+    says so out loud for both `deleted` and `unresolved_added`: a gate that
+    prints OK without mentioning what it left out is reporting success over a
+    comparison it did not make.
     """
 
     def __init__(self) -> None:
@@ -1718,6 +1800,7 @@ class Diff:
         self.deleted: list[str] = []
         self.renamed: list[tuple[str, str]] = []
         self.unreadable: list[tuple[str, str]] = []
+        self.unresolved_added: list[str] = []
 
     def pair(self, base: str, old: str, head: str, new: str) -> None:
         """Record one before/after comparison, whatever the paths were called.
@@ -1778,11 +1861,14 @@ def collect(base: str, head: str) -> Diff:
     large enough cut drops a real rename below the default, turning it back
     into an add plus a delete.
 
-    A cut deep enough to fall below 25% still lands there, and this gate does
-    not compare it -- but `main` prints the count of files added and deleted
-    whole rather than a bare OK, so the run says what it did not look at. At
-    that depth git itself renders the change as a file disappearing, which is
-    the out-of-scope class review cannot miss.
+    A cut deep enough to fall below 25% still lands there as an add plus a
+    delete rather than a rename, and the delete half of that split is not
+    compared -- the file this gate would compare the new path's ADD half
+    against, in turn, is the commit within `base..head` that first introduced
+    it, not `base` itself, where a wholly new path never has a version to
+    diff against. `main` prints the count of files added and deleted whole
+    rather than a bare OK either way, so the run says what it did and did not
+    look at.
     """
     diff = Diff()
     got = _git(
@@ -1803,7 +1889,13 @@ def collect(base: str, head: str) -> Diff:
             diff.renamed.append((old, new))
             diff.pair(base, old, head, new)
         elif status.startswith("A"):
-            diff.added.append(skill_paths[0])
+            path = skill_paths[0]
+            diff.added.append(path)
+            first = _first_appearance(base, head, path)
+            if first is None:
+                diff.unresolved_added.append(path)
+            else:
+                diff.pair(first, path, head, path)
         elif status.startswith("D"):
             diff.deleted.append(skill_paths[0])
         else:  # M, and anything else git reports as a content change
@@ -1889,6 +1981,15 @@ def main(argv: list[str] | None = None) -> int:
         f"compared and no verdict is reported for it."
         for rev, path in diff.unreadable
     ]
+    errors += [
+        f"::error file={path}{UNWALKABLE_ADDITION} that first introduced it "
+        f"could not be found by walking {base}..{args.head}, so it was not "
+        f"compared against its first version and no verdict is reported for "
+        f"it. git lists this path as added, which means some commit inside "
+        f"that range must have created it -- check the checkout step sets "
+        f"`fetch-depth: 0`."
+        for path in diff.unresolved_added
+    ]
     errors += run(diff.cases, ledger_before, ledger_after)
 
     if errors:
@@ -1925,12 +2026,22 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 1
 
-    skipped = ""
-    if diff.added or diff.deleted:
-        skipped = (
-            f", plus {len(diff.added)} added and {len(diff.deleted)} deleted "
-            "whole, which this gate does not compare"
+    # `added` is no longer "which this gate does not compare" -- it is, against
+    # the commit that introduced each one, which is why it gets its own clause
+    # rather than sharing `deleted`'s. Reaching this line at all means
+    # `diff.unresolved_added` was empty, so every added file WAS compared.
+    noted = []
+    if diff.added:
+        noted.append(
+            f"{len(diff.added)} added, each compared against its first "
+            "version within this range"
         )
+    if diff.deleted:
+        noted.append(
+            f"{len(diff.deleted)} deleted whole, which this gate does not "
+            "compare"
+        )
+    skipped = f", plus {'; '.join(noted)}" if noted else ""
     print(
         f"OK: {len(diff.cases)} changed SKILL.md file(s){skipped}. "
         "No undeclared prose removal."

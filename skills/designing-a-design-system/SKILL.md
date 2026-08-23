@@ -1,4 +1,5 @@
 ---
+version: "545064d853e0"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: designing-a-design-system
 description: |
   Entry-point dispatcher for BUILDING or EXTENDING a design system — creating a token architecture, color system, type scale, spacing system, or component-sizing ladder from scratch, or adding a new token family to an existing system. Routes to the L0 primitives in build order: naming and taxonomy (token-naming-conventions), color (oklch-color-space, apca-contrast, wcag-contrast, palette-relationships, chroma-harmonization), non-color families (type-scale, line-height-grid, spacing-system, component-sizing-principles), interchange and versioning (dtcg-format, semver-design-tokens), and the quality bar (designing-elite-ui). Use when the task is authoring the system itself; for reviewing design output load reviewing-design-work; for using an existing system load consuming-a-design-system.
@@ -41,6 +42,8 @@ Typography is a paired pair — a modular size ratio plus a line-height grid tha
 
 **REQUIRED BACKGROUND:** [type-scale](../type-scale/SKILL.md), [line-height-grid](../line-height-grid/SKILL.md), [spacing-system](../spacing-system/SKILL.md), [component-sizing-principles](../component-sizing-principles/SKILL.md)
 
+A spacing ladder is what grouping gets read off, and grouping follows the *ratio* between competing gaps rather than their pixel values — so a ladder that multiplies across a density or breakpoint change preserves it, and one that adds a fixed offset compresses every ratio toward 1 and dissolves the structure. That is an authoring-time decision: get it wrong here and every consumer inherits it. [empirical-design-principles](../empirical-design-principles/SKILL.md) carries the ratio a grouping claim has to clear, and the evidence for it.
+
 Worked instantiations (incubating): [udts-spacing-defaults](../udts-spacing-defaults/SKILL.md), [udts-component-sizing-ladders](../udts-component-sizing-ladders/SKILL.md).
 
 ## 4. Format & versioning
@@ -74,6 +77,7 @@ One system's enforcement layer (incubating): [udts-linter-rules](../udts-linter-
 - [line-height-grid](../line-height-grid/SKILL.md) — grid-aligned line-height per font size.
 - [spacing-system](../spacing-system/SKILL.md) — two-unit (minor + major) spacing model.
 - [component-sizing-principles](../component-sizing-principles/SKILL.md) — curated component-height and icon-size ladders.
+- [empirical-design-principles](../empirical-design-principles/SKILL.md) — the grouping ratio a spacing ladder has to preserve, and how to use a named principle forward rather than as a post-hoc defence of a ladder already chosen.
 - [dtcg-format](../dtcg-format/SKILL.md) — token interchange snapshot format.
 - [semver-design-tokens](../semver-design-tokens/SKILL.md) — version-bump severity from a resolved-value diff.
 

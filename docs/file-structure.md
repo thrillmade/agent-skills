@@ -24,6 +24,7 @@ agent-skills
 │   ├── integrating-with-agent-skills.md
 │   ├── placement-map.json
 │   ├── prose-removals.md
+│   ├── skill-versions.json
 │   └── timeline.md
 ├── skills
 │   ├── apca-contrast
@@ -33,6 +34,7 @@ agent-skills
 │   ├── clud-bug-collaboration
 │   ├── component-sizing
 │   ├── component-sizing-principles
+│   ├── composing-a-screen
 │   ├── consuming-a-design-system
 │   ├── conventions-template
 │   ├── critical-issues-only
@@ -42,8 +44,11 @@ agent-skills
 │   ├── designing-a-design-system
 │   ├── designing-elite-ui
 │   ├── dtcg-format
+│   ├── empirical-design-principles
 │   ├── evidence-based-review
+│   ├── finding-a-catalog-skill
 │   ├── frontend-a11y
+│   ├── guarding-a-regression
 │   ├── line-height-grid
 │   ├── logmind
 │   ├── oklch-color-space
@@ -52,7 +57,9 @@ agent-skills
 │   ├── orchestrating-elite-agent-qa
 │   ├── palette-relationships
 │   ├── pii-and-compliance
+│   ├── proving-an-absence
 │   ├── respect-existing-conventions
+│   ├── retiring-a-superseded-decision
 │   ├── reviewing-design-work
 │   ├── semver-design-tokens
 │   ├── session-heartbeat
@@ -72,6 +79,7 @@ agent-skills
 │   ├── udts-spacing-defaults
 │   ├── udts-token-model
 │   ├── unattended-operation
+│   ├── usability-heuristics
 │   ├── visual-polish
 │   ├── wcag-contrast
 │   └── web-interface-guidelines-review
@@ -79,9 +87,20 @@ agent-skills
 │   ├── fixtures
 │   ├── conftest.py
 │   ├── test_check_prose_retention.py
+│   ├── test_clud_bug_self_update_compare.py
+│   ├── test_gen_skill_directory.py
+│   ├── test_gen_skill_versions.py
+│   ├── test_gitignore_covers_local_state.py
 │   ├── test_prose_retention_mutations.py
+│   ├── test_skill_census_digest_closure.py
+│   ├── test_skill_directory_mutations.py
+│   ├── test_skill_version.py
+│   ├── test_skills_current.py
+│   ├── test_stamp_versions.py
 │   ├── test_validate_skills.py
 │   ├── test_validate_skills_cli.py
+│   ├── test_validate_skills_links.py
+│   ├── test_validate_skills_version.py
 │   └── test_workflow_triggers.py
 ├── .cursorrules
 ├── .gitattributes

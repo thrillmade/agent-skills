@@ -73,8 +73,40 @@ jobs:
             echo "skip=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          if [ "$INSTALLED" = "$LATEST" ]; then
-            echo "Already on latest. Nothing to do."
+          # Semver-aware, not string-`!=`. #192: npm's `latest` dist-tag
+          # (0.6.34) sat behind this repo's installed 0.7.x prerelease
+          # (0.7.0-rc.20) for weeks. A plain `!=` treated that as "needs an
+          # update", generated a downgrade PR (#187 — closed specifically
+          # because it was a downgrade), and every week since kept
+          # regenerating the exact same branch name, colliding with the
+          # closed PR's undeleted remnant and failing outright at `git
+          # push`. Only proceed when LATEST is actually newer than
+          # INSTALLED; an unparsable INSTALLED (fresh install, "(unknown)")
+          # is always treated as older so onboarding still proceeds, and an
+          # unparsable LATEST refuses to guess rather than risk a downgrade.
+          IS_NEWER=$(node -e "
+            const parse = (v) => {
+              const m = /^(\d+)\.(\d+)\.(\d+)(?:-(.+))?\$/.exec(String(v).trim());
+              return m ? { major: +m[1], minor: +m[2], patch: +m[3], pre: m[4] || null } : null;
+            };
+            const a = parse(process.argv[1]); // installed
+            const b = parse(process.argv[2]); // latest
+            if (!a) { console.log('true'); process.exit(0); }
+            if (!b) { console.log('false'); process.exit(0); }
+            for (const k of ['major', 'minor', 'patch']) {
+              if (a[k] !== b[k]) { console.log(b[k] > a[k]); process.exit(0); }
+            }
+            // Same major.minor.patch: a final release outranks any
+            // prerelease of it; between two prereleases, compare the
+            // prerelease tag lexicographically (matches clud-bug's '-rc.N'
+            // scheme for single-digit-run N; not general semver precedence).
+            if (a.pre === b.pre) { console.log('false'); process.exit(0); }
+            if (a.pre === null) { console.log('false'); process.exit(0); }
+            if (b.pre === null) { console.log('true'); process.exit(0); }
+            console.log(b.pre > a.pre);
+          " "$INSTALLED" "$LATEST")
+          if [ "$IS_NEWER" != "true" ]; then
+            echo "Installed ($INSTALLED) is not older than latest ($LATEST). Nothing to do."
             echo "skip=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi

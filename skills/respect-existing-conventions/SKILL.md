@@ -1,4 +1,5 @@
 ---
+version: "936899cf6899"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: respect-existing-conventions
 description: Don't suggest changes that fight the codebase's established patterns. Match what's already there.
 ---

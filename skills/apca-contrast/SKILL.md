@@ -1,6 +1,7 @@
 ---
+version: "c894961136c7"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: apca-contrast
-description: Use when picking text-on-surface contrast, auditing an accessibility budget, or generating a color against a specific contrast target. Names the APCA Lc target table (Lc 90 fluent body, 75 body minimum, 60 secondary, 45 large, 30 spot, 15 non-text), the APCACH inverse-composition rule, and the cross-check policy with WCAG 2.2 AA. Cite when an agent reaches for WCAG 2.x as the primary contrast model — APCA is the perceptual model UDTS composes against; WCAG is the cross-check.
+description: Use when picking text-on-surface contrast, auditing an accessibility budget, or generating a color against a specific contrast target. Names the APCA Lc target table (Lc 90 fluent body, 75 body minimum, 60 secondary, 45 large, 30 spot, 15 non-text), the APCACH inverse-composition rule, the Display-P3 meter rule (score on the same gamut the composer targeted, never sRGB-clamped), and WCAG 2.2 AA as an optional, off-by-default cross-check. Cite when an agent reaches for WCAG 2.x as the primary or required contrast model, or scores Lc through an sRGB-clamped meter — APCA is UDTS's required perceptual gate; WCAG is optional and advisory.
 ---
 
 # APCA contrast
@@ -43,29 +44,32 @@ INPUT  target_lc=75, hue=220, chroma_cap=auto, bg=oklch(0.99 0 0)
 OUTPUT oklch(L, c_max, 220) — hits Lc 75 against the near-white surface
 ```
 
-## WCAG 2.2 AA cross-check (not primary)
+## Measure Lc on the composer's gamut, not sRGB
 
-After APCACH composition, also verify WCAG 2.2 AA:
+Score contrast on **Display P3 luminance** — apca-w3's `displayP3toY()`, not the default `sRGBtoY()` — matching the gamut the composer (apcach) targeted when it built the color. Clamping into sRGB before scoring a P3-composed color makes the meter disagree with the composer by several Lc, purely from the gamut mismatch, not from a real contrast problem. Use the SAME meter the composer verifies against, or exactness is unachievable by construction. (See [oklch-color-space](../oklch-color-space/SKILL.md)'s "Known open gap" note: the shipped meter doesn't do this yet — that's a defect to fix, not a reason to teach sRGB-clamped scoring as correct.)
+
+## WCAG 2.2 AA cross-check (optional, off by default)
+
+APCA is the native gate: a token that hits its declared Lc target ships. WCAG 2.2 AA is an **optional, off-by-default** cross-check, not a second required gate:
 
 - **4.5:1** for normal text (< 18 px or < 14 px bold)
 - **3:1** for large text (≥ 18 px or ≥ 14 px bold) and non-text UI
 
-UDTS will not emit a contrast-bound token whose Lc satisfies APCA but whose WCAG ratio fails its declared role. Both must pass.
-
-**Why both:** APCA is the better perceptual model but is exploratory at W3C (removed from the WCAG 3.0 Working Draft in 2023). WCAG 2.2 is the operative legal standard until WCAG 3 ships (≥ 2029). Requiring both means UDTS-generated systems pass current audits *and* are forward-compatible.
+When the cross-check is enabled and disagrees with APCA, treat it as a flag for review, not an automatic reject — see [wcag-contrast](../wcag-contrast/SKILL.md) for the disagreement table. APCA is exploratory at W3C (removed from the WCAG 3.0 Working Draft in 2023) but is UDTS's required perceptual model; WCAG 2.2 remains the operative legal standard until WCAG 3 ships (≥ 2029), which is why the optional check exists at all.
 
 ## Verification
 
 After composing a contrast-bound color:
 
-1. **APCA check:** `apca_contrast(fg, bg) ≈ declared_lc_target` within ± 1 Lc.
-2. **WCAG check:** `wcag_ratio(fg, bg) ≥ declared_role_threshold` (4.5:1 or 3:1).
-3. **Direction check:** UDTS Lc is unsigned and direction-aware; ensure the polarity matches the declared role (light text on dark surface vs dark text on light surface use the same Lc magnitude).
+1. **APCA check:** `apca_contrast(fg, bg) ≈ declared_lc_target` within ± 1 Lc, measured via `displayP3toY` (or whatever gamut the composer targeted) — not sRGB-clamped.
+2. **Direction check:** UDTS Lc is unsigned and direction-aware; ensure the polarity matches the declared role (light text on dark surface vs dark text on light surface use the same Lc magnitude).
+3. **WCAG cross-check (if enabled):** `wcag_ratio(fg, bg) ≥ declared_role_threshold` (4.5:1 or 3:1) — advisory, not gating.
 
-If APCA passes but WCAG fails (or vice versa), reject the value and recompose.
+If the APCA check fails, recompose. A failing optional WCAG cross-check is a review flag, not a reject.
 
 ## Cross-references
 
+- **Routed here by:** [designing-a-design-system](../designing-a-design-system/SKILL.md) — the L1 dispatcher for building or extending a system.
 - **REQUIRED BACKGROUND:** [oklch-color-space](../oklch-color-space/SKILL.md) for the underlying perceptual model and the APCACH library context.
 - **For multi-hue palette generation:** [chroma-harmonization](../chroma-harmonization/SKILL.md) (the chroma cap at each Lc target is the cross-hue minimum).
 - **For the WCAG side:** [wcag-contrast](../wcag-contrast/SKILL.md) for the cross-check thresholds and large-text rules.

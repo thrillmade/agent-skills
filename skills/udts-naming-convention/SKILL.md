@@ -1,4 +1,5 @@
 ---
+version: "aaffc5a6e563"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: udts-naming-convention
 description: "[L2 stub — incubating] UDTS's concrete token-naming convention — its opinionated instantiation of the universal principles in token-naming-conventions. Full content is being authored in thrillmade/tokenomics and lands here via an upstream PR once the UDTS spec stabilizes; do not treat this stub as guidance yet."
 ---

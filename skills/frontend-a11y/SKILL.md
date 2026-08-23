@@ -1,4 +1,5 @@
 ---
+version: "ec171fa67568"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: frontend-a11y
 description: >-
   Use when judging accessibility on a RENDERED surface — screenshots or a live
@@ -62,11 +63,13 @@ commonest false pass here.
    **SC 2.4.13 Focus Appearance is AAA** — an enhancement, never an AA failure. Tooltips
    and hover cards have their own rule: hoverable, dismissible without moving the pointer,
    persistent (**SC 1.4.13, AA**).
-3. **Hit area, as laid out.** **SC 2.5.8, AA — 24 by 24 CSS px**, then the spacing
-   exception: a 24 px circle on each **undersized** target must miss **another target's
-   box** — not its circle — or another undersized target's circle. So a 20 px button 1 px
-   from a 40 px one fails. Dense icon toolbars fail on spacing more than size; measure the
-   gap. Touch surfaces have a higher
+3. **Hit area, as laid out.** **SC 2.5.8, AA — 24 by 24 CSS px**, exceptions:
+   **Inline** — a target inline in text, or sized by non-target line-height —
+   never flag an inline link; **Spacing** — a 24 px circle on each
+   **undersized** target must miss **another target**, not its circle, and
+   another undersized target's circle, so a 20 px button 1 px from a 40 px
+   one fails; also Equivalent, User Agent Control, Essential. Icon toolbars fail
+   on spacing more than size; measure the gap. Touch surfaces have a higher
    platform floor; read that platform's HIG. The ladder behind the height is
    [component-sizing-principles](../component-sizing-principles/SKILL.md).
 4. **Meaning that can vanish.** **SC 1.4.1 Use of Color, A** — status as red/green with
@@ -114,9 +117,8 @@ Motion has two obligations: auto-starting motion over five seconds must be pausa
    a value sampled from the composited render rather than read off a token.
 3. No AAA criterion (2.4.13, 2.3.3) is reported as an AA failure, and focus was exercised
    by tabbing rather than inferred from a `:focus-visible` rule.
-4. Every mode in the table is reported as checked or as not captured — including on a
-   clean surface, whose one-line pass **names the modes checked**. A clean report not
-   naming its modes is not evidence.
+4. Every mode in the table is reported as checked or as not captured, including a
+   clean pass, which must **name the modes checked** or it is not evidence.
 
 ## Sources
 
@@ -126,12 +128,11 @@ Motion has two obligations: auto-starting motion over five seconds must be pausa
   are **AAA** there, not AA.
 - [CSS Color Adjust 1](https://www.w3.org/TR/css-color-adjust-1/#forced) is normative for
   the forced-colors `box-shadow` / `text-shadow` / `background-image` behaviour;
-  [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/forced-colors) adds that
-  system colours come from native semantics, not ARIA roles.
+  [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/forced-colors) supports
+  the native-semantics point above.
   [Media Queries 5](https://www.w3.org/TR/mediaqueries-5/#prefers-reduced-motion) defines
   the preference queries.
-- **House convention, not a standard:** sampling the composited pixel; "a mode not
-  captured is not checked".
+- **House convention, not a standard:** the composited-pixel and per-mode rules above.
 
 ## Cross-references
 

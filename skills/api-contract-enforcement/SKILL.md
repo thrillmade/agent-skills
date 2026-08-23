@@ -1,4 +1,5 @@
 ---
+version: "1dd295d6a4e8"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: api-contract-enforcement
 description: Flag PRs that change the shape, semantics, or error behavior of a public API without versioning, deprecation, or migration notes. Catches removed fields, renamed parameters, changed status codes, broken pagination, and silent enum drift. Apply when reviewing HTTP routes, gRPC services, GraphQL schemas, SDK exports, CLI flags, or any other interface a downstream consumer depends on.
 applies_to:

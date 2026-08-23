@@ -276,6 +276,32 @@ MUTATIONS = [
         "        self._indented = False\n        self._paragraph = lazy",
         "        self._paragraph = lazy",
     ),
+    (
+        # #226. The LIST half of the same boundary, dropped: a quote written at
+        # the parent's own margin -- not indented to the list item's content
+        # column, so the item never contained it -- leaves the item's column
+        # alive anyway. `* item` then `>` at column 0 above an indented example
+        # scores it as the item's own wrapped prose. markdown-it-py renders the
+        # example `<pre><code>`; this reads it as text four columns short of
+        # code, netting against a real deletion the same way the class before
+        # it did.
+        "list_nesting_survives_a_margin_quote",
+        "        self._paragraph = lazy\n"
+        "        while self._lists and col < self._lists[-1]:\n"
+        "            self._lists.pop()",
+        "        self._paragraph = lazy",
+    ),
+    (
+        # The boundary the column is compared against moves one column short,
+        # so a quote sitting exactly AT a list item's content column -- inside
+        # it, by the same rule the CommonMark comment above states -- reads as
+        # outside it. A nested item's own continuation, quoted properly at
+        # exactly its content column, then loses its column and rescopes into
+        # code -- caught by the control this fix already carries.
+        "list_pop_boundary_is_off_by_one",
+        "        while self._lists and col < self._lists[-1]:",
+        "        while self._lists and col <= self._lists[-1]:",
+    ),
     # -- the paragraph model: a blank line is one boundary, not the only one --
     (
         # The whole of it: no leaf block closes a paragraph any more, so the
@@ -482,6 +508,49 @@ MUTATIONS = [
         "quoted_paths_drop_out_of_the_comparison",
         '    fields = [f for f in out.split("\\0") if f]',
         '    fields = [f if f.isascii() else \'"%s"\' % f for f in out.split("\\0") if f]',
+    ),
+    (
+        # A file added within the range stops being compared to the commit
+        # that introduced it, restoring the exact gap this module closes: add
+        # a skill in one commit and gut it in the next on the same branch, and
+        # the gate goes back to certifying nothing about it.
+        "added_files_stop_being_compared_to_their_first_appearance",
+        "        elif status.startswith(\"A\"):\n"
+        "            path = skill_paths[0]\n"
+        "            diff.added.append(path)\n"
+        "            first = _first_appearance(base, head, path)\n"
+        "            if first is None:\n"
+        "                diff.unresolved_added.append(path)\n"
+        "            else:\n"
+        "                diff.pair(first, path, head, path)",
+        "        elif status.startswith(\"A\"):\n"
+        "            diff.added.append(skill_paths[0])",
+    ),
+    (
+        # `_first_appearance` compares against the LAST commit in the range
+        # that touched the path instead of the FIRST -- for a file added and
+        # then gutted with nothing after, that last commit is the gutting
+        # commit itself, so the file is compared against its own head version
+        # and the loss is zero by construction every time.
+        "first_appearance_compares_against_the_last_touch_not_the_first",
+        "    shas = [ln for ln in got.stdout.splitlines() if ln]\n"
+        "    return shas[0] if shas else None",
+        "    shas = [ln for ln in got.stdout.splitlines() if ln]\n"
+        "    return shas[-1] if shas else None",
+    ),
+    (
+        # A range this gate cannot walk for an added file -- the shallow-clone
+        # case -- silently falls back to comparing the file to itself instead
+        # of refusing. That is reporting success over a comparison that was
+        # never made, the one thing this gate's own base-resolution guard
+        # already refuses to do.
+        "unwalkable_added_history_silently_treated_as_unchanged",
+        "    got = _git(\"log\", \"--reverse\", \"--format=%H\", f\"{base}..{head}\", \"--\", path)\n"
+        "    if got.returncode != 0:\n"
+        "        return None",
+        "    got = _git(\"log\", \"--reverse\", \"--format=%H\", f\"{base}..{head}\", \"--\", path)\n"
+        "    if got.returncode != 0:\n"
+        "        return head",
     ),
     (
         # A blob git named that will not come back is dropped in silence again,

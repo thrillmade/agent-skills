@@ -1,4 +1,5 @@
 ---
+version: "9bdad1baf4f5"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: dtcg-format
 description: |
   Use when authoring, validating, or transforming W3C Design Tokens Format (DTCG) JSON. Names the $type / $value / $extensions separation, alias-reference syntax ({path.to.token}), group inheritance for shared $type / $description, composite token shapes (shadow, typography, transition), and the namespaced $extensions mechanism for tool-specific metadata. Cite when an agent proposes bare value / type keys without $, invents a top-level $modes key (themes/modes aren't in the DTCG draft), or hand-rolls tool metadata outside a namespaced extension bag. For one system's concrete extension schema see udts-dtcg-extensions.
@@ -151,6 +152,7 @@ One worked extension schema is UDTS's, documented in [udts-dtcg-extensions](../u
 
 ## Cross-references
 
+- **Routed here by:** [designing-a-design-system](../designing-a-design-system/SKILL.md) — the L1 dispatcher for building or extending a system.
 - **REQUIRED BACKGROUND:** [token-naming-conventions](../token-naming-conventions/SKILL.md) — the naming principles that extension metadata redundantly encodes.
 - **For the version-bump policy when DTCG files change:** [semver-design-tokens](../semver-design-tokens/SKILL.md).
 - **For one system's concrete extension schema:** [udts-dtcg-extensions](../udts-dtcg-extensions/SKILL.md) — the worked example.

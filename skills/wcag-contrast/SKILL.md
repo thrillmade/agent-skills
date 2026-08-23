@@ -1,11 +1,12 @@
 ---
+version: "c2c3bd386622"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: wcag-contrast
-description: Use when verifying a color pair meets WCAG 2.2 AA contrast requirements as a cross-check on APCA-driven generation, or when auditing a token catalog or design for legal-baseline accessibility compliance. Names the 4.5:1 normal-text rule, the 3:1 large-text rule, the size threshold for "large" stated in points (≥ 18 pt regular ≈ 24 CSS px, OR ≥ 14 pt bold ≈ 18.67 CSS px — not pixels), the SC 1.4.11 non-text rule, SC 2.4.13 focus appearance (AAA — the AA hooks are 1.4.11 and 2.4.11), and the role this check plays alongside APCA. Cite when an agent treats WCAG as the *primary* contrast model, or writes the large-text threshold as "14 px bold / 18 px regular" — UDTS uses WCAG as a cross-check with APCA as primary, and WCAG sizes are in points.
+description: Use when verifying a color pair meets WCAG 2.2 AA contrast requirements as an optional cross-check on APCA-driven generation, or when auditing a token catalog or design for legal-baseline accessibility compliance. Names the 4.5:1 normal-text rule, the 3:1 large-text rule, the size threshold for "large" stated in points (≥ 18 pt regular ≈ 24 CSS px, OR ≥ 14 pt bold ≈ 18.67 CSS px — not pixels), the SC 1.4.11 non-text rule, SC 2.4.13 focus appearance (AAA — the AA hooks are 1.4.11 and 2.4.11), and the optional, off-by-default role this check plays alongside APCA's required gate. Cite when an agent treats WCAG as the *primary* or a *required* contrast model, or writes the large-text threshold as "14 px bold / 18 px regular" — UDTS uses WCAG only as an optional cross-check, APCA is the required gate, and WCAG sizes are in points.
 ---
 
 # WCAG 2.2 AA contrast
 
-WCAG 2.2 Level AA is the **legal-baseline** contrast standard for most jurisdictions until WCAG 3 ships (≥ 2029). UDTS uses it as a cross-check alongside its primary model, APCA. Every UDTS-emitted contrast-bound token passes both.
+WCAG 2.2 Level AA is the **legal-baseline** contrast standard for most jurisdictions until WCAG 3 ships (≥ 2029). UDTS uses it as an **optional, off-by-default** cross-check alongside its primary and only required model, APCA — enabling this check doesn't change what ships; APCA's Lc target is the gate.
 
 ## When to use
 
@@ -49,13 +50,11 @@ For OKLCH-source colors, gamut-map to sRGB first (clamp out-of-gamut chroma at t
 
 ## When WCAG and APCA disagree
 
-WCAG's relative-luminance model over-reports contrast for dark colors and under-reports for very light ones, so APCA and WCAG diverge at the extremes (very dark + very dark, very light + very light, very saturated mid-tones). UDTS finds the safe middle: a token passes only if **both** models pass.
+WCAG's relative-luminance model over-reports contrast for dark colors and under-reports for very light ones, so APCA and WCAG diverge at the extremes (very dark + very dark, very light + very light, very saturated mid-tones). APCA is the gate; WCAG, when the cross-check is enabled, is advisory only:
 
-In practice:
-
-- **WCAG passes, APCA fails:** the pairing meets the legal threshold but is *perceptually* hard to read. Reject. (Most common in the dark-on-dark range.)
-- **APCA passes, WCAG fails:** the pairing reads fine perceptually but doesn't meet the legal baseline. Reject. (Most common in the very-light range.)
-- **Both pass:** ship.
+- **WCAG passes, APCA fails:** the pairing meets the legal threshold but is *perceptually* hard to read. The APCA failure blocks emission regardless of WCAG. (Most common in the dark-on-dark range.)
+- **APCA passes, WCAG fails:** the pairing reads fine perceptually and ships — the WCAG miss is a flag for manual legal-compliance review, not a block. (Most common in the very-light range.)
+- **Both pass:** ship, no flag.
 
 ## Verification
 
@@ -64,11 +63,12 @@ For each contrast-bound pairing:
 1. Compute the WCAG ratio with sRGB-linearized luminance.
 2. Apply the role-appropriate threshold (4.5:1 normal text, 3:1 large text or non-text).
 3. Confirm the bold-text size rule in **points** — 14 pt bold (~18.67 CSS px) counts as large; 14 CSS px bold does not. Same for 18 pt regular (= 24 CSS px), not 18 CSS px.
-4. Cross-check the APCA Lc (see [apca-contrast](../apca-contrast/SKILL.md)).
-5. Reject if either model fails.
+4. Cross-check the APCA Lc (see [apca-contrast](../apca-contrast/SKILL.md)) — APCA is the gate.
+5. Flag (don't reject) if this WCAG check fails while APCA passes; an APCA failure is what blocks emission.
 
 ## Cross-references
 
+- **Routed here by:** [designing-a-design-system](../designing-a-design-system/SKILL.md) — the L1 dispatcher for building or extending a system.
 - **REQUIRED BACKGROUND:** [apca-contrast](../apca-contrast/SKILL.md) — the primary contrast model. WCAG is the cross-check; APCA is the generator target.
 - **For the underlying color space:** [oklch-color-space](../oklch-color-space/SKILL.md) — OKLCH source values must be gamut-mapped to sRGB before applying the WCAG formula.
 

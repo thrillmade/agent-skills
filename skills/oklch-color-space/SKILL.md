@@ -1,4 +1,5 @@
 ---
+version: "bed55cea4269"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: oklch-color-space
 description: Use when picking color values for a design-token system, constructing a palette around a starting hue, or generating colors against an accessibility contrast target. Names the OKLCH primitive ranges, the hue-angle naming convention, the gamut-mapping rule (Display P3 for computation, sRGB for the emitted fallback), and the APCACH inverse-composition approach for guaranteed-contrast color generation. Cite when an agent reaches for "pick a color then check contrast" — the inversion is the load-bearing move.
 ---
@@ -63,6 +64,7 @@ Practical rule for picking a chroma cap: compose against the **Display P3 ceilin
 
 ## Cross-references
 
+- **Routed here by:** [designing-a-design-system](../designing-a-design-system/SKILL.md) — the L1 dispatcher for building or extending a system.
 - **REQUIRED BACKGROUND:** [apca-contrast](../apca-contrast/SKILL.md) for the Lc target table, when contrast Lc applies, and the WCAG cross-check.
 - **REQUIRED for multi-hue palettes:** [chroma-harmonization](../chroma-harmonization/SKILL.md) — cap chroma at the lowest-achievable value across all hues at the same stop, so no hue is a neon outlier.
 - **For starting-hue palette construction:** [palette-relationships](../palette-relationships/SKILL.md) — analogous, complementary, triadic, etc., as hue-angle math.

@@ -21,9 +21,10 @@ name: skill-census
 # secret-guard step fails loudly with remediation if they are not.
 #
 # Idempotency: one digest issue per ISO-week cycle (commented on re-run, not
-# duplicated); verdict issues de-duplicated by exact title; hard cap of 5
-# verdict issues filed per cycle with the overflow count surfaced in the
-# digest. See the "File issues" step.
+# duplicated); every OTHER open digest is closed as superseded once this
+# cycle's is filed, so exactly one stays open at a time; verdict issues
+# de-duplicated by exact title; hard cap of 5 verdict issues filed per cycle
+# with the overflow count surfaced in the digest. See the "File issues" step.
 
 on:
   schedule:
@@ -241,6 +242,7 @@ jobs:
             --json number,title 2>/dev/null \
             | jq -r --arg t "$DIGEST_TITLE" 'map(select(.title == $t)) | .[0].number // empty') || EXISTING_DIGEST=""
 
+          DIGEST_NUM="$EXISTING_DIGEST"
           if [ "$DRY_RUN" = "true" ]; then
             echo "=== DRY-RUN: digest issue ==="
             if [ -n "$EXISTING_DIGEST" ]; then
@@ -256,11 +258,56 @@ jobs:
               gh issue comment "$EXISTING_DIGEST" --body-file "$DIGEST_BODY_FILE"
               echo "::notice::Updated digest issue #${EXISTING_DIGEST} for ${CYCLE_TAG}."
             else
-              gh issue create --title "$DIGEST_TITLE" --label census --body-file "$DIGEST_BODY_FILE"
-              echo "::notice::Created digest issue '${DIGEST_TITLE}'."
+              DIGEST_URL=$(gh issue create --title "$DIGEST_TITLE" --label census --body-file "$DIGEST_BODY_FILE")
+              DIGEST_NUM="${DIGEST_URL##*/}"
+              echo "::notice::Created digest issue '${DIGEST_TITLE}' (#${DIGEST_NUM})."
             fi
           fi
           rm -f "$DIGEST_BODY_FILE"
+
+          # Close every previously-filed digest now that this cycle's is filed
+          # — a weekly snapshot is superseded by construction the moment the
+          # next one ships, and nothing else prunes them (#249: four digests
+          # sat open at once, only the newest current). A prior digest is
+          # identified by BOTH signals together, never one alone: the "census"
+          # label with no OTHER census-scheme label riding along (a verdict
+          # always adds gap/placement/revise/promotion-candidate/demotion-
+          # candidate on top of census — see the labelling above, so "census"
+          # alone is the digest's own signature), and the exact "census
+          # <ISO-week> digest" title this workflow itself deterministically
+          # generates (never an LLM-authored verdict title). Requiring both
+          # means a human hand-labelling some other issue "census", or a
+          # verdict whose declared labels all fell through the allow-list
+          # above, still can't produce a false close on its own. Excluding
+          # this cycle's own title (by construction the one just
+          # created/updated) keeps a re-run idempotent — it never closes the
+          # digest it just filed.
+          PRIOR_DIGESTS=$(gh issue list --state open --label census --json number,title,labels --limit 100 2>/dev/null \
+            | jq -r --arg t "$DIGEST_TITLE" '
+                [.[] | select((.labels | length) == 1)
+                      | select(.title | test("^census [0-9]{4}-W[0-9]{2} digest$"))
+                      | select(.title != $t)]
+                | .[].number
+              ') || PRIOR_DIGESTS=""
+
+          if [ -n "$PRIOR_DIGESTS" ]; then
+            while IFS= read -r prior; do
+              [ -z "$prior" ] && continue
+              NOTE="Superseded by ${DIGEST_TITLE}"
+              if [ -n "$DIGEST_NUM" ]; then
+                NOTE="${NOTE} (#${DIGEST_NUM})"
+              fi
+              NOTE="${NOTE} — a weekly snapshot is stale the moment the next one files, closing this one."
+              if [ "$DRY_RUN" = "true" ]; then
+                echo "=== DRY-RUN: close prior digest #${prior} ==="
+                echo "${NOTE}"
+              else
+                gh issue comment "$prior" --body "$NOTE"
+                gh issue close "$prior"
+                echo "::notice::Closed prior digest issue #${prior} — ${NOTE}"
+              fi
+            done <<< "$PRIOR_DIGESTS"
+          fi
 
           if [ "$MODE_B" -eq 1 ]; then
             echo "Mode B — no verdict issues to file."

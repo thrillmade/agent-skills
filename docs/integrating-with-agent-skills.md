@@ -12,6 +12,34 @@ Every thrillmade repo where agents work integrates with this catalog. This guide
 | **Published** | Born in your repo, promoted to the catalog | Nomination PR to agent-skills; the editor gate accepts or rejects |
 | **Local** | Repo-specific; never leaves | Lives in `.claude/skills/`, marked local-only in your census |
 
+A fourth posture exists but isn't a choice a repo makes — it's what happens when a subscribed repo **leaves the org**:
+
+| Posture | Meaning | Mechanism |
+|---|---|---|
+| **Departed** | Was Subscribed; the repo has left the org (e.g. handed off to a client) and is no longer read by any org-side automation | None — `skills-lock.json` stays committed as a frozen provenance record, not a live subscription |
+
+A departed repo is not Subscribed, Published, or Local — it was Subscribed and became a frozen copy outside the org's reach. Nothing about the repo changes at the moment it leaves; what changes is that every mechanism above assumes a listener, and this repo no longer is one:
+
+- **No refresh PRs.** Fan-out (today's per-repo crons, and the steward's future org-wide watcher) only reaches repos the org can open PRs against.
+- **No census visibility.** The weekly census reads manifests from repos the steward App is installed on; a departed repo isn't among them, so it can't appear in `gap:` / `placement:` / `demotion-candidate:` issues, for better or worse.
+- **No migration window.** A deprecation's SUPERSEDED period exists so a *listening* repo has time to re-point before removal. A departed repo doesn't see the marker land and doesn't see the removal either — it just keeps whatever slug it had at handoff, forever.
+- **`skills-lock.json` still commits, but changes role.** "Manifests are repo content" still holds — don't delete or gitignore it. It stops meaning "what I'm subscribed to" and starts meaning "what I was given, and at what version": provenance a future paid-subscription product would attach to, not a live pointer this repo's automation still resolves.
+
+What a departed repo **can** still do, unaided: verify currency for itself — but **via the `version:` stamp, not via `computedHash`.**
+
+Each skill's frontmatter carries a `version:` line holding a content digest of that file, computed with the line itself elided so the stamp is a fixed point. It is reproducible from bytes with nothing beyond the Python standard library, and `thrillmade/agent-skills` is public, so both the checker and the index it reads are fetchable with `curl` alone — no org membership, no token, no install:
+
+```bash
+curl -fsSLO https://raw.githubusercontent.com/thrillmade/agent-skills/main/.github/scripts/skills_current.py
+python3 skills_current.py            # from the repo root
+```
+
+**Do not try this with `skills-lock.json`'s `computedHash`.** That hash is produced by the skills.sh CLI and its normalisation is not reproducible from the standard library: this catalog tried roughly forty candidate algorithms against real stored values and none matched, which is why `census_counters.py` leaves `CATALOG_HASH_ALGO` at `None` and reports every subscription `indeterminate` rather than claiming drift it cannot prove. `computedHash` is provenance you keep; it is not a check you can run.
+
+It works from anywhere, on demand — it just never happens automatically, and nothing tells the repo when it is worth doing.
+
+What it **cannot** do: receive a refresh PR, get flagged by the census, or see a migration window. Those all require the org to still be able to read or write the repo, and a departed repo is, by definition, a repo the org no longer touches.
+
 Two rules make the system trustworthy:
 
 1. **Nomination ≠ publication.** A promotion PR passes `validate-skills.yml`, the `skill-frontmatter-quality` review skill, strict-mode clud-bug review, and human approval. The editor can say no.
@@ -91,11 +119,63 @@ For a repo that predates this system (all current thrillmade repos):
 5. **Subscribe deliberately.** Check the open `placement:` issues on this repo — the census may already have recommendations for you.
 6. **Protect your seams:** never hand-edit subscribed copies (updaters overwrite them); publishers must never let refresh automation write their shipped source (e.g. clud-bug's `templates/skills/**` — that's an npm release, not a cron); preserve symlink topology (`.claude/skills/` → `.agents/skills/`); automation commits use `[skip-logmind]` or file a decision entry (protocol SPEC §15).
 
+## Am I current?
+
+Answerable from inside your own repo, with no access to this one. Until now it wasn't: `npx skills add` copies a `SKILL.md` wholesale and records a `computedHash` produced by the CLI's own normalisation, and the lock stores no version, ref, commit or date — so a subscriber holding a months-old copy had nothing to compare and nothing told them. The first run of the checker below found 21 of `arlyn-working`'s 23 subscribed skills behind, some by three versions and some since May.
+
+Every `SKILL.md` here now opens with its own content digest:
+
+```yaml
+version: "56be4995fc2f"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+```
+
+**The rule, in full, and it is meant to be re-derivable by hand:** normalise CRLF to LF, delete the `version:` line from the frontmatter, `sha256` the remaining bytes, take the first 12 hex characters. Deleting the line before hashing is what makes the value stable — a file's digest does not depend on what its stamp already claimed, so a wrong stamp, a malformed one and a missing one all name the same expected value. Everything else is inside the hash, `description:` included: it is the trigger surface, so a body-only digest would call a rewritten description "current".
+
+The quotes are not decoration. Unquoted, an all-digit digest stops being a string — `766941312459` is a real historical digest of this catalog's own `frontend-a11y`, and `000000123456` parses as octal `42798` and does not round-trip.
+
+**[`docs/skill-versions.json`](skill-versions.json)** publishes `current` plus the full history for every slug. One GET, no auth:
+
+```bash
+curl -fsSLO https://raw.githubusercontent.com/thrillmade/agent-skills/main/.github/scripts/skills_current.py
+python3 skills_current.py           # run from your repo root
+```
+
+Stdlib only, one HTTPS GET, reads nothing but your own files — no git, no lock, no `npx`. It finds skills under **both** `.agents/skills` and `.claude/skills`, counting a symlink and its target once, because neither root is a safe default: across the repos here `.agents/skills` exists in three of twenty and `.claude/skills` in twelve, and where both exist the second is usually symlinks into the first.
+
+Verdicts are `current`, `STALE n`, `DIVERGED`, `unpublished` (a version this catalog carries that isn't what `main` publishes — a branch build, so you are not behind), `mirrored` (authored elsewhere; this catalog only mirrors it and is not the authority), `retired`, and `local-skill` (not a catalog slug, so nothing is said about it). It exits `0` current, `1` stale-or-diverged, and **`2` whenever it examined nothing** — an unreadable index, an empty index, a root that isn't there. A run that looked at nothing reports success exactly as loudly as one that looked at thirty files, which is the failure this whole mechanism exists to remove.
+
+**What is checked, and what isn't.** Each `current` is recomputed from the file on disk by `validate-skills` on every pull request, so it cannot drift from the tree. The **history** rows are derived from git, and `validate-skills.yml` checks out at depth 1, so CI cannot recompute them; nothing gates them. That is most of the index by row count, and the index carries the split — and the exact count — in its own `verification` block rather than leaving you to assume. Regenerate them in a full clone with `.github/scripts/gen_skill_versions.py --write`, which enumerates from `refs/remotes/origin/*` — exactly what a fresh clone has, so anyone can reproduce the output.
+
+`version:` is **enforced when present, not required**, and it is not in the SPEC's frontmatter table at all. That is the sanctioned way to add one: protocol SPEC §2.1 says an unrecognised key "MUST NOT cause a failure" and MUST round-trip unchanged, "so the schema can grow without every consumer being upgraded first". Requiring it would be the unsanctioned half. The same table already marks `source` REQUIRED against **0 of 49** adopters in this catalog (control: `kind` has 5) — the catalog already diverges from the owner it cites, and declaring a second required key from inside it would widen that rather than close it. Ratification is [protocol#39](https://github.com/thrillmade/protocol/issues/39)'s to grant.
+
+**Pinning, if you want an exact answer instead of a comparison.** `npx skills add thrillmade/agent-skills#<sha>` records the ref in your lock, so a later install is reproducible. That works today and costs this catalog nothing — but it reaches only repos that have a lock (four of the twenty here), which is why the index exists rather than a lock convention.
+
+**This is pull-only.** It makes staleness *knowable*, not *known*: nothing here opens a PR in your repo, and this catalog still does not know who its subscribers are — [`placement-map.json`](placement-map.json) carries an empty `subscribers` list on most entries. Run the checker, or wire it into your own CI.
+
 ### The placement map
 
 [`docs/placement-map.json`](placement-map.json) is the per-skill ground truth the census reads as **signal 1**. For every skill in `skills/`, it records `authoring_home` (`catalog` / `repo-mirrored:<repo>` / `undecided`), `distribution` (`default-on` / `opt-in` / `catalog-only`), and `subscribers` (the repos that actually pull it) — the verdicts a prior editorial round already reached, so each new census cycle starts from a baseline instead of re-litigating placement from zero.
 
 Divergence from live state — a repo's `skills-lock.json` or `.clud-bug.json` subscribing to something the map marks `catalog-only`, or authoring a copy of something the map homes at `catalog` — isn't silently reconciled. It *files* a placement verdict: the census raises it as a `placement:` issue for a human to resolve, either by correcting the repo or by updating the map.
+
+It also carries the two editorial fields the catalog directory is generated from: `family` (which group the skill is listed under, an id declared in the map's top-level `families` array) and `owns` (a ≤32-byte fragment naming what that skill owns, as it appears in the directory line). Both are **required on every entry**, and that is deliberate: the map is already reconciled 1:1 against `skills/`, so requiring them here means a skill cannot be added without saying where it belongs and what it is for ([#229](https://github.com/thrillmade/agent-skills/issues/229)).
+
+That the catalog publishes a directory **at all** is owned by one test, `tests/test_gen_skill_directory.py::test_this_catalog_publishes_a_directory`, and not by the gate: `validate_skills` has to hold for any tree it is pointed at, so it tolerates a tree that publishes none. Deleting the skill alone is red at the gate (the map still has an entry for the missing dir); deleting the entry too used to be green everywhere, and is now red in the suite CI runs alongside it.
+
+The directory itself — [`skills/finding-a-catalog-skill`](../skills/finding-a-catalog-skill/SKILL.md) — is **generated, never hand-edited**. `validate-skills` re-renders it in process and fails on any difference, so a skill added without regenerating goes red on its own PR. Regenerate with:
+
+```bash
+python3 .github/scripts/gen_skill_directory.py --write
+```
+
+Prose lives in the generator, not in the SKILL.md. No ceiling is written down anywhere: run `python3 .github/scripts/gen_skill_directory.py` with no arguments and it prints today's headroom, measured by rendering the real tree with synthetic skills appended at the catalog's own density until the reserve binds.
+
+Two things a byte-identical re-render **cannot** catch, because both sides of the comparison agree with each other — so each has its own rule:
+
+- **A retired skill filed as live.** A skill whose `description` opens `SUPERSEDED` (or that carries `superseded_by` / `status: superseded`) must sit in the `deprecated` family. `skillforge` did not, and the directory routed agents to guidance its own author had told them to stop following.
+- **A skill missing from `README.md`.** The gate reconciles the README's `skills/<name>/SKILL.md` links 1:1 against the tree — membership only; the purpose column stays hand-written.
+
+And one thing nothing catches, stated plainly because the directory reads as though something did: `owns` is editorial text, so a skill can be rewritten from top to bottom and its fragment will still say what it said before. The rendered header tells the reader that, rather than letting them infer a freshness guarantee nothing makes.
 
 Editing the map is a normal PR through the same gate as any other catalog change — `validate-skills.yml`, strict-mode clud-bug review, human approval. There's no separate authority for it.
 

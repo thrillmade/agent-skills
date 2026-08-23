@@ -44,9 +44,15 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          # Self-heal mode A pushes commits back to this PR. Need the
-          # head ref + full history so the push is fast-forward.
-          ref: ${{ github.event.pull_request.head.ref || github.ref }}
+          # SHA, not branch name (#223). This job only reads the tree to
+          # run the link check — it never pushes — so it doesn't need a
+          # named ref, and a name goes stale the moment the PR merges and
+          # `delete_branch_on_merge` removes it: a run still in flight
+          # dies at this step with "A branch or tag with the name '…'
+          # could not be found", manufacturing a red X on a merged PR for
+          # a run that never touched the actual change. The SHA stays
+          # resolvable after the branch is gone.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
@@ -88,6 +94,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
+          # Unlike the check-links job above, this one genuinely needs a
+          # named ref (#223): self-heal pushes fixes back to the PR
+          # branch, and there's nowhere to push a SHA to. It only runs
+          # after check-links has already failed on a still-open PR, so
+          # the branch is expected to exist here.
           ref: ${{ github.event.pull_request.head.ref }}
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           token: ${{ secrets.GITHUB_TOKEN }}
