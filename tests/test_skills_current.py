@@ -82,6 +82,17 @@ def test_the_checker_and_the_catalog_agree_on_every_catalog_skill() -> None:
         b"---\nname: a\nmetadata:\n  version: 3\n---\n\n# T\n\nB.\n",
         b'---\nname: a\nversion: "1.0.0"\ndigest: "aaaaaaaaaaaa"\norigin: https://x\n---\n\n# T\n\nB.\n',
         b"---\nname: a\ndigest: banana\norigin:\n---\n\n# T\n\nB.\n",
+        # The shape that broke the pair: a line INSIDE the frontmatter that
+        # merely starts with dashes. Both copies must treat it as content,
+        # not as the closing delimiter -- SPEC 2.1 step 2 says the block
+        # closes at the first line that is EXACTLY `---`. This was absent
+        # from the list, so the two copies diverged here in silence.
+        b'---\nname: a\n--- not a close\nversion: "1.0.0"\n---\n\n# T\n\nB.\n',
+        b'---\nname: a\n----\ndigest: "aaaaaaaaaaaa"\n---\n\n# T\n\nB.\n',
+        b'---\nname: a\n---  \norigin: "https://x"\n---\n\n# T\n\nB.\n',
+        # Closing delimiter at EOF with no trailing newline -- the case the
+        # lookahead genuinely buys over a consuming match.
+        b'---\nname: a\nversion: "1.0.0"\n---',
     ],
 )
 def test_the_two_copies_agree_on_the_awkward_shapes(raw: bytes) -> None:

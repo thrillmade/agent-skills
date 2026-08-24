@@ -84,9 +84,16 @@ import re
 # `--- not a close`, ending the block early -- so an identity line after
 # such a line would not be elided, and this implementation would compute a
 # different digest from one that follows SPEC 2.1 step 2 ("closes at the
-# first subsequent line that is exactly `---`"). A LOOKAHEAD, not a match:
-# `m.end()` must stay immediately after the closing `---`, because callers
-# slice on it and consuming the newline would move bytes across that seam.
+# first subsequent line that is exactly `---`").
+#
+# A LOOKAHEAD rather than a consuming `\n`, and the reason is NOT that
+# `m.end()` would shift -- an earlier version of this comment claimed that
+# and it is false: `front + rest` reassembly is lossless whichever side of
+# the newline the seam falls on, and a consuming variant computes identical
+# digests on every real skill. The real reason is a file whose frontmatter
+# closes at EOF with NO trailing newline. A consuming pattern does not match
+# it at all, so `stamp()` raises ValueError on a validly-formed file. The
+# lookahead matches it.
 FRONTMATTER_RE = re.compile(rb"^---\n(.*?)\n---(?=\n|\Z)", re.DOTALL)
 
 # PERMISSIVE: any line of this shape at column 0 of the frontmatter. Anchored

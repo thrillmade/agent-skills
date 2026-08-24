@@ -385,6 +385,33 @@ def test_a_line_that_merely_starts_with_dashes_does_not_close_the_frontmatter():
     assert skill_version.digest(early) == skill_version.digest(without)
 
 
+def test_the_frontmatter_closes_at_the_FIRST_exact_delimiter_not_the_last():
+    """SPEC 2.1 step 2 has two halves -- exactly, and FIRST. The other tests
+    pin exactness; a greedy `.*` variant passes every one of them and is
+    still wrong, because it swallows the body up to the LAST bare `---`.
+
+    A skill body may legitimately carry further bare `---` lines -- a fenced
+    example showing frontmatter, or a horizontal rule -- and the reference
+    catalog already contains such a file. Under a greedy reading an identity
+    line in that stretch is elided from one implementation's hash and not
+    another's.
+    """
+    raw = (
+        b"---\n"
+        b"name: x\n"
+        b"---\n"
+        b"body before\n"
+        b'version: "9.9.9"\n'   # in the BODY -- must NOT be elided
+        b"---\n"
+        b"body after\n"
+    )
+    # Changing that body line changes the digest. Under a greedy reading it
+    # would sit inside the "frontmatter" and be elided, so the two files
+    # would hash the same.
+    other = raw.replace(b'version: "9.9.9"', b'version: "8.8.8"')
+    assert skill_version.digest(raw) != skill_version.digest(other)
+
+
 def test_a_four_dash_line_does_not_close_the_frontmatter():
     """The same boundary, one character wider -- `----` is a markdown rule,
     not a delimiter, and a reader following the SPEC would not stop there.

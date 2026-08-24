@@ -170,7 +170,7 @@ WORD_RE = re.compile(r"[A-Za-z0-9_]+(?:['’-][A-Za-z0-9_]+)*")
 # `validate_skills.py`'s own frontmatter boundary, character for character --
 # see split_scopes. Applied to text with its line endings normalised, which
 # that gate gets for free from `Path.read_text` and this one does not.
-FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
+FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---(?=\n|\Z)", re.DOTALL)
 
 # A byte-order mark is not content. Left in place it sits before the opening
 # `---` and the frontmatter stops being locatable.

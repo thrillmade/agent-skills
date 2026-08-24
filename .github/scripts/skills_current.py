@@ -65,7 +65,7 @@ INDEX_URL = (
 )
 ROOTS = (".agents/skills", ".claude/skills")
 
-FRONTMATTER_RE = re.compile(rb"^---\n(.*?)\n---", re.DOTALL)
+FRONTMATTER_RE = re.compile(rb"^---\n(.*?)\n---(?=\n|\Z)", re.DOTALL)
 IDENTITY_LINE_RES = (
     re.compile(rb"(?m)^version:[^\n]*\n"),
     re.compile(rb"(?m)^digest:[^\n]*\n"),
