@@ -1,5 +1,5 @@
 ---
-version: "edf49c1e4dc2"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "057a7ec84fbe"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: consuming-a-design-system
 description: |
   Entry-point dispatcher for CONSUMING a design system in a product — installing its tokens, wiring CSS variables, theming, upgrading across token releases, or deciding whether to extend or fork. Routes to token discipline (reference tokens, never raw hex/px — token-naming-conventions), composition rules (semantic over primitive; themes swap role-to-palette bindings), install patterns (dtcg-format to CSS variables and framework primitives), and migration discipline (semver-design-tokens, token-diff reading, deprecation cycles). Use when the task is using an existing system; for building one load designing-a-design-system; for reviewing design output load reviewing-design-work.
@@ -53,9 +53,9 @@ The bump severity tells you whether product code must change — see [semver-des
 
 ## 5. Extending vs. consuming
 
-- **Alias, don't fork.** Product-local tokens that need something the system doesn't provide should be authored *on top* — aliasing system tokens — not by duplicating or forking the system's catalog.
+- **Alias, don't fork — and only as a fenced interim.** A product-local token for something the system doesn't provide yet is authored *on top*, aliasing system tokens, never duplicating or forking the catalog — and it is **interim, not standing**: opened against an issue on the system's tracker, and deleted the moment the upstream token lands. An alias with no linked issue and no removal condition is drift wearing the alias pattern.
 - **Fork only when you own the whole lifecycle.** A fork means you now maintain contrast floors, SemVer discipline, and migrations yourself; that's a heavier commitment than most product-specific needs justify.
-- **Upstream recurring extensions.** If the same product-local alias keeps getting reinvented across teams, that's a signal to propose it to the system's maintainers rather than let it live as private drift.
+- **Upstream recurring extensions.** If the same product-local alias keeps getting reinvented across teams, that's the signal to propose it to the system's maintainers — not to leave it as permanent private drift.
 
 One system's worked instantiation of a consumer-facing contract (incubating, not yet loadable): [udts-token-model](../udts-token-model/SKILL.md), [udts-linter-rules](../udts-linter-rules/SKILL.md).
 

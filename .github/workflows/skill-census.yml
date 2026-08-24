@@ -43,8 +43,14 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
+  # No issues: write here — checkout is the only step still on github.token,
+  # and it only needs contents:read. Filing (the panel and File issues steps)
+  # runs on the minted App token instead, which sets no permission-<x>
+  # inputs and so inherits the installation's own permissions (Issues:
+  # read/write since 2026-07-17, #183) — this block does not govern it.
+  # Widen this only if a future step goes back to github.token for
+  # something that needs it.
   contents: read
-  issues: write
 
 jobs:
   census:
@@ -84,10 +90,12 @@ jobs:
             echo "panel_enabled=true" >> "$GITHUB_OUTPUT"
           fi
 
-      # Scoped to exactly the consumer repos census_counters.py reads
-      # cross-repo (STEWARD_TOKEN). agent-skills itself is read via checkout,
-      # not this token, and issue filing now runs on github.token (see the
-      # File issues step) — so agent-skills does not need to be in scope here.
+      # Scoped to the consumer repos census_counters.py reads cross-repo
+      # (STEWARD_TOKEN), plus agent-skills itself. The App has held Issues:
+      # read/write since 2026-07-17 (#183) — the panel and File issues steps
+      # below now file under this token, as the steward identity, so
+      # agent-skills must be in scope here or those steps have nothing to
+      # write with.
       - name: Mint steward App token
         id: app_token
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3
@@ -96,6 +104,7 @@ jobs:
           private-key: ${{ secrets.THRILLMADE_ORCHESTRATOR_PRIVATE_KEY }}
           owner: thrillmade
           repositories: |
+            agent-skills
             clud-bug
             clud-bug-app
             logmind
@@ -138,11 +147,12 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           CENSUS_DIR: ${{ runner.temp }}/census
-          # Reads the open `census` docket via `gh issue list` in THIS repo —
-          # the App has no Issues permission at all, so this must be the
-          # workflow's own GITHUB_TOKEN (issues: write, granted above), not
-          # the App token.
-          GH_TOKEN: ${{ github.token }}
+          # Reads the open `census` docket via `gh issue list` in THIS repo,
+          # under the steward App identity. The App has held Issues:
+          # read/write since 2026-07-17 (#183) — the blocker was never a
+          # missing grant, it was this token's repo scope omitting
+          # agent-skills, which the mint step above now fixes.
+          GH_TOKEN: ${{ steps.app_token.outputs.token }}
         run: |
           set -euo pipefail
           python3 .github/scripts/census_panel.py
@@ -156,10 +166,10 @@ jobs:
         id: file_issues
         if: ${{ !cancelled() && steps.counters.outcome == 'success' }}
         env:
-          # Filing uses GITHUB_TOKEN (github-actions[bot]); switch GH_TOKEN to
-          # the App token once the App is granted Issues R/W to file under the
-          # steward identity.
-          GH_TOKEN: ${{ github.token }}
+          # Files under the steward App identity, not github-actions[bot].
+          # The App has held Issues: read/write since 2026-07-17 (#183); this
+          # is the same token minted above, now scoped to agent-skills.
+          GH_TOKEN: ${{ steps.app_token.outputs.token }}
           GH_REPO: thrillmade/agent-skills
           CENSUS_DIR: ${{ runner.temp }}/census
           DRY_RUN: ${{ inputs.dry_run }}
