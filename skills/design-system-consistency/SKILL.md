@@ -93,8 +93,8 @@ Without the second there is no drift, only preference, and saying so is the find
 6. **Re-implementation.** A hand-rolled button, card or input — the finding stands
    whether or not a system component for it exists. Where one exists it's visible as
    subtly different padding, radius, hover or focus ring from its siblings; fix: the
-   component, not corrected values. Where none exists, propose it upstream — a
-   missing part is never license to hand-roll one.
+   component, not corrected values. Where none exists, propose it upstream, filed once
+   per missing component class — not one finding per hand-rolled instance.
 
 ## Every mode needs a token path
 
@@ -135,8 +135,6 @@ correctly in two modes and has nowhere to put the third.
 - [W3C Design Tokens Format Module](https://tr.designtokens.org/format/) — what a token
   file declares and what an alias is; the catalog's reading is
   [dtcg-format](../dtcg-format/SKILL.md).
-- **House convention, not a standard:** establish the reference before judging; "no
-  declared stance" is one finding, not many; a mode needs a path, not a screenshot.
 
 ## Cross-references
 
