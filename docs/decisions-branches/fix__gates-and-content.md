@@ -1,0 +1,13 @@
+← back to [docs/timeline.md](../timeline.md)
+
+## 2026-08-24 08:52 - Five issue fixes in one editorial pass: the prose gate's masking blind spot, a swallowed census failure, a drift guard that could not drift, and two content contradictions
+
+**Reasoning:** Batched because the findings overlap in files and reviewer attention, not because they share a cause. #258: check_prose_retention scored three coarse buckets net, so a deletion could be paid for by a bigger addition in the same scope -- the founding case, designing-elite-ui's #257 restructure, cut 36 words and scored a net GAIN, exit 0. #250: skill-census swallowed a failed gh issue list at two sites, so a lookup outage read as 'no prior issue' and the census would refile. #221: the existing guard compared .gitignore against a HARDCODED snapshot, so it would stay green forever if .git/info/exclude grew an unmirrored 11th pattern -- a drift guard that could not detect drift. #253: token-naming-conventions still demanded both APCA and WCAG after that framing was retired. #256: design-system-consistency rule 6 lacked the 'filed once' dedup rule 2 already had.
+
+**Alternatives considered:** Five separate PRs and five panels. Rejected: overlapping files make that N reconciliations plus review overhead without review value. Per-section scoring for #258 instead of a churn threshold. Rejected after calibration: replaying the signal over the corpus found a dense continuous distribution with no natural gap, unlike FLOOR which has one -- so CHURN_FLOOR=20 is documented in code as a CHOSEN order-of-magnitude margin, not a discovered boundary. Patching docs/file-structure.md for #221. Refused: it is logmind's generated file, not ours -- our side is made safe and the rest reported upstream.
+
+**Implications:**
+- #258's new detector, applied to dev's own history, found a SECOND undisclosed masked loss in the very commit that fixed the first (spacing-system's icon-ladder move, masked by a border-radius paragraph, not covered by that commit's ledger row). Outside this branch's diff, so it does not affect CI here; filed rather than silently fixed, because it is a content judgment for the skill owner. #256's file had 3 bytes of headroom, not 4 -- re-measured; room was bought by cutting a Sources bullet that restated three things stated in full elsewhere, declared in docs/prose-removals.md rather than removed silently. #217 needed no code: the three things its thread called missing have all shipped, and skills_current.py run live against a read-only arlyn-working copy reported 30 discovered / 2 current / 21 stale / 5 diverged, with the 5 diverged correctly discriminated. One real gap stays open there -- the weekly census still does not scan arlyn-working or arlyn-delivery.
+
+---
+
