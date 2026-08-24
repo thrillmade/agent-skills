@@ -13,10 +13,10 @@ PR's CI run, so this file is always coherent with current `main`.
 ---
 
 
-## 2026-08 (42 decisions)
+## 2026-08 (43 decisions)
 
-- **2026-08-23** — Reconcile placement-map.json subscribers against real skills-lock.json files: add arlyn-working and arlyn-delivery, the two largest real consumers, to every skill entry their locks actually pin *(fix/placement-map-reality)* — [decisions-branches/fix__placement-map-reality.md](decisions-branches/fix__placement-map-reality.md)
-- *... 40 more decisions ...*
+- **2026-08-23** — File census issues as the steward App, not github-actions[bot] (#183) *(fix/census-steward-identity)* — [decisions-branches/fix__census-steward-identity.md](decisions-branches/fix__census-steward-identity.md)
+- *... 41 more decisions ...*
 - **2026-08-14** — Gate skill size with a shrink-only ratchet, and deprecate skillforge into the three skills that own its job *(feat/skill-depth-and-interlinking)* — [decisions-branches/feat__skill-depth-and-interlinking.md](decisions-branches/feat__skill-depth-and-interlinking.md)
 
 ## 2026-07 (13 decisions)
