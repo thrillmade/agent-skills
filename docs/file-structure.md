@@ -22,6 +22,7 @@ agent-skills
 │   ├── decisions.md
 │   ├── file-structure.md
 │   ├── integrating-with-agent-skills.md
+│   ├── npm-package.md
 │   ├── placement-map.json
 │   ├── prose-removals.md
 │   ├── skill-versions.json
@@ -110,6 +111,7 @@ agent-skills
 ├── AGENTS.md
 ├── CLAUDE.md
 ├── LICENSE
+├── package.json
 └── README.md
 ```
 
