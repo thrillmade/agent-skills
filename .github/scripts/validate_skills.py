@@ -538,6 +538,125 @@ def _skill_dirs(root: Path) -> list[Path]:
     return sorted(p for p in root.iterdir() if p.is_dir())
 
 
+# One (field, permissive-line-reader, strict-count, malformed-message) tuple
+# per identity field, walked in `identity_errors` below. `digest` and
+# `origin` have exactly one correct value the gate can compute on its own
+# (the content hash, and the constant `skill_version.ORIGIN`); `version`
+# does not -- its correct PATCH digit depends on whether THIS file's own
+# prior claim already matches the freshly computed digest, which is exactly
+# what `skill_version.stamp()` already works out. So every field's "what
+# should this line say" answer is read the same way: render `stamp(raw)`
+# once and compare each actual line against the line it produced.
+_IDENTITY_FIELDS = (
+    (
+        "version",
+        skill_version.version_lines,
+        skill_version.version_line_count,
+        skill_version.stamped_version,
+        'It must be `version: "<major>.<minor>.<patch>"` -- the quotes are '
+        "REQUIRED, an unquoted three-part number is still just text but a "
+        "malformed one is not worth the exception. Never bump PATCH by hand; "
+        "only MAJOR and MINOR are an author's to set.",
+    ),
+    (
+        "digest",
+        skill_version.digest_lines,
+        skill_version.digest_line_count,
+        skill_version.stamped_digest,
+        'It must be `digest: "<12 lowercase hex>"` -- the quotes are '
+        "REQUIRED, because unquoted an all-digit digest parses as an "
+        "integer.",
+    ),
+    (
+        "origin",
+        skill_version.origin_lines,
+        skill_version.origin_line_count,
+        skill_version.stamped_origin,
+        f"It must be `origin: {skill_version.ORIGIN}` -- unquoted, this "
+        "catalog's own URL and nothing else.",
+    ),
+)
+
+
+def identity_errors(prefix: str, raw: bytes) -> list[str]:
+    """`version:` / `digest:` / `origin:` -- the three fields split out of
+    the old single `version:` stamp (see skill_version.py's module
+    docstring): an ordered, human semver; a recomputable content digest; and
+    a machine-readable route home, in place of a YAML comment `yaml.safe_load`
+    discarded before a program ever saw it.
+
+    Checked against the file's own bytes, so none of the three is a promise a
+    human has to keep. A stale stamp is worse than none: every subscriber
+    comparing against it is told they are current when they are not.
+
+    ENFORCED WHEN PRESENT, NOT REQUIRED -- the same posture `version:` alone
+    had, and `source` and `kind` still have. The protocol SPEC owns the
+    frontmatter schema (live §2.1 "The skill file"), and its table already
+    marks `source` REQUIRED against 0 of 49 adopters. Declaring a required key
+    from inside the catalog would widen that divergence rather than close it.
+    Ratification is protocol#39's to grant; until it does, a file naming NONE
+    of the three is not an error -- but naming one and not the others is: the
+    three are gated together, because an index carrying `current` and
+    `version` for a skill whose file only bothered to claim a digest is
+    exactly the kind of half-true state this format exists to make
+    unrepresentable.
+    """
+    opted_in = any(count(raw) for _f, _lf, count, _sv, _msg in _IDENTITY_FIELDS)
+    if not opted_in:
+        return []
+
+    errors: list[str] = []
+    expected_full = skill_version.stamp(raw)
+
+    for field, line_fn, count_fn, stamped_fn, malformed_msg in _IDENTITY_FIELDS:
+        lines = line_fn(raw)
+        expected_line = line_fn(expected_full)[0]
+
+        if len(lines) == 0:
+            # The other two fields are present (`opted_in` is true) but this
+            # one is not -- the file has opted the whole triple in without
+            # actually naming all of it. Reported by name, the same as any
+            # other missing-but-required-together key in this file.
+            errors.append(
+                f"::error file={prefix}::this file stamps `version:`/`digest:`/"
+                f"`origin:` together but is missing `{field}:` -- it must be "
+                f"all three or none. Run `python3 .github/scripts/"
+                f"stamp_versions.py --write`, which would add `{expected_line}`."
+            )
+        elif len(lines) > 1:
+            # Two lines for one field make identity a question of which
+            # reader you ask. A `search`-based gate takes the FIRST and
+            # passes; every YAML consumer takes the LAST (last key wins) and
+            # reads something else. Neither is wrong about its own rule, so
+            # the file has to be rejected rather than adjudicated. Not just
+            # `version:`'s risk -- `yaml.safe_load` applies last-key-wins to
+            # any duplicated key, so `digest:` and `origin:` get the same
+            # check.
+            shown = lines[0].split()[1] if len(lines[0].split()) > 1 else "?"
+            errors.append(
+                f"::error file={prefix}::frontmatter has {len(lines)} `{field}:` "
+                f"lines, and there must be exactly one -- this gate would read "
+                f"{shown} while `yaml.safe_load` reads the last one. Keep one "
+                f"line: `{expected_line}`"
+            )
+        else:
+            claimed = stamped_fn(raw)
+            if claimed is None:
+                errors.append(
+                    f"::error file={prefix}::`{lines[0]}` is not a well-formed "
+                    f"`{field}:` stamp. {malformed_msg} Never type this by hand; "
+                    f"run `python3 .github/scripts/stamp_versions.py --write`."
+                )
+            elif lines[0] != expected_line:
+                errors.append(
+                    f"::error file={prefix}::`{field}` claims {claimed!r} but "
+                    f"should read `{expected_line}`. The stamp is stale, so every "
+                    f"subscriber comparing against it reads a wrong identity. Run "
+                    f"`python3 .github/scripts/stamp_versions.py --write`."
+                )
+    return errors
+
+
 def run(root: Path) -> list[str]:
     """Validate every skill under `root`, returning the `::error ...::` lines.
 
@@ -559,6 +678,9 @@ def run(root: Path) -> list[str]:
     # slug -> content digest, filled in as each skill is read, so the index
     # gate below compares against bytes this run actually saw.
     digests: dict[str, str] = {}
+    # slug -> the semver the file itself claims, or None if it has never
+    # been stamped -- same "filled in as read" reasoning as `digests` above.
+    versions: dict[str, str | None] = {}
 
     if not root.exists() or not root.is_dir():
         print("::error::skills/ directory not found at repo root")
@@ -629,67 +751,15 @@ def run(root: Path) -> list[str]:
                 f"::error file={prefix}::frontmatter is missing a non-empty `description:` field"
             )
 
-        # --- Content identity (`version:`) ---------------------------------
+        # --- Content identity (`version:` / `digest:` / `origin:`) --------
         #
-        # Checked against the file's own bytes, so it is not a promise a human
-        # has to keep. A stale stamp is worse than none: every subscriber
-        # comparing against it is told they are current when they are not.
-        #
-        # ENFORCED WHEN PRESENT, NOT REQUIRED -- the same posture `source` and
-        # `kind` already have here. The protocol SPEC owns the frontmatter
-        # schema (live §2.1 "The skill file"), and its table already marks
-        # `source` REQUIRED against 0 of 49 adopters. Declaring a second
-        # required key from inside the catalog would widen that divergence
-        # rather than close it. Ratification is protocol#39's to grant; until
-        # it does, an unstamped file is not an error and a WRONG stamp is.
-        #
-        # Read from the RAW line, never from the YAML parse: unquoted, an
-        # all-digit digest is coerced to int -- `766941312459` is a real
-        # historical digest of this catalog's own frontend-a11y, and
-        # `000000123456` is read as octal (42798) and does not round-trip.
-        expected = skill_version.digest(raw)
-        digests[dir_name] = expected
-        expected_line = skill_version.version_line(expected)
-        lines = skill_version.version_lines(raw)
-
-        if len(lines) > 1:
-            # Two `version:` lines make identity a question of which reader
-            # you ask. A `search`-based gate takes the FIRST and passes; every
-            # YAML consumer takes the LAST (last key wins) and reads something
-            # else. Neither is wrong about its own rule, so the file has to be
-            # rejected rather than adjudicated.
-            errors.append(
-                f"::error file={prefix}::frontmatter has {len(lines)} `version:` "
-                f"lines, and there must be exactly one -- this gate would read "
-                f"{lines[0].split()[1] if len(lines[0].split()) > 1 else '?'} while "
-                f"`yaml.safe_load` reads the last one. Keep one line: "
-                f"`{expected_line}`"
-            )
-        elif len(lines) == 1:
-            claimed = skill_version.stamped_value(raw)
-            if claimed is None:
-                errors.append(
-                    f"::error file={prefix}::`{lines[0]}` is not a well-formed "
-                    f'stamp. It must be `version: "<12 lowercase hex>"` -- the '
-                    f"quotes are REQUIRED, because unquoted an all-digit digest "
-                    f"parses as an integer. Never type this by hand; run "
-                    f"`python3 .github/scripts/stamp_versions.py --write`."
-                )
-            elif claimed != expected:
-                errors.append(
-                    f"::error file={prefix}::`version` claims {claimed} but this "
-                    f"file's content digest is {expected}. The stamp is stale, so "
-                    f"every subscriber comparing against it reads a wrong "
-                    f"identity. Run `python3 .github/scripts/stamp_versions.py "
-                    f"--write`."
-                )
-            elif lines[0] != expected_line:
-                errors.append(
-                    f"::error file={prefix}::the `version:` line is generated in "
-                    f"full -- digest and route home have one owner between them. "
-                    f"Expected exactly:\n{expected_line}\nGot:\n{lines[0]}\n"
-                    f"Run `python3 .github/scripts/stamp_versions.py --write`."
-                )
+        # See `identity_errors` above for the rules. `digests`/`versions` are
+        # filled in here regardless of whether this file opts in to the
+        # stamp -- the skill-versions.json currency gate below needs every
+        # skill's digest and semver, stamped or not (None is a value too).
+        digests[dir_name] = skill_version.digest(raw)
+        versions[dir_name] = skill_version.stamped_version(raw)
+        errors.extend(identity_errors(prefix, raw))
 
         # Require an H1 (Markdown title) somewhere in the body after the frontmatter
         body = content[m.end():]
@@ -1083,13 +1153,26 @@ def run(root: Path) -> list[str]:
                     "being current. Run "
                     "`python3 .github/scripts/gen_skill_versions.py --write`."
                 )
-            elif entry.get("current") != want:
+                continue
+            if entry.get("current") != want:
                 errors.append(
                     f"::error file={sv_prefix}::skills.{slug}.current is "
                     f"{entry.get('current')!r} but skills/{slug}/SKILL.md digests "
                     f"to {want}. The index is stale, so every subscriber it "
                     "answers is told the wrong thing. Run "
                     "`python3 .github/scripts/gen_skill_versions.py --write`."
+                )
+            # `version` is the semver counterpart of the check just above --
+            # same reasoning, same remedy. None is a legitimate value on both
+            # sides (a skill never stamped), so it is compared like any other.
+            want_version = versions.get(slug)
+            if entry.get("version") != want_version:
+                errors.append(
+                    f"::error file={sv_prefix}::skills.{slug}.version is "
+                    f"{entry.get('version')!r} but skills/{slug}/SKILL.md's "
+                    f"`version:` claims {want_version!r}. The index is stale, "
+                    "so every subscriber it answers is told the wrong thing. "
+                    "Run `python3 .github/scripts/gen_skill_versions.py --write`."
                 )
 
     return errors

@@ -250,6 +250,107 @@ def test_the_index_records_which_refs_it_was_built_from(repo: Repo) -> None:
     assert index["versions_enumerated"] >= 1
 
 
+# --- the `version` (semver) field ------------------------------------------
+
+
+def test_a_live_skills_semver_is_read_from_its_own_frontmatter(repo: Repo) -> None:
+    p = repo.skill("alpha")
+    p.write_bytes(skill_version.stamp(p.read_bytes()))
+    repo.commit("add alpha, stamped")
+    repo.publish("main")
+    index = build(repo)
+    assert index["skills"]["alpha"]["version"] == "1.0.0"
+
+
+def test_an_unstamped_live_skill_has_a_null_version(repo: Repo) -> None:
+    repo.skill("alpha")  # SKILL.md with no version:/digest:/origin: lines
+    repo.commit("add alpha")
+    repo.publish("main")
+    index = build(repo)
+    assert index["skills"]["alpha"]["version"] is None
+
+
+def test_history_rows_carry_the_semver_of_their_own_blob(repo: Repo) -> None:
+    """Old-style and unstamped blobs read `version: None` -- `stamped_version`
+    does not match a bare digest or nothing at all -- and the one blob
+    committed under the three-field format reads its real semver.
+    """
+    p = repo.skill("alpha", body="v1")
+    repo.commit("v1, unstamped", date="2024-01-01T00:00:00")
+
+    p = repo.skill("alpha", body="v2")
+    p.write_bytes(skill_version.stamp(p.read_bytes()))
+    v2 = skill_version.digest(p.read_bytes())
+    repo.commit("v2, stamped", date="2024-06-01T00:00:00")
+    repo.publish("main")
+
+    index = build(repo)
+    rows = {h["v"]: h["version"] for h in index["skills"]["alpha"]["history"]}
+    assert len(rows) == 2  # control: two genuinely distinct rows
+    assert rows[v2] == "1.0.0"
+    unstamped_digest = [v for v in rows if v != v2][0]
+    assert rows[unstamped_digest] is None
+
+
+def test_a_regeneration_fills_in_a_missing_version_from_the_fresh_enumeration(
+    repo: Repo,
+) -> None:
+    """`version` is a pure function of the blob's own bytes, unlike
+    `commit`/`date` -- so a row published before this field existed (no
+    `version` key at all) must not silently keep reading `null` forever once
+    a run CAN recompute it. `commit`/`date` still win from the published row
+    (append-only); `version` does not need that protection and must not lose
+    data to it.
+    """
+    p = repo.skill("alpha")
+    p.write_bytes(skill_version.stamp(p.read_bytes()))
+    repo.commit("v1")
+    repo.publish("main")
+    (repo.base / "docs").mkdir(exist_ok=True)
+
+    index = build(repo)
+    # Simulate a row published by the code before this field existed: same
+    # digest, no `version` key at all.
+    del index["skills"]["alpha"]["history"][0]["version"]
+    (repo.base / "docs" / "skill-versions.json").write_text(json.dumps(index))
+
+    again = build(repo)
+    assert again["skills"]["alpha"]["history"][0]["version"] == "1.0.0"
+
+
+def test_a_published_version_is_not_overwritten_by_a_fresh_derivation(repo: Repo) -> None:
+    """Once out, `version` -- like `commit`/`date` -- is corrected by an
+    explicit edit to the checked-in file, visible in review, not by whatever
+    a regeneration happens to recompute.
+    """
+    p = repo.skill("alpha")
+    p.write_bytes(skill_version.stamp(p.read_bytes()))
+    repo.commit("v1")
+    repo.publish("main")
+    (repo.base / "docs").mkdir(exist_ok=True)
+
+    index = build(repo)
+    index["skills"]["alpha"]["history"][0]["version"] = "9.9.9"
+    (repo.base / "docs" / "skill-versions.json").write_text(json.dumps(index))
+
+    again = build(repo)
+    assert again["skills"]["alpha"]["history"][0]["version"] == "9.9.9"
+
+
+def test_a_retired_skill_has_a_null_version(repo: Repo) -> None:
+    repo.skill("alpha")
+    p = repo.skill("gamma")
+    p.write_bytes(skill_version.stamp(p.read_bytes()))
+    repo.commit("add both")
+    subprocess.run(["rm", "-rf", str(repo.base / "skills" / "gamma")], check=True)
+    repo.commit("retire gamma")
+    repo.publish("main")
+
+    index = build(repo)
+    assert index["skills"]["gamma"]["current"] is None
+    assert index["skills"]["gamma"]["version"] is None
+
+
 def test_authoring_home_is_copied_from_the_placement_map_never_invented(repo: Repo) -> None:
     repo.skill("alpha")
     repo.skill("beta")

@@ -1,11 +1,11 @@
 """`.github/scripts/stamp_versions.py` -- the only thing that writes a stamp.
 
 `restamp` re-checks, on every file, what `skill_version.stamp` promises: the
-body comes out byte-identical, `name` and `description` survive, the result
-re-parses, and the stamp is a fixed point. Those assertions exist to catch a
-future regression in `stamp`, which means nothing about them fails today --
-deleting every one of them leaves the suite green unless something reaches in
-and breaks `stamp` too. So that is what these tests do.
+body comes out byte-identical, `name` and `description` survive, all three
+identity lines re-parse, and each is its own fixed point. Those assertions
+exist to catch a future regression in `stamp`, which means nothing about them
+fails today -- deleting every one of them leaves the suite green unless
+something reaches in and breaks `stamp` too. So that is what these tests do.
 
 Without them the assertions are decoration: a mutation run flipped
 `assert new_body == old_body` to `pass` and 814 tests still passed.
@@ -38,7 +38,9 @@ Body.
 
 def test_restamp_stamps_a_clean_file() -> None:
     out = stamp_versions.restamp(BASE)
-    assert skill_version.stamped_value(out) == skill_version.digest(BASE)
+    assert skill_version.stamped_digest(out) == skill_version.digest(BASE)
+    assert skill_version.stamped_version(out) == "1.0.0"
+    assert skill_version.stamped_origin(out) == skill_version.ORIGIN
 
 
 def _sabotage(monkeypatch, corrupt) -> None:
@@ -83,13 +85,22 @@ def test_restamp_refuses_a_stamp_that_changed_the_name(monkeypatch) -> None:
         stamp_versions.restamp(BASE)
 
 
-def test_restamp_refuses_a_one_time_unquoting_sabotage(monkeypatch) -> None:
-    """Drop the quotes on the FIRST call only and the YAML value is still the
-    right digest, so the re-parse check above is satisfied. This is the shape
-    the fixed-point assertion below was mutation-tested against before it was
-    deleted: `new` itself is malformed (unquoted), so `stamped_value(new)`
-    disagrees with `digest(new)` and the fixed-point assertion fires first --
-    idempotence never gets a turn.
+def test_restamp_refuses_a_stamp_that_drops_origin(monkeypatch) -> None:
+    _sabotage(monkeypatch, lambda out, raw: out.replace(
+        f'origin: "{skill_version.ORIGIN}"'.encode(),
+        b'origin: "https://example.invalid"',
+    ))
+    with pytest.raises(AssertionError, match="origin does not re-parse"):
+        stamp_versions.restamp(BASE)
+
+
+def test_restamp_refuses_a_one_time_unquoting_sabotage_on_digest(monkeypatch) -> None:
+    """Drop the quotes on the digest line on the FIRST call only and the YAML
+    value is still the right hash, so the re-parse check above is satisfied.
+    This is the shape the fixed-point assertion below was mutation-tested
+    against before it was deleted: `new` itself is malformed (unquoted), so
+    `stamped_digest(new)` disagrees with `digest(new)` and the fixed-point
+    assertion fires first -- idempotence never gets a turn.
 
     A one-time sabotage is a narrower case than a real regression, though --
     see `test_restamp_refuses_a_persistent_unquoting_regression` below for
@@ -97,40 +108,60 @@ def test_restamp_refuses_a_one_time_unquoting_sabotage(monkeypatch) -> None:
     """
     def unquote(out: bytes, raw: bytes) -> bytes:
         d = skill_version.digest(out).encode()
-        return out.replace(b'version: "' + d + b'"', b"version: " + d)
+        return out.replace(b'digest: "' + d + b'"', b"digest: " + d)
 
     _sabotage(monkeypatch, unquote)
-    with pytest.raises(AssertionError, match="not a fixed point"):
+    with pytest.raises(AssertionError, match="digest is not a fixed point"):
         stamp_versions.restamp(BASE)
 
 
 def test_restamp_refuses_a_persistent_unquoting_regression(monkeypatch) -> None:
     """A regression inside `version_line` itself -- not at the `stamp` call
     site -- fires on EVERY call, including the idempotence self-check two
-    lines below. Both sides of `stamp(new) == new` come out unquoted the same
-    way and agree with each other while both are wrong, so idempotence is
-    blind to it.
+    lines below. `stamped_version` reads the unquoted line as no claim at
+    all, and "no claim" is exactly the case `stamp()` seeds at the constant
+    "1.0.0" -- so a persistently unquoted generator converges on repeated
+    calls (unlike a persistently unquoted `digest_line`, which would instead
+    bump PATCH forever and so trips idempotence on its own; this is the
+    quieter shape, the one idempotence is blind to).
 
-    Only the fixed-point assertion (`stamped_value(new) == digest(new)`)
-    catches this: `stamped_value` reads the STRICT, quote-requiring
-    `STAMP_RE` and comes back `None` for an unquoted line. This is the
-    assertion `cbb3eff` deleted on the strength of a mutation that sabotaged
-    `stamp` only once -- a one-time sabotage is exactly the shape idempotence
-    *does* catch, so it proved nothing about a persistent one.
+    The re-parse assertion (`new_meta.get("version") == stamped_version(new)`)
+    catches this first: YAML reads the unquoted `version: 1.0.0` as the
+    string `"1.0.0"`, but `stamped_version` reads the STRICT, quote-requiring
+    `SEMVER_RE` and comes back `None` for the same line -- the two disagree,
+    so `restamp` refuses. This is the shape a mutation once deleted a
+    fixed-point-style assertion on the strength of testing only a one-time
+    sabotage -- a one-time sabotage is exactly the shape idempotence *does*
+    catch, so it proved nothing about a persistent one.
     """
     def unquoted_version_line(value: str) -> str:
-        return f"version: {value}  {skill_version.COMMENT}"
+        return f"version: {value}"
 
     monkeypatch.setattr(skill_version, "version_line", unquoted_version_line)
 
     # Control: under the regression, idempotence alone does NOT notice --
-    # both calls to `stamp` are corrupted the same persistent way.
+    # both calls to `stamp` converge on the same wrong, unquoted "1.0.0".
     new = skill_version.stamp(BASE)
     assert skill_version.stamp(new) == new  # "idempotent" and still wrong
-    assert skill_version.stamped_value(new) is None
-    assert skill_version.digest(new) is not None
+    assert skill_version.stamped_version(new) is None
+    assert skill_version.stamped_digest(new) == skill_version.digest(new)
 
-    with pytest.raises(AssertionError, match="not a fixed point"):
+    with pytest.raises(AssertionError, match="version does not re-parse"):
+        stamp_versions.restamp(BASE)
+
+
+def test_restamp_refuses_a_version_line_that_reparses_as_none(monkeypatch) -> None:
+    """The shape the re-parse assertion, by itself, is BLIND to: `version:`
+    with no value at all. YAML reads that as Python `None`, and
+    `stamped_version` -- which requires `SEMVER_RE` to match -- ALSO reads it
+    as `None`, so `new_meta.get("version") == stamped_version(new)` passes
+    (`None == None`) even though nothing was actually stamped. Only the
+    fixed-point assertion, which insists on `is not None`, catches it -- this
+    is the case that justifies it being a SEPARATE assertion rather than
+    folded into the re-parse check above.
+    """
+    monkeypatch.setattr(skill_version, "version_line", lambda value: "version:")
+    with pytest.raises(AssertionError, match="version is not a fixed point"):
         stamp_versions.restamp(BASE)
 
 
@@ -157,7 +188,7 @@ def test_check_fails_on_an_unstamped_tree(tmp_path: Path) -> None:
     (d / "SKILL.md").write_bytes(BASE)
     p = _run("--check", cwd=tmp_path)
     assert p.returncode == 1, p.stdout
-    assert "no `version:` line" in p.stdout
+    assert "0 `version:` line(s), 0 `digest:` line(s), 0 `origin:` line(s)" in p.stdout
 
 
 def test_write_then_check_is_clean(tmp_path: Path) -> None:
@@ -185,7 +216,19 @@ def test_check_reports_a_duplicate_version_line(tmp_path: Path) -> None:
     d.mkdir(parents=True)
     stamped = skill_version.stamp(BASE)
     line = skill_version.version_lines(stamped)[0].encode()
-    (d / "SKILL.md").write_bytes(stamped.replace(line, line + b'\nversion: "deadbeefcafe"'))
+    (d / "SKILL.md").write_bytes(stamped.replace(line, line + b'\nversion: "9.9.9"'))
     p = _run("--check", cwd=tmp_path)
     assert p.returncode == 1, p.stdout
-    assert "2 `version:` lines" in p.stdout
+    assert "2 `version:` line(s)" in p.stdout
+
+
+def test_check_reports_a_stale_digest_by_name(tmp_path: Path) -> None:
+    d = tmp_path / "skills" / "alpha"
+    d.mkdir(parents=True)
+    stamped = skill_version.stamp(BASE)
+    edited = stamped.replace(b"Body.", b"Bodyx.")  # digest now stale
+    (d / "SKILL.md").write_bytes(edited)
+    p = _run("--check", cwd=tmp_path)
+    assert p.returncode == 1, p.stdout
+    assert "`digest` claims" in p.stdout
+    assert "`version` claims" in p.stdout  # PATCH is stale too -- same edit

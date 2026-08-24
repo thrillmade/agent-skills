@@ -1,5 +1,7 @@
 ---
-version: "cde544a56582"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.0"
+digest: "cde544a56582"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/agent-skills"
 name: design-token-naming
 description: |
   SUPERSEDED by `token-naming-conventions` (L0) + `udts-naming-convention` (L2, incubating) — see the design-catalog section of the README; kept unchanged during the tokenomics migration window, new work should load the successors. Use when designing, auditing, or critiquing a design-token naming scheme. Names the UDTS convention — hyphen-separated names where the prefix declares the token's class (contrast-bound vs free) and kind (text / surface / border / ui / illustration / decorative / brand-spot), with the class redundantly encoded in `$extensions.udts.class`. Names the hue-angle primitive convention (`teal-180` not `accent-teal`), the role + stop convention for color-mode tokens (`primary-contrast-500`, `surface-fixed-100`), the two component-token chain shapes (direct vs via-semantic), and the rule that themes and density go in the theme layer, not the token name. Cite when an agent proposes dot-separated paths, semantic primitive names, or naming patterns where class isn't derivable from the prefix.

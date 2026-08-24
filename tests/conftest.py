@@ -141,6 +141,7 @@ class SkillTree:
         current = {
             md.parent.name: {
                 "current": skill_version.digest(md.read_bytes()),
+                "version": skill_version.stamped_version(md.read_bytes()),
                 "history": [],
             }
             for md in sorted((self.base / "skills").glob("*/SKILL.md"))

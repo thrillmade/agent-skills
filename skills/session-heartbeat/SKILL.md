@@ -1,5 +1,7 @@
 ---
-version: "ceee4cf10ea4"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.0"
+digest: "ceee4cf10ea4"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/agent-skills"
 name: session-heartbeat
 description: |
   Use when a session must keep working across a stretch longer than one uninterrupted sitting — an orchestrator rolling through a multi-slice plan for hours, a run that will cross a usage-limit reset, a session resumed after a limit or a compaction with someone else's work in flight, or the moment before dispatching an agent when you do not know whether the remaining window can finish it. Also use when a long run is accumulating wakeups but no landed commits, when you are polling for a result the harness would have pushed to you, or when a resumed session is re-deriving pipeline state it should have read off a checkpoint. Names the per-beat order, the largest-dispatch threshold rule, the checkpoint's required slots, and the resume-as-survivor protocol. Not for a single task inside one sitting, and not the unattended-operation policy — that is `unattended-operation`, which builds on this.

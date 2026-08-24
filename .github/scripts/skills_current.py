@@ -12,8 +12,9 @@ this question from inside your own repo.
 
 The rule, small enough to check by hand if you would rather not run this:
 
-    normalise CRLF -> LF, delete the `version:` line from the frontmatter,
-    sha256 the remaining bytes, take the first 12 hex characters
+    normalise CRLF -> LF, delete the `version:`, `digest:` and `origin:`
+    lines from the frontmatter, sha256 the remaining bytes, take the first
+    12 hex characters
 
 then look your skill's slug up in the published index. The catalog's own copy
 of that rule lives in `.github/scripts/skill_version.py`, and a test asserts
@@ -65,14 +66,21 @@ INDEX_URL = (
 ROOTS = (".agents/skills", ".claude/skills")
 
 FRONTMATTER_RE = re.compile(rb"^---\n(.*?)\n---", re.DOTALL)
-VERSION_LINE_RE = re.compile(rb"(?m)^version:[^\n]*\n")
+IDENTITY_LINE_RES = (
+    re.compile(rb"(?m)^version:[^\n]*\n"),
+    re.compile(rb"(?m)^digest:[^\n]*\n"),
+    re.compile(rb"(?m)^origin:[^\n]*\n"),
+)
 
 
 def digest(raw: bytes) -> str:
     raw = raw.replace(b"\r\n", b"\n")
     m = FRONTMATTER_RE.match(raw)
     if m:
-        raw = VERSION_LINE_RE.sub(b"", raw[: m.end()]) + raw[m.end() :]
+        front = raw[: m.end()]
+        for line_re in IDENTITY_LINE_RES:
+            front = line_re.sub(b"", front)
+        raw = front + raw[m.end() :]
     return hashlib.sha256(raw).hexdigest()[:12]
 
 

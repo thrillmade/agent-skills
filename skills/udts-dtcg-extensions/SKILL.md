@@ -1,5 +1,7 @@
 ---
-version: "574e1d81d2fb"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.0"
+digest: "574e1d81d2fb"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/agent-skills"
 name: udts-dtcg-extensions
 description: "[L2 stub — incubating] UDTS's namespaced DTCG extension schema — its extension of the interchange format in dtcg-format. Full content is being authored in thrillmade/tokenomics and lands here via an upstream PR once the UDTS spec stabilizes; do not treat this stub as guidance yet."
 ---

@@ -1,5 +1,7 @@
 ---
-version: "9d79fc250e83"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.0"
+digest: "9d79fc250e83"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/agent-skills"
 name: usability-heuristics
 description: >-
   Use when a decision or review is about to cite Nielsen's ten usability

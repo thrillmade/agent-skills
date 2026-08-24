@@ -1,5 +1,7 @@
 ---
-version: "936899cf6899"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.0"
+digest: "936899cf6899"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/agent-skills"
 name: respect-existing-conventions
 description: Don't suggest changes that fight the codebase's established patterns. Match what's already there.
 ---
