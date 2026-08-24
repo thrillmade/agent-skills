@@ -48,8 +48,9 @@ prefix without opening the token body.
 Split prefixes into two disjoint groups:
 
 - **Contrast-bound** prefixes (e.g. `content-*`, `surface-*`) name tokens that
-  carry a contrast-pairing obligation — every value must clear an APCA/WCAG
-  check against its intended background.
+  carry a contrast-pairing obligation — every value must clear its declared
+  APCA Lc target against its intended background. WCAG 2.2 AA is an optional,
+  off-by-default cross-check, never a second required gate.
 - **Free** prefixes name tokens with no contrast obligation — decorative,
   illustration, and brand-spot colors that are never asked to be legible text.
 
