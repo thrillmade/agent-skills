@@ -79,7 +79,15 @@ from __future__ import annotations
 import hashlib
 import re
 
-FRONTMATTER_RE = re.compile(rb"^---\n(.*?)\n---", re.DOTALL)
+# The closing delimiter must be a line that is EXACTLY `---`. Without the
+# lookahead, `\n---` also matches the first three characters of `----` or
+# `--- not a close`, ending the block early -- so an identity line after
+# such a line would not be elided, and this implementation would compute a
+# different digest from one that follows SPEC 2.1 step 2 ("closes at the
+# first subsequent line that is exactly `---`"). A LOOKAHEAD, not a match:
+# `m.end()` must stay immediately after the closing `---`, because callers
+# slice on it and consuming the newline would move bytes across that seam.
+FRONTMATTER_RE = re.compile(rb"^---\n(.*?)\n---(?=\n|\Z)", re.DOTALL)
 
 # PERMISSIVE: any line of this shape at column 0 of the frontmatter. Anchored
 # to column 0 so a nested `metadata:\n  version: 3` -- somebody else's field
