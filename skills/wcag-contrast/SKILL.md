@@ -1,7 +1,7 @@
 ---
 version: "1.0.0"
 digest: "c2c3bd386622"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
-origin: https://github.com/thrillmade/agent-skills
+origin: "https://github.com/thrillmade/agent-skills"
 name: wcag-contrast
 description: Use when verifying a color pair meets WCAG 2.2 AA contrast requirements as an optional cross-check on APCA-driven generation, or when auditing a token catalog or design for legal-baseline accessibility compliance. Names the 4.5:1 normal-text rule, the 3:1 large-text rule, the size threshold for "large" stated in points (≥ 18 pt regular ≈ 24 CSS px, OR ≥ 14 pt bold ≈ 18.67 CSS px — not pixels), the SC 1.4.11 non-text rule, SC 2.4.13 focus appearance (AAA — the AA hooks are 1.4.11 and 2.4.11), and the optional, off-by-default role this check plays alongside APCA's required gate. Cite when an agent treats WCAG as the *primary* or a *required* contrast model, or writes the large-text threshold as "14 px bold / 18 px regular" — UDTS uses WCAG only as an optional cross-check, APCA is the required gate, and WCAG sizes are in points.
 ---

@@ -1,7 +1,7 @@
 ---
 version: "1.0.0"
 digest: "51d7ef75a679"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
-origin: https://github.com/thrillmade/agent-skills
+origin: "https://github.com/thrillmade/agent-skills"
 name: clud-bug-collaboration
 description: How Claude Code agents working in a clud-bug-installed repo should interact with the bot's review threads, strict-mode gate, and skill set. Use this skill whenever you're about to push a commit, address a clud-bug PR review comment, edit anything under .claude/skills/, modify .github/workflows/clud-bug-*.yml, or wonder why a PR check is red. Also use when planning work in a repo that has a `clud-bug-review` workflow installed — even if the user didn't mention clud-bug by name.
 ---

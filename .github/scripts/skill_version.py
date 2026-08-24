@@ -104,7 +104,7 @@ DIGEST_RE = re.compile(rb'(?m)^digest:[ \t]*"([0-9a-f]{12})"[ \t]*(?:#[^\n]*)?$'
 # STRICT: `origin: <token>`, unquoted -- a URL has no int/octal coercion
 # landmine to quote against, and quoting it would be decoration this module
 # does not ask for anywhere else.
-ORIGIN_RE = re.compile(rb"(?m)^origin:[ \t]*(\S+)[ \t]*$")
+ORIGIN_RE = re.compile(rb'(?m)^origin:[ \t]*"([^"\n]+)"[ \t]*$')
 
 # The route home, carried by every stamped file. A copy taken by hand -- no
 # `npx skills add`, no lock, no checker -- is a normal case for a public
@@ -144,7 +144,7 @@ def origin_line() -> str:
     """The one canonical spelling of the origin line. Not a function of
     `value` -- there is exactly one value, `ORIGIN`, for every file.
     """
-    return f"origin: {ORIGIN}"
+    return f'origin: "{ORIGIN}"'
 
 
 def digest(raw: bytes) -> str:

@@ -350,10 +350,32 @@ def test_the_generated_digest_line_carries_a_route_home():
     assert "\n" not in line
 
 
-def test_the_generated_origin_line_is_the_constant_url_unquoted():
+def test_the_generated_origin_line_quotes_the_constant_url():
+    """SPEC 2.1: all three identity values MUST be quoted. A URL cannot be
+    coerced to an integer, so `origin` is safe unquoted -- but the rule is
+    uniform on purpose, so no implementer has to re-derive which of the three
+    fields needs it. An over-quoted URL is harmless; an under-quoted digest is
+    an identity that compares unequal to itself.
+    """
     line = skill_version.origin_line()
-    assert line == f"origin: {skill_version.ORIGIN}"
-    assert '"' not in line
+    assert line == f'origin: "{skill_version.ORIGIN}"'
+    assert line.count('"') == 2
+
+
+def test_an_unquoted_origin_line_is_not_a_valid_claim():
+    """The strict reader must reject the pre-SPEC-2.1 unquoted shape, or the
+    quoting MUST is decorative -- files would keep validating either way.
+    """
+    quoted = b'---\nname: x\norigin: "https://example.com/r"\n---\nbody\n'
+    bare = b"---\nname: x\norigin: https://example.com/r\n---\nbody\n"
+    # Both are COUNTED -- counting uses the permissive line regex, because a
+    # duplicate key must be caught whatever shape its value takes.
+    assert skill_version.origin_line_count(quoted) == 1
+    assert skill_version.origin_line_count(bare) == 1
+    # Only the quoted one is a CLAIM. That is the permissive/strict split:
+    # elide and count permissively, judge well-formedness strictly.
+    assert skill_version.stamped_origin(quoted) == "https://example.com/r"
+    assert skill_version.stamped_origin(bare) is None
 
 
 # --- the duplicate-key bypass (C2), for each of the three fields -----------

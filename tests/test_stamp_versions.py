@@ -87,7 +87,8 @@ def test_restamp_refuses_a_stamp_that_changed_the_name(monkeypatch) -> None:
 
 def test_restamp_refuses_a_stamp_that_drops_origin(monkeypatch) -> None:
     _sabotage(monkeypatch, lambda out, raw: out.replace(
-        f"origin: {skill_version.ORIGIN}".encode(), b"origin: https://example.invalid"
+        f'origin: "{skill_version.ORIGIN}"'.encode(),
+        b'origin: "https://example.invalid"',
     ))
     with pytest.raises(AssertionError, match="origin does not re-parse"):
         stamp_versions.restamp(BASE)

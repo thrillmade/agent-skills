@@ -1,7 +1,7 @@
 ---
 version: "1.0.0"
 digest: "15808738e2f6"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
-origin: https://github.com/thrillmade/agent-skills
+origin: "https://github.com/thrillmade/agent-skills"
 name: guarding-a-regression
 description: Use when you have just fixed a bug and are writing the test that stops it coming back, or when adding an assertion, lint rule, schema check, validating constructor or CI gate and claiming it protects something. Fires when a test passed on its first run and was never watched failing, when a regression shipped twice despite a test that covered it, when a guard's green looks identical whether it works or the edit never reached the running code, and when reviewing a test you cannot tell would ever go red. Not `test-discipline`, which reviews a whole test diff for suite decay (deleted assertions, over-mocking, snapshot churn, stray `.skip`); this is one guard, one regression, and whether it can be driven red — including for lint rules, schema checks and CI steps, which sit outside test paths entirely. Load both on a PR that adds a regression test.
 ---

@@ -96,7 +96,7 @@ def test_naming_one_field_without_the_others_is_rejected(tree: SkillTree) -> Non
     triple in -- it is not a mix-and-match menu. Reported as `version`
     missing AND `digest` missing, not silently accepted as one-third done.
     """
-    tree.frontmatter(extra=f"origin: {skill_version.ORIGIN}\n")
+    tree.frontmatter(extra=f'origin: "{skill_version.ORIGIN}"\n')
     errors = tree.validate()
     assert any("missing `version:`" in e for e in errors)
     assert any("missing `digest:`" in e for e in errors)
@@ -255,10 +255,22 @@ def test_a_wrong_origin_is_rejected(tree: SkillTree) -> None:
     path = stamped(tree)
     raw = path.read_bytes()
     good = skill_version.origin_lines(raw)[0].encode()
-    path.write_bytes(raw.replace(good, b"origin: https://example.invalid"))
+    path.write_bytes(raw.replace(good, b'origin: "https://example.invalid"'))
     error = only(tree.validate())
     assert error.startswith(ALPHA + "`origin` claims ")
     assert skill_version.ORIGIN in error
+
+
+def test_an_unquoted_origin_is_rejected(tree: SkillTree) -> None:
+    """SPEC 2.1 requires all three identity values be quoted. The pre-2.1
+    unquoted shape must fail the STRICT reader, or the MUST is decorative --
+    a file would keep validating either way and the rule would rot.
+    """
+    path = stamped(tree)
+    raw = path.read_bytes()
+    good = skill_version.origin_lines(raw)[0].encode()
+    path.write_bytes(raw.replace(good, b"origin: " + skill_version.ORIGIN.encode()))
+    assert "is not a well-formed `origin:` stamp" in only(tree.validate())
 
 
 def test_a_malformed_origin_is_rejected(tree: SkillTree) -> None:

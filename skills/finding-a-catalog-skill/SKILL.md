@@ -1,7 +1,7 @@
 ---
 version: "1.0.0"
 digest: "1c15601a0087"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
-origin: https://github.com/thrillmade/agent-skills
+origin: "https://github.com/thrillmade/agent-skills"
 name: finding-a-catalog-skill
 description: >-
   The directory of the thrillmade/agent-skills catalog — that catalog only,

@@ -14,3 +14,14 @@
 
 ---
 
+## 2026-08-24 09:20 - Quote origin, and make the strict reader reject the unquoted shape
+
+**Reasoning:** protocol#103 ratifies SPEC 2.1's 'All three values MUST be quoted'; origin_line() emitted 'origin: <url>' bare, so this PR would have shipped 56 skills carrying an identity field the spec ratifying that field forbids. Quoting the emitter alone would have been decorative: ORIGIN_RE captured (\\S+), so a bare URL still read as a well-formed claim and a file would have validated either way. The MUST is only real if the strict reader enforces it, so ORIGIN_RE now requires the quotes.
+
+**Alternatives considered:** Narrow the SPEC MUST to version and digest, where the coercion failure is real -- a URL cannot be read as an integer or as octal. Rejected: a rule with a per-field carve-out is one every implementer must re-derive, and the cost of getting it wrong is silent and asymmetric (an over-quoted URL is harmless; an under-quoted digest is an identity that compares unequal to itself). Also considered merging as-is and quoting in a follow-up: rejected, shipping 56 files known non-conformant with a promise to fix is the drift pattern itself, and the change is free before merge.
+
+**Implications:**
+- Zero digests moved -- 56 files changed, one line each, and 'git diff -- skills/ | grep -cE ^\\+digest:' returns 0. That is the fixed-point property doing its job: ORIGIN_LINE_RE elides the whole line whatever shape the value takes, so re-spelling the value cannot perturb the hash. The permissive/strict split is now load-bearing and tested both ways: origin_line_count() still counts a bare line (duplicate keys must be caught whatever their shape) while stamped_origin() returns None for it. Three pre-existing tests asserted the unquoted shape and were updated rather than deleted; two new tests pin the rule from both sides. Mutation-tested: reverting ORIGIN_RE to (\\S+), grepped in the tree to confirm it landed, turns 60 tests red including the new guard; restored byte-identical, 381 green.
+
+---
+

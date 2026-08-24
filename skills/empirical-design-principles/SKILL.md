@@ -1,7 +1,7 @@
 ---
 version: "1.0.0"
 digest: "9b90fefae38b"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
-origin: https://github.com/thrillmade/agent-skills
+origin: "https://github.com/thrillmade/agent-skills"
 name: empirical-design-principles
 description: Use when a layout decision is about to be defended by naming a principle — Gestalt grouping and common region, Fitts's, Hick's, Miller's, Jakob's, von Restorff, the aesthetic-usability effect — or when a rule of thumb like "seven items max" needs checking against what the underlying work actually says. Covers the empirical tradition only, meaning principles that make a prediction which can be tested and can fail. Says which ones predict something real, which four do not say what design writing claims, and how to use one forward as a prediction rather than backward as a post-hoc justification. Does NOT cover usability heuristics — Nielsen's ten, Norman's signifiers, Shneiderman's eight, progressive disclosure, recognition over recall — which are design judgement organised for inspection, not falsifiable prediction; those are in usability-heuristics. Norman's constraints, forcing functions and natural mapping are in neither skill and covered nowhere yet; the two gulfs of execution and evaluation are covered in composing-a-screen.
 ---

@@ -1,7 +1,7 @@
 ---
 version: "1.0.0"
 digest: "b470bbfb49da"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
-origin: https://github.com/thrillmade/agent-skills
+origin: "https://github.com/thrillmade/agent-skills"
 name: visual-polish
 description: >-
   Use when judging execution craft on a RENDERED surface — screenshots or a live

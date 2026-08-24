@@ -1,7 +1,7 @@
 ---
 version: "1.0.0"
 digest: "7c3fe31c3949"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
-origin: https://github.com/thrillmade/agent-skills
+origin: "https://github.com/thrillmade/agent-skills"
 name: logmind
 description: |
   MUST be loaded for any task in a project that uses logmind (detect by:
