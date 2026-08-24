@@ -6,7 +6,7 @@ way to ask:
 
     version: "1.4.2"    ordered, human -- which revision, and how it compares
     digest:  "c894961136c7"   exact, machine-recomputable -- which bytes
-    origin:  https://github.com/thrillmade/agent-skills   where to check
+    origin:  "https://github.com/thrillmade/agent-skills"   where to check
 
 `digest` used to be all there was, spelled `version:` -- a fixed point, but
 one that answers "same or different," never "newer." `origin` used to be a
@@ -64,8 +64,10 @@ Two shapes of regex per field, on purpose:
               and `000000123456` is read as octal -> 42798, silently, and
               does not round-trip) -- the same landmine a bare `1.0` would
               be for `version` if it were ever two components instead of
-              three, which is one reason all three are quoted except the
-              URL.
+              three. All THREE are quoted, the URL included: a URL has no
+              coercion landmine of its own, but a rule with a per-field
+              carve-out is one every implementer must re-derive, and the
+              cost of getting it wrong is silent and asymmetric.
 
 Stdlib only. No git, no network -- a consumer with the file in hand has
 everything, and `stamp()` reaches for nothing this module does not already
@@ -101,9 +103,13 @@ SEMVER_RE = re.compile(
 # comment. The quotes are part of the shape, not decoration -- see above.
 DIGEST_RE = re.compile(rb'(?m)^digest:[ \t]*"([0-9a-f]{12})"[ \t]*(?:#[^\n]*)?$')
 
-# STRICT: `origin: <token>`, unquoted -- a URL has no int/octal coercion
-# landmine to quote against, and quoting it would be decoration this module
-# does not ask for anywhere else.
+# STRICT: `origin: "<url>"`, QUOTED. A URL has no int/octal coercion
+# landmine of its own -- the quotes are here for uniformity, not for safety,
+# because SPEC 2.1 makes the rule all three fields rather than the two that
+# can be digit-shaped. Over-quoting a URL is inert; under-quoting a digest
+# is an identity that compares unequal to itself. The strict reader has to
+# enforce it or the MUST is decorative: a bare URL would keep validating and
+# nothing would ever notice.
 ORIGIN_RE = re.compile(rb'(?m)^origin:[ \t]*"([^"\n]+)"[ \t]*$')
 
 # The route home, carried by every stamped file. A copy taken by hand -- no

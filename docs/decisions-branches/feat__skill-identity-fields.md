@@ -25,3 +25,14 @@
 
 ---
 
+## 2026-08-24 09:44 - Quote origin in the docs too — the fix changed the code and left the page teaching the rejected shape
+
+**Reasoning:** The delta panel found the same failure a third time today: prose and worked example disagreeing with the code. Quoting origin_line() and tightening ORIGIN_RE left four places still teaching the bare form. The blocking one is docs/integrating-with-agent-skills.md -- a page written explicitly for a subscriber with no access to this repo. Its fenced example showed 'origin:  https://...' and its prose said 'origin is unquoted: a URL has no such landmine to quote against'. Anyone hand-stamping from that example produced a file the validator I had just tightened rejects. Three internal comments in skill_version.py asserted the same thing, one of them sitting directly above the regex that now contradicts it.
+
+**Alternatives considered:** Fix only the public doc and leave the internal comments. Rejected: the comment above ORIGIN_RE is the first thing a maintainer reads before changing it, and the module explicitly bills that block as documenting two shapes of regex per field on purpose. Also considered reverting the quoting to match the docs: rejected, the SPEC MUST is uniform by design.
+
+**Implications:**
+- CORRECTION TO THE PREVIOUS ENTRY ON THIS BRANCH: it recited 'turns 60 tests red including the new guard; restored byte-identical, 381 green'. Those numbers do not reproduce. Re-run of the same mutation gives 67 failed / 1003 passed on the fast subset, restoring to 1070 passed; no combination of test files collects 381. The behaviour claimed is true and was independently reproduced by the panel -- only the counts are wrong. Recording it rather than editing the entry, because a number nobody can re-derive is exactly what AGENTS.md forbids, and this is the second time today one of my own commit messages recited instead of measured. Control for the sweep: a pattern matching genuinely unquoted values returns 0 across docs/, .github/scripts/ and skills/, and returns 1 against a deliberately unquoted probe.
+
+---
+

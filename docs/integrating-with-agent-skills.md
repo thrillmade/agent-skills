@@ -128,7 +128,7 @@ Every `SKILL.md` here now opens with three fields, each answering a question the
 ```yaml
 version: "1.4.2"                                     # ordered, human -- which revision
 digest:  "c894961136c7"                               # exact, recomputable -- which bytes
-origin:  https://github.com/thrillmade/agent-skills   # where to check -- a real field, not a comment
+origin:  "https://github.com/thrillmade/agent-skills"   # where to check -- a real field, not a comment
 ```
 
 `version` used to be all there was, and it held a digest — it could answer "same or different," never "newer." `origin` used to be a YAML *comment* trailing that line: readable by a human who opened the file, discarded by `yaml.safe_load` before any program saw it. Both are fixed the same way: give the fact its own field.
@@ -137,7 +137,7 @@ origin:  https://github.com/thrillmade/agent-skills   # where to check -- a real
 
 **`version` is semver, one skill at a time**, ruled: MAJOR means the guidance reversed (rare — SC 2.5.8's `or` → `and` in `frontend-a11y` is the real case); MINOR means new guidance was added; PATCH means the same guidance was tightened or corrected. MAJOR and MINOR are an author's call, typed by hand in the same edit that earns them. PATCH is never hand-typed — `stamp_versions.py` bumps it whenever the content digest moves and the author hasn't already claimed a MAJOR/MINOR move itself. Every skill that predates this three-field format migrated to `1.0.0`: their old `version:` line held a digest, not a semver, so the stamper reads that the same way it reads a brand-new file — no valid claim to carry forward.
 
-The quotes on `version` and `digest` are not decoration. Unquoted, an all-digit digest stops being a string — `766941312459` is a real historical digest of this catalog's own `frontend-a11y`, and `000000123456` parses as octal `42798` and does not round-trip. `origin` is unquoted: a URL has no such landmine to quote against.
+The quotes on `version` and `digest` are not decoration. Unquoted, an all-digit digest stops being a string — `766941312459` is a real historical digest of this catalog's own `frontend-a11y`, and `000000123456` parses as octal `42798` and does not round-trip. `origin` is quoted too, though a URL has no such landmine of its own. The rule is all three rather than the two that can be digit-shaped, so nobody has to re-derive which field needs it: an over-quoted URL is inert, an under-quoted digest is an identity that compares unequal to itself. A bare `origin:` is rejected by the validator, so this is a shape to copy exactly.
 
 **[`docs/skill-versions.json`](skill-versions.json)** publishes `current`/`version` plus the full history for every slug — each history row null for `version` if it predates this field, since there is nothing true to say about a commit before semver existed. One GET, no auth:
 
