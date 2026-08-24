@@ -1,6 +1,6 @@
 ---
 version: "1.0.0"
-digest: "50253dba79e9"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+digest: "2d77f524744c"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: design-system-consistency
 description: >-

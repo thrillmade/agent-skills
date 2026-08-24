@@ -1,6 +1,6 @@
 ---
 version: "1.0.0"
-digest: "e89a261fddd8"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+digest: "acd03a0caa94"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: token-naming-conventions
 description: |
