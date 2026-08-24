@@ -304,6 +304,14 @@
       "subscribers": [],
       "notes": "review-discipline skill (review_mode: dedicated, applies_to api paths) a repo might subscribe to"
     },
+    "technical-writing": {
+      "family": "review-discipline",
+      "owns": "docs and changelog for additions",
+      "authoring_home": "catalog",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "kind: writing review-discipline skill; the additive-change gap neither retiring-a-superseded-decision (no old value to hunt) nor api-contract-enforcement (silent on purely additive changes) covers. Per SPEC §2.2 must not solo-cite a code-behavior finding -- pairs with api-contract-enforcement when a finding also touches behavior"
+    },
     "chroma-harmonization": {
       "family": "design-primitives",
       "owns": "per-stop cross-hue chroma caps",
