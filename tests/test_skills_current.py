@@ -80,6 +80,8 @@ def test_the_checker_and_the_catalog_agree_on_every_catalog_skill() -> None:
         b"---\r\nname: a\r\n---\r\n\r\n# T\r\n\r\nB.\r\n",
         b"no frontmatter at all\n",
         b"---\nname: a\nmetadata:\n  version: 3\n---\n\n# T\n\nB.\n",
+        b'---\nname: a\nversion: "1.0.0"\ndigest: "aaaaaaaaaaaa"\norigin: https://x\n---\n\n# T\n\nB.\n',
+        b"---\nname: a\ndigest: banana\norigin:\n---\n\n# T\n\nB.\n",
     ],
 )
 def test_the_two_copies_agree_on_the_awkward_shapes(raw: bytes) -> None:

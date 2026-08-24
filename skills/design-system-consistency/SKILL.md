@@ -1,5 +1,7 @@
 ---
-version: "50253dba79e9"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.0"
+digest: "50253dba79e9"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+origin: https://github.com/thrillmade/agent-skills
 name: design-system-consistency
 description: >-
   Use when judging whether a RENDERED surface obeys its own design system —

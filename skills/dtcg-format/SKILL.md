@@ -1,5 +1,7 @@
 ---
-version: "9bdad1baf4f5"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.0"
+digest: "9bdad1baf4f5"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+origin: https://github.com/thrillmade/agent-skills
 name: dtcg-format
 description: |
   Use when authoring, validating, or transforming W3C Design Tokens Format (DTCG) JSON. Names the $type / $value / $extensions separation, alias-reference syntax ({path.to.token}), group inheritance for shared $type / $description, composite token shapes (shadow, typography, transition), and the namespaced $extensions mechanism for tool-specific metadata. Cite when an agent proposes bare value / type keys without $, invents a top-level $modes key (themes/modes aren't in the DTCG draft), or hand-rolls tool metadata outside a namespaced extension bag. For one system's concrete extension schema see udts-dtcg-extensions.

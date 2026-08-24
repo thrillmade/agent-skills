@@ -1,5 +1,7 @@
 ---
-version: "ec171fa67568"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.0"
+digest: "ec171fa67568"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+origin: https://github.com/thrillmade/agent-skills
 name: frontend-a11y
 description: >-
   Use when judging accessibility on a RENDERED surface — screenshots or a live

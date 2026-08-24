@@ -1,5 +1,7 @@
 ---
-version: "6963f02bb4bd"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.0"
+digest: "6963f02bb4bd"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+origin: https://github.com/thrillmade/agent-skills
 name: conventions-template
 description: Template for a "review like me" skill - captures one maintainer's review conventions (formatting, what to flag, what to ignore). Copy + customize per SPEC v0.5.1 applies_to.author.
 kind: rule

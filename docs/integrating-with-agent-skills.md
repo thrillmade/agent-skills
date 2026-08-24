@@ -123,17 +123,23 @@ For a repo that predates this system (all current thrillmade repos):
 
 Answerable from inside your own repo, with no access to this one. Until now it wasn't: `npx skills add` copies a `SKILL.md` wholesale and records a `computedHash` produced by the CLI's own normalisation, and the lock stores no version, ref, commit or date — so a subscriber holding a months-old copy had nothing to compare and nothing told them. The first run of the checker below found 21 of `arlyn-working`'s 23 subscribed skills behind, some by three versions and some since May.
 
-Every `SKILL.md` here now opens with its own content digest:
+Every `SKILL.md` here now opens with three fields, each answering a question the old single `version:` line couldn't:
 
 ```yaml
-version: "56be4995fc2f"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.4.2"                                     # ordered, human -- which revision
+digest:  "c894961136c7"                               # exact, recomputable -- which bytes
+origin:  https://github.com/thrillmade/agent-skills   # where to check -- a real field, not a comment
 ```
 
-**The rule, in full, and it is meant to be re-derivable by hand:** normalise CRLF to LF, delete the `version:` line from the frontmatter, `sha256` the remaining bytes, take the first 12 hex characters. Deleting the line before hashing is what makes the value stable — a file's digest does not depend on what its stamp already claimed, so a wrong stamp, a malformed one and a missing one all name the same expected value. Everything else is inside the hash, `description:` included: it is the trigger surface, so a body-only digest would call a rewritten description "current".
+`version` used to be all there was, and it held a digest — it could answer "same or different," never "newer." `origin` used to be a YAML *comment* trailing that line: readable by a human who opened the file, discarded by `yaml.safe_load` before any program saw it. Both are fixed the same way: give the fact its own field.
 
-The quotes are not decoration. Unquoted, an all-digit digest stops being a string — `766941312459` is a real historical digest of this catalog's own `frontend-a11y`, and `000000123456` parses as octal `42798` and does not round-trip.
+**The digest rule, in full, and it is meant to be re-derivable by hand:** normalise CRLF to LF, delete the `version:`, `digest:` and `origin:` lines from the frontmatter, `sha256` the remaining bytes, take the first 12 hex characters. Deleting all three lines before hashing is what makes the value stable — a file's digest does not depend on what its stamp already claims, so a wrong stamp, a malformed one and a missing one all name the same expected value. Everything else is inside the hash, `description:` included: it is the trigger surface, so a body-only digest would call a rewritten description "current".
 
-**[`docs/skill-versions.json`](skill-versions.json)** publishes `current` plus the full history for every slug. One GET, no auth:
+**`version` is semver, one skill at a time**, ruled: MAJOR means the guidance reversed (rare — SC 2.5.8's `or` → `and` in `frontend-a11y` is the real case); MINOR means new guidance was added; PATCH means the same guidance was tightened or corrected. MAJOR and MINOR are an author's call, typed by hand in the same edit that earns them. PATCH is never hand-typed — `stamp_versions.py` bumps it whenever the content digest moves and the author hasn't already claimed a MAJOR/MINOR move itself. Every skill that predates this three-field format migrated to `1.0.0`: their old `version:` line held a digest, not a semver, so the stamper reads that the same way it reads a brand-new file — no valid claim to carry forward.
+
+The quotes on `version` and `digest` are not decoration. Unquoted, an all-digit digest stops being a string — `766941312459` is a real historical digest of this catalog's own `frontend-a11y`, and `000000123456` parses as octal `42798` and does not round-trip. `origin` is unquoted: a URL has no such landmine to quote against.
+
+**[`docs/skill-versions.json`](skill-versions.json)** publishes `current`/`version` plus the full history for every slug — each history row null for `version` if it predates this field, since there is nothing true to say about a commit before semver existed. One GET, no auth:
 
 ```bash
 curl -fsSLO https://raw.githubusercontent.com/thrillmade/agent-skills/main/.github/scripts/skills_current.py
@@ -146,7 +152,7 @@ Verdicts are `current`, `STALE n`, `DIVERGED`, `unpublished` (a version this cat
 
 **What is checked, and what isn't.** Each `current` is recomputed from the file on disk by `validate-skills` on every pull request, so it cannot drift from the tree. The **history** rows are derived from git, and `validate-skills.yml` checks out at depth 1, so CI cannot recompute them; nothing gates them. That is most of the index by row count, and the index carries the split — and the exact count — in its own `verification` block rather than leaving you to assume. Regenerate them in a full clone with `.github/scripts/gen_skill_versions.py --write`, which enumerates from `refs/remotes/origin/*` — exactly what a fresh clone has, so anyone can reproduce the output.
 
-`version:` is **enforced when present, not required**, and it is not in the SPEC's frontmatter table at all. That is the sanctioned way to add one: protocol SPEC §2.1 says an unrecognised key "MUST NOT cause a failure" and MUST round-trip unchanged, "so the schema can grow without every consumer being upgraded first". Requiring it would be the unsanctioned half. The same table already marks `source` REQUIRED against **0 of 49** adopters in this catalog (control: `kind` has 5) — the catalog already diverges from the owner it cites, and declaring a second required key from inside it would widen that rather than close it. Ratification is [protocol#39](https://github.com/thrillmade/protocol/issues/39)'s to grant.
+`version:`/`digest:`/`origin:` are **enforced when present, not required**, and none is in the SPEC's frontmatter table at all. That is the sanctioned way to add them: protocol SPEC §2.1 says an unrecognised key "MUST NOT cause a failure" and MUST round-trip unchanged, "so the schema can grow without every consumer being upgraded first". Requiring any of the three would be the unsanctioned half. The same table already marks `source` REQUIRED against **0 of 49** adopters in this catalog (control: `kind` has 5) — the catalog already diverges from the owner it cites, and declaring a required key from inside it would widen that rather than close it. Ratification is [protocol#39](https://github.com/thrillmade/protocol/issues/39)'s to grant. The three ARE gated *together*, though: a file naming one without the other two is rejected — an index carrying `current`/`version` for a skill whose file only bothered to claim a digest is exactly the half-true state this format exists to make unrepresentable.
 
 **Pinning, if you want an exact answer instead of a comparison.** `npx skills add thrillmade/agent-skills#<sha>` records the ref in your lock, so a later install is reproducible. That works today and costs this catalog nothing — but it reaches only repos that have a lock (four of the twenty here), which is why the index exists rather than a lock convention.
 

@@ -63,11 +63,13 @@ OUT = Path("docs/skill-versions.json")
 README = (
     "Content identity for every SKILL.md this catalog has published. "
     "To check a copy you hold, by hand: normalise CRLF to LF, delete the "
-    "`version:` line from its frontmatter, sha256 the rest, take the first 12 "
-    "hex characters -- then find your skill's slug below. Matching `current` "
-    "means you are up to date; a match in `history` means you are that many "
-    "versions behind; no match means your copy was edited locally. To check a "
-    "whole repo at once, run "
+    "`version:`, `digest:` and `origin:` lines from its frontmatter, sha256 "
+    "the rest, take the first 12 hex characters -- then find your skill's "
+    "slug below. Matching `current` means you are up to date; a match in "
+    "`history` means you are that many versions behind; no match means your "
+    "copy was edited locally. `version` and each row's `version` are the "
+    "skill's own semver, null for anything published before that field "
+    "existed. To check a whole repo at once, run "
     "https://raw.githubusercontent.com/thrillmade/agent-skills/main/"
     ".github/scripts/skills_current.py -- stdlib only, no install. Update "
     "with `npx skills add thrillmade/agent-skills --skill <slug>`. The "
@@ -137,23 +139,36 @@ def enumerate_history() -> tuple[dict[str, list[tuple[str, str, str]]], set[str]
 
     contents = _batch_read(sorted(blobs))
 
-    # Rows are (digest, short_sha, published date, sort key). The last two
-    # differ once a row has been published: see `merge_published`.
-    history: dict[str, list[tuple[str, str, str, str]]] = {}
+    # Rows are (digest, semver, short_sha, published date, sort key). The
+    # last two differ once a row has been published: see `merge_published`.
+    # `semver` is `skill_version.stamped_version` of the SAME blob the digest
+    # came from -- a pure function of content, unlike `sha`/`when`, so it
+    # needs no append-only protection of its own; every commit before the
+    # three-field format shipped reads back None here, because their
+    # `version:` line held a digest, not a semver -- the same "no valid
+    # claim" case `stamped_version` already treats identically to absence.
+    history: dict[str, list[tuple[str, str | None, str, str, str]]] = {}
     for (slug, obj), (sha, when) in seen.items():
         history.setdefault(slug, []).append(
-            (skill_version.digest(contents[obj]), sha, when[:10], when)
+            (
+                skill_version.digest(contents[obj]),
+                skill_version.stamped_version(contents[obj]),
+                sha,
+                when[:10],
+                when,
+            )
         )
 
-    out: dict[str, list[tuple[str, str, str, str]]] = {}
+    out: dict[str, list[tuple[str, str | None, str, str, str]]] = {}
     for slug, rows in history.items():
-        rows.sort(key=lambda r: r[3])
-        # Two blobs can normalise to one digest (they differed only in a
-        # `version:` line, which is elided). Keep the earliest appearance.
-        dedup: dict[str, tuple[str, str, str, str]] = {}
+        rows.sort(key=lambda r: r[4])
+        # Two blobs can normalise to one digest (they differed only in the
+        # version/digest/origin lines, which are elided). Keep the earliest
+        # appearance.
+        dedup: dict[str, tuple[str, str | None, str, str, str]] = {}
         for row in rows:
             dedup.setdefault(row[0], row)
-        out[slug] = sorted(dedup.values(), key=lambda r: r[3])
+        out[slug] = sorted(dedup.values(), key=lambda r: r[4])
 
     if not blobs:
         raise SystemExit(
@@ -211,11 +226,12 @@ def merge_published(history: dict[str, list], root: Path) -> dict[str, list]:
         return history
     published = json.loads(path.read_text(encoding="utf-8")).get("skills", {})
     for slug, entry in published.items():
-        # A published row WINS over a freshly derived one. Once a date is out
-        # there a subscriber may have read it, and re-deriving it from a
-        # different set of refs can move it. Correcting a published row is
-        # then an explicit edit to this file, which is visible in review --
-        # rather than something that happens to whoever regenerates next.
+        # A published row's `commit`/`date` WIN over a freshly derived one.
+        # Once a date is out there a subscriber may have read it, and
+        # re-deriving it from a different set of refs can move it. Correcting
+        # a published row is then an explicit edit to this file, which is
+        # visible in review -- rather than something that happens to whoever
+        # regenerates next.
         rows = {r[0]: r for r in history.get(slug, [])}
         for old in entry.get("history", []):
             # Keep the enumerated SORT key where there is one. A published row
@@ -223,9 +239,20 @@ def merge_published(history: dict[str, list], root: Path) -> dict[str, list]:
             # the two as strings reorders versions that landed on the same
             # day -- which this catalog already has.
             was = rows.get(old["v"])
-            rows[old["v"]] = (old["v"], old["commit"], old["date"],
-                              was[3] if was else old["date"])
-        history[slug] = sorted(rows.values(), key=lambda r: r[3])
+            # `version` is NOT append-only the way `commit`/`date` are: it is
+            # a pure function of the blob's own bytes, so a freshly-derived
+            # value is never wrong, only sometimes MISSING when this run
+            # cannot read the blob at all (a digest that only survives in an
+            # already-published row, from a ref nobody still fetches). Every
+            # row published before this field existed has no "version" key at
+            # all -- `.get` reads that the same way `stamped_version` reads a
+            # pre-migration blob: as no claim, not as a claim of None.
+            version = old.get("version")
+            if version is None and was is not None:
+                version = was[1]
+            rows[old["v"]] = (old["v"], version, old["commit"], old["date"],
+                              was[4] if was else old["date"])
+        history[slug] = sorted(rows.values(), key=lambda r: r[4])
     return history
 
 
@@ -246,7 +273,12 @@ def build(root: Path) -> dict:
         rows = history.get(slug, [])
         entry: dict = {}
         if slug in live:
-            entry["current"] = skill_version.digest(live[slug].read_bytes())
+            live_raw = live[slug].read_bytes()
+            entry["current"] = skill_version.digest(live_raw)
+            # The semver counterpart of `current` -- None for a skill never
+            # stamped under the three-field format, same as `stamped_version`
+            # itself reads it.
+            entry["version"] = skill_version.stamped_version(live_raw)
             # `authoring_home` has exactly one owner -- the CI-gated placement
             # map. Copied, never invented: a slug the map does not carry gets
             # no value rather than a plausible one.
@@ -256,6 +288,7 @@ def build(root: Path) -> dict:
             # Published once, gone from the tree. `current: null` says so, and
             # the checker must not tell anyone to reinstall it.
             entry["current"] = None
+            entry["version"] = None
             entry["retired"] = True
         else:
             # Seen only on a feature branch. It has never been published, so
@@ -263,7 +296,9 @@ def build(root: Path) -> dict:
             # the checker then reports `local-skill`, which is exactly right
             # for a skill somebody else authored and nominated.
             continue
-        entry["history"] = [{"v": v, "commit": c, "date": d} for v, c, d, _ in rows]
+        entry["history"] = [
+            {"v": v, "version": ver, "commit": c, "date": d} for v, ver, c, d, _ in rows
+        ]
         skills[slug] = entry
 
     rows_total = sum(len(s["history"]) for s in skills.values())

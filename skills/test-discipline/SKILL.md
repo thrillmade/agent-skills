@@ -1,5 +1,7 @@
 ---
-version: "e606dd248a0a"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.0"
+digest: "e606dd248a0a"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+origin: https://github.com/thrillmade/agent-skills
 name: test-discipline
 description: Review test changes for the patterns that hollow out a test suite over time — overly-mocked tests, snapshot churn, asserting on the implementation, deleted tests without replacement, skipped tests left in the diff, and "fix the test to match the new behavior" without thinking about whether the old assertion was load-bearing. Apply to any PR that adds, deletes, or modifies test files.
 applies_to:
