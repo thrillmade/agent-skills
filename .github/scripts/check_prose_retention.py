@@ -40,7 +40,7 @@ Reformatting is free; losing content is not.
             get trimmed, superseded, merged), but it has to be on purpose and
             on the record
 
-Three moves make that separable, and all three are load-bearing:
+Four moves make that separable, and all four are load-bearing:
 
 1. NORMALISE LINKS FIRST. `[x](../x/SKILL.md)` tokenises to four words where
    `` `x` `` tokenises to one, so an un-normalised comparison reads the #197
@@ -95,6 +95,34 @@ Three moves make that separable, and all three are load-bearing:
    SKILL.md therefore passed that gate and defeated this split. Line endings
    are normalised here so it does not, and the refusal stands behind that for
    whatever the next spelling turns out to be.
+
+4. FLAG LARGE OFFSETTING CHURN WITHIN ONE SCOPE, EVEN WHEN THE NET DOES NOT
+   FIRE. Move 3 stops a gain in one scope paying for a loss in ANOTHER. It
+   does nothing about a gain and a loss in the SAME scope, which is exactly
+   what a restructure produces: a section deleted and several sections added
+   in one pass, all landing in "prose". #258, found by the panel on #257:
+   designing-elite-ui cut its `## Deploying This Skill` section (55 words) in
+   the same change that added the house's five standard sections, and the
+   gate scored a net GAIN and exited 0. `over` cannot see this by
+   construction -- net is the one quantity a masking gain defeats.
+
+   `CHURN_FLOOR` catches it as a second, independent condition: both
+   directions of a scope moving past it at once, net or no net. It does not
+   assert which passage went -- `excerpt` already declines to guess when no
+   single deleted block accounts for most of the loss, and a masked scope's
+   words are rarely one contiguous block by the time an unrelated addition has
+   covered part of the vocabulary. It says only that this much genuinely
+   left and this much arrived in the same part in the same change, which is
+   enough to ask for one sentence saying why -- the same ledger row `over`
+   already asks for, through the same hatch.
+
+   Scoring per-`##`-section instead was the other candidate, and more
+   faithful to the intent: a moved paragraph would net to zero inside the
+   section it landed in either way. Rejected because it prices the thing
+   this gate has always left free -- reordering sections, moving a line
+   between them -- and would fire on every one of those, not only the ones
+   that lost something. CHURN_FLOOR fires on far fewer changes; see the
+   constant's own comment for what that trade cost against the corpus.
 
 Stdlib only.
 
@@ -335,6 +363,44 @@ FLOOR = {
     "prose": 2,
     "frontmatter": 3,
     "code": 3,
+}
+
+# Both directions of a scope's word count moving past this at once, with the
+# net still at or under FLOOR -- a loss masked by a simultaneous gain in the
+# SAME bucket, which `over` above cannot see: net is exactly the quantity a
+# masking gain defeats. #258: a restructure adds and removes in one pass, in
+# the same scope, and the words landing offset the words leaving before `over`
+# ever gets to look.
+#
+# UNLIKE FLOOR, this digit is chosen, not discovered. Replaying it over the
+# same corpus the FLOOR comment above measures (`--all`, same command) finds
+# no empty band: distinct masked-loss values for prose run 1, 2, 4, 5, 6 ... 95,
+# 100, with no gap over 4 anywhere in it -- there is no "argument is the empty
+# band" to make here the way FLOOR makes it.
+#
+# What IS measured: the file-revision that motivated this check --
+# designing-elite-ui, #257, a 55-word `## Deploying This Skill` section cut and
+# disclosed only by hand, after a panel caught what this gate missed -- scores a
+# 36-word masked loss against a 328-word gain in the same prose scope. Three
+# legitimate whole-file rewrites in the same history (frontend-a11y,
+# visual-polish, design-system-consistency -- three near-empty skills landing
+# at full size in one PR, #231) score HIGHER on the masked-loss side alone
+# (95-100) while keeping under 40% of their own before-text verbatim, against
+# designing-elite-ui's 84%. A retained-fraction test would tell those two
+# shapes apart here, but a rewrite that legitimately touches most of a file is
+# not obviously exempt either -- it is the shape #258 itself names as free
+# today (reorganisation), and one sentence in a PR that just tripled a file's
+# size is a small tax, not a wrong verdict. So this floor is set an order of
+# magnitude above FLOOR: comfortably under the founding case, above every one
+# of the 15 smallest historical values on either side (all under 20) so
+# ordinary small edits stay free, and it asks a declaration only of
+# file-revisions on the scale of an actual restructuring PR -- 19 distinct
+# (path, scope) pairs across this catalog's whole history at this setting, not
+# "every restructure."
+CHURN_FLOOR = {
+    "prose": 20,
+    "frontmatter": 20,
+    "code": 20,
 }
 
 LEDGER = Path("docs/prose-removals.md")
@@ -1010,8 +1076,10 @@ class Loss:
     a loss in another -- see move 3 in the module docstring.
 
     `net` is the total that left the file and was not replaced where it left
-    from: the sum of the scopes that lost words, ignoring those that gained.
-    That is the number the ledger row carries.
+    from: the sum of the scopes that lost words, ignoring those that gained --
+    PLUS, for a scope `over` cannot see because a gain in the same scope masks
+    it, the words that scope genuinely lost regardless. That is the number the
+    ledger row carries either way.
     """
 
     def __init__(self, before: str, after: str) -> None:
@@ -1025,19 +1093,41 @@ class Loss:
         b_scopes, a_scopes = scopes["base"], scopes["head"]
 
         self.scopes: dict[str, int] = {}
+        self.gross_loss: dict[str, int] = {}
+        self.gross_gain: dict[str, int] = {}
         self.gone: collections.Counter[str] = collections.Counter()
         for name in SCOPES:
             b = collections.Counter(words(b_scopes[name]))
             a = collections.Counter(words(a_scopes[name]))
             self.gone += b - a
-            self.scopes[name] = sum((b - a).values()) - sum((a - b).values())
+            self.gross_loss[name] = sum((b - a).values())
+            self.gross_gain[name] = sum((a - b).values())
+            self.scopes[name] = self.gross_loss[name] - self.gross_gain[name]
 
         self.over = {n: v for n, v in self.scopes.items() if v > FLOOR[n]}
-        self.net = sum(v for v in self.scopes.values() if v > 0)
+
+        # A scope `over` did not catch -- net at or under FLOOR -- where BOTH
+        # directions moved past CHURN_FLOOR anyway. Keyed to the gross loss,
+        # not the net, because the net is precisely what a masking gain
+        # defeats: this is the second, independent way a scope can need a
+        # declaration. See CHURN_FLOOR.
+        self.churn = {
+            n: self.gross_loss[n]
+            for n in SCOPES
+            if n not in self.over
+            and self.gross_loss[n] > CHURN_FLOOR[n]
+            and self.gross_gain[n] > CHURN_FLOOR[n]
+        }
+
+        self.net = sum(
+            v for n, v in self.scopes.items() if v > 0 and n not in self.churn
+        ) + sum(self.churn.values())
 
     def __bool__(self) -> bool:
-        """True when some part of the file lost more than its floor allows."""
-        return bool(self.over)
+        """True when some part of the file lost more than its floor allows, or
+        moved past CHURN_FLOOR in both directions at once with the loss masked
+        by a gain in the same scope."""
+        return bool(self.over) or bool(self.churn)
 
     def breakdown(self) -> str:
         """Which parts lost the words, for the error message.
@@ -1045,12 +1135,14 @@ class Loss:
         Every part that lost words, not only the parts that lost more than
         their floor -- otherwise the breakdown does not add up to the total the
         author is being asked to write into the ledger, and a reader is left to
-        wonder which of the two numbers is the real one.
+        wonder which of the two numbers is the real one. A masked scope's own
+        gross loss is included here too, on the same terms -- `run` explains
+        separately why it did not show up as a net loss.
         """
+        parts = [(n, v) for n, v in self.scopes.items() if v > 0 and n not in self.churn]
+        parts += list(self.churn.items())
         return ", ".join(
-            f"{v} from its {SCOPE_LABEL[n]}"
-            for n, v in sorted(self.scopes.items(), key=lambda kv: -kv[1])
-            if v > 0
+            f"{v} from its {SCOPE_LABEL[n]}" for n, v in sorted(parts, key=lambda kv: -kv[1])
         )
 
     def excerpt(self, limit: int = 160) -> str:
@@ -1574,6 +1666,24 @@ def run(
                 f"{ledger_row(skill, loss.net)}"
             )
 
+        # Printed only for a scope `over` did not catch on its own -- a gain in
+        # the SAME part masked the loss from the net count above, which cross-
+        # scope scoring (the sentence before this one) does not explain, since
+        # nothing here moved between parts. #258: this is the case a plain net
+        # count is blind to by construction, not the one move 3 already fixed.
+        masked = (
+            " ".join(
+                f"Counted by net alone its {SCOPE_LABEL[n]} would not have "
+                f"fired: {loss.gross_gain[n]} words arrived there in the same "
+                f"change, enough to turn a {v}-word loss into a net gain. "
+                f"Flagged anyway, because a gain that size in the same part "
+                f"is exactly what a net count cannot see through."
+                for n, v in sorted(loss.churn.items())
+            )
+            if loss.churn
+            else ""
+        )
+
         errors.append(
             f"::error file={path}{LOST_PROSE}{loss.net} words that "
             f"nothing in the same part of it replaced ({loss.breakdown()}). "
@@ -1581,7 +1691,8 @@ def run(
             f"to a markdown link all score zero here, so this is content, not "
             f"layout. Each part is scored on its own, so words added to the "
             f"frontmatter or to a code block cannot pay for prose that went "
-            f"missing. Gone: {loss.excerpt()}. {hatch}{rewritten}"
+            f"missing.{' ' + masked if masked else ''} Gone: {loss.excerpt()}. "
+            f"{hatch}{rewritten}"
         )
 
     return errors
