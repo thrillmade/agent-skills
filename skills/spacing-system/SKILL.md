@@ -1,5 +1,5 @@
 ---
-version: "cd4c96613b2b"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "aef0e20032c4"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: spacing-system
 description: Use when designing or auditing a spacing scale for padding, gaps, icon sizes, component heights, or border radii. Names the two-unit primitive model (a minor unit — the smallest legal increment — plus a major unit — the dominant rhythm — where major divides cleanly by minor), the derivation rule (padding / gap / radius / height ladders all derive from the unit primitives, never invented per-surface), the 24 CSS px WCAG 2.5.8 AA target floor for interactive heights, and the T-shirt-vs-numeric naming options. Cite when an agent proposes a single-unit grid for a mixed-density system or invents off-grid spacing values for "this one specific case." For one system's concrete density-mode unit choices see udts-spacing-defaults.
 ---
@@ -59,7 +59,7 @@ Same ladder as padding, separately labeled (`gap-*`) because horizontal and vert
 
 ### Icon-size ladder
 
-**Curated**, not formula-derived. A widely-used curated set is `12, 16, 24, 32, 40, 48` — these are the sizes where rendered glyphs (Material, Lucide, Heroicons families) hit pixel boundaries cleanly. Formula-derived sizes (e.g. 14, 18, 22) produce hairline mis-renders on a lot of icon families. See [component-sizing-principles](../component-sizing-principles/SKILL.md) for the rule that pairs an icon size with a control height.
+Curated, not derived — [component-sizing-principles](../component-sizing-principles/SKILL.md) owns the curated set, the reasoning, and the rule that pairs an icon size with a control height.
 
 ### Component-height ladder
 
@@ -67,16 +67,7 @@ Curated per density mode, with the **24 CSS px WCAG 2.5.8 AA Pointer Target floo
 
 ### Border-radius ladder
 
-```
-radius-0     = 0
-radius-sm    = minor                     (e.g. 4)
-radius-md    = major / 2                 (e.g. 4)        — equals sm at balanced and dense; diverges at spacious (sm=4, md=8)
-radius-lg    = major                     (e.g. 8)
-radius-xl    = 1.5 × major               (e.g. 12)
-radius-2xl   = 2 × major                 (e.g. 16)
-radius-pill  = 9999                      (infinite — for fully-rounded)
-radius-circle = 50%                      (relative — for circular elements)
-```
+Radius snaps to the minor unit like every other ladder here, but **how many rungs and how fast they grow is the system's own personality call, not a universal formula** — a sharp-cornered enterprise tool and a soft-cornered consumer app can share the same unit primitives and still diverge completely on radius. Two endpoints are universal regardless of personality: `radius-pill` (9999, fully-rounded) and `radius-circle` (50%, relative, for circular elements). One worked ladder between `0` and those endpoints lands in [udts-spacing-defaults](../udts-spacing-defaults/SKILL.md) once that stub stabilizes.
 
 ## Naming: T-shirt OR numeric
 
@@ -116,10 +107,9 @@ After picking unit primitives + emitting ladders:
 2. **Grid alignment:** every padding, gap, and component-height token is a multiple of the minor unit.
 3. **Pointer target:** every interactive component-height rung is ≥ 24 CSS px.
 4. **Naming sync:** if both T-shirt and numeric families are emitted, every value has a matching pair in both. No orphans.
-5. **Icon-size curation:** icon sizes match the curated set (12, 16, 24, 32, 40, 48), not a formula output.
+5. **Icon-size curation:** icon sizes match [component-sizing-principles](../component-sizing-principles/SKILL.md)'s curated set, not a formula output.
 
 ## Sources
 
 - [WCAG 2.5.8 — Target Size (AA, added in 2.2)](https://www.w3.org/TR/WCAG22/#target-size-minimum) — the 24 CSS px floor.
-- [Material Design's icon sizing](https://m3.material.io/styles/icons) — informs the curated icon set.
 - One system's concrete density-mode unit choices: [udts-spacing-defaults](../udts-spacing-defaults/SKILL.md) (incubating).

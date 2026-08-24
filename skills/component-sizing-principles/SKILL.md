@@ -1,5 +1,5 @@
 ---
-version: "0be18bc0cded"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "9de5f0d2c424"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 name: component-sizing-principles
 description: |
   Use when picking a control height (button / input / chip / badge), proposing a component-height or icon-size ladder for a density mode, or auditing one-off heights drifting across a codebase. Names the universal principles: ladders are curated, not formula-derived — formula-clean values render poorly and blur rung distinctions; every interactive control clears the WCAG 2.5.8 AA 24 CSS px target-size floor, with the smallest rung reserved for non-interactive elements; each rung pairs its height with a type-scale font size and a curated icon size; sibling controls in one surface share a rung. Cite when an agent derives heights from a ratio, picks an off-ladder height, or puts an interactive control below 24 px. For one system's concrete rung sets see udts-component-sizing-ladders.
@@ -43,15 +43,13 @@ Curate the icon ladder the same way you curate heights. **12, 16, 24, 32, 40, 48
 
 **Don't formula-derive icon sizes.** A height-to-icon ratio like `icon = height / 2` produces off-curve values (14, 18, 22, ...) — every one of which renders worse than its curated neighbour.
 
-## The WCAG 2.5.8 target-size floor
+## Applying the target-size floor to a ladder
 
-Interactive control heights clear **24 CSS px** per WCAG 2.5.8 AA Target Size (added in WCAG 2.2). In practice:
+[spacing-system](../spacing-system/SKILL.md) owns the WCAG 2.5.8 AA target-size floor and its citation. Applied to a ladder:
 
-- Reserve the **smallest rung** — which may sit at or below the 24 px floor — for **non-interactive elements** (badges, read-only chips, density tags).
+- Reserve the **smallest rung** — which may sit at or below the floor — for **non-interactive elements** (badges, read-only chips, density tags).
 - Start interactive rungs at the **first rung that clears the floor**.
-- In a roomier, lower-density mode whose smallest rung already exceeds 24 px, the entire ladder is interactive-safe.
-
-Failing this floor is one of the most common WCAG 2.2 audit misses. The floor itself is defined alongside the spacing primitives in [spacing-system](../spacing-system/SKILL.md).
+- In a roomier, lower-density mode whose smallest rung already clears the floor, the entire ladder is interactive-safe.
 
 ## Sibling consistency
 
@@ -71,7 +69,7 @@ Default heuristic:
 After picking a rung:
 
 1. **Ladder match:** the rung comes from the declared density ladder, not a one-off height. Mixing rungs from different density ladders in one surface is a bug.
-2. **Interactive floor:** the height clears 24 CSS px for interactive controls. Where the smallest rung sits below that floor it is reserved for non-interactive use; a ladder whose smallest rung already clears 24 px has no reserved tier.
+2. **Interactive floor:** the height clears [spacing-system](../spacing-system/SKILL.md)'s target-size floor for interactive controls. Where the smallest rung sits below that floor it is reserved for non-interactive use; a ladder whose smallest rung already clears it has no reserved tier.
 3. **Font pairing:** the inner font-size matches the rung's paired size from the type scale, not a free-picked value.
 4. **Icon pairing:** the leading or trailing icon size matches the rung's paired icon, and is not smaller than the font.
 5. **Sibling consistency:** sibling controls in the same surface share a rung.
@@ -79,13 +77,13 @@ After picking a rung:
 ## Cross-references
 
 - **Routed here by:** [designing-a-design-system](../designing-a-design-system/SKILL.md) — the L1 dispatcher for building or extending a system.
-- **REQUIRED BACKGROUND:** [spacing-system](../spacing-system/SKILL.md) — the unit primitives drive which density ladder applies, and the 24 CSS px WCAG 2.5.8 floor is defined there.
+- **REQUIRED BACKGROUND:** [spacing-system](../spacing-system/SKILL.md) — the unit primitives drive which density ladder applies, and it owns the WCAG 2.5.8 target-size floor.
 - **For the font sizes paired with each rung:** [type-scale](../type-scale/SKILL.md) — the per-rung font is taken from the canonical scale, not free-picked.
 - **For line-heights inside each rung:** [line-height-grid](../line-height-grid/SKILL.md) — interactive controls use `lh-ui`, not `lh-prose`.
 - **For one system's worked rung sets:** [udts-component-sizing-ladders](../udts-component-sizing-ladders/SKILL.md) — concrete per-density heights with their font and icon pairings (incubating L2 stub).
 
 ## Sources
 
-- [WCAG 2.5.8 — Target Size (AA, added in 2.2)](https://www.w3.org/TR/WCAG22/#target-size-minimum).
-- Material Design 3 — Component sizing guidance.
-- Apple Human Interface Guidelines — touch targets (44 pt mobile; relaxed to 24 CSS px desktop per WCAG).
+- The WCAG 2.5.8 target-size floor cited above is [spacing-system](../spacing-system/SKILL.md)'s to source; linked, not restated, so the two skills can't drift on the number.
+- [Material Design's icon sizing](https://m3.material.io/styles/icons) — informs the curated icon set.
+- Apple Human Interface Guidelines — touch targets (44 pt mobile; relaxed on desktop to the floor spacing-system cites).

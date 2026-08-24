@@ -5,14 +5,14 @@
  "enumeration": {
   "refs": "refs/remotes/origin/*",
   "publishing_ref": "origin/main",
-  "commits": 173,
-  "blobs": 272
+  "commits": 174,
+  "blobs": 273
  },
- "versions_enumerated": 191,
+ "versions_enumerated": 192,
  "verification": {
   "current": "GATED. validate_skills.py recomputes every `current` from skills/<slug>/SKILL.md on every pull request. Needs no git history, so it holds at the depth-1 checkout CI uses.",
   "history": "NOT GATED. History is derived from git and validate-skills.yml checks out at fetch-depth 1, so CI cannot recompute these rows. Regenerate them in a full clone with `.github/scripts/gen_skill_versions.py --write`.",
-  "history_rows_ungated": 135
+  "history_rows_ungated": 136
  },
  "skills": {
   "apca-contrast": {
@@ -182,7 +182,7 @@
    ]
   },
   "component-sizing-principles": {
-   "current": "0be18bc0cded",
+   "current": "9de5f0d2c424",
    "authoring_home": "catalog",
    "history": [
     {
@@ -234,7 +234,7 @@
    ]
   },
   "consuming-a-design-system": {
-   "current": "edf49c1e4dc2",
+   "current": "057a7ec84fbe",
    "authoring_home": "catalog",
    "history": [
     {
@@ -376,7 +376,7 @@
    ]
   },
   "designing-elite-ui": {
-   "current": "cc8799744d8f",
+   "current": "4500a7e39f2d",
    "authoring_home": "catalog",
    "history": [
     {
@@ -533,7 +533,7 @@
    ]
   },
   "line-height-grid": {
-   "current": "f48e72b56887",
+   "current": "af7dddd2f2d7",
    "authoring_home": "catalog",
    "history": [
     {
@@ -934,7 +934,7 @@
    ]
   },
   "spacing-system": {
-   "current": "cd4c96613b2b",
+   "current": "aef0e20032c4",
    "authoring_home": "catalog",
    "history": [
     {
@@ -1302,6 +1302,11 @@
     {
      "v": "8614ce4a0ec5",
      "commit": "96476a1",
+     "date": "2026-08-23"
+    },
+    {
+     "v": "709e9dd2f98f",
+     "commit": "2e618c1",
      "date": "2026-08-23"
     }
    ]
