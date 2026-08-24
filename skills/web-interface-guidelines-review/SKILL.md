@@ -1,6 +1,6 @@
 ---
-version: "1.0.0"
-digest: "709e9dd2f98f"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.1"
+digest: "c135ca07d880"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: web-interface-guidelines-review
 description: |
@@ -99,11 +99,6 @@ Apply each section in order. Stop and flag at the first failure in each section.
 - Show the fix, not just the rule. "Replace `style={{ color: '#666' }}` with `className=\"text-secondary\"`" beats "use the design tokens."
 - Quote the offending line verbatim before the critique.
 
-## Cross-references
-
-- **REQUIRED BACKGROUND:** contrast — [apca-contrast](../apca-contrast/SKILL.md), [wcag-contrast](../wcag-contrast/SKILL.md); typography — [type-scale](../type-scale/SKILL.md), [line-height-grid](../line-height-grid/SKILL.md); spacing — [spacing-system](../spacing-system/SKILL.md), [component-sizing-principles](../component-sizing-principles/SKILL.md); tokens — [token-naming-conventions](../token-naming-conventions/SKILL.md), [dtcg-format](../dtcg-format/SKILL.md).
-- **UI-string voice:** [brand-voice-review](../brand-voice-review/SKILL.md).
-
 ## Verification
 
 After completing a review:
@@ -113,6 +108,11 @@ After completing a review:
 3. **Sections applied in order.** Contrast and a11y come before token discipline; don't lead with cosmetic findings.
 4. **No bundled comments.**
 5. **Skills cross-referenced.** Contrast findings cite `apca-contrast` / `wcag-contrast`; size findings cite `type-scale` / `component-sizing-principles`.
+
+## Cross-references
+
+- **REQUIRED BACKGROUND:** contrast — [apca-contrast](../apca-contrast/SKILL.md), [wcag-contrast](../wcag-contrast/SKILL.md); typography — [type-scale](../type-scale/SKILL.md), [line-height-grid](../line-height-grid/SKILL.md); spacing — [spacing-system](../spacing-system/SKILL.md), [component-sizing-principles](../component-sizing-principles/SKILL.md); tokens — [token-naming-conventions](../token-naming-conventions/SKILL.md), [dtcg-format](../dtcg-format/SKILL.md).
+- **UI-string voice:** [brand-voice-review](../brand-voice-review/SKILL.md).
 
 ## Sources
 

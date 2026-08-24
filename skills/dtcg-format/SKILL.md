@@ -1,6 +1,6 @@
 ---
-version: "1.0.0"
-digest: "9bdad1baf4f5"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.1"
+digest: "b864390c7e86"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: dtcg-format
 description: |
@@ -152,13 +152,6 @@ One worked extension schema is UDTS's, documented in [udts-dtcg-extensions](../u
 4. **Composite-token sub-aliasing with wrong type.** `shadow.color` must reference a color token, not a dimension. Validators flag this; if your validator doesn't, your runtime will.
 5. **`$type` repeated on leaves under a typed group.** Redundant but not wrong; clean DTCG omits it.
 
-## Cross-references
-
-- **Routed here by:** [designing-a-design-system](../designing-a-design-system/SKILL.md) — the L1 dispatcher for building or extending a system.
-- **REQUIRED BACKGROUND:** [token-naming-conventions](../token-naming-conventions/SKILL.md) — the naming principles that extension metadata redundantly encodes.
-- **For the version-bump policy when DTCG files change:** [semver-design-tokens](../semver-design-tokens/SKILL.md).
-- **For one system's concrete extension schema:** [udts-dtcg-extensions](../udts-dtcg-extensions/SKILL.md) — the worked example.
-
 ## Verification
 
 For each DTCG file:
@@ -168,6 +161,13 @@ For each DTCG file:
 3. **Type inheritance:** leaves under a typed group don't redeclare `$type`.
 4. **No cycles:** alias chains terminate.
 5. **Extension consistency:** if the catalog declares a namespaced extension schema, every token carries it consistently and its fields agree with what the token's name declares.
+
+## Cross-references
+
+- **Routed here by:** [designing-a-design-system](../designing-a-design-system/SKILL.md) — the L1 dispatcher for building or extending a system.
+- **REQUIRED BACKGROUND:** [token-naming-conventions](../token-naming-conventions/SKILL.md) — the naming principles that extension metadata redundantly encodes.
+- **For the version-bump policy when DTCG files change:** [semver-design-tokens](../semver-design-tokens/SKILL.md).
+- **For one system's concrete extension schema:** [udts-dtcg-extensions](../udts-dtcg-extensions/SKILL.md) — the worked example.
 
 ## Sources
 

@@ -1,6 +1,6 @@
 ---
-version: "1.0.0"
-digest: "ec171fa67568"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.1"
+digest: "624829557d3e"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: frontend-a11y
 description: >-
@@ -122,20 +122,6 @@ Motion has two obligations: auto-starting motion over five seconds must be pausa
 4. Every mode in the table is reported as checked or as not captured, including a
    clean pass, which must **name the modes checked** or it is not evidence.
 
-## Sources
-
-- [WCAG 2.2](https://www.w3.org/TR/WCAG22/) — every SC above carries its published level
-  ([2.5.8](https://www.w3.org/TR/WCAG22/#target-size-minimum),
-  [2.4.11](https://www.w3.org/TR/WCAG22/#focus-not-obscured-minimum)). 2.4.13 and 2.4.12
-  are **AAA** there, not AA.
-- [CSS Color Adjust 1](https://www.w3.org/TR/css-color-adjust-1/#forced) is normative for
-  the forced-colors `box-shadow` / `text-shadow` / `background-image` behaviour;
-  [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/forced-colors) supports
-  the native-semantics point above.
-  [Media Queries 5](https://www.w3.org/TR/mediaqueries-5/#prefers-reduced-motion) defines
-  the preference queries.
-- **House convention, not a standard:** the composited-pixel and per-mode rules above.
-
 ## Cross-references
 
 - **REQUIRED BACKGROUND:** [apca-contrast](../apca-contrast/SKILL.md) — Lc targets and
@@ -151,3 +137,17 @@ Motion has two obligations: auto-starting motion over five seconds must be pausa
   [reviewing-design-work](../reviewing-design-work/SKILL.md) orders all four, and
   [orchestrating-elite-agent-qa](../orchestrating-elite-agent-qa/SKILL.md) drives the
   browser pass producing these renders.
+## Sources
+
+- [WCAG 2.2](https://www.w3.org/TR/WCAG22/) — every SC above carries its published level
+  ([2.5.8](https://www.w3.org/TR/WCAG22/#target-size-minimum),
+  [2.4.11](https://www.w3.org/TR/WCAG22/#focus-not-obscured-minimum)). 2.4.13 and 2.4.12
+  are **AAA** there, not AA.
+- [CSS Color Adjust 1](https://www.w3.org/TR/css-color-adjust-1/#forced) is normative for
+  the forced-colors `box-shadow` / `text-shadow` / `background-image` behaviour;
+  [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/forced-colors) supports
+  the native-semantics point above.
+  [Media Queries 5](https://www.w3.org/TR/mediaqueries-5/#prefers-reduced-motion) defines
+  the preference queries.
+- **House convention, not a standard:** the composited-pixel and per-mode rules above.
+

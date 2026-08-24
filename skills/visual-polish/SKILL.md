@@ -1,6 +1,6 @@
 ---
-version: "1.0.0"
-digest: "b470bbfb49da"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.1"
+digest: "afe087cb57e2"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: visual-polish
 description: >-
@@ -113,21 +113,6 @@ upgrade (the trim, the token, the missing cell), never just the verdict.
    never ranks a polish nit above a measured failure.
 5. A genuinely polished surface gets one line saying so, naming what was exercised.
 
-## Sources
-
-- [CSS Inline Layout 3 — `text-box-trim`](https://drafts.csswg.org/css-inline-3/#text-box-trim)
-  and [MDN `text-box`](https://developer.mozilla.org/en-US/docs/Web/CSS/text-box) — the
-  standards-track replacement for hand-tuned `line-height` centring, plus its support.
-- [MDN `devicePixelRatio`](https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio)
-  — why a 1 px rule is not one device pixel.
-- [Material 3 — elevation](https://m3.material.io/styles/elevation/overview): higher
-  surfaces are expressed lighter, which is why shadow-only elevation fails on dark.
-- [Apple HIG — right to left](https://developer.apple.com/design/human-interface-guidelines/right-to-left)
-  for which glyphs mirror.
-- **Design principle, not a spec:** grouping read from relative distance (Gestalt
-  proximity). **House convention:** "fine but not elite" is a legitimate finding, and so
-  is a clean verdict.
-
 ## Cross-references
 
 - **REQUIRED BACKGROUND:** [designing-elite-ui](../designing-elite-ui/SKILL.md) — the bar
@@ -147,3 +132,18 @@ upgrade (the trim, the token, the missing cell), never just the verdict.
   [reviewing-design-work](../reviewing-design-work/SKILL.md) orders the lenses and
   [orchestrating-elite-agent-qa](../orchestrating-elite-agent-qa/SKILL.md) drives the
   browser pass producing the states and themes this lens needs.
+## Sources
+
+- [CSS Inline Layout 3 — `text-box-trim`](https://drafts.csswg.org/css-inline-3/#text-box-trim)
+  and [MDN `text-box`](https://developer.mozilla.org/en-US/docs/Web/CSS/text-box) — the
+  standards-track replacement for hand-tuned `line-height` centring, plus its support.
+- [MDN `devicePixelRatio`](https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio)
+  — why a 1 px rule is not one device pixel.
+- [Material 3 — elevation](https://m3.material.io/styles/elevation/overview): higher
+  surfaces are expressed lighter, which is why shadow-only elevation fails on dark.
+- [Apple HIG — right to left](https://developer.apple.com/design/human-interface-guidelines/right-to-left)
+  for which glyphs mirror.
+- **Design principle, not a spec:** grouping read from relative distance (Gestalt
+  proximity). **House convention:** "fine but not elite" is a legitimate finding, and so
+  is a clean verdict.
+

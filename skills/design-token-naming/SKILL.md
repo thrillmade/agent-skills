@@ -1,6 +1,6 @@
 ---
-version: "1.0.0"
-digest: "cde544a56582"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.1"
+digest: "7bd0a88c9948"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: design-token-naming
 description: |
@@ -104,12 +104,6 @@ Density modes (dense / balanced / spacious) and color themes (default / hallowee
 
 Anti-pattern: `button-bg-primary-default-dense` (density in the name). Correct: density is a foundation-theme axis; the token's resolved value differs because the theme differs, not because the name differs.
 
-## Cross-references
-
-- **REQUIRED BACKGROUND:** [oklch-color-space](../oklch-color-space/SKILL.md) for the hue-angle convention; [apca-contrast](../apca-contrast/SKILL.md) for the contrast-class concept.
-- **For the DTCG schema that mirrors the prefix:** [dtcg-format](../dtcg-format/SKILL.md) — the `$extensions.udts.class` and `$extensions.udts.kind` fields that redundantly encode what the prefix declares.
-- **For SemVer behavior on naming changes:** [semver-design-tokens](../semver-design-tokens/SKILL.md) — renames are always major.
-
 ## Verification
 
 For each new or modified token:
@@ -119,6 +113,12 @@ For each new or modified token:
 3. **Hue primitives use the angle, not a semantic label.** No `primary-500`-as-primitive; only `<hue>-<angle>-<variant>-<stop>`.
 4. **No density / theme in the name.** Density and theme are runtime axes, not token-name segments.
 5. **Cross-reference resolves.** If the token aliases another (e.g. `surface-base` aliasing a mode-default), the target exists in the catalog.
+
+## Cross-references
+
+- **REQUIRED BACKGROUND:** [oklch-color-space](../oklch-color-space/SKILL.md) for the hue-angle convention; [apca-contrast](../apca-contrast/SKILL.md) for the contrast-class concept.
+- **For the DTCG schema that mirrors the prefix:** [dtcg-format](../dtcg-format/SKILL.md) — the `$extensions.udts.class` and `$extensions.udts.kind` fields that redundantly encode what the prefix declares.
+- **For SemVer behavior on naming changes:** [semver-design-tokens](../semver-design-tokens/SKILL.md) — renames are always major.
 
 ## Sources
 

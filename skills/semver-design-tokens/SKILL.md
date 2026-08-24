@@ -1,6 +1,6 @@
 ---
-version: "1.0.0"
-digest: "15eb93208c7d"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.1"
+digest: "cf7d94058da8"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: semver-design-tokens
 description: |
@@ -111,14 +111,6 @@ A theme's resolved values changing is a separate axis:
 - **Default theme value change:** classify per the bump policy above. Most value changes are patch; some are major (semantic role flip — `danger` becoming green).
 - **Non-default theme value change:** classify the same way IF the theme is GA. If the theme is explicitly **experimental** (documented as such), value changes within it are minor regardless of severity.
 
-## Cross-references
-
-- **Routed here by:** [designing-a-design-system](../designing-a-design-system/SKILL.md) — the L1 dispatcher for building or extending a system.
-- **REQUIRED BACKGROUND:** [dtcg-format](../dtcg-format/SKILL.md) — the snapshot format the diff operates on.
-- **For name conventions that the bump rules reference:** [token-naming-conventions](../token-naming-conventions/SKILL.md).
-- **For one system's concrete policy choices (worked example):** [udts-semver-defaults](../udts-semver-defaults/SKILL.md).
-- **For the half a version bump does not cover:** [retiring-a-superseded-decision](../retiring-a-superseded-decision/SKILL.md) — a rename or removal is versioned here, but the READMEs, ADRs, comments, fixtures and generated pages still naming the old token are not in the diff, so they keep reading as current until the old value is grepped for and every hit classified.
-
 ## Verification
 
 For each release candidate:
@@ -129,6 +121,14 @@ For each release candidate:
 4. **If the catalog documents a pre-1.0 relaxation, it's applied exactly as documented.**
 5. **Snapshot stored** at `snapshots/v<new>.dtcg.json` before tagging.
 6. **Deprecation cycle honored** — no removals without a prior minor that marked the token deprecated.
+
+## Cross-references
+
+- **Routed here by:** [designing-a-design-system](../designing-a-design-system/SKILL.md) — the L1 dispatcher for building or extending a system.
+- **REQUIRED BACKGROUND:** [dtcg-format](../dtcg-format/SKILL.md) — the snapshot format the diff operates on.
+- **For name conventions that the bump rules reference:** [token-naming-conventions](../token-naming-conventions/SKILL.md).
+- **For one system's concrete policy choices (worked example):** [udts-semver-defaults](../udts-semver-defaults/SKILL.md).
+- **For the half a version bump does not cover:** [retiring-a-superseded-decision](../retiring-a-superseded-decision/SKILL.md) — a rename or removal is versioned here, but the READMEs, ADRs, comments, fixtures and generated pages still naming the old token are not in the diff, so they keep reading as current until the old value is grepped for and every hit classified.
 
 ## Sources
 

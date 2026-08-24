@@ -24,7 +24,13 @@ import gen_skill_directory  # noqa: E402  -- same
 
 
 # A SKILL.md that passes every rule. Tests break exactly one thing at a time
-# off this baseline, so a failure names the rule that fired.
+# off this baseline, so a failure names the rule that fired. Carries the
+# house's five sections (in validate_skills.HOUSE_SECTIONS order) since
+# house_structure_errors joined "every rule" -- a `tree.valid_skill()` paired
+# with a placement map (most of the placement-map suite) must satisfy it
+# regardless of which `family` that map assigns, or every one of those tests
+# would need its own exemption wiring just to stay focused on what it
+# actually tests.
 VALID_SKILL = """---
 name: {name}
 description: What this skill does and when to use it.
@@ -33,6 +39,26 @@ description: What this skill does and when to use it.
 # Title
 
 Body.
+
+## When to use
+
+- When this applies.
+
+## When NOT to use
+
+- When it doesn't.
+
+## Verification
+
+- How to tell it worked.
+
+## Cross-references
+
+- Nothing to cross-reference in this fixture.
+
+## Sources
+
+- None.
 """
 
 

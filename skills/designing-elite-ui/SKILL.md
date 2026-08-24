@@ -1,6 +1,6 @@
 ---
-version: "1.0.0"
-digest: "4500a7e39f2d"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.1"
+digest: "0fbed8d8fe18"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: designing-elite-ui
 description: Visual review — hold the rendered UI to a concrete elite/Figma-grade bar (one-axis color, APCA-gated contrast, floating stable chrome, dark verified) instead of a vague "looks fine." The STANDARD a design-critic measures against.
@@ -72,13 +72,13 @@ After building or critiquing a surface against this bar:
 4. **Both themes were actually rendered and compared**, not one screenshot in one theme.
 5. **No focus ring is clipped**, and every control has a hover/active/disabled state distinct from its neighbors.
 
-## Sources
-
-- Principle 1 (one axis per role) and principle 2 (APCA-gated contrast) are grounded in the primary sources [oklch-color-space](../oklch-color-space/SKILL.md) and [apca-contrast](../apca-contrast/SKILL.md) already cite — linked rather than restated, so the two skills never disagree on what backs the claim.
-- **House convention, not a spec:** the rest of the bar is this catalog's own taste standard.
-
 ## Cross-references
 
 - **REQUIRED COMPANION:** [orchestrating-elite-agent-qa](../orchestrating-elite-agent-qa/SKILL.md) — enforces this bar per slice, including the browser-driving design-critic gate.
 - **Consumed by:** [visual-polish](../visual-polish/SKILL.md) (REQUIRED BACKGROUND there) applies this bar as a craft lens; [design-system-consistency](../design-system-consistency/SKILL.md) reads principle 1 as the stance it judges color drift against.
 - **Built on:** [apca-contrast](../apca-contrast/SKILL.md) and [oklch-color-space](../oklch-color-space/SKILL.md).
+## Sources
+
+- Principle 1 (one axis per role) and principle 2 (APCA-gated contrast) are grounded in the primary sources [oklch-color-space](../oklch-color-space/SKILL.md) and [apca-contrast](../apca-contrast/SKILL.md) already cite — linked rather than restated, so the two skills never disagree on what backs the claim.
+- **House convention, not a spec:** the rest of the bar is this catalog's own taste standard.
+
