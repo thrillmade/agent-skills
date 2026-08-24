@@ -13,10 +13,10 @@ PR's CI run, so this file is always coherent with current `main`.
 ---
 
 
-## 2026-08 (48 decisions)
+## 2026-08 (49 decisions)
 
-- **2026-08-24** — Anchor the frontmatter closing delimiter: a line that merely STARTS with dashes was closing the block *(fix/frontmatter-boundary)* — [decisions-branches/fix__frontmatter-boundary.md](decisions-branches/fix__frontmatter-boundary.md)
-- *... 46 more decisions ...*
+- **2026-08-24** — Anchor all four copies of the frontmatter rule, not the one I happened to be looking at *(fix/frontmatter-boundary)* — [decisions-branches/fix__frontmatter-boundary.md](decisions-branches/fix__frontmatter-boundary.md)
+- *... 47 more decisions ...*
 - **2026-08-14** — Gate skill size with a shrink-only ratchet, and deprecate skillforge into the three skills that own its job *(feat/skill-depth-and-interlinking)* — [decisions-branches/feat__skill-depth-and-interlinking.md](decisions-branches/feat__skill-depth-and-interlinking.md)
 
 ## 2026-07 (13 decisions)
