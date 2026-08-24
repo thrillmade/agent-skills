@@ -12,3 +12,14 @@
 
 ---
 
+## 2026-08-24 15:02 - Declare the 6-word loss check-prose-retention flagged on the token-frugal-tooling rename
+
+**Reasoning:** Renaming '## Where to look for detail' to the house's '## Cross-references' and converting two bolded-code skill mentions into real relative links reads as pure reformatting, but the gate counts words literally: the shorter heading and the dropped, now-redundant noun 'skill' after each link net out to 6 words gone with nothing added in the same scope. The gate's own doctrine says a genuine tightening is a declared removal like any other, so it gets a row rather than a workaround -- added to docs/prose-removals.md in the prior commit's working tree but not yet committed, which is why the gate still failed on a second run against real HEAD.
+
+**Alternatives considered:** Padding a word back in to zero out the count -- rejected: docs/prose-removals.md itself calls this a live evasion (nets the count to zero while freeing real bytes), not a fix
+
+**Implications:**
+- No content changed for a reader of token-frugal-tooling -- the two entries still say exactly what each sibling skill covers
+
+---
+
