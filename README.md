@@ -153,6 +153,13 @@ npx skills add https://github.com/thrillmade/agent-skills
 
 Browse on skills.sh: <https://www.skills.sh/thrillmade/agent-skills>
 
+Or add it as an npm dependency and let Dependabot open the update PRs — see [docs/npm-package.md](docs/npm-package.md):
+
+```bash
+npm install --save-dev thrill-skills
+npx skills experimental_sync
+```
+
 ## Consumer patterns — using these skills from your tool
 
 There are two distinct ways a tool can consume a SKILL.md:
