@@ -517,21 +517,33 @@ def _is_superseded(meta: dict) -> bool:
 
 # --- house section structure gate -------------------------------------------
 #
-# CEO ruling: "A standard that isn't enforced drifts -- that's how we got
-# here." The five-section shape (When to use / When NOT to use / Verification
-# / Cross-references / Sources) lived nowhere but a grep-able pattern before
-# this: no CONTRIBUTING.md, no template, no validator rule. This makes it one.
+# CEO ruling (2026-08-24, in session): the house section order IS enforced --
+# five sections, this order: When to use / When NOT to use / Verification /
+# Cross-references / Sources. No CONTRIBUTING.md, no template, no validator
+# rule stated this shape before now; this makes it one. The reasoning, which
+# is what belongs in the record rather than the headcount below:
+#   1. Human readability across a catalog this size and still growing -- a
+#      fixed sequence is worth real money in muscle memory when files are
+#      read in bulk.
+#   2. The order runs actionable -> adjacent -> archival: do the work, check
+#      it, find what else to read, then the footnotes. It ends on the most
+#      inert material, which is where a scanner's attention drops off anyway.
+#   3. Every file that already carried all five sections agreed on the first
+#      two -- the split was always in the tail three, never in the part that
+#      decides "is this even the right skill."
 #
 # THE ORDER. Measured across the catalog before this gate existed: of the
 # skills carrying all five sections, 14 used When to use -> When NOT to use ->
 # Verification -> Cross-references -> Sources; 9 swapped Verification and
-# Cross-references; 5 put Sources before Cross-references. Plurality is a
-# defensible reason for picking one, so HOUSE_SECTIONS below is the 14-file
-# order -- and the 14 non-conforming files this gate found on the day it
-# landed were reordered (pure section moves, zero prose change, verified free
-# by check_prose_retention.py's own "reordering sections... is free" rule) so
-# the gate could ship strict rather than opening with a grandfather list. See
-# docs/decisions-branches/feat__skill-depth-and-interlinking.md.
+# Cross-references; 5 put Sources before Cross-references. HOUSE_SECTIONS
+# below is that 14-file order per the ruling above -- the plurality is
+# corroboration, not the reason; reason 3 already narrowed the real dispute to
+# the tail three sections before the count was ever taken. The 14
+# non-conforming files this gate found on the day it landed were reordered
+# (pure section moves, zero prose change, verified free by
+# check_prose_retention.py's own "reordering sections... is free" rule) so the
+# gate could ship strict rather than opening with a grandfather list. See
+# docs/decisions-branches/feat__house-structure-gate.md.
 #
 # THE OPT-OUT IS THE KNOWLEDGE, NOT THE CHECK. Every exemption below is
 # derived from a property already recorded elsewhere (this file's own

@@ -5,14 +5,14 @@
  "enumeration": {
   "refs": "refs/remotes/origin/*",
   "publishing_ref": "origin/main",
-  "commits": 212,
-  "blobs": 397
+  "commits": 115,
+  "blobs": 274
  },
- "versions_enumerated": 202,
+ "versions_enumerated": 203,
  "verification": {
   "current": "GATED. validate_skills.py recomputes every `current` from skills/<slug>/SKILL.md on every pull request. Needs no git history, so it holds at the depth-1 checkout CI uses.",
   "history": "NOT GATED. History is derived from git and validate-skills.yml checks out at fetch-depth 1, so CI cannot recompute these rows. Regenerate them in a full clone with `.github/scripts/gen_skill_versions.py --write`.",
-  "history_rows_ungated": 146
+  "history_rows_ungated": 147
  },
  "skills": {
   "apca-contrast": {
@@ -623,15 +623,15 @@
      "date": "2026-07-31"
     },
     {
-     "v": "766941312459",
-     "version": null,
-     "commit": "e33ad45",
-     "date": "2026-08-17"
-    },
-    {
      "v": "56be4995fc2f",
      "version": null,
      "commit": "9e74682",
+     "date": "2026-08-17"
+    },
+    {
+     "v": "766941312459",
+     "version": null,
+     "commit": "e33ad45",
      "date": "2026-08-17"
     },
     {
@@ -796,7 +796,7 @@
     {
      "v": "db70f973fffd",
      "version": "1.0.2",
-     "commit": "9de9a7e",
+     "commit": "18d145f",
      "date": "2026-08-24"
     }
    ]
@@ -914,7 +914,7 @@
     {
      "v": "a8d1ca880a7c",
      "version": "1.0.1",
-     "commit": "03a49f8",
+     "commit": "8093e24",
      "date": "2026-08-24"
     }
    ]
@@ -1001,15 +1001,15 @@
    "authoring_home": "catalog",
    "history": [
     {
-     "v": "5c55077b9a1f",
-     "version": null,
-     "commit": "77bdb5a",
-     "date": "2026-08-18"
-    },
-    {
      "v": "6dcadc6157d5",
      "version": null,
      "commit": "31e3d2e",
+     "date": "2026-08-18"
+    },
+    {
+     "v": "5c55077b9a1f",
+     "version": null,
+     "commit": "77bdb5a",
      "date": "2026-08-18"
     }
    ]
@@ -1075,16 +1075,16 @@
      "date": "2026-08-15"
     },
     {
-     "v": "eb6807c59000",
-     "version": null,
-     "commit": "ff61334",
-     "date": "2026-08-18"
-    },
-    {
      "v": "b2d7a06203fa",
      "version": null,
      "commit": "f552f6e",
      "date": "2026-08-17"
+    },
+    {
+     "v": "eb6807c59000",
+     "version": null,
+     "commit": "ff61334",
+     "date": "2026-08-18"
     },
     {
      "v": "15eb93208c7d",
@@ -1245,7 +1245,13 @@
     {
      "v": "d04f5bfcbcfe",
      "version": "1.0.1",
-     "commit": "03a49f8",
+     "commit": "8093e24",
+     "date": "2026-08-24"
+    },
+    {
+     "v": "8da49028c193",
+     "version": "1.0.2",
+     "commit": "1bf0769",
      "date": "2026-08-24"
     }
    ]
