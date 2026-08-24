@@ -22,3 +22,14 @@
 
 ---
 
+## 2026-08-24 11:41 - Correct this branch's own 'four owners, all anchored' claim: there were six, and my grep could not have found the other two
+
+**Reasoning:** The delta panel found gen_skill_directory.py carries the boundary INLINED at two call sites as text.find(chr(10)+'---', 4) -- the same unanchored search, with no FRONTMATTER_RE constant. My sweep grepped for the SYMBOL, which by construction cannot find inlined logic, and I then wrote 'Grep found FOUR literal copies... All four are now anchored' as a completeness claim. Searching for the symbol found four owners; searching for the BEHAVIOUR finds six. The previous entry on this branch is wrong and is left standing per 3.2, corrected here.
+
+**Alternatives considered:** File the two remaining owners as a follow-up, which is how the panel graded them and how pass 1 graded the analogous pair. Rejected: this PR's entire thesis is that one rule with many owners IS the defect, so shipping it while two owners stay wrong and the log claims otherwise is worse than either fixing them or never claiming completeness. Also considered deleting the completeness sentence rather than fixing the code: rejected, that removes the evidence of the error without removing the error.
+
+**Implications:**
+- Both call sites now route through one _frontmatter_end() helper, which agrees with the four regex copies on all 56 real skills -- compared against validate_skills' STR copy, not skill_version's BYTES copy, because byte offsets differ from character offsets on any file with non-ASCII text and comparing across them reported 44 false disagreements before I noticed. MY FIRST GUARD WAS DECORATIVE: it tested the helper directly, so mutating a CALL SITE back to the naive search left all 38 tests green -- exactly the failure I brief every lane about, committed by me. There is now a call-site test reading what _trigger_surface actually produces, and mutating the call site turns it red. Plus a control proving the helper test alone would pass against the bug, since on real skills the naive and correct searches agree. 0 published digests moved; fast suite 1089.
+
+---
+
