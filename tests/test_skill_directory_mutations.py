@@ -377,6 +377,57 @@ MUTATIONS = [
         "    errors.extend(readme_errors(root, skill_dirs))",
         "    errors.extend([])",
     ),
+    # --- validate_skills.py: house section structure -----------------------
+    (
+        VALIDATOR,
+        # The whole gate never runs. Every skill missing a house section, or
+        # carrying them out of order, ships silently -- the drift #266's CEO
+        # ruling exists to close, reopened at the call site rather than
+        # inside either check.
+        "the_house_structure_gate_never_runs",
+        "    if isinstance(skills_map, dict):\n"
+        "        errors.extend(\n"
+        "            house_structure_errors(root, skill_dirs, skill_meta, superseded, skills_map)\n"
+        "        )",
+        "    if False:\n"
+        "        pass",
+    ),
+    (
+        VALIDATOR,
+        # A skill missing one or more of the five sections is not reported --
+        # the presence half of the rule, the one that actually names the
+        # shape.
+        "a_missing_house_section_is_not_reported",
+        "        missing = [h for h in HOUSE_SECTIONS if h not in present]\n"
+        "        if missing:",
+        "        missing = [h for h in HOUSE_SECTIONS if h not in present]\n"
+        "        if False:",
+    ),
+    (
+        VALIDATOR,
+        # All five sections present but in the wrong order stops being an
+        # error -- the SWAP/third-order drift this gate reordered 14 real
+        # files to close reopens silently.
+        "house_sections_out_of_order_are_not_reported",
+        "        if present != list(HOUSE_SECTIONS):",
+        "        if False:",
+    ),
+    (
+        VALIDATOR,
+        # The opt-out itself: every exemption (SUPERSEDED, [L2 stub],
+        # repo-mirrored, the exempt families, the named exceptions) stops
+        # applying, so every legitimately-exempt skill in the real catalog --
+        # the udts-* stubs, the review-discipline family, logmind, the L1
+        # dispatchers, and more -- starts failing a rule it was never meant
+        # to carry. Proves the opt-out is load-bearing, not decorative: this
+        # file's own `test_an_exempt_family_is_not_required_to_conform` /
+        # `test_a_named_exemption_is_not_required_to_conform` /
+        # `test_a_superseded_skill_is_exempt` / `test_an_l2_stub_is_exempt` /
+        # `test_a_repo_mirrored_skill_is_exempt` go red.
+        "the_house_structure_exemptions_are_ignored",
+        "    if dir_name == gen_skill_directory.DIRECTORY_SLUG:",
+        "    return None\n    if dir_name == gen_skill_directory.DIRECTORY_SLUG:",
+    ),
 ]
 
 

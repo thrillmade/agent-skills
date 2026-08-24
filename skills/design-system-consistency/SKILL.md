@@ -1,6 +1,6 @@
 ---
-version: "1.0.0"
-digest: "2d77f524744c"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.1"
+digest: "c4adcac2a7fb"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: design-system-consistency
 description: >-
@@ -130,12 +130,6 @@ correctly in two modes and has nowhere to put the third.
    looking right in the two captured themes.
 5. A token-clean surface gets one line saying so, naming what it was checked against.
 
-## Sources
-
-- [W3C Design Tokens Format Module](https://tr.designtokens.org/format/) — what a token
-  file declares and what an alias is; the catalog's reading is
-  [dtcg-format](../dtcg-format/SKILL.md).
-
 ## Cross-references
 
 - **REQUIRED BACKGROUND:** [token-naming-conventions](../token-naming-conventions/SKILL.md)
@@ -153,3 +147,9 @@ correctly in two modes and has nowhere to put the third.
   [reviewing-design-work](../reviewing-design-work/SKILL.md) orders the lenses;
   [consuming-a-design-system](../consuming-a-design-system/SKILL.md) is where a repo with
   no token path goes.
+## Sources
+
+- [W3C Design Tokens Format Module](https://tr.designtokens.org/format/) — what a token
+  file declares and what an alias is; the catalog's reading is
+  [dtcg-format](../dtcg-format/SKILL.md).
+

@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import pytest
 
+import validate_skills
 from conftest import SkillTree
 
 # `alpha`'s annotation prefix -- every per-skill error is filed against the
@@ -851,7 +852,18 @@ SUPERSEDED_DESC = "SUPERSEDED by `beta` — kept for the migration window."
 
 
 def superseded_skill(tree: SkillTree, name: str = "alpha", desc: str = SUPERSEDED_DESC) -> None:
-    tree.skill(name, f"---\nname: {name}\ndescription: {desc}\n---\n\n# T\n\nBody.\n")
+    # House sections included so the two "not actually retired" cases below
+    # (mid-sentence "SUPERSEDED") aren't ALSO tripping house_structure_errors
+    # -- they are testing the retirement marker, not the house shape, and the
+    # actually-superseded cases stay clean regardless (SUPERSEDED is its own
+    # exemption).
+    tree.skill(
+        name,
+        f"---\nname: {name}\ndescription: {desc}\n---\n\n# T\n\nBody.\n\n"
+        "## When to use\n\n- X.\n\n## When NOT to use\n\n- Y.\n\n"
+        "## Verification\n\n- Z.\n\n## Cross-references\n\n- None.\n\n"
+        "## Sources\n\n- None.\n",
+    )
 
 
 def test_a_superseded_skill_filed_as_live_is_reported(tree: SkillTree) -> None:
@@ -929,6 +941,197 @@ def test_the_reserved_retirement_keys_count_too(tree: SkillTree, extra: str) -> 
     tree.frontmatter("alpha", extra=extra)
     tree.placement_map(valid_map(alpha=ENTRY))
     assert "announces itself as SUPERSEDED" in only(tree.validate())
+
+
+# --- house section structure (When to use / When NOT to use / Verification /
+# Cross-references / Sources, in that order) ---------------------------------
+#
+# Only runs once a placement map's `skills` object parses -- see
+# `house_structure_errors`'s own docstring for why. `tree.valid_skill()`
+# already carries the five sections in order (see conftest.VALID_SKILL), so
+# every test here that wants a NON-conforming body builds one explicitly via
+# `tree.frontmatter()` / `tree.skill()`, exactly as the rest of this file
+# isolates one rule at a time.
+
+CONFORMING_BODY = (
+    "\n# Title\n\nBody.\n\n"
+    "## When to use\n\n- X.\n\n"
+    "## When NOT to use\n\n- Y.\n\n"
+    "## Verification\n\n- Z.\n\n"
+    "## Cross-references\n\n- None.\n\n"
+    "## Sources\n\n- None.\n"
+)
+
+
+def test_house_structure_is_not_checked_without_a_placement_map(tree: SkillTree) -> None:
+    tree.frontmatter()  # bare body, no house sections at all
+    assert tree.validate() == []
+
+
+def test_a_conforming_skill_passes_regardless_of_family(tree: SkillTree) -> None:
+    tree.frontmatter(body=CONFORMING_BODY)
+    tree.placement_map(valid_map(alpha=ENTRY))  # family "fam" -- not exempt
+    assert tree.validate() == []
+
+
+def test_missing_house_sections_are_reported(tree: SkillTree) -> None:
+    tree.frontmatter()  # bare body -- none of the five present
+    tree.placement_map(valid_map(alpha=ENTRY))
+    assert only(tree.validate()) == (
+        ALPHA + "missing the house section(s) `## When to use`, "
+        "`## When NOT to use`, `## Verification`, `## Cross-references`, "
+        "`## Sources`. Every skill carries `## When to use`, "
+        "`## When NOT to use`, `## Verification`, `## Cross-references` and "
+        "`## Sources` (in that order) unless it is exempt -- see "
+        "HOUSE_STRUCTURE_EXEMPT_FAMILIES and HOUSE_STRUCTURE_NAMED_EXEMPTIONS "
+        "in validate_skills.py for the legitimate variations, and "
+        "docs/placement-map.json's `family` field to request one."
+    )
+
+
+def test_one_missing_section_is_named_by_itself(tree: SkillTree) -> None:
+    body = CONFORMING_BODY.replace("## Sources\n\n- None.\n", "")
+    tree.frontmatter(body=body)
+    tree.placement_map(valid_map(alpha=ENTRY))
+    assert only(tree.validate()) == (
+        ALPHA + "missing the house section(s) `## Sources`. Every skill "
+        "carries `## When to use`, `## When NOT to use`, `## Verification`, "
+        "`## Cross-references` and `## Sources` (in that order) unless it is "
+        "exempt -- see HOUSE_STRUCTURE_EXEMPT_FAMILIES and "
+        "HOUSE_STRUCTURE_NAMED_EXEMPTIONS in validate_skills.py for the "
+        "legitimate variations, and docs/placement-map.json's `family` "
+        "field to request one."
+    )
+
+
+def test_sections_present_but_out_of_order_are_reported(tree: SkillTree) -> None:
+    """Control for the order rule: the SWAP variant this catalog carried
+    before the gate reordered it -- Cross-references ahead of Verification.
+    """
+    swapped = (
+        "\n# Title\n\n"
+        "## When to use\n\n- X.\n\n"
+        "## When NOT to use\n\n- Y.\n\n"
+        "## Cross-references\n\n- None.\n\n"
+        "## Verification\n\n- Z.\n\n"
+        "## Sources\n\n- None.\n"
+    )
+    tree.frontmatter(body=swapped)
+    tree.placement_map(valid_map(alpha=ENTRY))
+    assert only(tree.validate()) == (
+        ALPHA + "house sections are present but out of order -- found "
+        "['When to use', 'When NOT to use', 'Cross-references', "
+        "'Verification', 'Sources'], expected ['When to use', "
+        "'When NOT to use', 'Verification', 'Cross-references', 'Sources']. "
+        "Move the headings; this is a pure structural edit, never a reason "
+        "to reword or cut content."
+    )
+
+
+def test_a_heading_shown_as_a_code_example_does_not_count(tree: SkillTree) -> None:
+    """`_strip_code` runs first -- a skill that shows the shape inside a
+    fenced walkthrough (as `skillforge` does with `## Steps`) is not thereby
+    exempt from carrying it for real.
+    """
+    body = (
+        "\n# Title\n\n"
+        "```markdown\n## When to use\n## When NOT to use\n## Verification\n"
+        "## Cross-references\n## Sources\n```\n"
+    )
+    tree.frontmatter(body=body)
+    tree.placement_map(valid_map(alpha=ENTRY))
+    assert "missing the house section(s)" in only(tree.validate())
+
+
+@pytest.mark.parametrize(
+    "family", sorted(validate_skills.HOUSE_STRUCTURE_EXEMPT_FAMILIES)
+)
+def test_an_exempt_family_is_not_required_to_conform(tree: SkillTree, family: str) -> None:
+    tree.frontmatter()  # no house sections
+    tree.placement_map(
+        {
+            **valid_map(alpha={**ENTRY, "family": family}),
+            "families": [{"id": family, "title": "T", "routes": "R"}],
+        }
+    )
+    assert tree.validate() == []
+
+
+def test_an_ordinary_family_is_not_silently_exempted(tree: SkillTree) -> None:
+    """Control for the family exemption above: an unlisted family does NOT
+    get a free pass -- otherwise every one of these tests would trivially
+    pass regardless of what HOUSE_STRUCTURE_EXEMPT_FAMILIES actually says.
+    """
+    assert "fam" not in validate_skills.HOUSE_STRUCTURE_EXEMPT_FAMILIES  # control
+    tree.frontmatter()
+    tree.placement_map(valid_map(alpha=ENTRY))  # family "fam"
+    assert "missing the house section(s)" in only(tree.validate())
+
+
+def test_a_superseded_skill_is_exempt(tree: SkillTree) -> None:
+    # `family: "deprecated"` sidesteps the SEPARATE retirement/family-mismatch
+    # rule (a superseded skill filed under a live family) so this test
+    # isolates the house-structure exemption alone.
+    tree.skill(
+        "alpha",
+        f"---\nname: alpha\ndescription: {SUPERSEDED_DESC}\n---\n\n# T\n\nBody.\n",
+    )
+    tree.placement_map(
+        {
+            **valid_map(alpha={**ENTRY, "family": "deprecated"}),
+            "families": [{"id": "deprecated", "title": "D", "routes": "R"}],
+        }
+    )
+    assert tree.validate() == []
+
+
+def test_an_l2_stub_is_exempt(tree: SkillTree) -> None:
+    tree.skill(
+        "alpha",
+        "---\nname: alpha\ndescription: \"[L2 stub — incubating] Nothing to "
+        "structure yet.\"\n---\n\n# T\n\nBody.\n",
+    )
+    tree.placement_map(valid_map(alpha=ENTRY))
+    assert tree.validate() == []
+
+
+def test_the_stub_marker_must_be_at_the_start(tree: SkillTree) -> None:
+    """Control for the marker above: mentioning stubs mid-sentence does not
+    exempt a skill that has real content to structure.
+    """
+    tree.skill(
+        "alpha",
+        "---\nname: alpha\ndescription: A skill about [L2 stub] markers.\n"
+        "---\n\n# T\n\nBody.\n",
+    )
+    tree.placement_map(valid_map(alpha=ENTRY))
+    assert "missing the house section(s)" in only(tree.validate())
+
+
+def test_a_repo_mirrored_skill_is_exempt(tree: SkillTree) -> None:
+    tree.frontmatter()  # no house sections
+    tree.placement_map(
+        valid_map(alpha={**ENTRY, "authoring_home": "repo-mirrored:upstream"})
+    )
+    assert tree.validate() == []
+
+
+def test_the_generated_directory_is_exempt(tree: SkillTree) -> None:
+    tree.control_skill()
+    tree.placement_map(
+        valid_map(control=ENTRY, **{gen_skill_directory.DIRECTORY_SLUG: ENTRY})
+    )
+    tree.directory()  # rendered body carries no house sections
+    assert tree.validate() == []
+
+
+@pytest.mark.parametrize(
+    "name", sorted(validate_skills.HOUSE_STRUCTURE_NAMED_EXEMPTIONS)
+)
+def test_a_named_exemption_is_not_required_to_conform(tree: SkillTree, name: str) -> None:
+    tree.skill(name, f"---\nname: {name}\ndescription: d\n---\n\n# T\n\nBody.\n")
+    tree.placement_map(valid_map(**{name: ENTRY}))
+    assert tree.validate() == []
 
 
 # --- README membership (#229's first problem) -------------------------------

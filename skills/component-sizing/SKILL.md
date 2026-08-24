@@ -1,6 +1,6 @@
 ---
-version: "1.0.0"
-digest: "4b8024eca633"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.1"
+digest: "f93f0d21ed7b"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: component-sizing
 description: |
@@ -97,12 +97,6 @@ Default heuristic:
 
 Sibling controls in the same UI surface should share a rung — mixing `sm` and `md` buttons next to each other reads as a typo, not a hierarchy.
 
-## Cross-references
-
-- **REQUIRED BACKGROUND:** [spacing-system](../spacing-system/SKILL.md) — the unit primitives (minor + major) drive which density mode applies, and the WCAG 2.5.8 floor lives there.
-- **For the font sizes paired with each rung:** [type-scale](../type-scale/SKILL.md) — the per-rung font is taken from the canonical scale, not free-picked.
-- **For line-heights inside each rung:** [line-height-grid](../line-height-grid/SKILL.md) — interactive controls use `lh-ui` (1.20), not `lh-prose`.
-
 ## Verification
 
 After picking a rung:
@@ -112,6 +106,12 @@ After picking a rung:
 3. **Font pairing:** the inner font-size matches the rung's pairing (not a one-off).
 4. **Icon pairing:** the leading or trailing icon size matches the rung's pairing.
 5. **Sibling consistency:** sibling controls in the same surface share a rung.
+
+## Cross-references
+
+- **REQUIRED BACKGROUND:** [spacing-system](../spacing-system/SKILL.md) — the unit primitives (minor + major) drive which density mode applies, and the WCAG 2.5.8 floor lives there.
+- **For the font sizes paired with each rung:** [type-scale](../type-scale/SKILL.md) — the per-rung font is taken from the canonical scale, not free-picked.
+- **For line-heights inside each rung:** [line-height-grid](../line-height-grid/SKILL.md) — interactive controls use `lh-ui` (1.20), not `lh-prose`.
 
 ## Sources
 

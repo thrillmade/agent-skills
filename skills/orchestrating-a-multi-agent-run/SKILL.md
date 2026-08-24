@@ -1,6 +1,6 @@
 ---
-version: "1.0.0"
-digest: "9f1280e7d6bc"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.1"
+digest: "c3a7455321c3"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: orchestrating-a-multi-agent-run
 description: |
@@ -125,18 +125,6 @@ On the run, not on any one station.
    judgment call you made explicitly. Whole-suite claims name their worktree.
 4. Nothing left in flight or pending that no one will sweep.
 
-## Sources
-
-This dispatcher owns no threshold of its own — every number lives in the station that
-owns it. Routing and the four axioms are practitioner-derived:
-
-- The family-size measurement behind it: thrillmade/agent-skills#205, with the
-  reference-graph and reference-syntax findings under it (#200, #197).
-- Run-continuity practice — pacing, limit hazards, mid-write kills, owned-files recovery:
-  thrillmade/agent-skills#169, #173, #174.
-- Roles as files on disk; work outliving its producer needing a survivor:
-  thrillmade/protocol `SPEC.md` §2.4, §6.2.
-
 ## Cross-references
 
 **Stations (L0),** in obligation order:
@@ -153,3 +141,15 @@ obligation 2's rendered-surface gate ·
 [curating-a-skill-catalog](../curating-a-skill-catalog/SKILL.md) — the catalog, not the
 run · [skill-frontmatter-quality](../skill-frontmatter-quality/SKILL.md) — the trigger
 surface of the skills your agents load.
+## Sources
+
+This dispatcher owns no threshold of its own — every number lives in the station that
+owns it. Routing and the four axioms are practitioner-derived:
+
+- The family-size measurement behind it: thrillmade/agent-skills#205, with the
+  reference-graph and reference-syntax findings under it (#200, #197).
+- Run-continuity practice — pacing, limit hazards, mid-write kills, owned-files recovery:
+  thrillmade/agent-skills#169, #173, #174.
+- Roles as files on disk; work outliving its producer needing a survivor:
+  thrillmade/protocol `SPEC.md` §2.4, §6.2.
+
