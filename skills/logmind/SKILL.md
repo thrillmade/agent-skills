@@ -1,6 +1,6 @@
 ---
-version: "1.0.0"
-digest: "7c3fe31c3949"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.2"
+digest: "db70f973fffd"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: logmind
 description: |
@@ -64,10 +64,10 @@ externally-modified tree only.
 A substantive commit bypassing `logmind log` is **blocked**, not merely
 discouraged — a git `commit-msg` hook, plus (inside Claude Code) a
 PreToolUse hook intercepting the `git commit` Bash call.
-Escape hatches for genuinely no-decision commits (typos, dep bumps):
-`[skip-logmind]` in the commit subject; `LOGMIND_ALLOW_GIT_COMMIT=1` for
-one command; `git.enforce_commits: false` in `.logmind/config.yml`
-repo-wide.
+Escape hatches for no-decision commits (typos, dep bumps): `[skip-logmind]`
+in the subject, or `LOGMIND_ALLOW_GIT_COMMIT=1` for one command.
+**`git.enforce_commits: false` is a person's call — logmind refuses an
+agent asking for it** (§1.6).
 
 ## Reading prior context
 
@@ -115,15 +115,15 @@ stdout regardless of `--quiet`, with `ok` on stderr so `| jq` stays clean.
 ## Derived docs are main-only — don't edit them on a branch
 
 `docs/timeline.md`, `docs/timeline-archive.md` and `docs/file-structure.md`
-regenerate on `main` only, straight from source. Commit to
+regenerate on `main` only, from source. Commit to
 `docs/decisions-branches/<branch>.md` instead.
 
 `regen-timeline.yml` enforces this with a **blocking** PR-time gate: a
-branch diff touching either derived doc fails with
-`::error title=Derived docs were edited on this branch` and `exit 1` —
-branch edits cause exactly the cross-PR conflicts this design eliminates.
-Fix by resetting to main's copy: `logmind warp`, or
-`git checkout origin/main -- docs/timeline.md docs/file-structure.md`.
+branch diff touching **any** of the three fails with
+`::error title=Derived docs were edited on this branch` and `exit 1`.
+Fix with `logmind warp`: it restores the **merge-base** §3.3 requires and
+covers `timeline-archive.md`. A hand-written `git checkout origin/main --`
+takes the moving tip and misses the archive.
 
 On a push to `main` a job regenerates both files and pushes; with no
 `LOGMIND_AUTO_REGEN_PAT` secret it degrades to a non-blocking
@@ -131,9 +131,10 @@ On a push to `main` a job regenerates both files and pushes; with no
 risk). Repos on the older fail-fast template block on *staleness* (missing
 file, fork PR, no PAT) instead of branch edits.
 
-**`logmind warp`** fetches `origin/<default-branch>` and overwrites your
-local `docs/timeline.md` + `docs/file-structure.md`. **Never stages or
-commits.** Run it after pulling, or whenever the gate flags drift.
+**`logmind warp`** overwrites your local derived docs from
+`origin/<default-branch>` and **stages them** — that is why a plain
+`git commit` works. Commit what it staged — `git commit -a` sweeps in
+unstaged tip copies and CI rejects that.
 
 ## Parallel-PR merges
 
