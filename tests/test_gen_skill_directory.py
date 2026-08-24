@@ -566,3 +566,35 @@ def test_the_trigger_surface_call_site_uses_the_anchored_boundary(tmp_path: Path
     # ends at `--- not a close` and the description is lost.
     assert "findable" in surface
     assert "not a close" in surface
+
+
+def test_the_split_call_site_uses_the_anchored_boundary() -> None:
+    """The SECOND call site, pinned the same way as the first.
+
+    `_split` decides where the directory skill's hand-authored frontmatter
+    ends and its generated body begins. Under the naive search a frontmatter
+    line merely starting with dashes ends the block early, so part of the
+    frontmatter is treated as body -- and `--write` would then overwrite
+    hand-authored fields, while `--check` would report drift that is not
+    there.
+
+    An earlier version of this branch guarded only `_trigger_surface`'s call
+    site. Mutating THIS one back to the naive search left all 39 tests green,
+    which is the same decorative-test defect the guard was added to close --
+    at the other half of the same fix.
+    """
+    text = (
+        "---\n"
+        "name: finding-a-catalog-skill\n"
+        "--- not a close\n"
+        "description: hand-authored, must survive\n"
+        "---\n"
+        "\n"
+        "# Body\n"
+    )
+    front, body = gen._split(text)
+    # Everything up to the FIRST line that is exactly `---` is frontmatter.
+    assert "hand-authored, must survive" in front
+    assert "not a close" in front
+    assert "hand-authored" not in body
+    assert body.lstrip().startswith("# Body")
