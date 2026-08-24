@@ -250,7 +250,8 @@ jobs:
           # Digest issue: one per cycle, commented on re-run (exact-title match).
           EXISTING_DIGEST=$(gh issue list --state open --search "${DIGEST_TITLE} in:title" \
             --json number,title 2>/dev/null \
-            | jq -r --arg t "$DIGEST_TITLE" 'map(select(.title == $t)) | .[0].number // empty') || EXISTING_DIGEST=""
+            | jq -r --arg t "$DIGEST_TITLE" 'map(select(.title == $t)) | .[0].number // empty') \
+            || { EXISTING_DIGEST=""; echo "::warning::gh issue list failed while looking up this cycle's digest issue — treating it as absent. A new digest issue may be created even though one is already open, rather than commented on."; }
 
           DIGEST_NUM="$EXISTING_DIGEST"
           if [ "$DRY_RUN" = "true" ]; then
@@ -298,7 +299,8 @@ jobs:
                       | select(.title | test("^census [0-9]{4}-W[0-9]{2} digest$"))
                       | select(.title != $t)]
                 | .[].number
-              ') || PRIOR_DIGESTS=""
+              ') \
+            || { PRIOR_DIGESTS=""; echo "::warning::gh issue list failed while looking up prior digest issues to close — treating it as none. A stale digest from an earlier cycle may be left open this run."; }
 
           if [ -n "$PRIOR_DIGESTS" ]; then
             while IFS= read -r prior; do
