@@ -5,7 +5,7 @@
  "enumeration": {
   "refs": "refs/remotes/origin/*",
   "publishing_ref": "origin/main",
-  "commits": 195,
+  "commits": 203,
   "blobs": 394
  },
  "versions_enumerated": 199,
@@ -400,7 +400,7 @@
     },
     {
      "v": "2d77f524744c",
-     "version": null,
+     "version": "1.0.0",
      "commit": "b88d0ad",
      "date": "2026-08-24"
     }
@@ -693,8 +693,8 @@
    ]
   },
   "logmind": {
-   "current": "7c3fe31c3949",
-   "version": "1.0.0",
+   "current": "db70f973fffd",
+   "version": "1.0.2",
    "authoring_home": "repo-mirrored:logmind",
    "history": [
     {
@@ -1257,7 +1257,7 @@
     },
     {
      "v": "acd03a0caa94",
-     "version": null,
+     "version": "1.0.0",
      "commit": "0204f32",
      "date": "2026-08-24"
     }
