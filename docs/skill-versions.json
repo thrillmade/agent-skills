@@ -5,14 +5,14 @@
  "enumeration": {
   "refs": "refs/remotes/origin/*",
   "publishing_ref": "origin/main",
-  "commits": 115,
-  "blobs": 274
+  "commits": 121,
+  "blobs": 291
  },
- "versions_enumerated": 203,
+ "versions_enumerated": 220,
  "verification": {
   "current": "GATED. validate_skills.py recomputes every `current` from skills/<slug>/SKILL.md on every pull request. Needs no git history, so it holds at the depth-1 checkout CI uses.",
   "history": "NOT GATED. History is derived from git and validate-skills.yml checks out at fetch-depth 1, so CI cannot recompute these rows. Regenerate them in a full clone with `.github/scripts/gen_skill_versions.py --write`.",
-  "history_rows_ungated": 147
+  "history_rows_ungated": 163
  },
  "skills": {
   "apca-contrast": {
@@ -210,6 +210,12 @@
      "version": null,
      "commit": "b7b5a7e",
      "date": "2026-08-15"
+    },
+    {
+     "v": "f93f0d21ed7b",
+     "version": "1.0.1",
+     "commit": "fde90af",
+     "date": "2026-08-24"
     }
    ]
   },
@@ -403,6 +409,12 @@
      "version": "1.0.0",
      "commit": "b88d0ad",
      "date": "2026-08-24"
+    },
+    {
+     "v": "c4adcac2a7fb",
+     "version": "1.0.1",
+     "commit": "fde90af",
+     "date": "2026-08-24"
     }
    ]
   },
@@ -434,6 +446,12 @@
      "version": null,
      "commit": "b7b5a7e",
      "date": "2026-08-15"
+    },
+    {
+     "v": "7bd0a88c9948",
+     "version": "1.0.1",
+     "commit": "fde90af",
+     "date": "2026-08-24"
     }
    ]
   },
@@ -490,6 +508,12 @@
      "version": null,
      "commit": "b205f4d",
      "date": "2026-08-23"
+    },
+    {
+     "v": "0fbed8d8fe18",
+     "version": "1.0.1",
+     "commit": "fde90af",
+     "date": "2026-08-24"
     }
    ]
   },
@@ -521,6 +545,12 @@
      "version": null,
      "commit": "ff61334",
      "date": "2026-08-18"
+    },
+    {
+     "v": "b864390c7e86",
+     "version": "1.0.1",
+     "commit": "fde90af",
+     "date": "2026-08-24"
     }
    ]
   },
@@ -569,8 +599,8 @@
    ]
   },
   "finding-a-catalog-skill": {
-   "current": "6db0976a0715",
-   "version": "1.0.1",
+   "current": "61a41a489f78",
+   "version": "1.0.2",
    "authoring_home": "catalog",
    "history": [
     {
@@ -602,6 +632,18 @@
      "version": null,
      "commit": "5b893cd",
      "date": "2026-08-18"
+    },
+    {
+     "v": "28eecd3bbef4",
+     "version": "1.0.1",
+     "commit": "486a817",
+     "date": "2026-08-24"
+    },
+    {
+     "v": "6db0976a0715",
+     "version": "1.0.1",
+     "commit": "0e835cc",
+     "date": "2026-08-24"
     }
    ]
   },
@@ -639,6 +681,12 @@
      "version": null,
      "commit": "870f218",
      "date": "2026-08-18"
+    },
+    {
+     "v": "624829557d3e",
+     "version": "1.0.1",
+     "commit": "fde90af",
+     "date": "2026-08-24"
     }
    ]
   },
@@ -689,6 +737,12 @@
      "version": null,
      "commit": "b205f4d",
      "date": "2026-08-23"
+    },
+    {
+     "v": "a648cf9ec860",
+     "version": "1.0.1",
+     "commit": "fde90af",
+     "date": "2026-08-24"
     }
    ]
   },
@@ -796,7 +850,7 @@
     {
      "v": "db70f973fffd",
      "version": "1.0.2",
-     "commit": "9de9a7e",
+     "commit": "18d145f",
      "date": "2026-08-24"
     }
    ]
@@ -835,6 +889,12 @@
      "version": null,
      "commit": "96476a1",
      "date": "2026-08-23"
+    },
+    {
+     "v": "2686571dd8f2",
+     "version": "1.0.1",
+     "commit": "fde90af",
+     "date": "2026-08-24"
     }
    ]
   },
@@ -848,6 +908,12 @@
      "version": null,
      "commit": "a5aa7d9",
      "date": "2026-08-15"
+    },
+    {
+     "v": "c3a7455321c3",
+     "version": "1.0.1",
+     "commit": "fde90af",
+     "date": "2026-08-24"
     }
    ]
   },
@@ -1091,6 +1157,12 @@
      "version": null,
      "commit": "7efd6b5",
      "date": "2026-08-18"
+    },
+    {
+     "v": "cf7d94058da8",
+     "version": "1.0.1",
+     "commit": "fde90af",
+     "date": "2026-08-24"
     }
    ]
   },
@@ -1191,6 +1263,25 @@
      "version": null,
      "commit": "b205f4d",
      "date": "2026-08-23"
+    },
+    {
+     "v": "f3fa330446f6",
+     "version": "1.0.1",
+     "commit": "fde90af",
+     "date": "2026-08-24"
+    }
+   ]
+  },
+  "technical-writing": {
+   "current": "13e8b85d472a",
+   "version": "1.0.0",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "13e8b85d472a",
+     "version": "1.0.0",
+     "commit": "486a817",
+     "date": "2026-08-24"
     }
    ]
   },
@@ -1315,6 +1406,12 @@
      "version": null,
      "commit": "ff61334",
      "date": "2026-08-18"
+    },
+    {
+     "v": "5ddf65fe6700",
+     "version": "1.0.1",
+     "commit": "fde90af",
+     "date": "2026-08-24"
     }
    ]
   },
@@ -1530,6 +1627,12 @@
      "version": null,
      "commit": "f552f6e",
      "date": "2026-08-17"
+    },
+    {
+     "v": "afe087cb57e2",
+     "version": "1.0.1",
+     "commit": "fde90af",
+     "date": "2026-08-24"
     }
    ]
   },
@@ -1622,6 +1725,12 @@
      "version": null,
      "commit": "2e618c1",
      "date": "2026-08-23"
+    },
+    {
+     "v": "c135ca07d880",
+     "version": "1.0.1",
+     "commit": "fde90af",
+     "date": "2026-08-24"
     }
    ]
   }
