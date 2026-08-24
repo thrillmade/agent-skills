@@ -10,6 +10,12 @@ __pycache__/
 # Playwright MCP session debris (console logs, page snapshots) — never repo content
 .playwright-mcp/
 
+# npm — this repo ships thrill-skills as content only (no deps, no lockfile
+# needed), so node_modules/ and a stray *.tgz from a local `npm pack` are
+# always build output, never repo content.
+node_modules/
+*.tgz
+
 # Machine-local agent/runtime state (#221). This was previously kept out of
 # git only via .git/info/exclude, which is per-clone and untracked — so
 # `logmind file-structure --write` (which honours .gitignore) walked right
