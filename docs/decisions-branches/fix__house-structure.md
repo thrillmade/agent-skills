@@ -23,3 +23,16 @@
 
 ---
 
+## 2026-08-24 16:31 - Actually restructure token-frugal-tooling, and correct every byte number this branch produced
+
+**Reasoning:** Panel review of #269 found two defects fixable independently of the open order-enforcement question a second, concurrent panel is now settling (#202's actual ruling covers presence only -- title 'Decided: required frame, free body' -- and a later comment on it says order is still undecided; the phrase 'a standard that isn't enforced drifts' returns zero hits repo-wide). Those two: token-frugal-tooling's earlier heading rename (renaming 'Where to look for detail' to Cross-references) never added the other four house sections it still lacked, so it read as fixed but was still divergent; it had 2703 bytes of headroom and no valid exemption (its family, catalog-and-tooling, is not collectively exempt -- sibling retiring-a-superseded-decision fully conforms), so it is now actually restructured with real When to use, When NOT to use, Verification and Sources sections, deferring detail to logmind and clud-bug-collaboration the way its Cross-references already did; it moves from divergent to conforming. Separately, every hand-computed byte number produced while working this branch undercounts by exactly one. Root cause: FRONTMATTER_RE's closing delimiter is a lookahead ((?=\n|\Z)), so m.end() lands right after the closing --- and body = content[m.end():] includes the leading newline the frontmatter block ends on; a hand-split that instead started at the next line dropped that byte. Re-measured with the gate's own regex: orchestrating-elite-agent-qa's before-fix headroom was 1790, not 1791; test-discipline's is 1, not 2; curating-a-skill-catalog's is 83, not 84 (its smallest-honest-citation leftover is 2 bytes, not 3); reviewing-design-work's is 55, not 56; composing-a-screen's and clud-bug-collaboration's are each 6, not 7; retiring-a-superseded-decision's is 6, not 7; usability-heuristics' is 12, not 13. The prior entry's 'several files sit 2-25 bytes under the cap' becomes 1-24.
+
+**Alternatives considered:** Reasoning fully through clud-bug-collaboration, logmind and composing-a-screen's classification in this same entry -- rejected: the accounting those three lean on assumes a settled house-shape rule, and a concurrent panel found the CEO ruling that was cited for enforcing it does not exist; reasoning that would need redoing once that ruling lands is deferred rather than written twice.
+
+**Implications:**
+- token-frugal-tooling's fix stands on its own -- it adds presence, which #202's actual ruling already requires, regardless of how the order question resolves.
+- clud-bug-collaboration and logmind's reasons, and composing-a-screen's reclassification, are still open; a follow-up entry finishes the accounting once the order ruling lands.
+- Every byte figure in the prior two entries and the PR body should be read as off-by-one low; this entry's numbers are correct and supersede them.
+
+---
+
