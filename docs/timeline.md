@@ -13,10 +13,10 @@ PR's CI run, so this file is always coherent with current `main`.
 ---
 
 
-## 2026-08 (47 decisions)
+## 2026-08 (50 decisions)
 
-- **2026-08-24** — Quote origin in the docs too — the fix changed the code and left the page teaching the rejected shape *(feat/skill-identity-fields)* — [decisions-branches/feat__skill-identity-fields.md](decisions-branches/feat__skill-identity-fields.md)
-- *... 45 more decisions ...*
+- **2026-08-24** — Correct this branch's own 'four owners, all anchored' claim: there were six, and my grep could not have found the other two *(fix/frontmatter-boundary)* — [decisions-branches/fix__frontmatter-boundary.md](decisions-branches/fix__frontmatter-boundary.md)
+- *... 48 more decisions ...*
 - **2026-08-14** — Gate skill size with a shrink-only ratchet, and deprecate skillforge into the three skills that own its job *(feat/skill-depth-and-interlinking)* — [decisions-branches/feat__skill-depth-and-interlinking.md](decisions-branches/feat__skill-depth-and-interlinking.md)
 
 ## 2026-07 (13 decisions)

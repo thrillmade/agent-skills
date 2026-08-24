@@ -79,7 +79,7 @@ except ImportError as _import_error:
 import skill_version
 
 ROOT = Path("skills")
-FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
+FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---(?=\n|\Z)", re.DOTALL)
 
 # protocol SPEC.md §1.10.1 "Frontmatter (NORMATIVE)" -- enums and
 # shapes enforced below. Every key here is OPTIONAL in the

@@ -241,10 +241,31 @@ def _trigger_surface(md: Path, name: str) -> str:
     text = md.read_text(encoding="utf-8")
     front = ""
     if text.startswith("---\n"):
-        end = text.find("\n---", 4)
+        end = _frontmatter_end(text)
         if end != -1:
             front = text[4:end]
     return f"{name}\n{front}"
+
+
+def _frontmatter_end(text: str) -> int:
+    """Index of the newline that starts the closing delimiter, or -1.
+
+    SPEC 2.1 step 2: the block closes at the first subsequent line that is
+    EXACTLY `---`. A bare `text.find("\\n---", 4)` also matches the leading
+    three characters of `----` or `--- not a close`, closing the block early.
+    This is the same rule the four `FRONTMATTER_RE` copies enforce; it lives
+    here inlined because these two call sites want an index, not a match --
+    which is exactly why a grep for `FRONTMATTER_RE` did not find them.
+    """
+    i = 4
+    while True:
+        i = text.find("\n---", i)
+        if i == -1:
+            return -1
+        rest = text[i + 4:]
+        if rest == "" or rest.startswith("\n"):
+            return i
+        i += 1
 
 
 def _matching_files(root: Path, phrase: str) -> list[str]:
@@ -591,7 +612,7 @@ def _split(text: str) -> tuple[str, str]:
     """
     if not text.startswith("---\n"):
         raise SystemExit(f"{target()} does not start with YAML frontmatter.")
-    end = text.find("\n---", 4)
+    end = _frontmatter_end(text)
     if end == -1:
         raise SystemExit(f"{target()} has an unterminated frontmatter block.")
     cut = end + len("\n---")

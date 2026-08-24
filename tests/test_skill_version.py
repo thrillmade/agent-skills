@@ -350,6 +350,77 @@ def test_the_generated_digest_line_carries_a_route_home():
     assert "\n" not in line
 
 
+def test_a_line_that_merely_starts_with_dashes_does_not_close_the_frontmatter():
+    """SPEC 2.1 step 2: the block "closes at the first subsequent line that is
+    EXACTLY `---`" -- first, and exactly.
+
+    Without the lookahead, `\\n---` also matches the leading three characters
+    of `----` or `--- not a close`, ending the block early. An identity line
+    after such a line then sits in what this module treats as the body, is not
+    elided, and the digest moves -- so this implementation and one written
+    from the SPEC prose compute DIFFERENT digests from IDENTICAL bytes, which
+    is the single thing digest exists to prevent.
+
+    Asserted through `digest()` rather than by matching the regex: a test on
+    the pattern passes its own mutation and still goes green when the bug
+    ships again.
+    """
+    early = (
+        b"---\n"
+        b"name: x\n"
+        b"--- this is not a close\n"
+        b'version: "1.0.0"\n'
+        b"---\n"
+        b"body\n"
+    )
+    # The `version:` line is INSIDE the frontmatter, so eliding it must leave
+    # the same bytes as a file that never carried it.
+    without = (
+        b"---\n"
+        b"name: x\n"
+        b"--- this is not a close\n"
+        b"---\n"
+        b"body\n"
+    )
+    assert skill_version.digest(early) == skill_version.digest(without)
+
+
+def test_the_frontmatter_closes_at_the_FIRST_exact_delimiter_not_the_last():
+    """SPEC 2.1 step 2 has two halves -- exactly, and FIRST. The other tests
+    pin exactness; a greedy `.*` variant passes every one of them and is
+    still wrong, because it swallows the body up to the LAST bare `---`.
+
+    A skill body may legitimately carry further bare `---` lines -- a fenced
+    example showing frontmatter, or a horizontal rule -- and the reference
+    catalog already contains such a file. Under a greedy reading an identity
+    line in that stretch is elided from one implementation's hash and not
+    another's.
+    """
+    raw = (
+        b"---\n"
+        b"name: x\n"
+        b"---\n"
+        b"body before\n"
+        b'version: "9.9.9"\n'   # in the BODY -- must NOT be elided
+        b"---\n"
+        b"body after\n"
+    )
+    # Changing that body line changes the digest. Under a greedy reading it
+    # would sit inside the "frontmatter" and be elided, so the two files
+    # would hash the same.
+    other = raw.replace(b'version: "9.9.9"', b'version: "8.8.8"')
+    assert skill_version.digest(raw) != skill_version.digest(other)
+
+
+def test_a_four_dash_line_does_not_close_the_frontmatter():
+    """The same boundary, one character wider -- `----` is a markdown rule,
+    not a delimiter, and a reader following the SPEC would not stop there.
+    """
+    raw = b"---\nname: x\n----\n" + b'version: "1.0.0"\n' + b"---\nbody\n"
+    stripped = b"---\nname: x\n----\n---\nbody\n"
+    assert skill_version.digest(raw) == skill_version.digest(stripped)
+
+
 def test_the_generated_origin_line_quotes_the_constant_url():
     """SPEC 2.1: all three identity values MUST be quoted. A URL cannot be
     coerced to an integer, so `origin` is safe unquoted -- but the rule is
