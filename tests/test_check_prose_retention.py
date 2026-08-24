@@ -473,6 +473,79 @@ def test_scopes_are_not_netted_against_each_other():
     assert loss.net == 7, "a prose gain must not be subtracted from a frontmatter loss"
 
 
+# --- offsetting churn WITHIN one scope (#258) --------------------------------
+#
+# Move 3 stops a gain in one scope paying for a loss in another. It does
+# nothing when the gain and the loss are in the SAME scope -- exactly what a
+# restructure produces, adding several sections and cutting one in the same
+# pass, all landing in "prose". #258: designing-elite-ui cut its `## Deploying
+# This Skill` section (55 words) in the same change that added the house's
+# five standard sections, net scored a GAIN, and the gate exited 0. CHURN_FLOOR
+# catches it as a second, independent condition on the same scope: both
+# directions moving past it at once, net or no net -- see the module docstring
+# and the constant's own comment for why this digit is chosen rather than
+# measured, unlike FLOOR.
+#
+# The fixture pins the real founding case; the synthetic pairs pin the
+# boundary in both directions, the same way the FLOOR tests above pin theirs.
+
+
+def test_the_founding_case_fires_though_net_is_a_gain():
+    before, after = fixture("designing-elite-ui")
+    loss = cpr.Loss(before, after)
+    assert loss.scopes["prose"] < 0, "the added house sections outweigh the cut"
+    assert loss.churn == {"prose": 36}
+    assert loss.net == 36
+    (error,) = skill_errors(case("designing-elite-ui", before, after))
+    assert "lost 36 words" in error
+    assert "Counted by net alone" in error
+
+
+def test_a_masked_loss_below_the_churn_floor_on_either_side_is_free():
+    """A large gain paired with a floor-scale loss stays free -- only when
+    BOTH directions cross CHURN_FLOOR does the scope need a declaration.
+    """
+    before = skill(" ".join(f"gone{i}" for i in range(10)) + "\n")
+    after = skill(" ".join(f"new{i}" for i in range(25)) + "\n")
+    loss = cpr.Loss(before, after)
+    assert loss.gross_loss["prose"] == 10
+    assert loss.gross_gain["prose"] == 25
+    assert loss.churn == {}
+    assert cpr.run(case("alpha", before, after)) == []
+
+
+def test_a_masked_loss_past_the_churn_floor_on_both_sides_fires():
+    """The boundary itself: one word more on each side than the test above,
+    crossing CHURN_FLOOR on both sides at once.
+    """
+    before = skill(" ".join(f"gone{i}" for i in range(21)) + "\n")
+    after = skill(" ".join(f"new{i}" for i in range(26)) + "\n")
+    loss = cpr.Loss(before, after)
+    assert loss.gross_loss["prose"] == 21
+    assert loss.gross_gain["prose"] == 26
+    assert loss.scopes["prose"] <= cpr.FLOOR["prose"], "still masked, not caught by `over`"
+    assert loss.churn == {"prose": 21}
+    assert len(cpr.run(case("alpha", before, after))) == 1
+
+
+def test_a_churn_finding_is_declared_through_the_same_ledger_row():
+    before, after = fixture("designing-elite-ui")
+    ledger_after = declared("| designing-elite-ui | 36 | test declaration |")
+    assert skill_errors(
+        case("designing-elite-ui", before, after), "", ledger_after
+    ) == []
+
+
+def test_a_churn_finding_does_not_double_count_a_scope_over_did_not_flag():
+    """`self.net` sums an ordinary loss and a masked loss without adding a
+    scope twice: nothing here is in both `over` and `churn` at once.
+    """
+    before, after = fixture("designing-elite-ui")
+    loss = cpr.Loss(before, after)
+    assert set(loss.over) & set(loss.churn) == set()
+    assert loss.net == sum(loss.over.values()) + sum(loss.churn.values())
+
+
 # --- the scope split has to be findable, or there is no verdict -------------
 #
 # Scoring the parts separately is what stops the gate being paid off, and it
