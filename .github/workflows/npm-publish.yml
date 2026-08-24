@@ -42,6 +42,32 @@ jobs:
       contents: read
       id-token: write    # OIDC for npm Trusted Publishing + provenance
     steps:
+      # Guard the workflow_dispatch path. `inputs.tag || github.ref` falls
+      # back to github.ref, which on workflow_dispatch is the BRANCH the
+      # dispatch was fired from -- typically main, not a tag. A stray
+      # dispatch with an empty tag would therefore publish main's HEAD as a
+      # release. `required: true` covers the web form; it is not a runtime
+      # guarantee for an API- or CLI-triggered dispatch, so this checks at
+      # run time. Ported from thrillmade/clud-bug's own npm-publish.yml,
+      # which carries this guard for exactly this reason -- an earlier
+      # version of THIS file cited that workflow as its pattern and then
+      # dropped the guard the pattern exists for.
+      # Tag-push triggers skip it (event_name == 'push').
+      - name: Validate dispatch inputs
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          TAG_INPUT: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${TAG_INPUT}" ]]; then
+            echo "::error::workflow_dispatch requires an explicit tag. Without one this would publish the branch HEAD, not a release."
+            exit 1
+          fi
+          if [[ ! "${TAG_INPUT}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+            echo "::error::tag '${TAG_INPUT}' is not vX.Y.Z shaped."
+            exit 1
+          fi
+
       - name: Checkout the tag
         uses: actions/checkout@v7
         with:
@@ -84,7 +110,18 @@ jobs:
         # `npm publish` on a prerelease tag would still point the default
         # install channel at it.
         run: |
+          set -euo pipefail
           VERSION="$(node -p "require('./package.json').version")"
+          # The tag and package.json must agree. npm refuses to re-publish a
+          # version, so a v9.9.9 tag on a 0.1.0 package would publish 0.1.0
+          # and leave the git tag and the registry permanently disagreeing,
+          # with nothing to catch it. Fail instead.
+          REF="${{ inputs.tag || github.ref }}"
+          TAG_VERSION="${REF#refs/tags/}"; TAG_VERSION="${TAG_VERSION#v}"
+          if [[ -n "${TAG_VERSION}" && "${TAG_VERSION}" != "${VERSION}" ]]; then
+            echo "::error::tag says ${TAG_VERSION}, package.json says ${VERSION}. Bump one to match the other."
+            exit 1
+          fi
           if [[ "${VERSION}" == *-* ]]; then DIST_TAG=next; else DIST_TAG=latest; fi
           echo "Publishing thrill-skills@${VERSION} to dist-tag '${DIST_TAG}'"
           npm publish --provenance --access public --tag "${DIST_TAG}"
