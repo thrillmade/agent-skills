@@ -1,6 +1,6 @@
 ---
-version: "1.0.0"
-digest: "c98ce58192b4"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.1"
+digest: "d04f5bfcbcfe"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: token-frugal-tooling
 description: |
@@ -125,10 +125,10 @@ works without extra plumbing.
   re-introduces filler patterns. The byte-budget cap is intentionally
   low post-0.0.P (v0.6.20).
 
-## Where to look for detail
+## Cross-references
 
-- **`logmind` skill** — when / how to log decisions; reading prior
-  context; agent-invocation flags.
-- **`clud-bug-collaboration` skill** — fix-push flow, strict mode,
-  modifying skills, editing the workflow, full comment format, full
-  cost-control wiring.
+- [logmind](../logmind/SKILL.md) — when / how to log decisions; reading
+  prior context; agent-invocation flags.
+- [clud-bug-collaboration](../clud-bug-collaboration/SKILL.md) — fix-push
+  flow, strict mode, modifying skills, editing the workflow, full comment
+  format, full cost-control wiring.
