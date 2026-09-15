@@ -559,9 +559,7 @@ def _is_superseded(meta: dict) -> bool:
 # `_is_superseded`, a skill's self-declared `[L2 stub]` marker, or
 # docs/placement-map.json's `family` / `authoring_home` fields) rather than a
 # name list, so a skill ADDED to an exempt family or authored elsewhere
-# inherits the exemption without a second edit here. Two files could not be
-# derived from a property and are named explicitly, each with its own reason
-# -- see HOUSE_STRUCTURE_NAMED_EXEMPTIONS.
+# inherits the exemption without a second edit here.
 HOUSE_SECTIONS = (
     "When to use",
     "When NOT to use",
@@ -619,23 +617,16 @@ HOUSE_STRUCTURE_EXEMPT_FAMILIES = frozenset(
 # reviewer can check against the file, on purpose: a bare name list is a
 # second owner of the same fact and rots silently; a name with its reason
 # attached is a claim a reviewer can hold the file up against.
-HOUSE_STRUCTURE_NAMED_EXEMPTIONS = {
-    "curating-a-skill-catalog": (
-        "carries 4 of the 5 sections (When to use, When NOT to use, "
-        "Verification, Cross-references) and is missing only Sources -- but "
-        "measured headroom under SIZE_LIMIT is under 100 bytes, too tight "
-        "for an honest citation without a prose-trim pass elsewhere first. "
-        "A known gap, not a permanent exemption -- see "
-        "docs/decisions-branches/fix__house-structure.md."
-    ),
-    "token-frugal-tooling": (
-        "a quick-reference card (env vars, artifact defaults, CLI flags "
-        "across two other skills), not a judgment skill with a 'when should "
-        "I reach for this' decision to make. Not byte-constrained (2000+ "
-        "bytes of headroom measured) -- the absence is a document-kind "
-        "difference, not debt."
-    ),
-}
+#
+# EMPTY ON PURPOSE, not an oversight. The two prior rows (curating-a-skill-
+# catalog, token-frugal-tooling) were byte-headroom and document-kind excuses
+# respectively; both were fixed instead -- edited to actually carry all five
+# sections -- rather than carried as permanent debt. See
+# docs/decisions-branches/fix__house-structure.md. A future file that
+# genuinely cannot be derived from a property above still earns a row here,
+# same terms as before; nothing about the mechanism is removed, only its
+# only two occupants.
+HOUSE_STRUCTURE_NAMED_EXEMPTIONS: dict[str, str] = {}
 
 
 def _house_structure_headings(body: str) -> list[str]:

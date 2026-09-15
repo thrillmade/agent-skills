@@ -27,3 +27,14 @@
 
 ---
 
+## 2026-09-15 18:39 - Fix, don't exempt: clud-bug-collaboration and curating-a-skill-catalog now carry the real house structure; HOUSE_STRUCTURE_NAMED_EXEMPTIONS is empty
+
+**Reasoning:** CEO ruling overrode the prior lane's byte-budget framing ('just fix the skill if you need to; condense and be judicious with words, be an editor this isnt hard'). clud-bug-collaboration had 6 bytes of headroom and only Cross-references of the five house sections; condensed redundant/duplicated prose across every existing section (merged the 'don't resolve threads' double-statement, tightened Cost-control wiring, Modifying-a-skill, Reading-review-comments) to buy room for real When to use / When NOT to use / Verification / Sources sections, reusing the existing check-status content as Verification and splitting the trailing bare URLs into Sources -- net body 7681 bytes (511 headroom), net prose loss 63 words (over FLOOR, declared in docs/prose-removals.md, verified against the gate's own Loss class). curating-a-skill-catalog was missing only Sources with 83 bytes of true headroom (re-measured with FRONTMATTER_RE, matching the branch's own prior correction); a one-line citation to this catalog's own skill-census.yml workflow and docs/skill-census/ reports fit at 82 bytes, 1 byte to spare. token-frugal-tooling's exemption was dead code -- it already carries all five sections in canonical order (fixed on this same branch's earlier commits) -- so gating it via an exemption would have silently stopped checking its own future drift. HOUSE_STRUCTURE_NAMED_EXEMPTIONS is now an empty dict with a comment stating that is the intended state, not an oversight; the mechanism itself (family/authoring_home-derived exemptions, and the named-exemption escape hatch for a file that genuinely cannot be derived from a property) is untouched, only its two occupants are gone.
+
+**Alternatives considered:** Move the byte-tight content into references/ to buy room: rejected -- SIZE_LIMIT's own comment says a consuming reviewer reads SKILL.md and nothing else, so that move deletes the content for its reader rather than saving it. Grandfather the two skills a while longer pending a dedicated trim pass: rejected outright by the CEO ruling this branch executes.
+
+**Implications:**
+- Re-stamped identity (stamp_versions.py --write) and regenerated docs/skill-versions.json (gen_skill_versions.py --write); the only new history row introduced is finding-a-catalog-skill's eb32af1, reachable from origin/feat/technical-writing -- confirmed with git branch -r --contains, no SHA removed. 21 of 70 cited history SHAs are unreachable from any refs/remotes/origin/* ref, all pre-existing (present in docs/skill-versions.json at this branch's prior HEAD, before this change touched the file) and already flagged in a prior decisions-branches entry as its own follow-up -- not introduced or fixed here.
+
+---
+
