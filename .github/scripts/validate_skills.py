@@ -1092,10 +1092,20 @@ def run(root: Path) -> list[str]:
                     # this set without the guard raised TypeError out of the
                     # whole gate -- a malformed map taking the validator down
                     # instead of being reported by it.
+                    # `agents/`-prefixed entries are filtered here for the same
+                    # reason `map_names` filters them below -- a different
+                    # namespace, reconciled by validate_agents.py. Without the
+                    # filter an `agents/` entry that DID carry a `family` would
+                    # count as live use and silently keep a dead family alive:
+                    # the check would pass, defeated by a key it was never
+                    # meant to read. The two filters are one rule and must stay
+                    # in step; a panel found this half missing.
                     used = {
                         m.get("family")
-                        for m in skills_map.values()
-                        if isinstance(m, dict) and isinstance(m.get("family"), str)
+                        for k, m in skills_map.items()
+                        if not k.startswith(AGENTS_PREFIX)
+                        and isinstance(m, dict)
+                        and isinstance(m.get("family"), str)
                     }
                     dead = [] if malformed_entry else sorted(family_ids - used)
                     if dead:

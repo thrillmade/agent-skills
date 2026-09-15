@@ -63,7 +63,7 @@ PLACEMENT_MAP_PATH = Path("docs/placement-map.json")
 FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---(?=\n|\Z)", re.DOTALL)
 
 # SPEC §2.4's own placeholder is `<kebab-case-slug>`, the identical shape
-# skills use (SPEC §1.10.1) -- reused rather than re-derived, since nothing
+# skills use (SPEC §2.1) -- reused rather than re-derived, since nothing
 # in §2.4 says a role's slug rules differ from a skill's.
 NAME_SLUG_RE = re.compile(r"^[a-z][a-z0-9-]{0,62}$")
 
@@ -125,6 +125,20 @@ def run(root: Path) -> list[str]:
     for role_path in role_files:
         prefix = str(role_path)
         stem = role_path.stem
+
+        # `_role_files` globs `*.md` without a type filter, so a directory
+        # NAMED `<name>.md` (nothing stops one existing under `.claude/agents/`)
+        # reaches here too. `read_bytes()` on a directory raises
+        # `IsADirectoryError` uncaught, taking the whole run down instead of
+        # reporting it -- identical to the pre-existing `skill_md.read_bytes()`
+        # bug at validate_skills.py:712 (same root cause: `.exists()`/glob is
+        # true for a directory too), confirmed there and left alone as a
+        # wider change than this file should carry. Reported and skipped
+        # here, matching the UnicodeDecodeError case just below rather than
+        # added to `role_names` as SPEC-valid.
+        if not role_path.is_file():
+            errors.append(f"::error file={prefix}::{role_path} is not a file")
+            continue
 
         raw = role_path.read_bytes()
         try:

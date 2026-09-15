@@ -64,6 +64,15 @@ class RoleTree:
     def valid_role(self, name: str = "alpha") -> Path:
         return self.role(name, VALID_ROLE.format(name=name))
 
+    def role_dir(self, name: str) -> Path:
+        """Create a DIRECTORY at `.claude/agents/<name>.md` -- `_role_files`
+        globs `*.md` with no type filter, so this reaches the per-file loop
+        exactly like a real role file would.
+        """
+        d = self.base / ".claude" / "agents" / f"{name}.md"
+        d.mkdir(parents=True, exist_ok=True)
+        return d
+
     def frontmatter(self, name: str = "alpha", extra: str = "", body: str = "\nBody.\n") -> Path:
         """A valid role with `extra` YAML lines spliced into the frontmatter."""
         fm = f"---\nname: {name}\ndescription: What this role does.\n{extra}---\n"
@@ -99,6 +108,16 @@ def test_multiple_valid_roles_produce_no_errors(roles: RoleTree) -> None:
     roles.valid_role("beta")
     roles.valid_role("gamma")
     assert roles.validate() == []
+
+
+def test_a_directory_named_like_a_role_is_reported_not_crashed(roles: RoleTree) -> None:
+    # `_role_files` globs `*.md` with no `is_file()` filter, so a directory
+    # under `.claude/agents/` whose name happens to end `.md` reaches the
+    # per-file loop too. Before the guard, `role_path.read_bytes()` raised
+    # `IsADirectoryError` uncaught, taking the whole run down instead of
+    # producing an annotation -- confirmed by reverting the guard locally.
+    roles.role_dir("alpha")
+    assert only(roles.validate()) == ALPHA + ".claude/agents/alpha.md is not a file"
 
 
 def test_missing_frontmatter(roles: RoleTree) -> None:

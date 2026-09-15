@@ -273,9 +273,21 @@ MUTATIONS = [
         # An unhashable `family` (a JSON list) crashes the whole gate with a
         # TypeError instead of being reported by it. This one shipped, briefly,
         # and a boundary parametrization caught it.
+        #
+        # `used`'s condition grew a THIRD line (the `agents/`-prefix filter,
+        # #276) after this mutation was written, so the exact one-line `old`
+        # stopped matching -- pin only the `isinstance(m.get("family"), str)`
+        # guard's own line, which is what actually stops the unhashable value
+        # from reaching the set literal. The `agents/` filter added above it
+        # is NOT covered by a row here: this harness's SUITES list runs only
+        # test_gen_skill_directory.py and test_validate_skills.py in the
+        # subprocess, and that filter's regression test lives in
+        # tests/test_validate_skills_agents_namespace.py, which SUITES does
+        # not include. It is mutation-tested by hand instead (revert, red;
+        # restore, green) -- see that file's own comment on the fix.
         "an_unhashable_family_crashes_the_gate",
-        '                        if isinstance(m, dict) and isinstance(m.get("family"), str)',
-        "                        if isinstance(m, dict)",
+        '                        and isinstance(m.get("family"), str)\n',
+        "",
     ),
     # --- gen_skill_directory.py: the probe surface and the growth numbers ---
     (

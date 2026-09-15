@@ -116,3 +116,47 @@ def test_families_dead_check_is_unaffected_by_agent_entries(tree: SkillTree) -> 
     assert any(
         "`families` declares orphan but no skill lists it" in e for e in errors
     ), errors
+
+
+# The test above proves nothing about the actual escape: `AGENT_ENTRY` never
+# carries `family` in the first place, so it can't demonstrate that the
+# dead-family check ignores one when it IS present. Nothing in this gate
+# shape-checks the `agents/` namespace (see the `continue` at the top of the
+# skills_map loop), so a `family` key on an `agents/` entry is not itself an
+# error -- it is simply data the dead-family check must not read. Before the
+# fix, `used` was built from `skills_map.values()` with no `agents/` filter
+# while `map_names` (the 1:1 reconcile below it) DID filter them -- one rule
+# applied in two places, and only one of them updated. An `agents/` entry
+# carrying a `family` that named an otherwise-unused id counted as "live
+# use" and the dead family passed silently, defeated by a key this check was
+# never meant to read.
+def test_an_agent_entrys_family_field_does_not_keep_a_dead_family_alive(
+    tree: SkillTree,
+) -> None:
+    tree.valid_skill("alpha")
+    tree.placement_map(
+        {
+            "version": 1,
+            "updated": "2026-09-15",
+            "families": FAMILIES + [{"id": "orphan", "title": "t", "routes": "r"}],
+            "skills": {
+                "alpha": SKILL_ENTRY,
+                "agents/builder": {**AGENT_ENTRY, "family": "orphan"},
+            },
+        }
+    )
+    errors = tree.validate()
+    assert any(
+        "`families` declares orphan but no skill lists it" in e for e in errors
+    ), errors
+
+
+def test_a_family_used_by_a_real_skill_is_not_reported_dead(tree: SkillTree) -> None:
+    # Guards against over-correcting the fix above: filtering `agents/` keys
+    # out of `used` must not stop a family from counting as used when a REAL
+    # skills/ entry is the one using it -- even with an agents/ entry also
+    # present in the same map.
+    tree.valid_skill("alpha")
+    tree.placement_map(valid_map(alpha=SKILL_ENTRY, **{"agents/builder": AGENT_ENTRY}))
+    errors = tree.validate()
+    assert not any("`families` declares" in e for e in errors), errors
