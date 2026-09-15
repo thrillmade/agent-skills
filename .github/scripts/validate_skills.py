@@ -619,13 +619,14 @@ HOUSE_STRUCTURE_EXEMPT_FAMILIES = frozenset(
 # attached is a claim a reviewer can hold the file up against.
 #
 # EMPTY ON PURPOSE, not an oversight. The two prior rows (curating-a-skill-
-# catalog, token-frugal-tooling) were byte-headroom and document-kind excuses
-# respectively; both were fixed instead -- edited to actually carry all five
-# sections -- rather than carried as permanent debt. See
-# docs/decisions-branches/fix__house-structure.md. A future file that
+# catalog, token-frugal-tooling) were a byte-headroom excuse and a document-
+# kind excuse respectively; both skills were edited to actually carry all
+# five sections instead, so neither reason stands. See
+# docs/decisions-branches/fix__house-structure.md and
+# docs/decisions-branches/feat__house-structure-gate.md. A future file that
 # genuinely cannot be derived from a property above still earns a row here,
-# same terms as before; nothing about the mechanism is removed, only its
-# only two occupants.
+# same terms as before -- nothing about the mechanism is removed, only its
+# two former occupants.
 HOUSE_STRUCTURE_NAMED_EXEMPTIONS: dict[str, str] = {}
 
 
