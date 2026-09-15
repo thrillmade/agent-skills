@@ -15,6 +15,7 @@ PR's CI run, so this file is always coherent with current `main`.
 
 ## 2026-09
 
+- **2026-09-15** — Pin the agents/-namespace dead-family escape a panel found in PR #276, plus its own mutation self-test and a control-tested crash guard in validate_agents.py *(feat/agent-roster)* — [decisions-branches/feat__agent-roster.md](decisions-branches/feat__agent-roster.md)
 - **2026-09-15** — Implement protocol SPEC §2.4/§5.1's agent roster: 15 roles from ~/.claude/agents into .claude/agents/, an agents/ namespace in the placement map, and a validate_agents.py gate *(feat/agent-roster)* — [decisions-branches/feat__agent-roster.md](decisions-branches/feat__agent-roster.md)
 
 ## 2026-08 (55 decisions)
