@@ -35,11 +35,12 @@
       "subscribers": ["clud-bug", "clud-bug-app", "logmind", "tokenomics", "protocol", "reporulez", "rezgen", "skdd"]
     },
     "clud-bug-collaboration": {
-      "family": "review-discipline",
+      "family": "catalog-and-tooling",
       "owns": "living with the review bot",
       "authoring_home": "catalog",
       "distribution": "default-on",
-      "subscribers": ["clud-bug", "clud-bug-app", "logmind", "tokenomics", "protocol", "reporulez", "rezgen", "skdd"]
+      "subscribers": ["clud-bug", "clud-bug-app", "logmind", "tokenomics", "protocol", "reporulez", "rezgen", "skdd"],
+      "notes": "Moved from review-discipline (#269): it carried that tag because it distributes bundled with the three review-lens baselines (confirmed in fix__placement-map-subscribers.md), not because it shares their shape. All 8 review-discipline skills share a what-to-flag / what-not-to-flag / finding-shape-template rubric matching the family's own routing line ('what a review flags, what it lets go, and what a claim has to cite'); this skill's 11 sections never flag or withhold a finding -- they're bot-interaction procedure (push/resolve, strict-mode governance, workflow-edit restriction, secret handling, cost wiring, update cadence), the same kind of cross-repo CLI/dev-tool procedure logmind already owns here."
     },
     "logmind": {
       "family": "catalog-and-tooling",

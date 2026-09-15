@@ -1,12 +1,25 @@
 ---
-version: "1.0.0"
-digest: "7eebf3cfc4dd"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.1"
+digest: "a8d1ca880a7c"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: orchestrating-elite-agent-qa
 description: Use when orchestrating multi-agent feature work (build/review/merge with subagents or workflows) and the quality bar is high — shipping UI, interactive editors, or anything where a single build pass plus a polite review would let real bugs through.
 ---
 
 # Orchestrating Elite Agent QA
+
+## When to use
+
+- Orchestrating multi-agent build/review/merge work where the quality bar is high.
+- Shipping UI, interactive editors, or any surface where a single build pass plus a polite review would let real bugs through.
+- Gating a merge on more than a build agent's own "done" report.
+- A slice needs a browser-driven visual gate, not just a code read.
+
+## When NOT to use
+
+- Single-agent, low-stakes changes — the pipeline's overhead isn't worth it; [orchestrating-agent-delegation](../orchestrating-agent-delegation/SKILL.md) alone covers the brief and model tiering.
+- Pure backend/logic changes with no rendered surface — the design-critic gate and the visual-polish lens have nothing to check.
+- You are the executing agent, not the orchestrator running the pipeline.
 
 ## Overview
 
@@ -54,10 +67,21 @@ Gate the merge on all three. Each catches a class the others miss.
 
 > For each slice: branch off main. (If non-trivial, first run a **design** agent that reads the real code and specifies the algorithm + exact file/function seams.) Run a **build** agent (no commit). Then run **3 parallel adversarial reviewers**, each a distinct lens (correctness · invariants/regression · the headline behavior), prompted *refute-first* — report only real, high-confidence issues with a concrete fix, empty if clean. Run a **fix** agent on the confirmed high/med findings. Then a **design-critic** agent that *drives the browser* (cache-bust the JS, screenshot light + dark, exercise the states) and gates the merge on its findings. Then **QA it yourself on a fresh, simple setup** with realistic pointer events (not the dense seed, not exact-handle clicks). Merge only when all gates pass; update the spec + plan in the same PR; fix QA issues, never ship them. **Sequence slices that share files; verify "done" before trusting it; cache-bust before believing a browser result; for interaction slices, get a human real-mouse confirmation.**
 
+## Verification
+
+1. Build, the N parallel refute-first reviewers, the design-critic pass, and fresh-case QA are each independently confirmed to have run — never inferred from a "completed" status alone.
+2. The design-critic's screenshots come from cache-busted JS, in both light and dark.
+3. QA ran against a fresh, simple case with realistic pointer events — not only the dense seed clicked by exact handle.
+4. For interaction slices, a human gave real-mouse confirmation before merge.
+
 ## Cross-references
 
 - **For the two claims a panel most often accepts unchecked:** [guarding-a-regression](../guarding-a-regression/SKILL.md) — a fix's regression test is evidence only once someone has watched it go red, and the panel is where that gets asked; and [proving-an-absence](../proving-an-absence/SKILL.md) — "no test covers this", "I could not reproduce it" and any bare count are absence claims, and an uncontrolled probe is how a false one survives a review.
 - **For a run that outlives one sitting:** [session-heartbeat](../session-heartbeat/SKILL.md) — this skill says which gates a slice must clear, but nothing about a pipeline continuing across a usage-limit reset or a resumed session. That is where pacing, the checkpoint, and re-firing a gate whose producer was killed mid-flight live.
+
+## Sources
+
+- Practitioner-derived from the same #136 skill-unification build [orchestrating-agent-delegation](../orchestrating-agent-delegation/SKILL.md) cites — this skill is that run's panel / design-critic / QA gate sequence.
 
 ## Deploying This Skill (per writing-skills)
 

@@ -1,6 +1,6 @@
 ---
-version: "1.0.0"
-digest: "1c15601a0087"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.1"
+digest: "6db0976a0715"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: finding-a-catalog-skill
 description: >-
@@ -48,7 +48,6 @@ What a review flags, what it lets go, and what a claim has to cite.
 
 - `api-contract-enforcement` — public API shape changes
 - `brand-voice-review` — voice in user-facing strings
-- `clud-bug-collaboration` — living with the review bot
 - `critical-issues-only` — correctness, security, perf only
 - `evidence-based-review` — quote the code or cut the claim
 - `guarding-a-regression` — trusting a regression test
@@ -70,6 +69,7 @@ Handing work out, gating what comes back, surviving a long session.
 ## The catalog itself
 Finding, censusing and authoring skills; decision logging; CLI conventions.
 
+- `clud-bug-collaboration` — living with the review bot
 - `curating-a-skill-catalog` — the census rubric and verdicts
 - `finding-a-catalog-skill` — this directory
 - `logmind` — when and how to log a decision

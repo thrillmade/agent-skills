@@ -1,6 +1,6 @@
 ---
-version: "1.0.0"
-digest: "c98ce58192b4"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.2"
+digest: "8da49028c193"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: token-frugal-tooling
 description: |
@@ -17,6 +17,22 @@ description: |
 This project uses logmind + clud-bug, both engineered for token frugality.
 The defaults below land automatically; this skill is just so you don't
 re-learn them every session.
+
+## When to use
+
+- Both logmind and clud-bug are installed (see frontmatter) and you're about
+  to set an agent-mode env var, read a compact on-disk artifact, or triage a
+  clud-bug review comment, and want the one-line default rather than
+  re-reading either tool's full skill.
+
+## When NOT to use
+
+- Only one of the two tools is installed — load that tool's own skill
+  (`logmind` or `clud-bug-collaboration`) directly; the defaults here assume
+  both are present.
+- You need the mechanism behind a default, not just the default itself —
+  that detail is owned by the per-tool skill this one cross-references, not
+  duplicated here.
 
 ## Agent-mode env vars (set once per command or session)
 
@@ -125,10 +141,23 @@ works without extra plumbing.
   re-introduces filler patterns. The byte-budget cap is intentionally
   low post-0.0.P (v0.6.20).
 
-## Where to look for detail
+## Verification
 
-- **`logmind` skill** — when / how to log decisions; reading prior
-  context; agent-invocation flags.
-- **`clud-bug-collaboration` skill** — fix-push flow, strict mode,
-  modifying skills, editing the workflow, full comment format, full
-  cost-control wiring.
+- `logmind doctor` reports installed-vs-latest for both tools (logmind,
+  clud-bug if present) and exits non-zero on drift — run it before trusting
+  a version-gated default above; a stale install means that default isn't
+  live yet.
+
+## Cross-references
+
+- [logmind](../logmind/SKILL.md) — when / how to log decisions; reading
+  prior context; agent-invocation flags.
+- [clud-bug-collaboration](../clud-bug-collaboration/SKILL.md) — fix-push
+  flow, strict mode, modifying skills, editing the workflow, full comment
+  format, full cost-control wiring.
+
+## Sources
+
+- Version numbers and defaults above are drawn from logmind's and clud-bug's
+  own release notes; the primary citation for each lives in the two skills
+  above, which this page compresses.
