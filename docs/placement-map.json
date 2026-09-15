@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-08-23",
+  "updated": "2026-09-15",
   "families": [
     {"id": "review-discipline", "title": "Reviewing a pull request", "routes": "What a review flags, what it lets go, and what a claim has to cite."},
     {"id": "orchestration", "title": "Running agents", "routes": "Handing work out, gating what comes back, surviving a long session."},
@@ -456,6 +456,21 @@
       "distribution": "opt-in",
       "subscribers": [],
       "notes": "documentation-discipline skill; hunting the old value after a reversal. Pairs with semver-design-tokens for the versioned token case"
-    }
+    },
+    "agents/builder": {"authoring_home": "catalog", "distribution": "catalog-only", "subscribers": []},
+    "agents/citation-verifier": {"authoring_home": "catalog", "distribution": "catalog-only", "subscribers": []},
+    "agents/code-improver": {"authoring_home": "catalog", "distribution": "catalog-only", "subscribers": []},
+    "agents/design-critic": {"authoring_home": "catalog", "distribution": "catalog-only", "subscribers": []},
+    "agents/designer": {"authoring_home": "catalog", "distribution": "catalog-only", "subscribers": []},
+    "agents/documentarian": {"authoring_home": "catalog", "distribution": "catalog-only", "subscribers": []},
+    "agents/frontend": {"authoring_home": "catalog", "distribution": "catalog-only", "subscribers": []},
+    "agents/protocol-architect": {"authoring_home": "catalog", "distribution": "catalog-only", "subscribers": []},
+    "agents/qa-verifier": {"authoring_home": "catalog", "distribution": "catalog-only", "subscribers": []},
+    "agents/reviewer": {"authoring_home": "catalog", "distribution": "catalog-only", "subscribers": []},
+    "agents/scout": {"authoring_home": "catalog", "distribution": "catalog-only", "subscribers": []},
+    "agents/skill-smith": {"authoring_home": "catalog", "distribution": "catalog-only", "subscribers": []},
+    "agents/spec-auditor": {"authoring_home": "catalog", "distribution": "catalog-only", "subscribers": []},
+    "agents/test-closer": {"authoring_home": "catalog", "distribution": "catalog-only", "subscribers": []},
+    "agents/ticket-writer": {"authoring_home": "catalog", "distribution": "catalog-only", "subscribers": []}
   }
 }

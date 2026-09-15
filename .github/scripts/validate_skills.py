@@ -129,6 +129,15 @@ SIZE_LIMIT = 8192
 AUTHORING_HOME_RE = re.compile(r"^(catalog|undecided|repo-mirrored:[a-z0-9-]+)$")
 DISTRIBUTION_VALUES = {"default-on", "opt-in", "catalog-only"}
 
+# SPEC §5.1's own example key ("agents/simplifier"): a role at
+# .claude/agents/<name>.md, not a skill under skills/. This gate's `skills`
+# map carries both namespaces (one committed JSON file is the map for the
+# whole catalog, SPEC §5.1), so every rule below that assumes a `skills/`
+# directory entry -- the 1:1 reconcile, `family`, `owns` -- skips a key
+# carrying this prefix; validate_agents.py owns that namespace's shape and
+# its own 1:1 reconcile against .claude/agents/.
+AGENTS_PREFIX = "agents/"
+
 # How the catalog announces a retirement. All three retired skills open their
 # `description` with it, and no live skill does -- it is the first thing an
 # agent reads, so it is the thing the directory has to agree with. Anchored by
@@ -949,6 +958,16 @@ def run(root: Path) -> list[str]:
                 else:
                     malformed_entry = False
                     for slug, meta in skills_map.items():
+                        if slug.startswith(AGENTS_PREFIX):
+                            # SPEC §5.1's own example ("agents/simplifier") is a
+                            # separate namespace: a role at .claude/agents/, not
+                            # a skill under skills/. Its shape and its 1:1
+                            # reconciliation against the roster directory are
+                            # validate_agents.py's gate, not this one's -- family
+                            # and owns are generated-DIRECTORY concepts that
+                            # (deliberately) do not apply to a role, per SPEC
+                            # §5.1's own example, which carries neither.
+                            continue
                         if not isinstance(meta, dict):
                             errors.append(
                                 f"::error file={pm_prefix}::skills.{slug} must be "
@@ -1088,7 +1107,13 @@ def run(root: Path) -> list[str]:
                         )
 
                     # Map keys must EXACTLY equal the skills/ directory names.
-                    map_names = set(skills_map.keys())
+                    # `agents/`-prefixed keys are a different namespace (see
+                    # above) and are excluded here rather than counted as
+                    # "extra" -- they are reconciled against .claude/agents/
+                    # by validate_agents.py instead.
+                    map_names = {
+                        k for k in skills_map.keys() if not k.startswith(AGENTS_PREFIX)
+                    }
                     dir_names = {d.name for d in skill_dirs}
                     missing_from_map = sorted(dir_names - map_names)
                     extra_in_map = sorted(map_names - dir_names)
