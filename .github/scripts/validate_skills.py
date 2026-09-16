@@ -587,11 +587,12 @@ L2_STUB_RE = re.compile(r"\[L2 stub\b")
 #                        reached for by a "when should I use this" decision.
 #                        Ranges from terse flag-these / do-not-surface /
 #                        finding-template injections (skill-frontmatter-
-#                        quality, critical-issues-only) to a longer
-#                        collaboration guide that is not a lens at all
-#                        (clud-bug-collaboration) -- heterogeneous enough
-#                        that no single order would fit the family, but none
-#                        of it is the "when should I reach for this" shape.
+#                        quality, critical-issues-only) to full lenses with
+#                        worked categories and a "when this skill should be
+#                        silent" carve-out (test-discipline, pii-and-
+#                        compliance) -- heterogeneous enough that no single
+#                        order would fit the family, but none of it is the
+#                        "when should I reach for this" shape.
 #                        Two members (guarding-a-regression, proving-an-
 #                        absence) happen to carry the house shape anyway --
 #                        the exemption does not forbid it, it just does not

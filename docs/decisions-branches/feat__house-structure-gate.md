@@ -38,3 +38,15 @@
 
 ---
 
+## 2026-09-15 21:22 - Restore the show_full_output flag the condensing pass cut, and fix the review-discipline docstring's stale example
+
+**Reasoning:** Two panel findings on PR #277: clud-bug-collaboration/SKILL.md's cost-control section told a reader to check cache_read_input_tokens without the show_full_output:true flag that makes the field appear, and the prose-removals.md ledger row for that same edit asserted no actionable item was cut -- both now false in the same commit. Separately, validate_skills.py's HOUSE_STRUCTURE_EXEMPT_FAMILIES docstring cited clud-bug-collaboration as review-discipline's 'longer collaboration guide that is not a lens at all', but placement-map.json moved that skill to catalog-and-tooling in #269 and it now fully conforms to house structure anyway, so the example proved nothing.
+
+**Alternatives considered:** Amend the ledger row's declaration sentence instead of restoring the flag -- rejected because the reader needs the flag to follow the instruction at all, and restoring cost only bytes the file had headroom for, Drop the review-discipline docstring's long-vs-short contrast entirely instead of replacing the example -- rejected because the contrast is still true (terse flag-only skills vs full lenses with worked categories) and removing it would weaken a still-valid argument for the exemption
+
+**Implications:**
+- prose-removals.md's clud-bug-collaboration row net-word count changes from 63 to 61 words (re-measured with check_prose_retention.Loss against the merge-base with origin/dev, 0bb41be9) now that the flag is back; the rest of that row's declared items were independently re-checked against the merge-base diff and hold
+- validate_skills.py's review-discipline example now cites test-discipline and pii-and-compliance, which are still in that family per placement-map.json and still lack the house shape (When to use/When NOT to use), unlike guarding-a-regression and proving-an-absence already cited as the family's exceptions
+
+---
+

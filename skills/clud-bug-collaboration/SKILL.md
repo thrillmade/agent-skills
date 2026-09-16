@@ -1,6 +1,6 @@
 ---
-version: "1.0.1"
-digest: "e10e69b38f31"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.2"
+digest: "fc49f8cc5029"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: clud-bug-collaboration
 description: How Claude Code agents working in a clud-bug-installed repo should interact with the bot's review threads, strict-mode gate, and skill set. Use this skill whenever you're about to push a commit, address a clud-bug PR review comment, edit anything under .claude/skills/, modify .github/workflows/clud-bug-*.yml, or wonder why a PR check is red. Also use when planning work in a repo that has a `clud-bug-review` workflow installed — even if the user didn't mention clud-bug by name.
@@ -126,7 +126,8 @@ Wired into every template — you don't invoke it. Override per-repo (e.g.
 - **Prompt caching** (v0.6.3): the stable prefix (review-prompt, skill
   catalog, base-ref AGENTS.md) auto-caches. Cached input bills at 10% of
   standard within a 5-minute window; the first review in a fresh window
-  writes at 1.25×. Check `cache_read_input_tokens` in the result JSON.
+  writes at 1.25×. Check `cache_read_input_tokens` in the result JSON
+  (`show_full_output: true`).
 - **Byte budgets**: `MAX_COMMENT_BYTES=20000`, `MAX_SKILL_BYTES=4000`,
   `MAX_DIFF_BYTES=5000000`. Too low and that section is silently truncated
   into a **half-review**; a cap hit shows a truncation marker and the bot is
