@@ -68,6 +68,7 @@ agent-skills
 │   ├── skill-frontmatter-quality
 │   ├── skillforge
 │   ├── spacing-system
+│   ├── technical-writing
 │   ├── test-discipline
 │   ├── token-frugal-tooling
 │   ├── token-naming-conventions

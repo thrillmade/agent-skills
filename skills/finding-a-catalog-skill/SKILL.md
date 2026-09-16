@@ -1,6 +1,6 @@
 ---
-version: "1.0.1"
-digest: "6db0976a0715"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.2"
+digest: "61a41a489f78"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: finding-a-catalog-skill
 description: >-
@@ -55,6 +55,7 @@ What a review flags, what it lets go, and what a claim has to cite.
 - `proving-an-absence` — claiming a thing is missing
 - `respect-existing-conventions` — a review is not a redesign
 - `skill-frontmatter-quality` — judging a SKILL.md's frontmatter
+- `technical-writing` — docs and changelog for additions
 - `test-discipline` — test edits that hollow a suite
 
 ## Running agents
