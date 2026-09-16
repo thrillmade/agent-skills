@@ -13,15 +13,16 @@ PR's CI run, so this file is always coherent with current `main`.
 ---
 
 
-## 2026-09
+## 2026-09 (4 decisions)
 
-- **2026-09-15** — Pin the agents/-namespace dead-family escape a panel found in PR #276, plus its own mutation self-test and a control-tested crash guard in validate_agents.py *(feat/agent-roster)* — [decisions-branches/feat__agent-roster.md](decisions-branches/feat__agent-roster.md)
+- **2026-09-15** — Restore the show_full_output flag the condensing pass cut, and fix the review-discipline docstring's stale example *(feat/house-structure-gate)* — [decisions-branches/feat__house-structure-gate.md](decisions-branches/feat__house-structure-gate.md)
+- *... 2 more decisions ...*
 - **2026-09-15** — Implement protocol SPEC §2.4/§5.1's agent roster: 15 roles from ~/.claude/agents into .claude/agents/, an agents/ namespace in the placement map, and a validate_agents.py gate *(feat/agent-roster)* — [decisions-branches/feat__agent-roster.md](decisions-branches/feat__agent-roster.md)
 
-## 2026-08 (56 decisions)
+## 2026-08 (58 decisions)
 
-- **2026-08-24** — Finish the #269 divergence accounting: clud-bug-collaboration was misclassified and is now fixed; logmind and composing-a-screen get checked reasons *(fix/house-structure)* — [decisions-branches/fix__house-structure.md](decisions-branches/fix__house-structure.md)
-- *... 54 more decisions ...*
+- **2026-08-24** — Correct the house-structure-gate record: swap an invented CEO citation for the real ruling, credit PR #216's reversal, fix two arithmetic errors, and close the two dead SHAs the version index shipped *(feat/house-structure-gate)* — [decisions-branches/feat__house-structure-gate.md](decisions-branches/feat__house-structure-gate.md)
+- *... 56 more decisions ...*
 - **2026-08-14** — Gate skill size with a shrink-only ratchet, and deprecate skillforge into the three skills that own its job *(feat/skill-depth-and-interlinking)* — [decisions-branches/feat__skill-depth-and-interlinking.md](decisions-branches/feat__skill-depth-and-interlinking.md)
 
 ## 2026-07 (13 decisions)

@@ -1,6 +1,6 @@
 ---
-version: "1.0.0"
-digest: "dfcfcdfbd979"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.1"
+digest: "2686571dd8f2"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: oklch-color-space
 description: Use when picking color values for a design-token system, constructing a palette around a starting hue, or generating colors against an accessibility contrast target. Names the OKLCH primitive ranges, the hue-angle naming convention, the gamut-mapping rule (Display P3 for computation, sRGB for the emitted fallback), and the APCACH inverse-composition approach for guaranteed-contrast color generation. Cite when an agent reaches for "pick a color then check contrast" — the inversion is the load-bearing move.
@@ -64,13 +64,6 @@ Practical rule for picking a chroma cap: compose against the **Display P3 ceilin
 
 **The actual doctrine:** sRGB/hex intermediates are correct only at the three points above. Anywhere else — picking L or C, doing hue math, or resolving a gamut boundary that isn't the fallback edge, the WCAG check, or apcach's background-string requirement — stay in culori-native OKLCH objects end-to-end. An 8-bit hex round-trip outside those three points quantizes precision a P3-native pipeline doesn't need, and is the pattern to flag in review.
 
-## Cross-references
-
-- **Routed here by:** [designing-a-design-system](../designing-a-design-system/SKILL.md) — the L1 dispatcher for building or extending a system.
-- **REQUIRED BACKGROUND:** [apca-contrast](../apca-contrast/SKILL.md) for the Lc target table, when contrast Lc applies, and the WCAG cross-check.
-- **REQUIRED for multi-hue palettes:** [chroma-harmonization](../chroma-harmonization/SKILL.md) — cap chroma at the lowest-achievable value across all hues at the same stop, so no hue is a neon outlier.
-- **For starting-hue palette construction:** [palette-relationships](../palette-relationships/SKILL.md) — analogous, complementary, triadic, etc., as hue-angle math.
-
 ## Verification
 
 After picking an OKLCH value:
@@ -81,6 +74,13 @@ After picking an OKLCH value:
 4. **Contrast check (contrast-bound tokens):** APCA Lc against the declared pairing background hits the target ± 1 Lc.
 
 If any of the four fails, fix the value before emitting the token.
+
+## Cross-references
+
+- **Routed here by:** [designing-a-design-system](../designing-a-design-system/SKILL.md) — the L1 dispatcher for building or extending a system.
+- **REQUIRED BACKGROUND:** [apca-contrast](../apca-contrast/SKILL.md) for the Lc target table, when contrast Lc applies, and the WCAG cross-check.
+- **REQUIRED for multi-hue palettes:** [chroma-harmonization](../chroma-harmonization/SKILL.md) — cap chroma at the lowest-achievable value across all hues at the same stop, so no hue is a neon outlier.
+- **For starting-hue palette construction:** [palette-relationships](../palette-relationships/SKILL.md) — analogous, complementary, triadic, etc., as hue-angle math.
 
 ## Sources
 

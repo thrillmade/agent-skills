@@ -1,6 +1,6 @@
 ---
-version: "1.0.0"
-digest: "2d3ef77ae21b"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.1"
+digest: "8ced4d8ed56b"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: curating-a-skill-catalog
 description: |
@@ -171,3 +171,7 @@ and stops. The editor decides.
 - **For the adversarial review frame:** [orchestrating-agent-delegation](../orchestrating-agent-delegation/SKILL.md) —
   refute-first reviewer prompts; the census panel is a delegated adversarial
   review.
+
+## Sources
+
+- This catalog's own runs: `skill-census.yml`, `docs/skill-census/`.

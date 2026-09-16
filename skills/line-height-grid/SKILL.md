@@ -1,6 +1,6 @@
 ---
-version: "1.0.0"
-digest: "af7dddd2f2d7"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.1"
+digest: "a648cf9ec860"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: line-height-grid
 description: Use when calculating line-height for any font size in a grid-aligned design system. Names the two-track model (lh-ui = ceil(font × 1.20) snapped to the minor unit; lh-prose = ceil(font × 1.50) snapped to the minor unit), the picking heuristic per role (ui-track for headings / buttons / labels; prose-track for paragraph body), and worked examples for 4/8, 2/4, and 4/16 grids. Cite when an agent picks a unitless line-height multiplier without snapping to the system's grid.
@@ -90,12 +90,6 @@ Rounding down can put the resolved line-height *below* the natural ratio, which 
 
 `ceil` + snap-up is monotonic: line-height is always at least the ratio-derived value, and always on the grid.
 
-## Cross-references
-
-- **Routed here by:** [designing-a-design-system](../designing-a-design-system/SKILL.md) — the L1 dispatcher for building or extending a system.
-- **REQUIRED BACKGROUND:** [type-scale](../type-scale/SKILL.md) — provides the font sizes this skill snaps line-heights for. The two skills are paired.
-- **For the unit primitive that drives snapping:** [spacing-system](../spacing-system/SKILL.md) — the minor / major grid is what `snap up to nearest minor-unit multiple` refers to.
-
 ## Verification
 
 After computing line-heights:
@@ -107,6 +101,12 @@ After computing line-heights:
 5. **Multi-line stack check:** stack two paragraphs at the prose track. The total height = `(lines × lh) + paragraph-margin` lands on the major grid.
 
 If any check fails, recompute with stricter ceiling + snap-up.
+
+## Cross-references
+
+- **Routed here by:** [designing-a-design-system](../designing-a-design-system/SKILL.md) — the L1 dispatcher for building or extending a system.
+- **REQUIRED BACKGROUND:** [type-scale](../type-scale/SKILL.md) — provides the font sizes this skill snaps line-heights for. The two skills are paired.
+- **For the unit primitive that drives snapping:** [spacing-system](../spacing-system/SKILL.md) — the minor / major grid is what `snap up to nearest minor-unit multiple` refers to.
 
 ## Sources
 
