@@ -8,7 +8,7 @@
   "commits": 131,
   "blobs": 293
  },
- "versions_enumerated": 222,
+ "versions_enumerated": 223,
  "verification": {
   "current": "GATED. validate_skills.py recomputes every `current` from skills/<slug>/SKILL.md on every pull request. Needs no git history, so it holds at the depth-1 checkout CI uses.",
   "history": "NOT GATED. History is derived from git and validate-skills.yml checks out at fetch-depth 1, so CI cannot recompute these rows. Regenerate them in a full clone with `.github/scripts/gen_skill_versions.py --write`.",
@@ -611,8 +611,8 @@
    ]
   },
   "finding-a-catalog-skill": {
-   "current": "6db0976a0715",
-   "version": "1.0.1",
+   "current": "61a41a489f78",
+   "version": "1.0.2",
    "authoring_home": "catalog",
    "history": [
     {
@@ -1287,6 +1287,19 @@
      "version": "1.0.1",
      "commit": "fde90af",
      "date": "2026-08-24"
+    }
+   ]
+  },
+  "technical-writing": {
+   "current": "13e8b85d472a",
+   "version": "1.0.0",
+   "authoring_home": "catalog",
+   "history": [
+    {
+     "v": "13e8b85d472a",
+     "version": "1.0.0",
+     "commit": "ff6785e",
+     "date": "2026-09-15"
     }
    ]
   },
