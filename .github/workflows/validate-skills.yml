@@ -63,3 +63,10 @@ jobs:
         # docs/placement-map.json relative to the cwd, and refuses to report
         # success over a tree it did not actually walk.
         run: python .github/scripts/validate_skills.py
+
+      - name: Validate every agent role
+        # SPEC §2.4's roster: .claude/agents/<name>.md, shaped like a skill
+        # but a distinct contract (see validate_agents.py's own docstring).
+        # Same cwd-relative posture and the same refusal to report success
+        # over zero roles.
+        run: python .github/scripts/validate_agents.py
