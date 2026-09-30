@@ -57,3 +57,19 @@ jobs:
 
       - name: Run tests
         run: pytest tests/ -q
+
+  # Required by the org-wide "CI must pass" ruleset: a status check named
+  # exactly `ci`. The `test` job id stays `test` per the note above it — this
+  # job just relays its result under the name the org rule requires.
+  ci:
+    name: ci
+    needs: test
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require test to have passed
+        run: |
+          if [ "${{ needs.test.result }}" != "success" ]; then
+            echo "::error::test did not succeed (result: ${{ needs.test.result }})"
+            exit 1
+          fi
