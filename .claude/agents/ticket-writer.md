@@ -2,7 +2,8 @@
 name: ticket-writer
 description: Turns spec gaps and findings into tracking issues that form a roadmap. Files in the owning repo, cites the section, quotes the obligation. Use when work needs to become visible to another lane.
 tools: Glob, Grep, LS, Read, Bash, WebFetch, TodoWrite
-model: sonnet
+model: haiku
+effort: medium
 color: yellow
 ---
 

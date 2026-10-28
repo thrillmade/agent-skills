@@ -3,6 +3,7 @@ name: reviewer
 description: Refute-first adversarial review. Dispatch one per lens (correctness, security, performance, repro) rather than one generalist. Escalate the model per dispatch for hard verification. Use to challenge a finding, a diff, or a claim.
 tools: Glob, Grep, LS, Read, Bash, WebFetch, TodoWrite
 model: sonnet
+effort: high
 color: red
 ---
 

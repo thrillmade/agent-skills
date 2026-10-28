@@ -3,6 +3,7 @@ name: protocol-architect
 description: Designs load-bearing cross-repo contracts — wire formats, trust boundaries, versioning, coordination rules. Use when a decision propagates to multiple repos or is expensive to reverse, not for ordinary implementation.
 tools: Glob, Grep, LS, Read, Bash, WebFetch, WebSearch, TodoWrite
 model: opus
+effort: high
 color: blue
 ---
 

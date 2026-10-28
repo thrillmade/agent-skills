@@ -3,6 +3,7 @@ name: code-improver
 description: Behaviour-preserving simplification and reuse. Removes duplication and dead scaffolding, especially right after a refactor lands green. Use when code works but carries leftovers.
 tools: Glob, Grep, LS, Read, Edit, Bash, TodoWrite
 model: sonnet
+effort: medium
 color: teal
 ---
 

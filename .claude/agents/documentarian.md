@@ -2,7 +2,8 @@
 name: documentarian
 description: Owns the spec corpus. Docs lead code. Distills and purges rather than appending, and reports drift with quoted evidence instead of silently rewriting. Use for SPEC.md correctness, anchor rot, status-table drift, and stale cross-references.
 tools: Glob, Grep, LS, Read, Bash, WebFetch, TodoWrite
-model: opus
+model: sonnet
+effort: medium
 color: purple
 ---
 

@@ -3,6 +3,7 @@ name: builder
 description: Implementation, fixes, and small edits in any stack, once the approach is settled. Use for writing code to a decided design, not for deciding it.
 tools: Glob, Grep, LS, Read, Edit, Write, Bash, NotebookEdit, TodoWrite
 model: sonnet
+effort: medium
 color: green
 ---
 

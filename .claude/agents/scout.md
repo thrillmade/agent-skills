@@ -3,6 +3,7 @@ name: scout
 description: Cheap read-only survey. Locates files, symbols, and call sites and reports where things are. Use to map unfamiliar ground before dispatching a more expensive agent. Does not review, judge, or design.
 tools: Glob, Grep, LS, Read, Bash
 model: haiku
+effort: medium
 color: gray
 ---
 

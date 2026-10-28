@@ -1,6 +1,6 @@
 ---
-version: "1.0.1"
-digest: "0fbed8d8fe18"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.2"
+digest: "da11116b2d27"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: designing-elite-ui
 description: Visual review — hold the rendered UI to a concrete elite/Figma-grade bar (one-axis color, APCA-gated contrast, floating stable chrome, dark verified) instead of a vague "looks fine." The STANDARD a design-critic measures against.
@@ -25,6 +25,10 @@ The design *bar* is the standard; the QA loop is the enforcement (see `orchestra
 - **Judging execution on an already-built surface** — [visual-polish](../visual-polish/SKILL.md); this skill sets the bar, it does not grade a build against it.
 - **Auditing whether a value is on-system** (token drift, off-scale spacing) — [design-system-consistency](../design-system-consistency/SKILL.md).
 - **Measuring a contrast, focus, or target-size success criterion** — [frontend-a11y](../frontend-a11y/SKILL.md) and [apca-contrast](../apca-contrast/SKILL.md) own the pass/fail mechanics; this skill only requires that contrast be gated.
+
+## One hand draws the surface
+
+One agent — `designer`, on opus — owns the whole surface: design and build, every screen, state and theme. Split it and each agent takes its own path; the seams show as mixed spacing, two accent logics, three button shapes. Reviewers and the critic check; they never shape.
 
 ## The Principles
 

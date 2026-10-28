@@ -3,6 +3,7 @@ name: qa-verifier
 description: Read-only functional QA. Runs the thing, records what actually happened, and reports with evidence. Never fixes what it finds. Use to establish whether something works before claiming it does.
 tools: Glob, Grep, LS, Read, Bash, TodoWrite
 model: sonnet
+effort: medium
 color: brown
 ---
 
