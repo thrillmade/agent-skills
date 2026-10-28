@@ -11,3 +11,22 @@
 
 ---
 
+
+## 2026-10-28 14:21 - Correction: restore the dropped attribution rule; fix the headroom claim
+
+**Reasoning:** The refute lens found one CEO October rule silently dropped from
+orchestrating-agent-delegation -- "before attributing a failure, check the file is one you actually
+touched" -- while the ledger claimed no rule was withdrawn. Restored in compressed form ("a red not
+attributable until you check you touched the file"), paid for by cutting the redundant "Split UI
+drifts:" table-cell prefix and two clause tightenings. Ledger recounted with the gate's own Loss
+class: 36 -> 34.
+
+**Alternatives considered:** Leaving it out and amending the ledger to declare it -- rejected: the
+rule is load-bearing (it is the step that stops an agent blaming a file another lane broke), and the
+file had fat to pay for it.
+
+**Implications:** The prior entry's "2 bytes under the cap" was measured with a hand split that
+drops the body's leading newline; the gate's own regex gives 8 before this change and 2 after it.
+orchestrating-agent-delegation remains effectively full: the next addition is paid for with a cut.
+
+---

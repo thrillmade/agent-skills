@@ -5,14 +5,14 @@
  "enumeration": {
   "refs": "refs/remotes/origin/*",
   "publishing_ref": "origin/main",
-  "commits": 117,
-  "blobs": 292
+  "commits": 138,
+  "blobs": 297
  },
- "versions_enumerated": 224,
+ "versions_enumerated": 227,
  "verification": {
   "current": "GATED. validate_skills.py recomputes every `current` from skills/<slug>/SKILL.md on every pull request. Needs no git history, so it holds at the depth-1 checkout CI uses.",
   "history": "NOT GATED. History is derived from git and validate-skills.yml checks out at fetch-depth 1, so CI cannot recompute these rows. Regenerate them in a full clone with `.github/scripts/gen_skill_versions.py --write`.",
-  "history_rows_ungated": 167
+  "history_rows_ungated": 170
  },
  "skills": {
   "apca-contrast": {
@@ -181,15 +181,15 @@
      "date": "2026-08-14"
     },
     {
-     "v": "e10e69b38f31",
-     "version": "1.0.1",
-     "commit": "e95e58c",
-     "date": "2026-09-15"
-    },
-    {
      "v": "fc49f8cc5029",
      "version": "1.0.2",
      "commit": "8a77c44",
+     "date": "2026-09-15"
+    },
+    {
+     "v": "e10e69b38f31",
+     "version": "1.0.1",
+     "commit": "e95e58c",
      "date": "2026-09-15"
     }
    ]
@@ -532,6 +532,12 @@
      "version": "1.0.1",
      "commit": "fde90af",
      "date": "2026-08-24"
+    },
+    {
+     "v": "da11116b2d27",
+     "version": "1.0.2",
+     "commit": "9270719",
+     "date": "2026-10-28"
     }
    ]
   },
@@ -942,8 +948,8 @@
    ]
   },
   "orchestrating-agent-delegation": {
-   "current": "15a29eec03e2",
-   "version": "1.0.1",
+   "current": "f68272def8c6",
+   "version": "1.0.2",
    "authoring_home": "catalog",
    "history": [
     {
@@ -963,6 +969,12 @@
      "version": null,
      "commit": "a144454",
      "date": "2026-08-14"
+    },
+    {
+     "v": "15a29eec03e2",
+     "version": "1.0.1",
+     "commit": "9270719",
+     "date": "2026-10-28"
     }
    ]
   },
@@ -1006,6 +1018,12 @@
      "version": "1.0.1",
      "commit": "8093e24",
      "date": "2026-08-24"
+    },
+    {
+     "v": "4b0e5b2d3736",
+     "version": "1.0.2",
+     "commit": "9270719",
+     "date": "2026-10-28"
     }
    ]
   },

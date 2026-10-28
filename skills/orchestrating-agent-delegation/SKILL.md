@@ -1,6 +1,6 @@
 ---
-version: "1.0.1"
-digest: "15a29eec03e2"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.2"
+digest: "f68272def8c6"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: orchestrating-agent-delegation
 description: |
@@ -38,12 +38,12 @@ The **general delegation mechanics** — briefs, model tiering, verification —
 | Design agents (algorithm/seam design) | opus | Design errors are the expensive ones |
 | Build agents on load-bearing architecture | opus | One wrong seam ripples through the rest of the work |
 | Fix agents (applying confirmed findings) | sonnet OR opus | Sonnet for scoped fixes; opus if the fix touches algorithm |
-| UI design and build | opus, **one agent per surface** | Split UI drifts: lanes take different paths and the seams show |
+| UI design and build | opus, **one agent per surface** | lanes take different paths and the seams show |
 | Docs / trivial reconciliation | haiku | Throughput matters; quality is deterministic |
 
 **3. Parallelize by file-isolation — and isolate verification separately.** Different files run concurrently; sequence when they share files. Reviewers always parallel (3+ lenses, distinct hunts). Verify isolation. **A UI surface is never split across lanes, even with disjoint files: one `designer` lane on opus owns it whole.**
 
-File ownership stops overwrites, not mis-measurement: any agent in a shared checkout, read-only reviewers included, sees other lanes' half-finished work, so a whole-suite green there is not evidence, a red not attributable. Targeted tests on own files may run there; **a whole-suite claim comes from a disposable worktree at trunk HEAD with only that agent's diff**, and every number names its tree.
+Ownership stops overwrites, not mis-measurement: any agent in a shared checkout, read-only reviewers included, sees other lanes' half-finished work, so a whole-suite green there is not evidence, a red not attributable until you check you touched the file. Targeted tests on own files may run there; **a whole-suite claim comes from a disposable worktree at trunk HEAD with only its diff**, and every number names its tree.
 
 **4. Assign the tree in the brief, not just the files** — an agent not told assumes the main one.
 
