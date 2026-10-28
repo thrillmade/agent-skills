@@ -15,6 +15,7 @@ PR's CI run, so this file is always coherent with current `main`.
 
 ## 2026-10
 
+- **2026-10-28** — Correction: restore the dropped attribution rule; fix the headroom claim *(feat/sync-local-skills-agents)* — [decisions-branches/feat__sync-local-skills-agents.md](decisions-branches/feat__sync-local-skills-agents.md)
 - **2026-10-28** — Sync the CEO's October local edits: 3 orchestration/design skills merged, all 15 agent roles updated *(feat/sync-local-skills-agents)* — [decisions-branches/feat__sync-local-skills-agents.md](decisions-branches/feat__sync-local-skills-agents.md)
 
 ## 2026-09 (4 decisions)
