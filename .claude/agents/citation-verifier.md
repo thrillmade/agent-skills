@@ -3,6 +3,7 @@ name: citation-verifier
 description: Verifies every external claim in a document — statutes, sections, thresholds, deadlines, effective dates, RFCs, API versions, standards — against primary sources. Treats the brief as a claim to refute, not context to accept, so it catches errors the author seeded upstream. Use as the LAST pass, after drafting and after review.
 tools: Glob, Grep, LS, Read, Bash, WebSearch, WebFetch, TodoWrite
 model: sonnet
+effort: medium
 color: yellow
 ---
 

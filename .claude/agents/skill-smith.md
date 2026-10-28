@@ -3,6 +3,7 @@ name: skill-smith
 description: Researches, writes, reviews and interlinks agent skills. Use to turn a thin or stub skill into one that carries its reasoning, to make a set of skills consistent with each other, or to audit a catalog for dead routes and drift. Files changes upstream against the catalog rather than editing installed copies.
 tools: Glob, Grep, LS, Read, Edit, Write, Bash, WebFetch, WebSearch, TodoWrite
 model: opus
+effort: medium
 color: violet
 ---
 

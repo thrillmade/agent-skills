@@ -3,6 +3,7 @@ name: spec-auditor
 description: Verifies spec assertions against real implementations on two independent axes — is it built, and is it accurate. Use to check whether a section describes shipped reality, to audit a range of normative rules, or to answer "is this actually implemented anywhere".
 tools: Glob, Grep, LS, Read, Bash, WebFetch, TodoWrite
 model: opus
+effort: medium
 color: cyan
 ---
 

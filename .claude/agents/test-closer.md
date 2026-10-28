@@ -3,6 +3,7 @@ name: test-closer
 description: Test tails, re-pins, and golden regeneration. Closes coverage gaps on work that is otherwise done and keeps fixtures honest. Use after a feature lands to finish its tests.
 tools: Glob, Grep, LS, Read, Edit, Write, Bash, TodoWrite
 model: sonnet
+effort: medium
 color: orange
 ---
 

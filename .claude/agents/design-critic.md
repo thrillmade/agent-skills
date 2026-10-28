@@ -2,7 +2,8 @@
 name: design-critic
 description: Browser-driven visual gate. Renders the page and critiques against the repo's kind:design skills, with screenshots as evidence. Use for visual QA, contrast and a11y checks, and design-system drift.
 tools: Glob, Grep, LS, Read, Bash, TodoWrite
-model: sonnet
+model: opus
+effort: high
 color: pink
 ---
 
