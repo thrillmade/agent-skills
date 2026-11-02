@@ -1,6 +1,6 @@
 ---
-version: "1.0.0"
-digest: "fbe8f52ed9af"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.1"
+digest: "d1f117138319"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: motion-continuity
 description: |
@@ -10,8 +10,6 @@ description: |
 # Motion continuity
 
 Motion between two states exists to tell the reader *this is the same thing, moved*. A cut makes them find it again; a jump makes them doubt what they saw. Every rule below protects that one reading, then keeps it cheap enough to hold at frame rate on the weakest device you ship to.
-
-Rules 1, 6, 7 and 8 rest on published sources; 2–5 are house convention (see Sources), each with the failure it prevents.
 
 ## When to use
 
@@ -38,17 +36,17 @@ Rules 1, 6, 7 and 8 rest on published sources; 2–5 are house convention (see S
 
 **5. A fade belongs to its motion.** Opacity is timed into the movement it accompanies: an entrance pre-fades so the element is fully present as it arrives; an exit completes its fade as it leaves, not after. *Recognise:* the last frame of a motion shows an entrance below full opacity, or an exit still visible. *Fix:* put the fade on the same animation as keyframe offsets, not on its own transition.
 
-**6. Animate on the compositor.** The base rule is [web-interface-guidelines-review](../web-interface-guidelines-review/SKILL.md) §9's; for motion that travels it means `transform` (translate, scale, rotate) and `opacity`. `filter` is composited in Chromium and WebKit only; most else lays out or paints and misses the budget (16.7 ms at 60 Hz) on the devices you did not test. A size change becomes a `scale` on the container with an inverse scale on its content — and because easing makes two-keyframe scale and counter-scale disagree mid-flight, the content warps: precompute the counter-scale as sampled keyframes (about one per frame) with the easing baked in.
+**6. Animate on the compositor.** Which properties may transition is [web-interface-guidelines-review](../web-interface-guidelines-review/SKILL.md) §9's; travel goes on `transform` (translate, scale, rotate). `filter` is composited in Chromium and WebKit only; most else lays out or paints and misses the budget (16.7 ms at 60 Hz) on the devices you did not test. A size change becomes a `scale` on the container with an inverse scale on its content — and because easing makes two-keyframe scale and counter-scale disagree mid-flight, the content warps: precompute the counter-scale as sampled keyframes (about one per frame) with the easing baked in.
 
-**7. Precompute once per interaction, then hand it to the engine.** Measure the first and last states once, at the start (FLIP: First, Last, Invert, Play), build the keyframes, and give them to CSS or Web Animations to play. A per-frame script that reads layout and writes styles competes with input on the main thread and stalls under load. Motion that follows continuous input — drag, scroll — uses scroll-driven animations (`animation-timeline: scroll()` / `view()`; Safari 26+, flagged in Firefox — so behind `@supports (animation-timeline: scroll())` with a frame-loop fallback) or one frame loop that writes transforms and never reads layout.
+**7. Precompute once per interaction, then hand it to the engine.** Measure the first and last states once, at the start (FLIP: First, Last, Invert, Play), build the keyframes, and give them to CSS or Web Animations to play. A per-frame script that reads layout and writes styles competes with input on the main thread and stalls under load. Motion that follows continuous input — drag, scroll — uses scroll-driven animations (`animation-timeline: scroll()` / `view()`; Chrome 115, Safari 26, Firefox 159 — still behind `@supports (animation-timeline: scroll())` with a frame-loop fallback) or one frame loop that writes transforms and never reads layout.
 
-**8. Reduced motion keeps the meaning, drops the travel.** Under `prefers-reduced-motion: reduce`, replace movement with a short crossfade or an instant change; the order of events and the end state stay identical; parallax and ambient loops stop. Every path honours it — CSS, Web Animations, script loops, video.
+**8. Reduced motion keeps the meaning, drops the travel.** What `prefers-reduced-motion: reduce` asks for is web-interface-guidelines-review §9's; a short crossfade or an instant change is one compliant technique. The order of events and the end state stay identical; parallax and ambient loops stop. Every path honours it — CSS, Web Animations, script loops, video.
 
 ## Silent failures
 
 - **Smooth on the build machine.** Per-frame script holds 60 fps there and scatters on a phone. Throttle the CPU in the trace before believing it.
 - **End-state screenshots.** A capture taken after the motion settles cannot show a cut or a jump. Slow it and record — DevTools' animation speed control, or scaled duration tokens plus a slowed clock in any frame loop. Setting `playbackRate` on `document.getAnimations()` slows only what is already running.
-- **Reduced motion in CSS only** — [frontend-a11y](../frontend-a11y/SKILL.md)'s silent failure. What rule 8 adds: the reduced path must reach the same end state in the same order.
+- **Reduced motion in CSS only** — [frontend-a11y](../frontend-a11y/SKILL.md)'s silent failure; rule 8 makes every path reach the same end state in the same order.
 - **A clip-path shape that holds, then snaps** [observed in WebKit]: a `path()` containing a zero-radius arc does not interpolate. Clamp radii to a small positive value.
 
 ## Verification
@@ -61,7 +59,7 @@ Rules 1, 6, 7 and 8 rest on published sources; 2–5 are house convention (see S
 
 ## Cross-references
 
-- **Consumed by:** [thrill-design](../thrill-design/SKILL.md) (principle 5) and [designing-elite-ui](../designing-elite-ui/SKILL.md) (alive interaction, both worked examples).
+- **Consumed by:** [thrill-design](../thrill-design/SKILL.md) (principle 5) and [designing-elite-ui](../designing-elite-ui/SKILL.md) (alive interaction, both worked examples); [visual-polish](../visual-polish/SKILL.md) records motion rather than judging stills.
 - **Motion criteria and modes:** [frontend-a11y](../frontend-a11y/SKILL.md).
 - **Code-level rule set:** [web-interface-guidelines-review](../web-interface-guidelines-review/SKILL.md) flags layout-property transitions in a diff.
 - **Testing on the engine that ships:** [orchestrating-elite-agent-qa](../orchestrating-elite-agent-qa/SKILL.md), [ios-safari-surfaces](../ios-safari-surfaces/SKILL.md).
@@ -69,7 +67,7 @@ Rules 1, 6, 7 and 8 rest on published sources; 2–5 are house convention (see S
 ## Sources
 
 - Rule 1: Material's container transform "creates a visible connection between two UI elements" ([Material Components](https://github.com/material-components/material-components-android/blob/master/docs/theming/Motion.md)); [CSS View Transitions 1](https://www.w3.org/TR/css-view-transitions-1/).
-- Rule 6: "Restrict animations to `opacity` and `transform`" ([web.dev](https://web.dev/articles/animations-guide)); sampled counter-scale keyframes ([Chrome](https://developer.chrome.com/blog/performant-expand-and-collapse)); the 16.7 ms budget is 1000 ms ÷ 60.
+- Rule 6: "Where possible, restrict animations to `opacity` and `transform`" ([web.dev](https://web.dev/articles/animations-guide)); sampled counter-scale keyframes ([Chrome](https://developer.chrome.com/blog/performant-expand-and-collapse)); the 16.7 ms budget is 1000 ms ÷ 60.
 - Rule 7: [FLIP](https://aerotwist.com/blog/flip-your-animations/) (Lewis); [Scroll-driven Animations](https://www.w3.org/TR/scroll-animations-1/), support per [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/animation-timeline); shared timelines in [Web Animations 1](https://www.w3.org/TR/web-animations-1/).
 - Rule 8: [Media Queries 5](https://www.w3.org/TR/mediaqueries-5/#prefers-reduced-motion).
 - **House convention, not a standard:** rules 2–5. No spec says a follower may not overtake its driver; the reasoning is the failure each names.

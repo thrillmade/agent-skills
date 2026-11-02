@@ -5,14 +5,14 @@
  "enumeration": {
   "refs": "refs/remotes/origin/*",
   "publishing_ref": "origin/main",
-  "commits": 143,
-  "blobs": 298
+  "commits": 120,
+  "blobs": 305
  },
- "versions_enumerated": 228,
+ "versions_enumerated": 238,
  "verification": {
   "current": "GATED. validate_skills.py recomputes every `current` from skills/<slug>/SKILL.md on every pull request. Needs no git history, so it holds at the depth-1 checkout CI uses.",
   "history": "NOT GATED. History is derived from git and validate-skills.yml checks out at fetch-depth 1, so CI cannot recompute these rows. Regenerate them in a full clone with `.github/scripts/gen_skill_versions.py --write`.",
-  "history_rows_ungated": 168
+  "history_rows_ungated": 178
  },
  "skills": {
   "apca-contrast": {
@@ -181,15 +181,15 @@
      "date": "2026-08-14"
     },
     {
-     "v": "fc49f8cc5029",
-     "version": "1.0.2",
-     "commit": "8a77c44",
-     "date": "2026-09-15"
-    },
-    {
      "v": "e10e69b38f31",
      "version": "1.0.1",
      "commit": "e95e58c",
+     "date": "2026-09-15"
+    },
+    {
+     "v": "fc49f8cc5029",
+     "version": "1.0.2",
+     "commit": "8a77c44",
      "date": "2026-09-15"
     }
    ]
@@ -538,6 +538,12 @@
      "version": "1.0.2",
      "commit": "9270719",
      "date": "2026-10-28"
+    },
+    {
+     "v": "d7e3d3cf37f8",
+     "version": "1.1.0",
+     "commit": "4d72591",
+     "date": "2026-11-02"
     }
    ]
   },
@@ -623,8 +629,8 @@
    ]
   },
   "finding-a-catalog-skill": {
-   "current": "3666f60a0ba0",
-   "version": "1.0.3",
+   "current": "497ded87346d",
+   "version": "1.0.4",
    "authoring_home": "catalog",
    "history": [
     {
@@ -674,6 +680,12 @@
      "version": "1.0.2",
      "commit": "eb32af1",
      "date": "2026-09-15"
+    },
+    {
+     "v": "3666f60a0ba0",
+     "version": "1.0.3",
+     "commit": "4d72591",
+     "date": "2026-11-02"
     }
    ]
   },
@@ -717,6 +729,12 @@
      "version": "1.0.1",
      "commit": "fde90af",
      "date": "2026-08-24"
+    },
+    {
+     "v": "574e1cb35f53",
+     "version": "1.0.2",
+     "commit": "4d72591",
+     "date": "2026-11-02"
     }
    ]
   },
@@ -734,10 +752,17 @@
    ]
   },
   "ios-safari-surfaces": {
-   "current": "a57bad98b860",
-   "version": "1.0.0",
+   "current": "d7c99a6a1d1d",
+   "version": "1.0.1",
    "authoring_home": "catalog",
-   "history": []
+   "history": [
+    {
+     "v": "a57bad98b860",
+     "version": "1.0.0",
+     "commit": "4d72591",
+     "date": "2026-11-02"
+    }
+   ]
   },
   "line-height-grid": {
    "current": "a648cf9ec860",
@@ -892,10 +917,17 @@
    ]
   },
   "motion-continuity": {
-   "current": "fbe8f52ed9af",
-   "version": "1.0.0",
+   "current": "d1f117138319",
+   "version": "1.0.1",
    "authoring_home": "catalog",
-   "history": []
+   "history": [
+    {
+     "v": "fbe8f52ed9af",
+     "version": "1.0.0",
+     "commit": "4d72591",
+     "date": "2026-11-02"
+    }
+   ]
   },
   "oklch-color-space": {
    "current": "2686571dd8f2",
@@ -991,14 +1023,14 @@
     {
      "v": "f68272def8c6",
      "version": "1.0.2",
-     "commit": "890b0c1",
+     "commit": "8f47937",
      "date": "2026-10-28"
     }
    ]
   },
   "orchestrating-elite-agent-qa": {
-   "current": "04a52cbd8b67",
-   "version": "1.1.0",
+   "current": "db10a99c6060",
+   "version": "1.1.1",
    "authoring_home": "catalog",
    "history": [
     {
@@ -1042,6 +1074,12 @@
      "version": "1.0.2",
      "commit": "9270719",
      "date": "2026-10-28"
+    },
+    {
+     "v": "04a52cbd8b67",
+     "version": "1.1.0",
+     "commit": "4d72591",
+     "date": "2026-11-02"
     }
    ]
   },
@@ -1141,8 +1179,8 @@
    ]
   },
   "reviewing-design-work": {
-   "current": "a3c66569f90e",
-   "version": "1.0.1",
+   "current": "ee642a5b1da4",
+   "version": "1.1.0",
    "authoring_home": "catalog",
    "history": [
     {
@@ -1174,6 +1212,12 @@
      "version": null,
      "commit": "f552f6e",
      "date": "2026-08-17"
+    },
+    {
+     "v": "a3c66569f90e",
+     "version": "1.0.1",
+     "commit": "4d72591",
+     "date": "2026-11-02"
     }
    ]
   },
@@ -1371,10 +1415,17 @@
    ]
   },
   "thrill-design": {
-   "current": "6bea4b46ba63",
-   "version": "1.0.0",
+   "current": "5481a6863ea9",
+   "version": "1.0.1",
    "authoring_home": "catalog",
-   "history": []
+   "history": [
+    {
+     "v": "6bea4b46ba63",
+     "version": "1.0.0",
+     "commit": "4d72591",
+     "date": "2026-11-02"
+    }
+   ]
   },
   "token-frugal-tooling": {
    "current": "8da49028c193",
@@ -1699,6 +1750,12 @@
      "version": "1.0.1",
      "commit": "fde90af",
      "date": "2026-08-24"
+    },
+    {
+     "v": "7b327195329b",
+     "version": "1.0.2",
+     "commit": "4d72591",
+     "date": "2026-11-02"
     }
    ]
   },
@@ -1740,8 +1797,8 @@
    ]
   },
   "web-interface-guidelines-review": {
-   "current": "8a4b50c77bc6",
-   "version": "1.0.2",
+   "current": "1705e127d146",
+   "version": "1.0.3",
    "authoring_home": "catalog",
    "history": [
     {
@@ -1797,6 +1854,12 @@
      "version": "1.0.1",
      "commit": "fde90af",
      "date": "2026-08-24"
+    },
+    {
+     "v": "8a4b50c77bc6",
+     "version": "1.0.2",
+     "commit": "4d72591",
+     "date": "2026-11-02"
     }
    ]
   }

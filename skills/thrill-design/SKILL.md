@@ -1,6 +1,6 @@
 ---
-version: "1.0.0"
-digest: "6bea4b46ba63"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.1"
+digest: "5481a6863ea9"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: thrill-design
 description: |
@@ -13,7 +13,7 @@ applies_to:
 
 # Thrill design
 
-Thrill's house taste, for any surface on any project: a stance layered on [designing-elite-ui](../designing-elite-ui/SKILL.md). That skill is the bar every system shares; this one says which way the house leans where the bar leaves room. Each principle carries the test that shows it holds.
+Thrill's house taste, for any surface on any project: an L2 house stance layered on [designing-elite-ui](../designing-elite-ui/SKILL.md). That skill is the bar every system shares; this one says which way the house leans where the bar leaves room. Each principle carries the test that shows it holds.
 
 ## When to use
 
@@ -39,9 +39,9 @@ Where [designing-elite-ui](../designing-elite-ui/SKILL.md) owns the universal ru
 
 **4. Big type, few words, distinct names** (DEU 12). Headlines as short as the meaning allows, at the top of the hierarchy the surface can afford. DEU 12's actor rule, read strictly: never a claim of credit the person does not hold. Tone is [brand-voice-review](../brand-voice-review/SKILL.md)'s. *Holds when:* sibling headlines listed in one column are distinct, and every sentence's subject did what it says.
 
-**5. Continuity over cuts.** Objects never jump between states; mechanics are [motion-continuity](../motion-continuity/SKILL.md)'s. The house lean on interruption: user-triggered state changes are atomic — input during a change queues, the change lands, then the next state is computed from current input. Only an ambient or intro sequence may be cut short by input. *Holds when:* a slowed capture shows one object throughout, and a click during a change never produces a half-state.
+**5. Continuity over cuts.** Objects never jump between states; mechanics are [motion-continuity](../motion-continuity/SKILL.md)'s. The house lean on interruption: user-triggered state changes are atomic — input during a change queues, the change lands, then the next state is computed from current input. Only an ambient or intro sequence may be cut short by input. *Holds when:* motion-continuity's Verification 1 passes, and a click during a change never produces a half-state.
 
-**6. Measured, not eyeballed** (DEU 11, 2, 8). Sizes, grid and contrast are measured, and every check is shown able to fail before its pass is believed. Optical nudges live inside the footprint. *Holds when:* each size traces to its rule, footprint edges align to the margin, and each check has a control run that went red.
+**6. Measured, not eyeballed** (DEU 11, 2, 8). Sizes, grid and contrast are measured, and every check is shown able to fail before its pass is believed. *Holds when:* each size traces to its rule, DEU 8's footprint rule holds, and each check has a control run that went red.
 
 **7. Intent travels across screens.** Layout follows width; behaviour follows input. A small screen mirrors the large one's intent — motion, order, layering, rules — and is bespoke only where forced, with the reason written down. Every hover-only affordance has a touch equivalent the platform's conventions support, or a written reason it has none. Gate behaviour on input capability (on the web, `(hover: hover)` and `(pointer: coarse)`), never on width. *Holds when:* each divergence has a written reason, and narrow-with-mouse and wide-with-touch were both exercised.
 
@@ -51,13 +51,13 @@ Where [designing-elite-ui](../designing-elite-ui/SKILL.md) owns the universal ru
 
 ## Scale the check to the change
 
-A look-and-feel tweak — a fade, a tone, a curve, a line of copy — is one builder, one branch, and the decider's eye; no panel, no measurement campaign. Measurement governs sizes, grid and contrast, not feel. A new surface or a structural change gets the full gate ([orchestrating-elite-agent-qa](../orchestrating-elite-agent-qa/SKILL.md)).
+The rule is [designing-elite-ui](../designing-elite-ui/SKILL.md)'s (Verification). The house lean: a look-and-feel tweak — a fade, a tone, a curve, a line of copy — is one builder on one branch, judged by the decider; no panel, no measurement campaign, since measurement governs sizes, grid and contrast, not feel. The full gate is [orchestrating-elite-agent-qa](../orchestrating-elite-agent-qa/SKILL.md).
 
 ## Silent failures
 
 - **The busy sum.** Each addition passed review; together they are noise. Only a whole-surface subtraction pass (1) finds it.
 - **The small screen written fresh.** It re-introduces bugs the large screen solved; brief it as "mirror this; list where and why you differ".
-- **Ink on the margin.** Aligning a glyph's ink pushes its button's edge off the margin by a pixel or two; it reads as misalignment only beside a neighbour.
+- **Ink on the margin** (DEU 8, broken by a pixel or two) reads as misalignment only beside a neighbour.
 
 ## Verification
 

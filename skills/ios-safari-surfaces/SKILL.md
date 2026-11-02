@@ -1,6 +1,6 @@
 ---
-version: "1.0.0"
-digest: "a57bad98b860"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.1"
+digest: "d7c99a6a1d1d"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: ios-safari-surfaces
 description: |
@@ -28,7 +28,7 @@ Each claim is labelled: **[source]** read in WebKit source at the commit in Sour
 
 ## Bar tinting (iOS 26+)
 
-**The model.** `<meta name="theme-color">` is ignored [secondary]. Both bars take the page's background colour unless a viewport-constrained box owns an edge [secondary, consistent with source]. Each edge is decided separately: WebKit hit-tests a point 4 px in from the midpoint of that edge and walks up to the first `position: fixed` or `sticky` ancestor that qualifies [source]:
+**The model.** `<meta name="theme-color">` is ignored [secondary; unconfirmed by WebKit — verify on device]. Both bars take the page's background colour unless a viewport-constrained box owns an edge [secondary, consistent with source]. Each edge is decided separately: WebKit hit-tests a point 4 px in from the midpoint of that edge and walks up to the first `position: fixed` or `sticky` ancestor that qualifies [source]:
 
 - its length along the edge is at least **0.9** of the viewport's (short along it but full-length on the adjacent side is a *sidebar*: it still owns the edge, its colour kept or sampled);
 - it is not hidden or nearly transparent; a `backdrop-filter` in its lineage yields no single colour.
@@ -57,7 +57,7 @@ The screen scrolls in Safari's own process; a scroll from script is a request to
 - **A first screen that must fit and never jump:** `100svh`. It is never hidden behind the bars and never resizes as they move.
 - **A backdrop that must cover what the bars uncover:** `lvh`.
 - **`dvh` only where resizing during scroll is the intent** — it relayouts as the bars move.
-- **`vh` is the UA's choice** of one of the three; Safari resolves it to the large viewport [secondary], so `100vh` content sits under expanded bars.
+- **`vh` is `lvh` by spec** (§6.1.2.1), so `100vh` content sits under expanded bars.
 
 ## Testing: the Simulator is the test
 
@@ -85,14 +85,14 @@ A real device remains the last word on feel; the Simulator is where you reproduc
 
 ## Cross-references
 
-- **Real engine, real device:** [orchestrating-elite-agent-qa](../orchestrating-elite-agent-qa/SKILL.md) — an emulator is evidence about modules, not the product.
+- **Real engine, real device:** [orchestrating-elite-agent-qa](../orchestrating-elite-agent-qa/SKILL.md).
 - **Consumed by:** [thrill-design](../thrill-design/SKILL.md) (principle 7).
 - **Motion on the phone:** [motion-continuity](../motion-continuity/SKILL.md).
 
 ## Sources
 
 - [source] WebKit `LocalFrameView::fixedContainerEdges` at [d291551](https://github.com/WebKit/WebKit/blob/d2915517219320e0fdfbfc4a59c168337d982292/Source/WebCore/page/LocalFrameView.cpp): `minimumRatio = 0.9` against the viewport length on that side and `isFixedPositioned() || isStickilyPositioned()` in `containerEdgeCandidateResult` (sidebars returned as owners); `thinBorderWidth = 10` checked only in `primaryBackgroundColorForRenderer`, falling back to `PageColorSampler::predominantColor`; `fixedContainerSampleRectMargin = 4` and `sampleRectThickness = 2` (`PageColorSampler`); backdrop filter → multiple colours.
-- [secondary] [WebKit bug 301756](https://bugs.webkit.org/show_bug.cgi?id=301756) — tint from the page background, theme-color unused. [Ben Frain](https://benfrain.com/ios26-safari-theme-color-tab-tinting-with-fixed-position-elements/) on fixed elements recolouring the bars.
-- [CSS Values 4](https://www.w3.org/TR/css-values-4/#viewport-relative-lengths) for the three viewports and the UA-defined `vh`.
+- [secondary] [WebKit bug 301756](https://bugs.webkit.org/show_bug.cgi?id=301756) — the reporter's belief (tint from the page background, theme-color unused); WebKit's reply neither confirms nor denies it. [Ben Frain](https://benfrain.com/ios26-safari-theme-color-tab-tinting-with-fixed-position-elements/) on fixed elements recolouring the bars.
+- [CSS Values 4](https://www.w3.org/TR/css-values-4/#viewport-relative-lengths) for the three viewports and `vh` (§6.1.2.1).
 - `xcrun simctl help` for the Simulator commands.
 - [observed] the scroll desync, the Responsive Design Mode misreport and the cross-port logging loss: reproduced in the Simulator and on device; not traced in source.

@@ -1,6 +1,6 @@
 ---
-version: "1.0.3"
-digest: "3666f60a0ba0"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.4"
+digest: "497ded87346d"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: finding-a-catalog-skill
 description: >-
@@ -93,7 +93,6 @@ Math and standards any design system can build on. No product opinions.
 - `component-sizing-principles` — curated height and icon ladders
 - `dtcg-format` — the W3C DTCG interchange file
 - `empirical-design-principles` — which design laws hold
-- `ios-safari-surfaces` — iPhone Safari bars, scroll, svh
 - `line-height-grid` — two-track line height on grid
 - `motion-continuity` — motion between states
 - `oklch-color-space` — OKLCH ranges and gamut mapping
@@ -105,19 +104,24 @@ Math and standards any design system can build on. No product opinions.
 - `usability-heuristics` — what the heuristics say
 - `wcag-contrast` — ratios, the legal cross-check
 
+## Web platform behaviour (L0)
+What a shipping engine does that its spec and an emulator do not show.
+
+- `ios-safari-surfaces` — iPhone Safari bars, scroll, svh
+
 ## Design review lenses (L0)
 Judging the rendered surface -- and the standard it is judged against.
 
 - `design-system-consistency` — rendered drift from the tokens
 - `designing-elite-ui` — the visual standard to build to
 - `frontend-a11y` — contrast, focus, targets, motion
-- `thrill-design` — Thrill's house design taste
 - `visual-polish` — the fine-but-not-elite lens
 - `web-interface-guidelines-review` — the code and markup lens
 
-## UDTS stances (L2)
-Parity stubs for skills being authored in tokenomics. Not guidance yet.
+## Design stances (L2)
+One system's or one studio's lean on L0. The udts-* stubs are not guidance yet.
 
+- `thrill-design` — Thrill's house design taste
 - `udts-component-sizing-ladders` — per-density size ladders
 - `udts-dtcg-extensions` — namespaced DTCG extensions
 - `udts-linter-rules` — machine-enforceable lint rules

@@ -1,6 +1,6 @@
 ---
-version: "1.0.2"
-digest: "8a4b50c77bc6"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.3"
+digest: "1705e127d146"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: web-interface-guidelines-review
 description: |
@@ -83,7 +83,7 @@ Apply each section in order. Stop and flag at the first failure in each section.
 ### 9. Motion
 
 - Honor `prefers-reduced-motion: reduce` — reduce animation distance and easing, or remove non-essential motion entirely.
-- Transitions on color, transform, and opacity only; never `width`, `height`, `top`, `left` (they trigger layout). Timing: [motion-continuity](../motion-continuity/SKILL.md).
+- Transitions on color, transform, and opacity only; never `width`, `height`, `top`, `left` (they trigger layout). State changes: [motion-continuity](../motion-continuity/SKILL.md).
 - Durations from a token (`duration-fast` / `duration-default` / `duration-slow`), not arbitrary `ms` values.
 
 ### 10. Token discipline
