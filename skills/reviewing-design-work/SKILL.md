@@ -1,6 +1,6 @@
 ---
-version: "1.0.0"
-digest: "be3f7dadd266"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.1"
+digest: "a3c66569f90e"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: reviewing-design-work
 description: |
@@ -30,7 +30,7 @@ the station's own skill to actually run it.
   [designing-a-design-system](../designing-a-design-system/SKILL.md), not this dispatcher.
 - **Consuming a design system** (wiring an existing token set into a product) — load
   [consuming-a-design-system](../consuming-a-design-system/SKILL.md).
-- Pure logic / backend review with no design surface — this dispatcher adds nothing.
+- Pure logic / backend review with no design surface.
 
 ## Lens order
 
@@ -56,7 +56,7 @@ elite-bar-last placement is this dispatcher's guidance.)
 
    **REQUIRED BACKGROUND:** [design-system-consistency](../design-system-consistency/SKILL.md), [frontend-a11y](../frontend-a11y/SKILL.md), [visual-polish](../visual-polish/SKILL.md).
 3. **Opinion lens last — [designing-elite-ui](../designing-elite-ui/SKILL.md).** The concrete elite / Figma-grade bar
-   (one-axis color, APCA-gated contrast, floating stable chrome, dark verified). It runs
+   (one-axis color, gated contrast, subtraction, on-grid sizes, every mode). It runs
    last because it is the subjective bar; the objective violations should already be
    caught. **REQUIRED BACKGROUND:** [designing-elite-ui](../designing-elite-ui/SKILL.md).
 
@@ -83,7 +83,7 @@ Shneiderman, where the gate is source and edition rather than prediction.
 | PR touches UI code, **no** visual surface change (routing, state wiring, refactor) | Code lens only; the rendered lenses stay silent. |
 | PR changes a visual surface (component, layout, styles, theme) | Code lens **and** rendered lenses, with [designing-elite-ui](../designing-elite-ui/SKILL.md) running last after the objective lenses; the rendered pass is browser-driven — screenshots light + dark, states exercised — per [orchestrating-elite-agent-qa](../orchestrating-elite-agent-qa/SKILL.md) (**REQUIRED BACKGROUND** for orchestrating that gate). |
 | Design spec / Figma handoff, **no code yet** | [web-interface-guidelines-review](../web-interface-guidelines-review/SKILL.md) applies to the spec; [designing-elite-ui](../designing-elite-ui/SKILL.md) sets the bar the build must hit; the rendered lenses defer to post-build review. |
-| clud-bug-installed repo | The 4 dedicated design lenses ([design-system-consistency](../design-system-consistency/SKILL.md), [frontend-a11y](../frontend-a11y/SKILL.md), [visual-polish](../visual-polish/SKILL.md), [designing-elite-ui](../designing-elite-ui/SKILL.md)) are `kind: design` — they run as the separate **design pass** (SPEC §4.8), never inline with the code review, and **only when the repo opts in**: the design pass is listed in `review.passes` in `.clud-bug.json`, at least one design skill applies to the diff, and the trigger is a pull request. Installation alone never fires the pass, and design findings are advisory unless the repo marks that pass blocking. |
+| clud-bug-installed repo | The 5 dedicated design lenses ([design-system-consistency](../design-system-consistency/SKILL.md), [frontend-a11y](../frontend-a11y/SKILL.md), [visual-polish](../visual-polish/SKILL.md), [designing-elite-ui](../designing-elite-ui/SKILL.md), [thrill-design](../thrill-design/SKILL.md)) are `kind: design` — they run as the separate **design pass** (SPEC §4.8), never inline with the code review, and **only when the repo opts in**: the design pass is listed in `review.passes` in `.clud-bug.json`, at least one design skill applies to the diff, and the trigger is a pull request. Installation alone never fires the pass, and design findings are advisory unless the repo marks that pass blocking. |
 
 ## System-specific layers
 
@@ -97,9 +97,9 @@ marker pointing at tokenomics, not as loadable guidance yet.
 - **L0 primitives:** [oklch-color-space](../oklch-color-space/SKILL.md), [apca-contrast](../apca-contrast/SKILL.md), [wcag-contrast](../wcag-contrast/SKILL.md),
   [palette-relationships](../palette-relationships/SKILL.md), [chroma-harmonization](../chroma-harmonization/SKILL.md), [type-scale](../type-scale/SKILL.md), [line-height-grid](../line-height-grid/SKILL.md),
   [token-naming-conventions](../token-naming-conventions/SKILL.md), [component-sizing-principles](../component-sizing-principles/SKILL.md),
-  [empirical-design-principles](../empirical-design-principles/SKILL.md), [usability-heuristics](../usability-heuristics/SKILL.md).
+  [empirical-design-principles](../empirical-design-principles/SKILL.md), [usability-heuristics](../usability-heuristics/SKILL.md), [motion-continuity](../motion-continuity/SKILL.md).
 - **L0 critic lenses:** [web-interface-guidelines-review](../web-interface-guidelines-review/SKILL.md), [design-system-consistency](../design-system-consistency/SKILL.md),
   [frontend-a11y](../frontend-a11y/SKILL.md), [visual-polish](../visual-polish/SKILL.md), [designing-elite-ui](../designing-elite-ui/SKILL.md); and [orchestrating-elite-agent-qa](../orchestrating-elite-agent-qa/SKILL.md)
-  (the QA gate that drives the browser-driven rendered pass).
-- **L1 sibling dispatchers:** [designing-a-design-system](../designing-a-design-system/SKILL.md), [consuming-a-design-system](../consuming-a-design-system/SKILL.md).
-- **L2 stances (incubating):** [udts-review](../udts-review/SKILL.md).
+  (rendered-pass gate).
+- **L1 siblings:** [designing-a-design-system](../designing-a-design-system/SKILL.md), [consuming-a-design-system](../consuming-a-design-system/SKILL.md).
+- **L2 stances:** [udts-review](../udts-review/SKILL.md) (incubating), [thrill-design](../thrill-design/SKILL.md).

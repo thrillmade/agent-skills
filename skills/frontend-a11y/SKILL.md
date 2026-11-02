@@ -1,6 +1,6 @@
 ---
-version: "1.0.1"
-digest: "624829557d3e"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.2"
+digest: "574e1cb35f53"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: frontend-a11y
 description: >-
@@ -46,7 +46,7 @@ commonest false pass here.
   [wcag-contrast](../wcag-contrast/SKILL.md) own contrast;
   [component-sizing-principles](../component-sizing-principles/SKILL.md) owns the height
   ladder. Cite them, never re-derive them — this lens measures what the render gives the
-  pointer, not what the ladder should have been.
+  pointer.
 - Non-visual diffs — routing, state wiring, backend. Nothing renders; stay silent.
 
 ## What only the render shows
@@ -97,7 +97,7 @@ A mode not captured is not checked — name the ones you saw.
 
 Motion has two obligations: auto-starting motion over five seconds must be pausable
 (**SC 2.2.2, A**); disabling interaction-triggered motion is **SC 2.3.3, AAA**.
-`prefers-reduced-motion` is the mechanism, not the criterion.
+`prefers-reduced-motion` is the mechanism, not the criterion; reduced-path rules: [motion-continuity](../motion-continuity/SKILL.md).
 
 ## Silent failures
 
@@ -105,7 +105,7 @@ Motion has two obligations: auto-starting motion over five seconds must be pausa
   forced-colors. Fix: `outline` + `outline-offset` (only its colour is forced), or a
   `@media (forced-colors: active)` rule.
 - **Reduced motion honoured in CSS only.** The `@media` block exists, the JS animation
-  ignores it, and screenshots are static so this lens never sees it. Check the JS/WAAPI
+  ignores it, and static screenshots never show it. Check the JS/WAAPI
   path, `<video autoplay>`, library defaults.
 - **A clean automated run read as a pass.** A checker reports what it can compute — not a
   ring lost under sticky chrome, meaning in a gradient, or text over a photo.

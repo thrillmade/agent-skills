@@ -1,6 +1,6 @@
 ---
-version: "1.0.1"
-digest: "afe087cb57e2"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.2"
+digest: "7b327195329b"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: visual-polish
 description: >-
@@ -43,7 +43,6 @@ upgrade (the trim, the token, the missing cell), never just the verdict.
   [frontend-a11y](../frontend-a11y/SKILL.md). A polish nit never outranks a measured
   success-criterion failure, and never gets filed as one.
 - **Deciding what the bar *is*** — [designing-elite-ui](../designing-elite-ui/SKILL.md).
-  This lens applies a bar; it does not set one.
 
 ## What to look at
 
@@ -97,7 +96,8 @@ upgrade (the trim, the token, the missing cell), never just the verdict.
   [design-system-consistency](../design-system-consistency/SKILL.md) on the next pass. The
   fix is a trim, a token, or a geometry change.
 - **Motion judged from stills.** A transition that jumps, a hover that shifts layout, an
-  entrance animation replaying on every re-render: none of it is in a screenshot.
+  entrance animation replaying on every re-render: none of it is in a screenshot
+  (record it: [motion-continuity](../motion-continuity/SKILL.md)).
 - **Nits manufactured to look thorough.** A polished surface reported as polished is a
   valid output; padding the list costs the reviewer's credibility on the findings that
   matter.

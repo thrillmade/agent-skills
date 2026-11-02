@@ -1,6 +1,6 @@
 ---
-version: "1.0.2"
-digest: "61a41a489f78"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.3"
+digest: "3666f60a0ba0"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: finding-a-catalog-skill
 description: >-
@@ -93,7 +93,9 @@ Math and standards any design system can build on. No product opinions.
 - `component-sizing-principles` — curated height and icon ladders
 - `dtcg-format` — the W3C DTCG interchange file
 - `empirical-design-principles` — which design laws hold
+- `ios-safari-surfaces` — iPhone Safari bars, scroll, svh
 - `line-height-grid` — two-track line height on grid
+- `motion-continuity` — motion between states
 - `oklch-color-space` — OKLCH ranges and gamut mapping
 - `palette-relationships` — hue-angle palette relationships
 - `semver-design-tokens` — SemVer from the value diff
@@ -109,6 +111,7 @@ Judging the rendered surface -- and the standard it is judged against.
 - `design-system-consistency` — rendered drift from the tokens
 - `designing-elite-ui` — the visual standard to build to
 - `frontend-a11y` — contrast, focus, targets, motion
+- `thrill-design` — Thrill's house design taste
 - `visual-polish` — the fine-but-not-elite lens
 - `web-interface-guidelines-review` — the code and markup lens
 

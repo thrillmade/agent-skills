@@ -81,6 +81,30 @@
       "subscribers": ["arlyn-delivery", "arlyn-working"],
       "notes": "authoring-home decided (clud-bug#243 Ruling 2): catalog is the edit point; clud-bug's templates/skills/design/ is a vendored mirror refreshed only by an explicit release PR, never by automation"
     },
+    "thrill-design": {
+      "family": "design-critic-lenses",
+      "owns": "Thrill's house design taste",
+      "authoring_home": "catalog",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "House stance layered on designing-elite-ui: principles, not a token spec. Applies to any surface Thrill designs, on any project; carries no project nouns by rule. Listed with the critic lenses because it is a standard a render is judged against; a separate house-stances family is an open call for the editor"
+    },
+    "motion-continuity": {
+      "family": "design-primitives",
+      "owns": "motion between states",
+      "authoring_home": "catalog",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "Framework-neutral motion primitive; consumed by designing-elite-ui (principle 6) and thrill-design (principle 5). Motion accessibility criteria stay with frontend-a11y"
+    },
+    "ios-safari-surfaces": {
+      "family": "design-primitives",
+      "owns": "iPhone Safari bars, scroll, svh",
+      "authoring_home": "catalog",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "Web-platform primitive: iOS 26+ bar tinting (WebKit fixedContainerEdges, cited at a commit), the screen-versus-page scroll desync, viewport units, and the iOS Simulator as the test. Engine internals move; re-read the cited source when WebKit ships"
+    },
     "visual-polish": {
       "family": "design-critic-lenses",
       "owns": "the fine-but-not-elite lens",

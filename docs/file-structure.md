@@ -51,8 +51,10 @@ agent-skills
 │   ├── finding-a-catalog-skill
 │   ├── frontend-a11y
 │   ├── guarding-a-regression
+│   ├── ios-safari-surfaces
 │   ├── line-height-grid
 │   ├── logmind
+│   ├── motion-continuity
 │   ├── oklch-color-space
 │   ├── orchestrating-a-multi-agent-run
 │   ├── orchestrating-agent-delegation
@@ -70,6 +72,7 @@ agent-skills
 │   ├── spacing-system
 │   ├── technical-writing
 │   ├── test-discipline
+│   ├── thrill-design
 │   ├── token-frugal-tooling
 │   ├── token-naming-conventions
 │   ├── type-scale
