@@ -113,16 +113,19 @@ nothing measured belongs inside it. What is measured belongs here. The `clud-bug
 check on this repo has had three eras (measured 2026-11-03; probe control-tested against
 the known hits below):
 
-- `success` through #187, and `success` *"clud-bug review — clean (notarized)"* again on
-  #274 and #277 (October) — the App did produce real reviews after the #188 outage.
+- Before #188, mixed — not a clean era: #187 carries a workflow-produced `success` (from
+  the then-extant `clud-bug-review.yml` on its own branch) *and* an App-posted `neutral`;
+  #150 is an App `failure`; #120 has no run at all.
 - `neutral` *"clud-bug review unavailable"* from #188 through at least #269 — the outage era.
+- `success` *"clud-bug review — clean (notarized)"* from the App on #274 and #277
+  (October) — the App did produce real reviews after the outage.
 - **Absent entirely** on #293–#296 (November): no check-run at all. The review *workflow*
   was removed in #117 (the App migration), so a check-run exists only when the App posts
   one — and today it posts nothing here. Strict mode cannot fail on a review that never runs.
 
 While the check is absent, the per-change review gate above is carried entirely by local
-panels. Re-check before relying on it, and control-test an empty result against #187's or
-#274's head SHA before reading absence as fact:
+panels. Re-check before relying on it, and control-test an empty result against #274's
+head SHA (the cleanest known hit) before reading absence as fact:
 
 ```bash
 gh api repos/thrillmade/agent-skills/commits/<sha>/check-runs \
