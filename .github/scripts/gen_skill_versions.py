@@ -242,8 +242,14 @@ def enumerate_history() -> tuple[dict[str, list[tuple[str, str, str]]], set[str]
 
     out: dict[str, list[tuple[str, str | None, str, str, str]]] = {}
     reach7 = {c[:7] for c in reachable}
+    # The timestamp alone is not a total order: commits land in the same
+    # second on a fast runner, the sort then falls back to insertion order,
+    # and insertion order is rev-list's newest-first -- reversing chronology
+    # exactly on ties. The stamped version breaks the tie chronologically for
+    # stamped files; the sha is a pure determinism backstop.
+    row_order = lambda r: (r[4], r[1] or "", r[2])  # noqa: E731
     for slug, rows in history.items():
-        rows.sort(key=lambda r: r[4])
+        rows.sort(key=row_order)
         # Two blobs can normalise to one digest (they differed only in the
         # version/digest/origin lines, which are elided). Keep the earliest
         # appearance.
@@ -256,7 +262,7 @@ def enumerate_history() -> tuple[dict[str, list[tuple[str, str, str]]], set[str]
             held = dedup.get(row[0])
             if held is None or (held[2] not in reach7 and row[2] in reach7):
                 dedup[row[0]] = row
-        out[slug] = sorted(dedup.values(), key=lambda r: r[4])
+        out[slug] = sorted(dedup.values(), key=row_order)
 
     if not blobs:
         raise SystemExit(

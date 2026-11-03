@@ -11,3 +11,14 @@
 
 ---
 
+## 2026-11-03 08:14 - Row ordering gets a total key: timestamp, then stamp, then sha
+
+**Reasoning:** CI failed where local passed: same-second commits tie on %cI, the stable sort falls back to insertion order, and insertion order is rev-list newest-first -- reversing chronology exactly on the tie; reproduced deterministically by pinning GIT_COMMITTER_DATE
+
+**Alternatives considered:** Fixing only the test fixture's dates: rejected, the real file has same-second publishes too and output must not depend on runner speed
+
+**Implications:**
+- Regeneration output is now independent of execution speed and process hash seed; the same-second case is pinned by test_same_second_commits_still_order_by_stamp
+
+---
+

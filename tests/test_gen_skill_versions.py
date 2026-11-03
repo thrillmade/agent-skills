@@ -498,6 +498,24 @@ def test_a_fresh_enumeration_prefers_a_reachable_carrier_of_a_version(repo: Repo
     assert changed[:7] not in [h["commit"] for h in rows]
 
 
+def test_same_second_commits_still_order_by_stamp(
+    repo: Repo, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """CI regression (#291): on a fast runner the whole fixture lands in one
+    second, the timestamp sort ties, and insertion order (rev-list, newest
+    first) reversed the history exactly on the tie. The stamp breaks it."""
+    monkeypatch.setenv("GIT_COMMITTER_DATE", "2026-11-03T00:00:00Z")
+    monkeypatch.setenv("GIT_AUTHOR_DATE", "2026-11-03T00:00:00Z")
+    changed = branch_with_a_new_version(repo)
+    squashed = squash_merge(repo, "feat")
+    repo.publish("main")
+    (repo.base / "docs" / "skill-versions.json").unlink()
+
+    rows = build(repo)["skills"]["alpha"]["history"]
+    assert rows[-1]["commit"] == squashed[:7]
+    assert changed[:7] not in [h["commit"] for h in rows]
+
+
 def test_a_row_no_reachable_commit_carries_is_pruned_by_write(repo: Repo) -> None:
     changed = branch_with_a_new_version(repo)
     # An intermediate branch version the squash never kept.
