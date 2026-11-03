@@ -1,6 +1,6 @@
 ---
-version: "1.1.1"
-digest: "db10a99c6060"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.1.4"
+digest: "8ca1bd16dd76"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: orchestrating-elite-agent-qa
 description: Use when orchestrating multi-agent feature work (build/review/merge with subagents or workflows) and the quality bar is high — shipping UI, interactive editors, or anything where a single build pass plus a polite review would let real bugs through. Cite when a pass came from a headless engine, a responsive emulator or a narrowed desktop window rather than the shipping engine and device, or from a check never shown able to fail.
@@ -29,15 +29,15 @@ One build pass plus one agreeable review ships bugs. Quality comes from three in
 2. **An independent visual gate** — an agent that *drives the browser* (not just reads code).
 3. **Realistic QA** — a *fresh, simple* case exercised with *real-mouse-like* events, not the dense seed clicked by exact handle.
 
-Gate the merge on all three; each catches a class the others miss.
+Gate the merge on all three; each catches what the others miss.
 
-(The delegation mechanics beneath this pipeline live in [orchestrating-agent-delegation](../orchestrating-agent-delegation/SKILL.md); this skill is the UI-quality-gate specialization.)
+(The delegation mechanics under this pipeline live in [orchestrating-agent-delegation](../orchestrating-agent-delegation/SKILL.md); this skill is the UI-quality-gate specialization.)
 
 ## The Per-Slice Pipeline (run in order)
 
 1. **Scope ONE slice → branch** off main. Small, independently mergeable.
-2. **Design first (complex slices)** — a planning agent reads the *real code* and designs the algorithm + exact file/function seams before any build. Skip for trivial slices.
-3. **Build** — one agent implements on the branch. It must NOT commit. **For UI that one agent is a single `designer` lane on opus owning the whole surface (every state, both themes); never split a surface across builders — the seams show.** Reviewers and the critic stay separate: they check, not shape.
+2. **Design first (complex slices)** — a planning agent reads the *real code* and designs the logic + exact file/function seams before any build. Skip for trivial slices.
+3. **Build** — one agent implements on the branch. It must NOT commit. **For UI that one agent is a single `designer` lane on opus owning the whole surface (every state, every mode step 6 names); never split a surface across builders — the seams show.** Reviewers and the critic stay separate: they check, not shape.
 4. **Review — N parallel adversarial reviewers**, each a distinct LENS (e.g. correctness · invariants · regression · headline behavior). Prompt them **refute-first**: "try to break it; report ONLY real, high-confidence issues with a concrete fix; empty if clean." Not a rubber stamp.
 5. **Fix** — one agent applies the confirmed high/med findings (defer/note the lows).
 6. **Design-critic visual gate** — a dedicated agent drives the browser (cache-bust the JS, screenshot each of the bar's modes: light, dark, increased contrast, forced colors; open menus/states) and challenges the render against the elite bar. Its high/med findings GATE the merge.

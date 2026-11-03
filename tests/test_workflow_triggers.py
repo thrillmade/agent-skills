@@ -123,3 +123,18 @@ def test_prose_retention_checks_out_full_history():
         "base revision against a head revision; without the full history it "
         "cannot resolve the base and refuses to report success."
     )
+
+
+def test_validate_skills_checks_out_full_history_for_the_ancestry_gate():
+    """`gen_skill_versions.py --check` asks whether each history row's commit
+    is an ancestor of the PR head. On a depth-1 checkout every older commit
+    looks missing, so the gate would fail every run for the clone's sake."""
+    doc, _ = _load("validate-skills.yml")
+    steps = doc["jobs"]["validate"]["steps"]
+    checkout = next(s for s in steps if str(s.get("uses", "")).startswith("actions/checkout"))
+    assert (checkout.get("with") or {}).get("fetch-depth") == 0, (
+        "validate-skills.yml checks out shallow, so the version-history "
+        "ancestry check cannot see the commits it is asked about."
+    )
+    assert any("gen_skill_versions.py" in str(s.get("run", "")) and "--check" in str(s.get("run", ""))
+               for s in steps), "validate-skills.yml no longer runs the ancestry check."
