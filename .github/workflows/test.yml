@@ -6,16 +6,14 @@ name: test
 # and message text are pinned there so a change to either gate has to be a
 # deliberate one.
 #
-# NOT A REQUIRED CHECK -- AND NEITHER IS ANYTHING ELSE, TODAY. Measured, not
-# assumed: all three active rulesets (org-baseline, org-default-protection,
-# reporulez-default) carry only deletion, non_fast_forward,
-# required_linear_history and pull_request rules, none of them
-# required_status_checks, and every one is scoped to the default branch;
-# `gh api repos/thrillmade/agent-skills/rules/branches/dev` -- the branch this
-# repository's PRs actually target -- returns an empty list, and neither `main`
-# nor `dev` carries legacy branch protection either. So this reports without
-# blocking. check-prose-retention.yml says the same thing about itself; if that
-# ever stops being true, it stops being true in both places at once.
+# REQUIRED SINCE 2026-11. Measured, not assumed: the org "CI must pass"
+# ruleset requires a status check named exactly `ci` on PRs into both dev and
+# main (`gh api repos/thrillmade/agent-skills/rules/branches/dev` lists it,
+# and nothing else), and `.../rules/branches/main` additionally requires
+# `validate skills`, `test`, `check-links` and `check prose retention` by
+# name. The `ci` job below carries the required name by relaying `test`'s
+# result. check-prose-retention.yml carries the same measurement; if this
+# paragraph goes stale, re-measure both files in the same pass.
 #
 # NO `paths:` filter, deliberately, and being unrequired is not a reason to add
 # one: a filter-skipped check reports as expected-but-never-reported and blocks

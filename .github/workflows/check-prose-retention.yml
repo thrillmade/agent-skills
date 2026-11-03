@@ -53,15 +53,17 @@ name: check-prose-retention
 # path list rots -- this repository already shipped a size gate that could not
 # see edits to its own budget file. A committed test asserts this stays absent.
 #
-# NOT A REQUIRED CHECK -- AND NEITHER IS ANYTHING ELSE, TODAY. Measured
-# directly rather than assumed: `gh api repos/thrillmade/agent-skills/rules/
-# branches/main` lists four active rule types (deletion, non_fast_forward,
-# pull_request, required_linear_history) and none of them is
-# required_status_checks, and `.../rules/branches/dev` -- the branch this
-# repository's PRs actually target -- returns an empty list, no ruleset at
-# all. So this reports without blocking, and so does `test`. Making this (or
-# anything) a required status check is an org-ruleset change, out of this
-# file's scope.
+# A REQUIRED CHECK ON MAIN SINCE 2026-11. Measured directly rather than
+# assumed: `gh api repos/thrillmade/agent-skills/rules/branches/main` lists
+# five required status checks -- `ci`, `validate skills`, `test`,
+# `check-links` and this job's `check prose retention` -- and
+# `.../rules/branches/dev` -- the branch this repository's PRs actually
+# target -- requires exactly one, `ci` (the org "CI must pass" ruleset; the
+# aggregator job lives in test.yml). So this gate blocks a promotion into
+# main and reports without blocking on PRs into dev. Making anything more
+# required is an org-ruleset change, out of this file's scope. test.yml
+# carries the same measurement; if this paragraph goes stale, re-measure
+# both files in the same pass.
 on:
   pull_request:
   push:
