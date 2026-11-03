@@ -243,11 +243,17 @@ def enumerate_history() -> tuple[dict[str, list[tuple[str, str, str]]], set[str]
     out: dict[str, list[tuple[str, str | None, str, str, str]]] = {}
     reach7 = {c[:7] for c in reachable}
     # The timestamp alone is not a total order: commits land in the same
-    # second on a fast runner, the sort then falls back to insertion order,
-    # and insertion order is rev-list's newest-first -- reversing chronology
-    # exactly on ties. The stamped version breaks the tie chronologically for
-    # stamped files; the sha is a pure determinism backstop.
-    row_order = lambda r: (r[4], r[1] or "", r[2])  # noqa: E731
+    # second on a fast runner, and %cI cannot see inside a second. The only
+    # sub-second chronology git has is topology, so ties break by rev-list
+    # rank, oldest first (rev-list is newest-first, hence the negation).
+    # A row whose commit this enumeration never walked (a published legacy
+    # row) ranks oldest within its tie; the sha is a determinism backstop
+    # among those only. HEAD-only commits sit after the remote ones in
+    # `commits`, so within a tie they also read as oldest -- they can carry
+    # re-point candidates but never admitted rows, so order there is moot.
+    rank = {sha[:7]: i for i, sha in enumerate(commits)}
+    never = len(commits)
+    row_order = lambda r: (r[4], -rank.get(r[2], never), r[2])  # noqa: E731
     for slug, rows in history.items():
         rows.sort(key=row_order)
         # Two blobs can normalise to one digest (they differed only in the
