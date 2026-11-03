@@ -15,6 +15,7 @@ PR's CI run, so this file is always coherent with current `main`.
 
 ## 2026-11
 
+- **2026-11-02** — Version history admits only published rows; the check gets two tiers *(fix/issue-290)* — [decisions-branches/fix__issue-290.md](decisions-branches/fix__issue-290.md)
 - **2026-11-02** — Design skills: thrill-design house principles, motion-continuity, ios-safari-surfaces; designing-elite-ui and orchestrating-elite-agent-qa amended *(feat/design-skills-nov)* — [decisions-branches/feat__design-skills-nov.md](decisions-branches/feat__design-skills-nov.md)
 
 ## 2026-10
