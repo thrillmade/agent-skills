@@ -13,10 +13,10 @@ PR's CI run, so this file is always coherent with current `main`.
 ---
 
 
-## 2026-11 (4 decisions)
+## 2026-11 (5 decisions)
 
-- **2026-11-03** — The logmind and token-frugal skills describe shipped v1.2.0, nothing else *(fix/267-logmind-v120)* — [decisions-branches/fix__267-logmind-v120.md](decisions-branches/fix__267-logmind-v120.md)
-- *... 2 more decisions ...*
+- **2026-11-03** — Unblock the dev→main promotion: declare the five batch-level prose nets; true the required-check headers *(fix/promotion-ci-and-ledger)* — [decisions-branches/fix__promotion-ci-and-ledger.md](decisions-branches/fix__promotion-ci-and-ledger.md)
+- *... 3 more decisions ...*
 - **2026-11-02** — Design skills: thrill-design house principles, motion-continuity, ios-safari-surfaces; designing-elite-ui and orchestrating-elite-agent-qa amended *(feat/design-skills-nov)* — [decisions-branches/feat__design-skills-nov.md](decisions-branches/feat__design-skills-nov.md)
 
 ## 2026-10
