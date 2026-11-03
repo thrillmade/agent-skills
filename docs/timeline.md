@@ -13,10 +13,10 @@ PR's CI run, so this file is always coherent with current `main`.
 ---
 
 
-## 2026-11 (3 decisions)
+## 2026-11 (4 decisions)
 
-- **2026-11-03** — Row ordering gets a total key: timestamp, then stamp, then sha *(fix/issue-290)* — [decisions-branches/fix__issue-290.md](decisions-branches/fix__issue-290.md)
-- *... 1 more decision ...*
+- **2026-11-03** — The logmind and token-frugal skills describe shipped v1.2.0, nothing else *(fix/267-logmind-v120)* — [decisions-branches/fix__267-logmind-v120.md](decisions-branches/fix__267-logmind-v120.md)
+- *... 2 more decisions ...*
 - **2026-11-02** — Design skills: thrill-design house principles, motion-continuity, ios-safari-surfaces; designing-elite-ui and orchestrating-elite-agent-qa amended *(feat/design-skills-nov)* — [decisions-branches/feat__design-skills-nov.md](decisions-branches/feat__design-skills-nov.md)
 
 ## 2026-10
