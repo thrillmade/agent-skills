@@ -1,13 +1,13 @@
 ---
-version: "1.0.2"
-digest: "8da49028c193"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.4"
+digest: "3e0f00ab09c4"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: token-frugal-tooling
 description: |
   Use in any project that has BOTH logmind (`.logmind/config.yml` or
   `docs/decisions.md`) AND clud-bug (`.github/workflows/clud-bug-review.yml`)
   installed. Quick-reference for the org's token-frugal conventions: env vars,
-  artifact defaults, and the "agent mode" flags both CLIs accept. Detail lives
+  artifact defaults, and clud-bug's "agent mode" flag. Detail lives
   in the per-tool skills — load `logmind` and `clud-bug-collaboration`
   alongside this one when you actually need to invoke them.
 ---
@@ -38,17 +38,13 @@ re-learn them every session.
 
 | Var | Tool | Effect |
 |---|---|---|
-| `LOGMIND_QUIET=1` | logmind ≥ v0.5.1 | Suppresses progress chatter; emits one `ok <key-value>` line per command. v0.5.3 patched `click.secho` so error/warning output (red/yellow) still prints. `--quiet` / `-q` on the group is equivalent. |
-| `CLUD_BUG_QUIET=1` | clud-bug ≥ v0.6.7 | Same pattern for clud-bug CLI (`init` / `update` / `add` / `refresh` / `edit-workflow` / `review-mode`). `--quiet` / `-q` is equivalent. |
+| `CLUD_BUG_QUIET=1` | clud-bug ≥ v0.6.7 | Quiet mode for the clud-bug CLI: one `ok <key-value>` line per command (`init` / `update` / `add` / `refresh` / `edit-workflow` / `review-mode`). `--quiet` / `-q` is equivalent. |
 
-Prefer these for agent invocations even when chaining commands — every
+Prefer it for agent invocations even when chaining commands — every
 command emits a single parseable line, so the next step can grep/parse
-without re-running.
+without re-running. logmind v1.2.0 has no quiet mode.
 
 ```bash
-LOGMIND_QUIET=1 logmind log "..." -r "..." --no-push
-# → ok logged: <sha> "<title>"
-
 CLUD_BUG_QUIET=1 clud-bug update
 # → ok updated: @v0.6.11, N changed, M unchanged
 ```
@@ -94,20 +90,6 @@ The block names which section truncated and the recovery outcome (e.g.
 calibration — if a finding's section was deferred, the verdict on that
 section is partial.
 
-## Show + search are agent-friendly (v0.5.2+)
-
-`logmind show` carries three combinable flags for fast scans:
-
-```bash
-logmind show --brief --limit 10      # last 10 in one-line form
-logmind show --json --limit 20       # parseable JSON
-logmind show --json --all            # JSON across main + archive
-```
-
-`--json` stdout stays pipeline-clean regardless of `--quiet` — the `ok`
-summary line goes to stderr in JSON mode so `logmind show --json | jq`
-works without extra plumbing.
-
 ## What you don't need to do
 
 - **Don't override clud-bug budgets** (`MAX_DIFF_BYTES`, etc.) unless
@@ -143,15 +125,14 @@ works without extra plumbing.
 
 ## Verification
 
-- `logmind doctor` reports installed-vs-latest for both tools (logmind,
-  clud-bug if present) and exits non-zero on drift — run it before trusting
-  a version-gated default above; a stale install means that default isn't
-  live yet.
+- `logmind doctor` flags stale logmind templates, hooks and merge drivers
+  and exits non-zero on drift. It does not probe clud-bug, and its version
+  line is unreliable in v1.2.0 — check clud-bug's version with its own CLI.
 
 ## Cross-references
 
 - [logmind](../logmind/SKILL.md) — when / how to log decisions; reading
-  prior context; agent-invocation flags.
+  prior context.
 - [clud-bug-collaboration](../clud-bug-collaboration/SKILL.md) — fix-push
   flow, strict mode, modifying skills, editing the workflow, full comment
   format, full cost-control wiring.
