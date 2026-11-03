@@ -7,8 +7,9 @@
     {"id": "catalog-and-tooling", "title": "The catalog itself", "routes": "Finding, censusing and authoring skills; decision logging; CLI conventions."},
     {"id": "design-dispatchers", "title": "Design: start here (L1)", "routes": "Three entry points. Each routes to the primitives below in work order."},
     {"id": "design-primitives", "title": "Design primitives (L0)", "routes": "Math and standards any design system can build on. No product opinions."},
+    {"id": "web-platform", "title": "Web platform behaviour (L0)", "routes": "What a shipping engine does that its spec and an emulator do not show."},
     {"id": "design-critic-lenses", "title": "Design review lenses (L0)", "routes": "Judging the rendered surface -- and the standard it is judged against."},
-    {"id": "udts-stubs", "title": "UDTS stances (L2)", "routes": "Parity stubs for skills being authored in tokenomics. Not guidance yet."},
+    {"id": "design-stances", "title": "Design stances (L2)", "routes": "One system's or one studio's lean on L0. The udts-* stubs are not guidance yet."},
     {"id": "deprecated", "title": "Deprecated (migration window)", "routes": "Superseded. Each one names its successors; load those, not these."},
     {"id": "templates", "title": "Templates", "routes": "Copy-and-edit scaffolds. They fail the slug check until you customise."}
   ],
@@ -81,6 +82,30 @@
       "subscribers": ["arlyn-delivery", "arlyn-working"],
       "notes": "authoring-home decided (clud-bug#243 Ruling 2): catalog is the edit point; clud-bug's templates/skills/design/ is a vendored mirror refreshed only by an explicit release PR, never by automation"
     },
+    "thrill-design": {
+      "family": "design-stances",
+      "owns": "Thrill's house design taste",
+      "authoring_home": "catalog",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "House stance layered on designing-elite-ui: principles, not a token spec. Applies to any surface Thrill designs, on any project; carries no project nouns by rule. L2: a house stance, filed with the udts-* system stances; reviewing-design-work applies it as the last lens when the work is Thrill's"
+    },
+    "motion-continuity": {
+      "family": "design-primitives",
+      "owns": "motion between states",
+      "authoring_home": "catalog",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "Framework-neutral motion primitive; consumed by designing-elite-ui (principle 6) and thrill-design (principle 5). Motion accessibility criteria stay with frontend-a11y"
+    },
+    "ios-safari-surfaces": {
+      "family": "web-platform",
+      "owns": "iPhone Safari bars, scroll, svh",
+      "authoring_home": "catalog",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "Engine behaviour, not design-system math: iOS 26+ bar tinting (WebKit fixedContainerEdges, cited at a commit), the screen-versus-page scroll desync, viewport units, and the iOS Simulator as the test. Engine internals move; re-read the cited source when WebKit ships"
+    },
     "visual-polish": {
       "family": "design-critic-lenses",
       "owns": "the fine-but-not-elite lens",
@@ -98,7 +123,7 @@
       "notes": "tokenomics flip from authored-here to subscribed is pending (nomination in flight); tokenomics census says it would subscribe once accepted"
     },
     "udts-component-sizing-ladders": {
-      "family": "udts-stubs",
+      "family": "design-stances",
       "owns": "per-density size ladders",
       "authoring_home": "repo-mirrored:tokenomics",
       "distribution": "catalog-only",
@@ -106,7 +131,7 @@
       "notes": "incubating — deliberately unwritten; tokenomics is holding K2 incubation until the Phase R tier-model rewrite (feat/udts-color-polarity) lands so it doesn't encode the old model"
     },
     "udts-dtcg-extensions": {
-      "family": "udts-stubs",
+      "family": "design-stances",
       "owns": "namespaced DTCG extensions",
       "authoring_home": "repo-mirrored:tokenomics",
       "distribution": "catalog-only",
@@ -114,7 +139,7 @@
       "notes": "incubating — deliberately unwritten; tokenomics is holding K2 incubation until the Phase R tier-model rewrite (feat/udts-color-polarity) lands so it doesn't encode the old model"
     },
     "udts-linter-rules": {
-      "family": "udts-stubs",
+      "family": "design-stances",
       "owns": "machine-enforceable lint rules",
       "authoring_home": "repo-mirrored:tokenomics",
       "distribution": "catalog-only",
@@ -122,7 +147,7 @@
       "notes": "incubating — deliberately unwritten; tokenomics is holding K2 incubation until the Phase R tier-model rewrite (feat/udts-color-polarity) lands so it doesn't encode the old model"
     },
     "udts-naming-convention": {
-      "family": "udts-stubs",
+      "family": "design-stances",
       "owns": "the concrete naming convention",
       "authoring_home": "repo-mirrored:tokenomics",
       "distribution": "catalog-only",
@@ -130,7 +155,7 @@
       "notes": "incubating — deliberately unwritten; tokenomics is holding K2 incubation until the Phase R tier-model rewrite (feat/udts-color-polarity) lands so it doesn't encode the old model"
     },
     "udts-review": {
-      "family": "udts-stubs",
+      "family": "design-stances",
       "owns": "the system-specific lens",
       "authoring_home": "repo-mirrored:tokenomics",
       "distribution": "catalog-only",
@@ -138,7 +163,7 @@
       "notes": "incubating — deliberately unwritten; tokenomics census names this a gap (clud-bug lens for UDTS R7-R10 rules), but holding K2 incubation until the Phase R tier-model rewrite lands"
     },
     "udts-semver-defaults": {
-      "family": "udts-stubs",
+      "family": "design-stances",
       "owns": "SemVer policy choices",
       "authoring_home": "repo-mirrored:tokenomics",
       "distribution": "catalog-only",
@@ -146,7 +171,7 @@
       "notes": "incubating — deliberately unwritten; tokenomics is holding K2 incubation until the Phase R tier-model rewrite (feat/udts-color-polarity) lands so it doesn't encode the old model"
     },
     "udts-spacing-defaults": {
-      "family": "udts-stubs",
+      "family": "design-stances",
       "owns": "density-mode spacing units",
       "authoring_home": "repo-mirrored:tokenomics",
       "distribution": "catalog-only",
@@ -154,7 +179,7 @@
       "notes": "incubating — deliberately unwritten; tokenomics is holding K2 incubation until the Phase R tier-model rewrite (feat/udts-color-polarity) lands so it doesn't encode the old model"
     },
     "udts-token-model": {
-      "family": "udts-stubs",
+      "family": "design-stances",
       "owns": "taxonomy and resolution",
       "authoring_home": "repo-mirrored:tokenomics",
       "distribution": "catalog-only",
