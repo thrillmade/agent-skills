@@ -5,14 +5,14 @@
  "enumeration": {
   "refs": "refs/remotes/origin/*",
   "publishing_ref": "origin/main",
-  "commits": 120,
-  "blobs": 305
+  "commits": 122,
+  "blobs": 312
  },
- "versions_enumerated": 238,
+ "versions_enumerated": 217,
  "verification": {
   "current": "GATED. validate_skills.py recomputes every `current` from skills/<slug>/SKILL.md on every pull request. Needs no git history, so it holds at the depth-1 checkout CI uses.",
-  "history": "NOT GATED. History is derived from git and validate-skills.yml checks out at fetch-depth 1, so CI cannot recompute these rows. Regenerate them in a full clone with `.github/scripts/gen_skill_versions.py --write`.",
-  "history_rows_ungated": 178
+  "history": "NOT GATED. History content is derived from git and CI cannot recompute these rows; only that every row's `commit` is an ancestor of the checked revision is gated (`gen_skill_versions.py --check`). Regenerate them in a full clone with `.github/scripts/gen_skill_versions.py --write`.",
+  "history_rows_ungated": 157
  },
  "skills": {
   "apca-contrast": {
@@ -33,15 +33,9 @@
      "date": "2026-08-15"
     },
     {
-     "v": "2f4924f37c1d",
-     "version": null,
-     "commit": "ff61334",
-     "date": "2026-08-18"
-    },
-    {
      "v": "c894961136c7",
      "version": null,
-     "commit": "cd2a0c5",
+     "commit": "1bec314",
      "date": "2026-08-18"
     }
    ]
@@ -120,15 +114,9 @@
      "date": "2026-08-15"
     },
     {
-     "v": "bec2fc631306",
-     "version": null,
-     "commit": "ff61334",
-     "date": "2026-08-18"
-    },
-    {
      "v": "e710f973d63c",
      "version": null,
-     "commit": "cd2a0c5",
+     "commit": "1bec314",
      "date": "2026-08-18"
     }
    ]
@@ -181,12 +169,6 @@
      "date": "2026-08-14"
     },
     {
-     "v": "e10e69b38f31",
-     "version": "1.0.1",
-     "commit": "e95e58c",
-     "date": "2026-09-15"
-    },
-    {
      "v": "fc49f8cc5029",
      "version": "1.0.2",
      "commit": "8a77c44",
@@ -226,7 +208,7 @@
     {
      "v": "f93f0d21ed7b",
      "version": "1.0.1",
-     "commit": "fde90af",
+     "commit": "8a77c44",
      "date": "2026-08-24"
     }
    ]
@@ -257,19 +239,19 @@
     {
      "v": "08a07d2f7635",
      "version": null,
-     "commit": "ff61334",
+     "commit": "1bec314",
      "date": "2026-08-18"
     },
     {
      "v": "0be18bc0cded",
      "version": null,
-     "commit": "96476a1",
+     "commit": "602bb6c",
      "date": "2026-08-23"
     },
     {
      "v": "9de5f0d2c424",
      "version": null,
-     "commit": "b205f4d",
+     "commit": "d3963dd",
      "date": "2026-08-23"
     }
    ]
@@ -280,21 +262,9 @@
    "authoring_home": "catalog",
    "history": [
     {
-     "v": "39d2e1377a44",
-     "version": null,
-     "commit": "2cf6868",
-     "date": "2026-08-18"
-    },
-    {
-     "v": "6cef496bdf66",
-     "version": null,
-     "commit": "5b893cd",
-     "date": "2026-08-18"
-    },
-    {
      "v": "8137c5e68601",
      "version": null,
-     "commit": "116ae32",
+     "commit": "1bec314",
      "date": "2026-08-19"
     }
    ]
@@ -319,7 +289,7 @@
     {
      "v": "057a7ec84fbe",
      "version": null,
-     "commit": "b205f4d",
+     "commit": "d3963dd",
      "date": "2026-08-23"
     }
    ]
@@ -388,7 +358,7 @@
     {
      "v": "8ced4d8ed56b",
      "version": "1.0.1",
-     "commit": "e95e58c",
+     "commit": "8a77c44",
      "date": "2026-09-15"
     }
    ]
@@ -419,19 +389,19 @@
     {
      "v": "50253dba79e9",
      "version": null,
-     "commit": "96476a1",
+     "commit": "602bb6c",
      "date": "2026-08-23"
     },
     {
      "v": "2d77f524744c",
      "version": "1.0.0",
-     "commit": "b88d0ad",
+     "commit": "38f2c2a",
      "date": "2026-08-24"
     },
     {
      "v": "c4adcac2a7fb",
      "version": "1.0.1",
-     "commit": "fde90af",
+     "commit": "8a77c44",
      "date": "2026-08-24"
     }
    ]
@@ -468,7 +438,7 @@
     {
      "v": "7bd0a88c9948",
      "version": "1.0.1",
-     "commit": "fde90af",
+     "commit": "8a77c44",
      "date": "2026-08-24"
     }
    ]
@@ -493,7 +463,7 @@
     {
      "v": "545064d853e0",
      "version": null,
-     "commit": "f552f6e",
+     "commit": "1bec314",
      "date": "2026-08-17"
     }
    ]
@@ -518,31 +488,31 @@
     {
      "v": "cc8799744d8f",
      "version": null,
-     "commit": "7413194",
+     "commit": "1bec314",
      "date": "2026-08-18"
     },
     {
      "v": "4500a7e39f2d",
      "version": null,
-     "commit": "b205f4d",
+     "commit": "d3963dd",
      "date": "2026-08-23"
     },
     {
      "v": "0fbed8d8fe18",
      "version": "1.0.1",
-     "commit": "fde90af",
+     "commit": "8a77c44",
      "date": "2026-08-24"
     },
     {
      "v": "da11116b2d27",
      "version": "1.0.2",
-     "commit": "9270719",
+     "commit": "8f47937",
      "date": "2026-10-28"
     },
     {
      "v": "d7e3d3cf37f8",
      "version": "1.1.0",
-     "commit": "4d72591",
+     "commit": "f649720",
      "date": "2026-11-02"
     }
    ]
@@ -573,13 +543,13 @@
     {
      "v": "9bdad1baf4f5",
      "version": null,
-     "commit": "ff61334",
+     "commit": "1bec314",
      "date": "2026-08-18"
     },
     {
      "v": "b864390c7e86",
      "version": "1.0.1",
-     "commit": "fde90af",
+     "commit": "8a77c44",
      "date": "2026-08-24"
     }
    ]
@@ -590,21 +560,9 @@
    "authoring_home": "catalog",
    "history": [
     {
-     "v": "69b8422f9b0a",
-     "version": null,
-     "commit": "77bdb5a",
-     "date": "2026-08-18"
-    },
-    {
-     "v": "7a0f3dd047f0",
-     "version": null,
-     "commit": "31e3d2e",
-     "date": "2026-08-18"
-    },
-    {
      "v": "9b90fefae38b",
      "version": null,
-     "commit": "5b893cd",
+     "commit": "1bec314",
      "date": "2026-08-18"
     }
    ]
@@ -634,57 +592,27 @@
    "authoring_home": "catalog",
    "history": [
     {
-     "v": "3350df67c4f7",
-     "version": null,
-     "commit": "405b6c1",
-     "date": "2026-08-18"
-    },
-    {
-     "v": "6650f12ccd85",
-     "version": null,
-     "commit": "1da9f08",
-     "date": "2026-08-18"
-    },
-    {
-     "v": "b1752e52d6c9",
-     "version": null,
-     "commit": "d7825e2",
-     "date": "2026-08-18"
-    },
-    {
-     "v": "6eb19042e021",
-     "version": null,
-     "commit": "d1f0f4d",
-     "date": "2026-08-18"
-    },
-    {
      "v": "1c15601a0087",
      "version": null,
-     "commit": "5b893cd",
+     "commit": "1bec314",
      "date": "2026-08-18"
-    },
-    {
-     "v": "28eecd3bbef4",
-     "version": "1.0.1",
-     "commit": "486a817",
-     "date": "2026-08-24"
     },
     {
      "v": "6db0976a0715",
      "version": "1.0.1",
-     "commit": "0e835cc",
+     "commit": "0bb41be",
      "date": "2026-08-24"
     },
     {
      "v": "61a41a489f78",
      "version": "1.0.2",
-     "commit": "eb32af1",
+     "commit": "2640997",
      "date": "2026-09-15"
     },
     {
-     "v": "3666f60a0ba0",
-     "version": "1.0.3",
-     "commit": "4d72591",
+     "v": "497ded87346d",
+     "version": "1.0.4",
+     "commit": "f649720",
      "date": "2026-11-02"
     }
    ]
@@ -707,12 +635,6 @@
      "date": "2026-07-31"
     },
     {
-     "v": "56be4995fc2f",
-     "version": null,
-     "commit": "9e74682",
-     "date": "2026-08-17"
-    },
-    {
      "v": "766941312459",
      "version": null,
      "commit": "e33ad45",
@@ -721,19 +643,19 @@
     {
      "v": "ec171fa67568",
      "version": null,
-     "commit": "870f218",
+     "commit": "1bec314",
      "date": "2026-08-18"
     },
     {
      "v": "624829557d3e",
      "version": "1.0.1",
-     "commit": "fde90af",
+     "commit": "8a77c44",
      "date": "2026-08-24"
     },
     {
      "v": "574e1cb35f53",
      "version": "1.0.2",
-     "commit": "4d72591",
+     "commit": "f649720",
      "date": "2026-11-02"
     }
    ]
@@ -746,7 +668,7 @@
     {
      "v": "15808738e2f6",
      "version": null,
-     "commit": "31e3d2e",
+     "commit": "1bec314",
      "date": "2026-08-18"
     }
    ]
@@ -757,9 +679,9 @@
    "authoring_home": "catalog",
    "history": [
     {
-     "v": "a57bad98b860",
-     "version": "1.0.0",
-     "commit": "4d72591",
+     "v": "d7c99a6a1d1d",
+     "version": "1.0.1",
+     "commit": "f649720",
      "date": "2026-11-02"
     }
    ]
@@ -784,25 +706,25 @@
     {
      "v": "90eb1dd8eb53",
      "version": null,
-     "commit": "ff61334",
+     "commit": "1bec314",
      "date": "2026-08-18"
     },
     {
      "v": "f48e72b56887",
      "version": null,
-     "commit": "96476a1",
+     "commit": "602bb6c",
      "date": "2026-08-23"
     },
     {
      "v": "af7dddd2f2d7",
      "version": null,
-     "commit": "b205f4d",
+     "commit": "d3963dd",
      "date": "2026-08-23"
     },
     {
      "v": "a648cf9ec860",
      "version": "1.0.1",
-     "commit": "fde90af",
+     "commit": "8a77c44",
      "date": "2026-08-24"
     }
    ]
@@ -907,12 +829,6 @@
      "version": null,
      "commit": "a144454",
      "date": "2026-08-14"
-    },
-    {
-     "v": "db70f973fffd",
-     "version": "1.0.2",
-     "commit": "18d145f",
-     "date": "2026-08-24"
     }
    ]
   },
@@ -922,9 +838,9 @@
    "authoring_home": "catalog",
    "history": [
     {
-     "v": "fbe8f52ed9af",
-     "version": "1.0.0",
-     "commit": "4d72591",
+     "v": "d1f117138319",
+     "version": "1.0.1",
+     "commit": "f649720",
      "date": "2026-11-02"
     }
    ]
@@ -955,19 +871,19 @@
     {
      "v": "bed55cea4269",
      "version": null,
-     "commit": "ff61334",
+     "commit": "1bec314",
      "date": "2026-08-18"
     },
     {
      "v": "dfcfcdfbd979",
      "version": null,
-     "commit": "96476a1",
+     "commit": "602bb6c",
      "date": "2026-08-23"
     },
     {
      "v": "2686571dd8f2",
      "version": "1.0.1",
-     "commit": "fde90af",
+     "commit": "8a77c44",
      "date": "2026-08-24"
     }
    ]
@@ -986,7 +902,7 @@
     {
      "v": "c3a7455321c3",
      "version": "1.0.1",
-     "commit": "fde90af",
+     "commit": "8a77c44",
      "date": "2026-08-24"
     }
    ]
@@ -1015,12 +931,6 @@
      "date": "2026-08-14"
     },
     {
-     "v": "15a29eec03e2",
-     "version": "1.0.1",
-     "commit": "9270719",
-     "date": "2026-10-28"
-    },
-    {
      "v": "f68272def8c6",
      "version": "1.0.2",
      "commit": "8f47937",
@@ -1029,8 +939,8 @@
    ]
   },
   "orchestrating-elite-agent-qa": {
-   "current": "db10a99c6060",
-   "version": "1.1.1",
+   "current": "8ca1bd16dd76",
+   "version": "1.1.4",
    "authoring_home": "catalog",
    "history": [
     {
@@ -1060,25 +970,25 @@
     {
      "v": "7eebf3cfc4dd",
      "version": null,
-     "commit": "f552f6e",
+     "commit": "1bec314",
      "date": "2026-08-17"
     },
     {
      "v": "a8d1ca880a7c",
      "version": "1.0.1",
-     "commit": "8093e24",
+     "commit": "0bb41be",
      "date": "2026-08-24"
     },
     {
      "v": "4b0e5b2d3736",
      "version": "1.0.2",
-     "commit": "9270719",
+     "commit": "8f47937",
      "date": "2026-10-28"
     },
     {
-     "v": "04a52cbd8b67",
-     "version": "1.1.0",
-     "commit": "4d72591",
+     "v": "db10a99c6060",
+     "version": "1.1.1",
+     "commit": "f649720",
      "date": "2026-11-02"
     }
    ]
@@ -1103,7 +1013,7 @@
     {
      "v": "36a59edf6f40",
      "version": null,
-     "commit": "ff61334",
+     "commit": "1bec314",
      "date": "2026-08-18"
     }
    ]
@@ -1135,7 +1045,7 @@
     {
      "v": "878bc9780069",
      "version": null,
-     "commit": "31e3d2e",
+     "commit": "1bec314",
      "date": "2026-08-18"
     }
    ]
@@ -1165,15 +1075,9 @@
    "authoring_home": "catalog",
    "history": [
     {
-     "v": "6dcadc6157d5",
-     "version": null,
-     "commit": "31e3d2e",
-     "date": "2026-08-18"
-    },
-    {
      "v": "5c55077b9a1f",
      "version": null,
-     "commit": "77bdb5a",
+     "commit": "1bec314",
      "date": "2026-08-18"
     }
    ]
@@ -1210,13 +1114,13 @@
     {
      "v": "be3f7dadd266",
      "version": null,
-     "commit": "f552f6e",
+     "commit": "1bec314",
      "date": "2026-08-17"
     },
     {
-     "v": "a3c66569f90e",
-     "version": "1.0.1",
-     "commit": "4d72591",
+     "v": "ee642a5b1da4",
+     "version": "1.1.0",
+     "commit": "f649720",
      "date": "2026-11-02"
     }
    ]
@@ -1245,27 +1149,15 @@
      "date": "2026-08-15"
     },
     {
-     "v": "b2d7a06203fa",
-     "version": null,
-     "commit": "f552f6e",
-     "date": "2026-08-17"
-    },
-    {
-     "v": "eb6807c59000",
-     "version": null,
-     "commit": "ff61334",
-     "date": "2026-08-18"
-    },
-    {
      "v": "15eb93208c7d",
      "version": null,
-     "commit": "7efd6b5",
+     "commit": "1bec314",
      "date": "2026-08-18"
     },
     {
      "v": "cf7d94058da8",
      "version": "1.0.1",
-     "commit": "fde90af",
+     "commit": "8a77c44",
      "date": "2026-08-24"
     }
    ]
@@ -1353,25 +1245,25 @@
     {
      "v": "effc6349558d",
      "version": null,
-     "commit": "ff61334",
+     "commit": "1bec314",
      "date": "2026-08-18"
     },
     {
      "v": "cd4c96613b2b",
      "version": null,
-     "commit": "96476a1",
+     "commit": "602bb6c",
      "date": "2026-08-23"
     },
     {
      "v": "aef0e20032c4",
      "version": null,
-     "commit": "b205f4d",
+     "commit": "d3963dd",
      "date": "2026-08-23"
     },
     {
      "v": "f3fa330446f6",
      "version": "1.0.1",
-     "commit": "fde90af",
+     "commit": "8a77c44",
      "date": "2026-08-24"
     }
    ]
@@ -1384,7 +1276,7 @@
     {
      "v": "13e8b85d472a",
      "version": "1.0.0",
-     "commit": "ff6785e",
+     "commit": "2640997",
      "date": "2026-09-15"
     }
    ]
@@ -1420,9 +1312,9 @@
    "authoring_home": "catalog",
    "history": [
     {
-     "v": "6bea4b46ba63",
-     "version": "1.0.0",
-     "commit": "4d72591",
+     "v": "5481a6863ea9",
+     "version": "1.0.1",
+     "commit": "f649720",
      "date": "2026-11-02"
     }
    ]
@@ -1451,15 +1343,9 @@
      "date": "2026-07-31"
     },
     {
-     "v": "d04f5bfcbcfe",
-     "version": "1.0.1",
-     "commit": "8093e24",
-     "date": "2026-08-24"
-    },
-    {
      "v": "8da49028c193",
      "version": "1.0.2",
-     "commit": "1bf0769",
+     "commit": "0bb41be",
      "date": "2026-08-24"
     }
    ]
@@ -1484,13 +1370,13 @@
     {
      "v": "e89a261fddd8",
      "version": null,
-     "commit": "ff61334",
+     "commit": "1bec314",
      "date": "2026-08-18"
     },
     {
      "v": "acd03a0caa94",
      "version": "1.0.0",
-     "commit": "0204f32",
+     "commit": "38f2c2a",
      "date": "2026-08-24"
     }
    ]
@@ -1521,13 +1407,13 @@
     {
      "v": "92272bfa625d",
      "version": null,
-     "commit": "ff61334",
+     "commit": "1bec314",
      "date": "2026-08-18"
     },
     {
      "v": "5ddf65fe6700",
      "version": "1.0.1",
-     "commit": "fde90af",
+     "commit": "8a77c44",
      "date": "2026-08-24"
     }
    ]
@@ -1711,14 +1597,14 @@
     {
      "v": "9d79fc250e83",
      "version": null,
-     "commit": "31e3d2e",
+     "commit": "1bec314",
      "date": "2026-08-18"
     }
    ]
   },
   "visual-polish": {
-   "current": "7b327195329b",
-   "version": "1.0.2",
+   "current": "eb926d7927eb",
+   "version": "1.0.6",
    "authoring_home": "catalog",
    "history": [
     {
@@ -1742,19 +1628,19 @@
     {
      "v": "b470bbfb49da",
      "version": null,
-     "commit": "f552f6e",
+     "commit": "1bec314",
      "date": "2026-08-17"
     },
     {
      "v": "afe087cb57e2",
      "version": "1.0.1",
-     "commit": "fde90af",
+     "commit": "8a77c44",
      "date": "2026-08-24"
     },
     {
      "v": "7b327195329b",
      "version": "1.0.2",
-     "commit": "4d72591",
+     "commit": "f649720",
      "date": "2026-11-02"
     }
    ]
@@ -1783,15 +1669,9 @@
      "date": "2026-08-17"
     },
     {
-     "v": "e32264ff0d6a",
-     "version": null,
-     "commit": "ff61334",
-     "date": "2026-08-18"
-    },
-    {
      "v": "c2c3bd386622",
      "version": null,
-     "commit": "cd2a0c5",
+     "commit": "1bec314",
      "date": "2026-08-18"
     }
    ]
@@ -1838,27 +1718,21 @@
      "date": "2026-08-17"
     },
     {
-     "v": "8614ce4a0ec5",
-     "version": null,
-     "commit": "96476a1",
-     "date": "2026-08-23"
-    },
-    {
      "v": "709e9dd2f98f",
      "version": null,
-     "commit": "2e618c1",
+     "commit": "602bb6c",
      "date": "2026-08-23"
     },
     {
      "v": "c135ca07d880",
      "version": "1.0.1",
-     "commit": "fde90af",
+     "commit": "8a77c44",
      "date": "2026-08-24"
     },
     {
-     "v": "8a4b50c77bc6",
-     "version": "1.0.2",
-     "commit": "4d72591",
+     "v": "1705e127d146",
+     "version": "1.0.3",
+     "commit": "f649720",
      "date": "2026-11-02"
     }
    ]

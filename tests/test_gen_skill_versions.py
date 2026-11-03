@@ -143,7 +143,7 @@ def test_a_regeneration_never_drops_a_published_history_row(repo: Repo) -> None:
 
     index = build(repo)
     index["skills"]["alpha"]["history"].insert(
-        0, {"v": "aaaaaaaaaaaa", "commit": "0000000", "date": "2020-01-01"}
+        0, {"v": "aaaaaaaaaaaa", "commit": repo.git("rev-parse", "--short=7", "HEAD"), "date": "2020-01-01"}
     )
     (repo.base / "docs" / "skill-versions.json").write_text(json.dumps(index))
 
@@ -364,3 +364,283 @@ def test_authoring_home_is_copied_from_the_placement_map_never_invented(repo: Re
     index = build(repo)
     assert index["skills"]["alpha"]["authoring_home"] == "repo-mirrored:logmind"
     assert "authoring_home" not in index["skills"]["beta"]
+
+
+# --- history rows must cite commits the checked revision contains (#290) ----
+
+
+FABRICATED = "deadbee"
+
+
+def write_index(repo: Repo) -> None:
+    (repo.base / "docs").mkdir(exist_ok=True)
+    assert gen_skill_versions.main(["--write"]) == 0
+
+
+def squash_merge(repo: Repo, branch: str) -> str:
+    """Land `branch` on main the way a squash merge does: one new commit
+    carrying the branch's tree, none of the branch's commits."""
+    repo.git("checkout", "-q", "main")
+    repo.git("checkout", branch, "--", ".")
+    return repo.commit("squash")
+
+
+def branch_with_a_new_version(repo: Repo) -> str:
+    """main holds v1; `feat` changes the skill and records the index. Returns
+    the branch commit that changed the skill."""
+    repo.skill("alpha", body="v1")
+    repo.commit("v1")
+    repo.publish("main")
+    repo.git("checkout", "-q", "-b", "feat")
+    repo.skill("alpha", body="v2")
+    changed = repo.commit("v2")
+    repo.publish("feat")
+    write_index(repo)
+    repo.commit("index")
+    repo.publish("feat")
+    return changed
+
+
+def test_check_goes_red_on_a_row_whose_digest_nothing_reachable_carries(
+    repo: Repo, capsys: pytest.CaptureFixture[str]
+) -> None:
+    repo.skill("alpha")
+    repo.commit("v1")
+    repo.publish("main")
+    write_index(repo)
+    assert gen_skill_versions.main(["--check"]) == 0
+
+    index = json.loads((repo.base / "docs" / "skill-versions.json").read_text())
+    index["skills"]["alpha"]["history"][0]["v"] = "aaaaaaaaaaaa"
+    index["skills"]["alpha"]["history"][0]["commit"] = FABRICATED
+    (repo.base / "docs" / "skill-versions.json").write_text(json.dumps(index))
+
+    capsys.readouterr()
+    assert gen_skill_versions.main(["--check"]) == 1
+    out = capsys.readouterr().out
+    assert f"commit {FABRICATED} is not a commit in this clone" in out
+    assert "::error" in out
+
+
+def test_an_in_flight_branch_version_gets_no_history_row_before_the_squash(repo: Repo) -> None:
+    changed = branch_with_a_new_version(repo)
+    index = json.loads((repo.base / "docs" / "skill-versions.json").read_text())
+    v2 = skill_version.digest(SKILL.format(name="alpha", body="v2").encode())
+    assert v2 not in [h["v"] for h in index["skills"]["alpha"]["history"]]
+    assert changed[:7] not in [h["commit"] for h in index["skills"]["alpha"]["history"]]
+    # `current` is still read from disk.
+    assert index["skills"]["alpha"]["current"] == v2
+    assert gen_skill_versions.main(["--check"]) == 0
+
+
+def inject_stale_row(repo: Repo, commit: str, body: str = "v2") -> str:
+    """A row an older generator would have written: real digest, branch commit."""
+    path = repo.base / "docs" / "skill-versions.json"
+    index = json.loads(path.read_text())
+    v = skill_version.digest(SKILL.format(name="alpha", body=body).encode())
+    index["skills"]["alpha"]["history"].append(
+        {"v": v, "version": None, "commit": commit[:7], "date": "2026-01-01"}
+    )
+    path.write_text(json.dumps(index))
+    return v
+
+
+def test_a_post_squash_regeneration_adds_the_version_citing_the_squash(repo: Repo) -> None:
+    changed = branch_with_a_new_version(repo)
+    squashed = squash_merge(repo, "feat")
+    repo.publish("main")
+
+    write_index(repo)
+    index = json.loads((repo.base / "docs" / "skill-versions.json").read_text())
+    v2 = skill_version.digest(SKILL.format(name="alpha", body="v2").encode())
+    rows = {h["v"]: h["commit"] for h in index["skills"]["alpha"]["history"]}
+    assert rows[v2] == squashed[:7] != changed[:7]
+    assert gen_skill_versions.main(["--check"]) == 0
+
+
+def test_a_stale_pointer_with_a_published_digest_warns_then_is_repaired(
+    repo: Repo, capsys: pytest.CaptureFixture[str]
+) -> None:
+    changed = branch_with_a_new_version(repo)
+    squashed = squash_merge(repo, "feat")
+    repo.publish("main")
+    v2 = inject_stale_row(repo, changed)
+
+    capsys.readouterr()
+    assert gen_skill_versions.main(["--check"]) == 0
+    out = capsys.readouterr().out
+    assert "::warning file=docs/skill-versions.json::alpha" in out
+    assert f"commit {changed[:7]} is not an ancestor of HEAD" in out
+    assert "gen_skill_versions.py --write" in out
+    assert "::error" not in out
+
+    write_index(repo)
+    rows = {
+        h["v"]: h["commit"]
+        for h in json.loads((repo.base / "docs" / "skill-versions.json").read_text())["skills"]["alpha"]["history"]
+    }
+    assert rows[v2] == squashed[:7]
+    capsys.readouterr()
+    assert gen_skill_versions.main(["--check"]) == 0
+    assert "::warning" not in capsys.readouterr().out
+
+
+def test_a_fresh_enumeration_prefers_a_reachable_carrier_of_a_version(repo: Repo) -> None:
+    """No index to repair: the same blob lives on a branch commit (older, not
+    reachable from main) and on the squash commit; the row cites the latter."""
+    changed = branch_with_a_new_version(repo)
+    squashed = squash_merge(repo, "feat")
+    repo.publish("main")
+    (repo.base / "docs" / "skill-versions.json").unlink()
+
+    rows = build(repo)["skills"]["alpha"]["history"]
+    assert rows[-1]["commit"] == squashed[:7]
+    assert changed[:7] not in [h["commit"] for h in rows]
+
+
+def test_a_row_no_reachable_commit_carries_is_pruned_by_write(repo: Repo) -> None:
+    changed = branch_with_a_new_version(repo)
+    # An intermediate branch version the squash never kept.
+    repo.git("checkout", "-q", "feat")
+    repo.skill("alpha", body="v3")
+    repo.commit("v3")
+    repo.publish("feat")
+    write_index(repo)
+    repo.commit("index 2")
+    repo.publish("feat")
+    repo.skill("alpha", body="v2")
+    repo.commit("back to v2")
+    repo.publish("feat")
+    squash_merge(repo, "feat")
+    repo.publish("main")
+
+    write_index(repo)
+    index = json.loads((repo.base / "docs" / "skill-versions.json").read_text())
+    v3 = skill_version.digest(SKILL.format(name="alpha", body="v3").encode())
+    rows = index["skills"]["alpha"]["history"]
+    assert v3 not in [h["v"] for h in rows]
+    assert changed[:7] not in [h["commit"] for h in rows]
+    assert gen_skill_versions.main(["--check"]) == 0
+
+
+def test_write_prunes_an_unpublished_row_but_repoints_a_matchable_one(repo: Repo) -> None:
+    changed = branch_with_a_new_version(repo)
+    squashed = squash_merge(repo, "feat")
+    repo.publish("main")
+    path = repo.base / "docs" / "skill-versions.json"
+    index = json.loads(path.read_text())
+    # Unreachable commit AND a digest nothing carries: never published.
+    index["skills"]["alpha"]["history"].append(
+        {"v": "aaaaaaaaaaaa", "version": None, "commit": FABRICATED, "date": "2026-01-01"}
+    )
+    path.write_text(json.dumps(index))
+
+    write_index(repo)
+    rows = {h["v"]: h["commit"] for h in json.loads(path.read_text())["skills"]["alpha"]["history"]}
+    assert "aaaaaaaaaaaa" not in rows
+    v2 = skill_version.digest(SKILL.format(name="alpha", body="v2").encode())
+    assert rows[v2] == squashed[:7] != changed[:7]
+    assert gen_skill_versions.main(["--check"]) == 0
+
+
+def stamped(body: str, version: str) -> str:
+    text = SKILL.format(name="alpha", body=body)
+    return text.replace("---\n", f'---\nversion: "{version}"\n', 1)
+
+
+def test_a_digest_shared_with_a_reachable_commit_is_repointed_never_pruned(repo: Repo) -> None:
+    """Two blobs share a digest (they differ only in the `version:` line): the
+    earliest sits on a branch commit the squash dropped, the other on the
+    squash commit. The published row must follow the reachable one."""
+    repo.skill("alpha", body="v1")
+    repo.commit("v1")
+    repo.publish("main")
+    repo.git("checkout", "-q", "-b", "feat")
+    (repo.base / "skills" / "alpha" / "SKILL.md").write_text(stamped("B", "1.0.1"))
+    c1 = repo.commit("B on the branch")
+    repo.publish("feat")
+    write_index(repo)
+    inject_stale_row(repo, c1, body="B")  # as an older generator wrote it
+    repo.commit("index")
+    repo.publish("feat")
+
+    repo.git("checkout", "-q", "main")
+    repo.git("checkout", "feat", "--", "docs")
+    (repo.base / "skills" / "alpha" / "SKILL.md").write_text(stamped("B", "1.0.2"))
+    squashed = repo.commit("squash")
+    repo.publish("main")
+
+    path = repo.base / "docs" / "skill-versions.json"
+    digest = skill_version.digest(stamped("B", "1.0.1").encode())
+    assert digest == skill_version.digest(stamped("B", "1.0.2").encode())  # control
+    before = {h["v"]: h["commit"] for h in json.loads(path.read_text())["skills"]["alpha"]["history"]}
+    assert before[digest] == c1[:7]
+
+    write_index(repo)
+    rows = {h["v"]: h["commit"] for h in json.loads(path.read_text())["skills"]["alpha"]["history"]}
+    assert rows[digest] == squashed[:7]
+
+
+def test_a_main_only_digest_is_published_so_it_is_carried(repo: Repo) -> None:
+    """Subscribers install from main: a version only origin/main reaches is
+    carried, not fabricated, when the checked HEAD is somewhere else."""
+    repo.skill("alpha", body="v1")
+    repo.commit("v1")
+    repo.git("checkout", "-q", "-b", "side")
+    repo.git("checkout", "-q", "main")
+    repo.skill("alpha", body="hotfix")
+    hot = repo.commit("hotfix")
+    repo.publish("main")
+    row = {
+        "v": skill_version.digest(SKILL.format(name="alpha", body="hotfix").encode()),
+        "version": None, "commit": hot[:7], "date": "2026-01-01",
+    }
+    repo.git("checkout", "-q", "side")
+    write_index(repo)
+    path = repo.base / "docs" / "skill-versions.json"
+    index = json.loads(path.read_text())
+    index["skills"]["alpha"]["history"].append(row)
+    path.write_text(json.dumps(index))
+    assert gen_skill_versions.main(["--check"]) == 0
+
+
+def test_a_dev_only_digest_is_published_so_it_is_admitted(repo: Repo) -> None:
+    """dev is a publishing ref too: merged work lives there until promotion,
+    so a version only origin/dev reaches is admitted, never skipped as
+    in-flight."""
+    repo.skill("alpha", body="v1")
+    repo.commit("v1")
+    repo.publish("main")
+    repo.git("checkout", "-q", "-b", "side")
+    repo.git("checkout", "-q", "-b", "dev", "main")
+    repo.skill("alpha", body="on dev")
+    dev_sha = repo.commit("on dev")
+    repo.publish("dev")
+    repo.git("checkout", "-q", "side")
+    write_index(repo)
+    index = json.loads((repo.base / "docs" / "skill-versions.json").read_text())
+    rows = {r["v"]: r for r in index["skills"]["alpha"]["history"]}
+    digest = skill_version.digest(SKILL.format(name="alpha", body="on dev").encode())
+    assert digest in rows, "a dev-published version must get a history row"
+    assert rows[digest]["commit"] == dev_sha[:7]
+    assert gen_skill_versions.main(["--check"]) == 0
+
+
+def test_check_refuses_a_shallow_clone(
+    repo: Repo, tmp_path_factory: pytest.TempPathFactory, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repo.skill("alpha")
+    repo.commit("v1")
+    repo.skill("alpha", body="v2")
+    repo.commit("v2")
+    repo.publish("main")
+    write_index(repo)
+    repo.commit("index")
+
+    shallow = tmp_path_factory.mktemp("shallow") / "clone"
+    subprocess.run(
+        ["git", "clone", "-q", "--depth", "1", f"file://{repo.base}", str(shallow)], check=True
+    )
+    monkeypatch.chdir(shallow)
+    with pytest.raises(SystemExit, match="shallow clone"):
+        gen_skill_versions.main(["--check"])
