@@ -1,5 +1,7 @@
 ---
-version: "90eb1dd8eb53"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.1"
+digest: "a648cf9ec860"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/agent-skills"
 name: line-height-grid
 description: Use when calculating line-height for any font size in a grid-aligned design system. Names the two-track model (lh-ui = ceil(font × 1.20) snapped to the minor unit; lh-prose = ceil(font × 1.50) snapped to the minor unit), the picking heuristic per role (ui-track for headings / buttons / labels; prose-track for paragraph body), and worked examples for 4/8, 2/4, and 4/16 grids. Cite when an agent picks a unitless line-height multiplier without snapping to the system's grid.
 ---
@@ -17,7 +19,7 @@ Line-height in a token-driven system is not a free multiplier — it's a snapped
 
 ## When NOT to use
 
-- One-off display elements (hero marketing splashes) where the line-height is hand-tuned by a typographer and the grid doesn't apply.
+- No token layer on disk — no grid declared, so there is nothing to snap to. A marketing splash built inside a system with a declared grid is still in scope.
 - Inline contexts where line-height inherits from the parent — the parent owns the grid alignment.
 
 ## The two-track formulas
@@ -29,8 +31,8 @@ lh-prose(size) = ceil(size × 1.50) snapped UP to nearest minor-unit multiple
 
 The ratios are intentional:
 
-- **1.20 for UI**: keeps headings, button labels, and control text tight enough that they don't take excess vertical space in dense layouts. Tighter than 1.20 starts clipping diacritics on large sizes.
-- **1.50 for prose**: matches the canonical typographic recommendation for fluent paragraph reading. Looser than 1.50 starts feeling spaced-out; tighter than 1.45 fatigues the eye.
+- **1.20 for UI**: keeps headings, button labels, and control text tight enough that they don't take excess vertical space in dense layouts.
+- **1.50 for prose**: matches the canonical typographic recommendation for fluent paragraph reading, and the same floor WCAG 1.4.12 requires products to tolerate under a user's own spacing override.
 
 The `ceil` step ensures the line-height is never *less* than the natural typographic ratio; the snap step puts it on the grid for downstream rhythm.
 
@@ -88,12 +90,6 @@ Rounding down can put the resolved line-height *below* the natural ratio, which 
 
 `ceil` + snap-up is monotonic: line-height is always at least the ratio-derived value, and always on the grid.
 
-## Cross-references
-
-- **Routed here by:** [designing-a-design-system](../designing-a-design-system/SKILL.md) — the L1 dispatcher for building or extending a system.
-- **REQUIRED BACKGROUND:** [type-scale](../type-scale/SKILL.md) — provides the font sizes this skill snaps line-heights for. The two skills are paired.
-- **For the unit primitive that drives snapping:** [spacing-system](../spacing-system/SKILL.md) — the minor / major grid is what `snap up to nearest minor-unit multiple` refers to.
-
 ## Verification
 
 After computing line-heights:
@@ -106,8 +102,15 @@ After computing line-heights:
 
 If any check fails, recompute with stricter ceiling + snap-up.
 
+## Cross-references
+
+- **Routed here by:** [designing-a-design-system](../designing-a-design-system/SKILL.md) — the L1 dispatcher for building or extending a system.
+- **REQUIRED BACKGROUND:** [type-scale](../type-scale/SKILL.md) — provides the font sizes this skill snaps line-heights for. The two skills are paired.
+- **For the unit primitive that drives snapping:** [spacing-system](../spacing-system/SKILL.md) — the minor / major grid is what `snap up to nearest minor-unit multiple` refers to.
+
 ## Sources
 
 - The UDTS / token.design typography foundations spec.
 - Classical typography (Bringhurst, *The Elements of Typographic Style*) — the 1.5× rule for prose pre-dates digital systems.
+- [WCAG 2.2 SC 1.4.12 — Text Spacing (AA)](https://www.w3.org/TR/WCAG22/#text-spacing) — the 1.5× line-height floor a product must tolerate under a user override; corroborates the prose ratio, not the UI one.
 - [CSS line-height: where things go wrong](https://hacks.mozilla.org/2024/06/css-line-height/) — modern browser handling caveats.

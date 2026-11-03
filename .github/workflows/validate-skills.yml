@@ -50,6 +50,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          # The version-history check below asks whether each row's commit is
+          # an ancestor of the PR head. A depth-1 clone has no ancestors, so
+          # every row would read as missing.
+          fetch-depth: 0
 
       - uses: actions/setup-python@v7
         with:
@@ -63,3 +68,21 @@ jobs:
         # docs/placement-map.json relative to the cwd, and refuses to report
         # success over a tree it did not actually walk.
         run: python .github/scripts/validate_skills.py
+
+      - name: Validate every agent role
+        # SPEC §2.4's roster: .claude/agents/<name>.md, shaped like a skill
+        # but a distinct contract (see validate_agents.py's own docstring).
+        # Same cwd-relative posture and the same refusal to report success
+        # over zero roles.
+        run: python .github/scripts/validate_agents.py
+
+      - name: Check every version-history row names a published version
+        # Pull requests only, against the checked-out HEAD: on pull_request
+        # that is the merge ref, which reaches both the base's commits and the
+        # branch's. FAILS a row whose digest no commit reachable from HEAD or
+        # origin/main carries (a fabricated or never-published version). Only
+        # WARNS about a row whose commit a squash merge removed but whose
+        # digest a reachable commit still carries; the next PR author repairs
+        # those with `gen_skill_versions.py --write`.
+        if: github.event_name == 'pull_request'
+        run: python .github/scripts/gen_skill_versions.py --check

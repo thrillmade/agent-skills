@@ -1,5 +1,7 @@
 ---
-version: "7c3fe31c3949"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.2"
+digest: "6ca852acf9bf"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/agent-skills"
 name: logmind
 description: |
   MUST be loaded for any task in a project that uses logmind (detect by:
@@ -37,110 +39,83 @@ logmind log "Use PostgreSQL" -r "Need ACID + joins" -a "MongoDB" -a "SQLite" -i 
 
 ## `logmind log` IS the commit primitive — no manual git around it
 
-One invocation replaces `git add` + `git commit` + `git push`.
+One invocation replaces `git add` + `git commit`. This skill describes
+logmind v1.2.0, the latest release; `logmind version` shows yours.
 
-1. Appends to `docs/decisions-branches/<sanitized-branch>.md` — one file
-   per branch, `main` included, append-only and uncapped. Nothing rotates,
-   archives, folds, copies or deletes it when a branch lands; `logmind log`
+1. Appends to `docs/decisions-branches/<sanitized-branch>.md` on a feature
+   branch (`decisions.branch_aware`, on by default) — one file per branch,
+   append-only. On the default branch, a detached HEAD or a non-git
+   directory it appends to `docs/decisions.md` instead. `logmind log`
    routes this, you don't.
-2. Regenerates the derived docs **on the default branch only** — a branch
-   MUST NOT modify them (SPEC §3.3).
-3. **Stages the whole working tree** (`--stage all`, default since v0.2.7)
-   so the decision and its code land in one commit — **don't `git add`
-   first**. `--stage scoped` stages only the decision file(s) when you have
-   unrelated WIP you don't want swept in.
-4. `git commit` with message `logmind: <decision>`, then `git push`
-   (configurable via `auto_push`).
+2. **Stages the whole working tree** (`--stage all`, the default) so the
+   decision and its code land in one commit — **don't `git add` first**.
+   `--stage scoped` stages only the decision file when you have unrelated
+   WIP you don't want swept in.
+3. `git commit` with message `logmind: <decision>`. It **does not push** —
+   `git.auto_push` is in the config but v1.2.0 never reads it. Run
+   `git push` yourself.
+4. Link-checks the markdown. On findings it prints an advisory; in a
+   terminal it offers up to three fix-and-recheck tries, and
+   `--no-interactive` (or piped stdin) skips the prompt and exits 0. The
+   prompt path exits 1 on `q` or after three failed rechecks. The commit
+   has landed either way.
 
-**Nothing follows it** — no `git add` / `git commit` / `git push` /
-`logmind timeline --write`; all already done and staged. `logmind timeline
---write` is an escape hatch for a corrupted timeline or an
-externally-modified tree only.
+`logmind log` does not regenerate the derived docs — see below. After it
+you owe only the push.
 
-## Enforcement: raw `git commit` is blocked
+## Enforcement: a local hook and a PR gate
 
-A substantive commit bypassing `logmind log` is **blocked**, not merely
-discouraged — a git `commit-msg` hook, plus (inside Claude Code) a
-PreToolUse hook intercepting the `git commit` Bash call.
-Escape hatches for genuinely no-decision commits (typos, dep bumps):
-`[skip-logmind]` in the commit subject; `LOGMIND_ALLOW_GIT_COMMIT=1` for
-one command; `git.enforce_commits: false` in `.logmind/config.yml`
-repo-wide.
+- The pre-commit hook (`logmind check-decisions`) **blocks** (exit 1) a
+  sizeable commit with no decision-file update. It never reads
+  `[skip-logmind]`; its escape is `git commit --no-verify`.
+- `logmind init` also installs `check-decisions.yml`, a PR gate on 20+
+  non-doc changed lines. It honors `[skip-logmind]` in the **PR title** only.
+- In a commit subject, `[skip-logmind]` only makes the `commit-msg` hook
+  echo a notice; nothing else reads it.
 
 ## Reading prior context
 
 Before non-trivial work, read in order:
 
-1. **`docs/timeline.md`** — the canonical, source-derived union of decision
-   entries across every branch, each led by its **headline** (below); 50
-   most recent, `docs/timeline-archive.md` continues it.
+1. **`docs/timeline.md`** — the generated union of decision entries across
+   every branch, brief by default (first and last entry per month;
+   `logmind timeline --full` prints every one).
 2. **`docs/decisions-branches/<your-branch>.md`** if present — earlier
    decisions on this branch, in full.
-3. **`docs/file-structure.md`** — project tree, capped at depth 2 by
+3. **`docs/decisions.md`** and `docs/decisions-archive.md` — default-branch
+   decisions; grep them for a term before re-deciding it.
+4. **`docs/file-structure.md`** — project tree, capped at depth 2 by
    default (`--max-depth N` on `logmind file-structure` / `logmind tree`;
    `0` = unbounded).
-4. **The canonical spec file, if configured** (`.logmind/config.yml`'s
-   `context.spec_file`) — the forward-looking intended contract. Build
-   toward it; don't assume it describes the code. Nothing regenerates it —
-   refine it via an ordinary PR.
 
-`logmind context` bundles file structure + timeline (+ spec) in one
-cache-friendly read. `logmind show` lists recent decisions on this branch
-(`--brief`, `--limit N`, `--json`, `--all`); `logmind search <term>` is
-full-text across main + archive.
+## Derived docs are generated — never hand-edit them
 
-## Branch summaries (headline)
+`docs/timeline.md` and `docs/file-structure.md` are computed from sources
+(the decision files above; a tree walk). Edit the sources instead.
 
-On a feature branch, set a one-sentence summary of what the **whole branch**
-does — the canonical timeline shows this line for the branch. `logmind
-headline "<summary>"`, or bundle `-H "<summary>"` into a `logmind log`.
-No-op on the default branch; `logmind doctor --fix` backfills a missing one.
+`regen-timeline.yml` regenerates both on every PR. If they are stale it
+pushes the fix to the branch when `LOGMIND_AUTO_REGEN_PAT` is set; with no
+PAT, or on a fork PR, it fails red with `Stale derived docs`. The fix is
+regeneration, not a hand edit and not a copy from another branch:
 
-## The pulse: advisories after `logmind log`
+```bash
+logmind timeline --write docs/timeline.md
+logmind file-structure --write docs/file-structure.md
+```
 
-After a successful commit, `logmind log` may print advisories to stderr — a
-stale component (workflow/hook/AGENTS.md drift; run `logmind doctor --fix`)
-or spec staleness (spec file untouched for 20+ decisions). They never block
-the commit that landed — act on them anyway.
-
-## Agent-invocation mode: `LOGMIND_QUIET=1`
-
-Set `LOGMIND_QUIET=1` (or `--quiet` / `-q`) so an agent session gets one
-`ok <key-value>` line per command instead of progress chatter; errors and
-warnings still print. `logmind show --json` always emits parseable JSON to
-stdout regardless of `--quiet`, with `ok` on stderr so `| jq` stays clean.
-
-## Derived docs are main-only — don't edit them on a branch
-
-`docs/timeline.md`, `docs/timeline-archive.md` and `docs/file-structure.md`
-regenerate on `main` only, straight from source. Commit to
-`docs/decisions-branches/<branch>.md` instead.
-
-`regen-timeline.yml` enforces this with a **blocking** PR-time gate: a
-branch diff touching either derived doc fails with
-`::error title=Derived docs were edited on this branch` and `exit 1` —
-branch edits cause exactly the cross-PR conflicts this design eliminates.
-Fix by resetting to main's copy: `logmind warp`, or
-`git checkout origin/main -- docs/timeline.md docs/file-structure.md`.
-
-On a push to `main` a job regenerates both files and pushes; with no
-`LOGMIND_AUTO_REGEN_PAT` secret it degrades to a non-blocking
-`::warning title=Derived docs stale on main` (freshness-only — no conflict
-risk). Repos on the older fail-fast template block on *staleness* (missing
-file, fork PR, no PAT) instead of branch edits.
-
-**`logmind warp`** fetches `origin/<default-branch>` and overwrites your
-local `docs/timeline.md` + `docs/file-structure.md`. **Never stages or
-commits.** Run it after pulling, or whenever the gate flags drift.
+Commit both. Add `--check` to either for a CI exit status without writing.
+The same regeneration resolves a merge conflict in either file: re-run it,
+never pick a side. It reads only your checkout's sources, so there is no
+base or tip copy to choose between.
 
 ## Parallel-PR merges
 
 Two PRs that both run `logmind log` don't conflict on the derived docs:
 `logmind init` installs a `.gitattributes` merge-driver block, the
 per-clone `git config` defining the drivers, and a `.git/hooks/post-merge`
-sweep for what the driver missed; `logmind doctor` reports drift on all
-three. Client-side only — it can't help a server-side merge, which is why
-the main-only pin exists.
+sweep that regenerates what the driver missed (unstaged — the next
+`logmind log` picks it up); `logmind doctor` reports drift on all three.
+Client-side only — it can't help a server-side merge.
 
 ## Authoring skills — `logmind skill …`
 
@@ -154,11 +129,13 @@ context, author never iterates) and **aging** (untouched 90+ days) skills;
 across decisions. Pair with `clud-bug usage --health` (loads vs. citations
 on real PRs).
 
-All local and read-only against remotes **except `push`: without
+Local and read-only against remotes **except `push`: without
 `--dry-run` it clones the catalog, pushes a branch, and opens a real pull
 request the moment you run it — no confirmation prompt.** Run `logmind
 skill push <name> --dry-run` first, every time. Nomination isn't
-publication: the catalog's editor gate decides, and can say no.
+publication: the catalog's editor gate decides, and can say no. `suggest`
+is also not local by default: with `ANTHROPIC_API_KEY` set it sends
+pattern candidates and evidence to api.anthropic.com; pass `--no-llm`.
 
 ## Setup and health
 
@@ -172,12 +149,11 @@ logmind doctor # confirm clean install
 prints a note to run `npx clud-bug@latest init` yourself. Run them
 separately.
 
-`logmind doctor` reports installed-vs-latest versions (logmind,
-clud-bug if present) and flags stale workflow templates or an outdated
-`AGENTS.md` block-version, exiting non-zero on drift so it's CI-pluggable
-(`--json` for scripts, `--exit-zero` for informational runs). Run it
-whenever pins might have drifted — `init` auto-heals stale-pin drift even
-when no template body changed.
+`logmind doctor` flags stale workflow templates, stale hooks, merge-driver
+drift and an outdated `AGENTS.md` block-version, exiting non-zero on drift
+so it's CI-pluggable (`--json` for scripts, `--exit-zero` for informational
+runs). It has no clud-bug probe, and its installed-vs-latest version line
+is not reliable in v1.2.0 — don't read it as "up to date".
 
 ## Don'ts
 
@@ -188,5 +164,5 @@ when no template body changed.
 
 ## Cross-references
 
-- [token-frugal-tooling](../token-frugal-tooling/SKILL.md) — agent-mode flags.
+- [token-frugal-tooling](../token-frugal-tooling/SKILL.md) — token-frugal defaults for agent sessions.
 - [clud-bug-collaboration](../clud-bug-collaboration/SKILL.md) — the review half.

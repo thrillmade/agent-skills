@@ -1,5 +1,7 @@
 ---
-version: "5c55077b9a1f"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.0"
+digest: "5c55077b9a1f"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/agent-skills"
 name: retiring-a-superseded-decision
 description: Use when a decision reverses an earlier one — a typeface, colour, route, vendor, threshold, page type, API name or file location replaced — and a README, plan doc, ADR, spec, comment, fixture or generated page may still assert the old value. Also when an approval or review outcome landed in conversation and is not yet in the plan of record, or when an audit has just declared a document clean.
 ---

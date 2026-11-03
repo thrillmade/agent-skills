@@ -1,5 +1,7 @@
 ---
-version: "6054c41b9c3e"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.1"
+digest: "c4adcac2a7fb"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/agent-skills"
 name: design-system-consistency
 description: >-
   Use when judging whether a RENDERED surface obeys its own design system —
@@ -88,9 +90,11 @@ Without the second there is no drift, only preference, and saying so is the find
    replacement — [oklch-color-space](../oklch-color-space/SKILL.md),
    [palette-relationships](../palette-relationships/SKILL.md),
    [chroma-harmonization](../chroma-harmonization/SKILL.md).
-6. **Re-implementation.** A hand-rolled button, card or input where a system component
-   exists — visible on the render as subtly different padding, radius, hover or focus ring
-   from its siblings. Fix: the component, not corrected values.
+6. **Re-implementation.** A hand-rolled button, card or input — the finding stands
+   whether or not a system component for it exists. Where one exists it's visible as
+   subtly different padding, radius, hover or focus ring from its siblings; fix: the
+   component, not corrected values. Where none exists, propose it upstream, filed once
+   per missing component class — not one finding per hand-rolled instance.
 
 ## Every mode needs a token path
 
@@ -126,14 +130,6 @@ correctly in two modes and has nowhere to put the third.
    looking right in the two captured themes.
 5. A token-clean surface gets one line saying so, naming what it was checked against.
 
-## Sources
-
-- [W3C Design Tokens Format Module](https://tr.designtokens.org/format/) — what a token
-  file declares and what an alias is; the catalog's reading is
-  [dtcg-format](../dtcg-format/SKILL.md).
-- **House convention, not a standard:** establish the reference before judging; "no
-  declared stance" is one finding, not many; a mode needs a path, not a screenshot.
-
 ## Cross-references
 
 - **REQUIRED BACKGROUND:** [token-naming-conventions](../token-naming-conventions/SKILL.md)
@@ -151,3 +147,9 @@ correctly in two modes and has nowhere to put the third.
   [reviewing-design-work](../reviewing-design-work/SKILL.md) orders the lenses;
   [consuming-a-design-system](../consuming-a-design-system/SKILL.md) is where a repo with
   no token path goes.
+## Sources
+
+- [W3C Design Tokens Format Module](https://tr.designtokens.org/format/) — what a token
+  file declares and what an alias is; the catalog's reading is
+  [dtcg-format](../dtcg-format/SKILL.md).
+

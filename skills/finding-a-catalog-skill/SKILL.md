@@ -1,5 +1,7 @@
 ---
-version: "1c15601a0087"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.4"
+digest: "497ded87346d"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/agent-skills"
 name: finding-a-catalog-skill
 description: >-
   The directory of the thrillmade/agent-skills catalog — that catalog only,
@@ -46,7 +48,6 @@ What a review flags, what it lets go, and what a claim has to cite.
 
 - `api-contract-enforcement` — public API shape changes
 - `brand-voice-review` — voice in user-facing strings
-- `clud-bug-collaboration` — living with the review bot
 - `critical-issues-only` — correctness, security, perf only
 - `evidence-based-review` — quote the code or cut the claim
 - `guarding-a-regression` — trusting a regression test
@@ -54,6 +55,7 @@ What a review flags, what it lets go, and what a claim has to cite.
 - `proving-an-absence` — claiming a thing is missing
 - `respect-existing-conventions` — a review is not a redesign
 - `skill-frontmatter-quality` — judging a SKILL.md's frontmatter
+- `technical-writing` — docs and changelog for additions
 - `test-discipline` — test edits that hollow a suite
 
 ## Running agents
@@ -68,6 +70,7 @@ Handing work out, gating what comes back, surviving a long session.
 ## The catalog itself
 Finding, censusing and authoring skills; decision logging; CLI conventions.
 
+- `clud-bug-collaboration` — living with the review bot
 - `curating-a-skill-catalog` — the census rubric and verdicts
 - `finding-a-catalog-skill` — this directory
 - `logmind` — when and how to log a decision
@@ -91,6 +94,7 @@ Math and standards any design system can build on. No product opinions.
 - `dtcg-format` — the W3C DTCG interchange file
 - `empirical-design-principles` — which design laws hold
 - `line-height-grid` — two-track line height on grid
+- `motion-continuity` — motion between states
 - `oklch-color-space` — OKLCH ranges and gamut mapping
 - `palette-relationships` — hue-angle palette relationships
 - `semver-design-tokens` — SemVer from the value diff
@@ -99,6 +103,11 @@ Math and standards any design system can build on. No product opinions.
 - `type-scale` — modular ratios and rounding
 - `usability-heuristics` — what the heuristics say
 - `wcag-contrast` — ratios, the legal cross-check
+
+## Web platform behaviour (L0)
+What a shipping engine does that its spec and an emulator do not show.
+
+- `ios-safari-surfaces` — iPhone Safari bars, scroll, svh
 
 ## Design review lenses (L0)
 Judging the rendered surface -- and the standard it is judged against.
@@ -109,9 +118,10 @@ Judging the rendered surface -- and the standard it is judged against.
 - `visual-polish` — the fine-but-not-elite lens
 - `web-interface-guidelines-review` — the code and markup lens
 
-## UDTS stances (L2)
-Parity stubs for skills being authored in tokenomics. Not guidance yet.
+## Design stances (L2)
+One system's or one studio's lean on L0. The udts-* stubs are not guidance yet.
 
+- `thrill-design` — Thrill's house design taste
 - `udts-component-sizing-ladders` — per-density size ladders
 - `udts-dtcg-extensions` — namespaced DTCG extensions
 - `udts-linter-rules` — machine-enforceable lint rules

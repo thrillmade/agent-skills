@@ -29,6 +29,7 @@ The table below is the same list in long form — it has no byte cap, so it can 
 | [`skill-frontmatter-quality`](skills/skill-frontmatter-quality/SKILL.md) | Review SKILL.md frontmatter for trigger surface, specificity, voice, and `review_mode` completeness. Apply on PRs that add or modify a `skills/*/SKILL.md`. Layers above `validate-skills.yml`'s mechanical checks. Pair with clud-bug as a dedicated-mode skill. |
 | [`brand-voice-review`](skills/brand-voice-review/SKILL.md) | Review user-facing strings for brand voice — kill "click here", strip "just"/"simply", catch accidental shouting and title-case drift. Applies to button labels, headings, error messages, marketing copy. Pair with clud-bug as a dedicated-mode skill: each PR gets a brand review alongside the code review. |
 | [`api-contract-enforcement`](skills/api-contract-enforcement/SKILL.md) | Flag PRs that change the shape, semantics, or error behavior of a public API without versioning or a migration path. Catches removed fields, renamed parameters, changed status codes, broken pagination, silent enum drift across HTTP/gRPC/GraphQL/SDK/CLI surfaces. |
+| [`technical-writing`](skills/technical-writing/SKILL.md) | Flag a PR that ships a new env var, CLI flag, config key, exported function/type, or endpoint with no matching doc or changelog entry — working and undocumented, not broken. Excludes reversed values (`retiring-a-superseded-decision`) and breaking API changes (`api-contract-enforcement`); pairs with the latter when a finding also touches behavior. |
 | [`pii-and-compliance`](skills/pii-and-compliance/SKILL.md) | Catch PII and auth material leaking into logs, error traces, analytics events, URLs, or third-party SDKs. Apply to logging calls, telemetry, error handlers, debug statements, and committed test fixtures. |
 | [`test-discipline`](skills/test-discipline/SKILL.md) | Flag the test-edit patterns that hollow out a suite over time: deleted assertions without replacement, mocks that hide the thing being tested, snapshot churn, `.skip`/`.only` left in the diff, time-dependent assertions without frozen time, assertions on internal state instead of observable behavior. |
 | [`proving-an-absence`](skills/proving-an-absence/SKILL.md) | Before reporting that something is missing, unbuilt or unreproducible — control-test the probe against a case you know hits, ask what *generates* the value before grepping for it, name what the instrument deliberately cannot see, and report the search rather than the world. Also fires on any count or measurement stated without running the command. |
@@ -39,7 +40,7 @@ The table below is the same list in long form — it has no byte cap, so it can 
 | [`session-heartbeat`](skills/session-heartbeat/SKILL.md) | Keeping a session working across a stretch longer than one sitting — the per-beat order (standing before spend), the largest-dispatch threshold instead of a round percentage, the checkpoint's required slots, and resume-as-survivor after a limit or compaction. The temporal-continuity layer under [`orchestrating-agent-delegation`](skills/orchestrating-agent-delegation/SKILL.md)'s dispatch mechanics. |
 | [`unattended-operation`](skills/unattended-operation/SKILL.md) | Policy for a session a human explicitly handed over to run **unattended** (often called "night mode", but the trigger is the handover, never the clock) — the handover contract, the reversible-and-invisible boundary on action, "a scheduled wake is never consent", named hard stops, and the handback digest. Layers on [`session-heartbeat`](skills/session-heartbeat/SKILL.md). Not dark mode. |
 | [`curating-a-skill-catalog`](skills/curating-a-skill-catalog/SKILL.md) | The skill-census rubric — lifecycle states, the five verdict kinds with evidence standards, the top-5-plus-digest noise budget, and the human-editor gate. Applied weekly by the census workflow; recursive (the rubric censuses itself). |
-| [`token-frugal-tooling`](skills/token-frugal-tooling/SKILL.md) | Quick-reference for the org's token-frugal CLI conventions in repos running both logmind and clud-bug — quiet-mode env vars, artifact defaults, agent-mode flags. Detail lives in the per-tool skills. |
+| [`token-frugal-tooling`](skills/token-frugal-tooling/SKILL.md) | Quick-reference for the org's token-frugal CLI conventions in repos running both logmind and clud-bug — the clud-bug quiet-mode env var, artifact defaults. Detail lives in the per-tool skills. |
 | [`skillforge`](skills/skillforge/SKILL.md) ✨ | **Superseded** ([#203](https://github.com/thrillmade/agent-skills/issues/203)) — skill authoring is now split three ways: `skill-creator` owns measurement, `superpowers:writing-skills` owns wording form, and the studio's `skill-smith` agent owns house rules. Kept unchanged during the migration window; new work should load the successors. **Vendored from [zakelfassi/skills-driven-development](https://github.com/zakelfassi/skills-driven-development) with attribution** — the canonical SkDD meta-skill. MIT, Zak El Fassi. |
 
 ## Design & design-system skills — three layers
@@ -48,14 +49,14 @@ The design catalog is organized in three layers (locked by the CDO; executed in 
 
 - **L0 — universal primitives.** Math, standards, and principles any design system can build on. No product opinions.
 - **L1 — purpose dispatchers.** Thin entry points that route an agent (or a human landing cold) to the right L0 primitives and L2 stances for a given mode of work. Start here.
-- **L2 — system stances (`udts-*`).** UDTS's opinionated instantiations of the L0 principles. Incubating in `thrillmade/tokenomics`; published here as stubs until stable.
+- **L2 — stances.** An opinionated instantiation of the L0 principles by one system or one studio: the `udts-*` system stances (incubating in `thrillmade/tokenomics`; published here as stubs until stable) and the `thrill-design` house stance.
 
 ### L1 — start here
 
 | Skill | Purpose |
 |---|---|
 | [`designing-a-design-system`](skills/designing-a-design-system/SKILL.md) | Dispatcher for **building or extending** a design system — routes through naming → color → non-color families → format/versioning → the elite bar → testing, in build order. |
-| [`reviewing-design-work`](skills/reviewing-design-work/SKILL.md) | Dispatcher for **reviewing or critiquing** design output — ordered lenses (code rules → rendered-surface lenses → the opinion bar) with routing rules for when the browser-driven design-critic pass fires. |
+| [`reviewing-design-work`](skills/reviewing-design-work/SKILL.md) | Dispatcher for **reviewing or critiquing** design output — ordered lenses (code rules → rendered-surface lenses → the opinion bar → the house stance, when the work is that house's) with routing rules for when the browser-driven design-critic pass fires. |
 | [`consuming-a-design-system`](skills/consuming-a-design-system/SKILL.md) | Dispatcher for **using** a design system in a product — token discipline, composition rules, DTCG install patterns, SemVer-aware upgrades, extend-vs-fork. |
 | [`composing-a-screen`](skills/composing-a-screen/SKILL.md) | Entry point for **making** a screen — the composition sequence in dependency order (rank → group → encode → space → lay out → conventionalise → target → clear the floors → defer). Carries the principles nothing else owns: hierarchy, proximity as a between-to-within ratio, measure and column count, alignment axes, progressive disclosure, Jakob's and Fitts's. |
 
@@ -77,21 +78,29 @@ The design catalog is organized in three layers (locked by the CDO; executed in 
 | [`semver-design-tokens`](skills/semver-design-tokens/SKILL.md) | SemVer for token releases computed from the resolved-value diff, with snapshot and deprecation discipline. |
 | [`empirical-design-principles`](skills/empirical-design-principles/SKILL.md) | The falsifiable half of the design-principle literature — Gestalt grouping (proximity works on *ratios*, not pixels), Fitts, Hick, Miller, Jakob, von Restorff, the aesthetic-usability effect — used forward as a prediction rather than backward as a post-hoc defence, with the four whose design-writing version the source does not support. Ships three [`references/`](skills/empirical-design-principles/references/) files of per-principle primary sources. |
 | [`usability-heuristics`](skills/usability-heuristics/SKILL.md) | The judgement half — Nielsen's ten and heuristic evaluation, Norman on affordances and signifiers *by edition*, Shneiderman's eight, progressive disclosure, recognition over recall. Every row carries a year, because the gate here is provenance and inter-rater agreement, not falsification: five users, 3-5 evaluators, 85%, 7±2 and the three-click rule all say less than they are quoted as saying. |
+| [`motion-continuity`](skills/motion-continuity/SKILL.md) | Motion between two states of one object — become, don't replace; start from where it is; followers never overtake their driver; one clock per gesture; fades timed into their motion; compositor-only properties; precompute once per interaction; reduced motion keeps the meaning. Framework-neutral. |
+| [`ios-safari-surfaces`](skills/ios-safari-surfaces/SKILL.md) | What Safari on iPhone does that no emulator shows — iOS 26+ bar tinting from fixed/sticky edge boxes (cited to WebKit source), the screen-versus-page scroll desync, `svh`/`lvh`/`dvh` for a first screen, and the iOS Simulator as the real test. |
 
 ### L0 — design-critic lenses (pair with clud-bug's dedicated design review)
 
 | Skill | Purpose |
 |---|---|
-| [`designing-elite-ui`](skills/designing-elite-ui/SKILL.md) | The elite/Figma-grade visual STANDARD a build designs to and a critic measures against — one-axis color roles, APCA-gated contrast, stable canvas + floating chrome, light and dark both primary. |
+| [`designing-elite-ui`](skills/designing-elite-ui/SKILL.md) | The elite/Figma-grade visual STANDARD a build designs to and a critic measures against — one-axis color roles, APCA-gated contrast, subtraction with a test, one source per primitive, on-grid and derived sizes, distinct copy, stable canvas + floating chrome, every theme and mode primary. Worked for a tool and for a content-led page. |
 | [`design-system-consistency`](skills/design-system-consistency/SKILL.md) | Flag rendered UI drifting from the system's tokens, scale, and color discipline — judges the screenshot, not just the code. |
 | [`frontend-a11y`](skills/frontend-a11y/SKILL.md) | Accessibility on the rendered surface — contrast ratios, focus visibility, tap targets, semantics, motion. |
 | [`visual-polish`](skills/visual-polish/SKILL.md) | The "fine but not elite" lens — alignment, optical centering, spacing rhythm, state coverage, theme parity. |
 | [`orchestrating-elite-agent-qa`](skills/orchestrating-elite-agent-qa/SKILL.md) | The multi-agent QA pipeline that enforces the bar — adversarial reviewer panels, the browser-driving design-critic gate, fresh-case realistic QA. |
 | [`web-interface-guidelines-review`](skills/web-interface-guidelines-review/SKILL.md) | The code+markup review lens — WIG/Material/Radix rules plus token discipline, the APCA-primary contrast stance, focus contract, and the 24 px floor. Fires first in `reviewing-design-work`. |
 
-### L2 — UDTS stances (incubating stubs)
+### L2 — stances
 
-Parity markers: each names a `udts-*` skill being authored in `thrillmade/tokenomics` and PR'd here once the UDTS spec stabilizes. Don't load these as guidance yet.
+One system's or one studio's lean on the L0 principles, applied on top of the bar rather than instead of it — `reviewing-design-work` runs the house stance as its last lens. `thrill-design` is `kind: design`, so it also runs in clud-bug's dedicated design review.
+
+| Skill | Purpose |
+|---|---|
+| [`thrill-design`](skills/thrill-design/SKILL.md) | Thrill's house taste, layered on `designing-elite-ui` for any surface Thrill designs — nine principles, each with a test: subtract until it breaks, reuse one source, the work is the hero, few and distinct words, continuity over cuts, measured not eyeballed, intent across screens, quiet delight, decide then ship. |
+
+The `udts-*` stubs below are incubating parity markers: each names a `udts-*` skill being authored in `thrillmade/tokenomics` and PR'd here once the UDTS spec stabilizes. Don't load these as guidance yet.
 
 | Stub | Will hold |
 |---|---|
@@ -152,6 +161,13 @@ npx skills add https://github.com/thrillmade/agent-skills
 ```
 
 Browse on skills.sh: <https://www.skills.sh/thrillmade/agent-skills>
+
+Or add it as an npm dependency and let Dependabot open the update PRs — see [docs/npm-package.md](docs/npm-package.md):
+
+```bash
+npm install --save-dev thrill-skills
+npx skills experimental_sync
+```
 
 ## Consumer patterns — using these skills from your tool
 

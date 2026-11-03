@@ -13,10 +13,27 @@ PR's CI run, so this file is always coherent with current `main`.
 ---
 
 
-## 2026-08 (40 decisions)
+## 2026-11 (5 decisions)
 
-- **2026-08-18** — frontend-a11y: name SC 2.5.8's missing Inline exception, fix box-vs-target wording *(fix/sc-258-exceptions)* — [decisions-branches/fix__sc-258-exceptions.md](decisions-branches/fix__sc-258-exceptions.md)
-- *... 38 more decisions ...*
+- **2026-11-03** — Unblock the dev→main promotion: declare the five batch-level prose nets; true the required-check headers *(fix/promotion-ci-and-ledger)* — [decisions-branches/fix__promotion-ci-and-ledger.md](decisions-branches/fix__promotion-ci-and-ledger.md)
+- *... 3 more decisions ...*
+- **2026-11-02** — Design skills: thrill-design house principles, motion-continuity, ios-safari-surfaces; designing-elite-ui and orchestrating-elite-agent-qa amended *(feat/design-skills-nov)* — [decisions-branches/feat__design-skills-nov.md](decisions-branches/feat__design-skills-nov.md)
+
+## 2026-10
+
+- **2026-10-28** — Correction: restore the dropped attribution rule; fix the headroom claim *(feat/sync-local-skills-agents)* — [decisions-branches/feat__sync-local-skills-agents.md](decisions-branches/feat__sync-local-skills-agents.md)
+- **2026-10-28** — Sync the CEO's October local edits: 3 orchestration/design skills merged, all 15 agent roles updated *(feat/sync-local-skills-agents)* — [decisions-branches/feat__sync-local-skills-agents.md](decisions-branches/feat__sync-local-skills-agents.md)
+
+## 2026-09 (4 decisions)
+
+- **2026-09-15** — Restore the show_full_output flag the condensing pass cut, and fix the review-discipline docstring's stale example *(feat/house-structure-gate)* — [decisions-branches/feat__house-structure-gate.md](decisions-branches/feat__house-structure-gate.md)
+- *... 2 more decisions ...*
+- **2026-09-15** — Implement protocol SPEC §2.4/§5.1's agent roster: 15 roles from ~/.claude/agents into .claude/agents/, an agents/ namespace in the placement map, and a validate_agents.py gate *(feat/agent-roster)* — [decisions-branches/feat__agent-roster.md](decisions-branches/feat__agent-roster.md)
+
+## 2026-08 (58 decisions)
+
+- **2026-08-24** — Correct the house-structure-gate record: swap an invented CEO citation for the real ruling, credit PR #216's reversal, fix two arithmetic errors, and close the two dead SHAs the version index shipped *(feat/house-structure-gate)* — [decisions-branches/feat__house-structure-gate.md](decisions-branches/feat__house-structure-gate.md)
+- *... 56 more decisions ...*
 - **2026-08-14** — Gate skill size with a shrink-only ratchet, and deprecate skillforge into the three skills that own its job *(feat/skill-depth-and-interlinking)* — [decisions-branches/feat__skill-depth-and-interlinking.md](decisions-branches/feat__skill-depth-and-interlinking.md)
 
 ## 2026-07 (13 decisions)

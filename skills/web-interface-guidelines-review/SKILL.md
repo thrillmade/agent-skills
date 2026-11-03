@@ -1,5 +1,7 @@
 ---
-version: "302abd5799cd"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.3"
+digest: "1705e127d146"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/agent-skills"
 name: web-interface-guidelines-review
 description: |
   Use when reviewing UI code or design output (React, Vue, Svelte, Astro, plain HTML, design specs) for adherence to web-interface guidelines — Vercel's WIG, Material 3, Radix patterns, and similar opinionated rule sets — extended with token-driven contrast, typography-scale, and spacing-system rules. Names the APCA-preferred contrast stance (cross-check WCAG 2.2 AA, never WCAG-only), the atomic typography class convention (one class binds font + size + lh + tracking + weight), the token-not-raw-hex rule, verb-noun action labels, the focus-ring contract (>= 2 px, 3:1 against both control and adjacent surface, never suppressed), the 24 CSS px WCAG 2.5.8 interactive floor, and the link-vs-button distinction. Cite when an agent reviews UI without checking token discipline, hardcoded values, or atomic typography compliance.
@@ -17,7 +19,7 @@ description: |
 ## When NOT to use
 
 - Pure backend / non-UI PRs (skill won't fire on a server-route change).
-- Marketing-only landing pages with bespoke design that intentionally lives outside the system.
+- No carve-out for a missing token layer: only section 6 skips without one.
 - Prototype code explicitly labeled as throwaway.
 
 ## The review checklist
@@ -81,7 +83,7 @@ Apply each section in order. Stop and flag at the first failure in each section.
 ### 9. Motion
 
 - Honor `prefers-reduced-motion: reduce` — reduce animation distance and easing, or remove non-essential motion entirely.
-- Transitions on color, transform, and opacity only; never `width`, `height`, `top`, `left` (they trigger layout).
+- Transitions on color, transform, and opacity only; never `width`, `height`, `top`, `left` (they trigger layout). State changes: [motion-continuity](../motion-continuity/SKILL.md).
 - Durations from a token (`duration-fast` / `duration-default` / `duration-slow`), not arbitrary `ms` values.
 
 ### 10. Token discipline
@@ -97,11 +99,6 @@ Apply each section in order. Stop and flag at the first failure in each section.
 - Show the fix, not just the rule. "Replace `style={{ color: '#666' }}` with `className=\"text-secondary\"`" beats "use the design tokens."
 - Quote the offending line verbatim before the critique.
 
-## Cross-references
-
-- **REQUIRED BACKGROUND:** contrast — [apca-contrast](../apca-contrast/SKILL.md), [wcag-contrast](../wcag-contrast/SKILL.md); typography — [type-scale](../type-scale/SKILL.md), [line-height-grid](../line-height-grid/SKILL.md); spacing — [spacing-system](../spacing-system/SKILL.md), [component-sizing-principles](../component-sizing-principles/SKILL.md); tokens — [token-naming-conventions](../token-naming-conventions/SKILL.md), [dtcg-format](../dtcg-format/SKILL.md).
-- **UI-string voice:** [brand-voice-review](../brand-voice-review/SKILL.md).
-
 ## Verification
 
 After completing a review:
@@ -111,6 +108,11 @@ After completing a review:
 3. **Sections applied in order.** Contrast and a11y come before token discipline; don't lead with cosmetic findings.
 4. **No bundled comments.**
 5. **Skills cross-referenced.** Contrast findings cite `apca-contrast` / `wcag-contrast`; size findings cite `type-scale` / `component-sizing-principles`.
+
+## Cross-references
+
+- **REQUIRED BACKGROUND:** contrast — [apca-contrast](../apca-contrast/SKILL.md), [wcag-contrast](../wcag-contrast/SKILL.md); typography — [type-scale](../type-scale/SKILL.md), [line-height-grid](../line-height-grid/SKILL.md); spacing — [spacing-system](../spacing-system/SKILL.md), [component-sizing-principles](../component-sizing-principles/SKILL.md); tokens — [token-naming-conventions](../token-naming-conventions/SKILL.md), [dtcg-format](../dtcg-format/SKILL.md).
+- **UI-string voice:** [brand-voice-review](../brand-voice-review/SKILL.md).
 
 ## Sources
 

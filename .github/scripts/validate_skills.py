@@ -79,7 +79,7 @@ except ImportError as _import_error:
 import skill_version
 
 ROOT = Path("skills")
-FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
+FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---(?=\n|\Z)", re.DOTALL)
 
 # protocol SPEC.md §1.10.1 "Frontmatter (NORMATIVE)" -- enums and
 # shapes enforced below. Every key here is OPTIONAL in the
@@ -128,6 +128,15 @@ SIZE_LIMIT = 8192
 
 AUTHORING_HOME_RE = re.compile(r"^(catalog|undecided|repo-mirrored:[a-z0-9-]+)$")
 DISTRIBUTION_VALUES = {"default-on", "opt-in", "catalog-only"}
+
+# SPEC §5.1's own example key ("agents/simplifier"): a role at
+# .claude/agents/<name>.md, not a skill under skills/. This gate's `skills`
+# map carries both namespaces (one committed JSON file is the map for the
+# whole catalog, SPEC §5.1), so every rule below that assumes a `skills/`
+# directory entry -- the 1:1 reconcile, `family`, `owns` -- skips a key
+# carrying this prefix; validate_agents.py owns that namespace's shape and
+# its own 1:1 reconcile against .claude/agents/.
+AGENTS_PREFIX = "agents/"
 
 # How the catalog announces a retirement. All three retired skills open their
 # `description` with it, and no live skill does -- it is the first thing an
@@ -515,6 +524,229 @@ def _is_superseded(meta: dict) -> bool:
     return isinstance(status, str) and status.strip().lower() == "superseded"
 
 
+# --- house section structure gate -------------------------------------------
+#
+# CEO ruling (2026-08-24, in session): the house section order IS enforced --
+# five sections, this order: When to use / When NOT to use / Verification /
+# Cross-references / Sources. No CONTRIBUTING.md, no template, no validator
+# rule stated this shape before now; this makes it one. The reasoning, which
+# is what belongs in the record rather than the headcount below:
+#   1. Human readability across a catalog this size and still growing -- a
+#      fixed sequence is worth real money in muscle memory when files are
+#      read in bulk.
+#   2. The order runs actionable -> adjacent -> archival: do the work, check
+#      it, find what else to read, then the footnotes. It ends on the most
+#      inert material, which is where a scanner's attention drops off anyway.
+#   3. Every file that already carried all five sections agreed on the first
+#      two -- the split was always in the tail three, never in the part that
+#      decides "is this even the right skill."
+#
+# THE ORDER. Measured across the catalog before this gate existed: of the
+# skills carrying all five sections, 14 used When to use -> When NOT to use ->
+# Verification -> Cross-references -> Sources; 9 swapped Verification and
+# Cross-references; 5 put Sources before Cross-references. HOUSE_SECTIONS
+# below is that 14-file order per the ruling above -- the plurality is
+# corroboration, not the reason; reason 3 already narrowed the real dispute to
+# the tail three sections before the count was ever taken. The 14
+# non-conforming files this gate found on the day it landed were reordered
+# (pure section moves, zero prose change, verified free by
+# check_prose_retention.py's own "reordering sections... is free" rule) so the
+# gate could ship strict rather than opening with a grandfather list. See
+# docs/decisions-branches/feat__house-structure-gate.md.
+#
+# THE OPT-OUT IS THE KNOWLEDGE, NOT THE CHECK. Every exemption below is
+# derived from a property already recorded elsewhere (this file's own
+# `_is_superseded`, a skill's self-declared `[L2 stub]` marker, or
+# docs/placement-map.json's `family` / `authoring_home` fields) rather than a
+# name list, so a skill ADDED to an exempt family or authored elsewhere
+# inherits the exemption without a second edit here.
+HOUSE_SECTIONS = (
+    "When to use",
+    "When NOT to use",
+    "Verification",
+    "Cross-references",
+    "Sources",
+)
+HOUSE_SECTION_HEADING_RE = re.compile(r"^## (.+)$", re.MULTILINE)
+
+# A skill with nothing to structure yet. Self-declaring, in the skill's OWN
+# frontmatter `description` -- every udts-* stub opens with this exact marker
+# (see docs/placement-map.json's `authoring_home: repo-mirrored:tokenomics`
+# rows for the same 8 skills). Anchored by `.match()` for the same reason
+# SUPERSEDED_RE above is: with both `.match()` and a literal `^`, neither is
+# provably load-bearing, and a mutation can only prove the one actually
+# anchoring.
+L2_STUB_RE = re.compile(r"\[L2 stub\b")
+
+# Families (docs/placement-map.json `skills.<slug>.family`) that are a
+# different DOCUMENT KIND than the judgment-skill shape the house structure
+# assumes -- exempt as a class, derived from the map's own field rather than
+# a name list.
+#
+#   review-discipline   loaded wholesale into every reviewed PR rather than
+#                        reached for by a "when should I use this" decision.
+#                        Ranges from terse flag-these / do-not-surface /
+#                        finding-template injections (skill-frontmatter-
+#                        quality, critical-issues-only) to full lenses with
+#                        worked categories and a "when this skill should be
+#                        silent" carve-out (test-discipline, pii-and-
+#                        compliance) -- heterogeneous enough that no single
+#                        order would fit the family, but none of it is the
+#                        "when should I reach for this" shape.
+#                        Two members (guarding-a-regression, proving-an-
+#                        absence) happen to carry the house shape anyway --
+#                        the exemption does not forbid it, it just does not
+#                        require it of a family this varied.
+#   design-dispatchers   the four L1 routers (composing-a-screen, consuming-
+#                        a-design-system, designing-a-design-system,
+#                        reviewing-design-work) that "point at the skill
+#                        that carries each station's rules; it does not
+#                        re-teach them." Requiring Verification/Sources here
+#                        would duplicate what the L0 skills they route to
+#                        already own -- violating one-owner-per-fact to
+#                        satisfy a shape.
+#   templates            conventions-template, a copy-and-customise
+#                        scaffold. It has no "when to use" of its own; the
+#                        whole file IS the answer, filled in per maintainer.
+HOUSE_STRUCTURE_EXEMPT_FAMILIES = frozenset(
+    {"review-discipline", "design-dispatchers", "templates"}
+)
+
+# Individually-justified exceptions -- used only where no property above
+# (family, authoring_home, the stub marker, SUPERSEDED, "is the generated
+# directory") accounts for the file. Each earns its place with a reason a
+# reviewer can check against the file, on purpose: a bare name list is a
+# second owner of the same fact and rots silently; a name with its reason
+# attached is a claim a reviewer can hold the file up against.
+#
+# EMPTY ON PURPOSE, not an oversight. The two prior rows (curating-a-skill-
+# catalog, token-frugal-tooling) were a byte-headroom excuse and a document-
+# kind excuse respectively; both skills were edited to actually carry all
+# five sections instead, so neither reason stands. See
+# docs/decisions-branches/fix__house-structure.md and
+# docs/decisions-branches/feat__house-structure-gate.md. A future file that
+# genuinely cannot be derived from a property above still earns a row here,
+# same terms as before -- nothing about the mechanism is removed, only its
+# two former occupants.
+HOUSE_STRUCTURE_NAMED_EXEMPTIONS: dict[str, str] = {}
+
+
+def _house_structure_headings(body: str) -> list[str]:
+    """The subsequence of `body`'s `## ` headings that are one of the five
+    HOUSE_SECTIONS strings, in document order.
+
+    Fenced/indented/inline code is blanked first via `_strip_code` -- the
+    same pass the link gate above runs -- so a heading shown as a
+    documentation EXAMPLE (`skillforge`'s own `## Steps` inside a fenced
+    walkthrough is the one instance in this catalog) is never misread as a
+    real section.
+    """
+    scanned = _strip_code(body)
+    return [h for h in HOUSE_SECTION_HEADING_RE.findall(scanned) if h in HOUSE_SECTIONS]
+
+
+def _house_structure_exempt_reason(
+    dir_name: str,
+    meta: dict,
+    superseded: set[str],
+    skills_map: dict | None,
+) -> str | None:
+    """Why `dir_name` is not required to carry the house shape, or `None` if
+    it IS required. Checked in this order; the first match wins.
+    """
+    if dir_name == gen_skill_directory.DIRECTORY_SLUG:
+        return (
+            "the generated catalog directory -- rendered by "
+            "gen_skill_directory.py; hand-editing its headers would fail --check"
+        )
+    if dir_name in superseded:
+        return "SUPERSEDED -- frozen during the migration window (see _is_superseded)"
+
+    description = meta.get("description")
+    if isinstance(description, str) and L2_STUB_RE.match(description):
+        return "an [L2 stub] -- self-declared incubating, no content yet to structure"
+
+    entry = skills_map.get(dir_name) if isinstance(skills_map, dict) else None
+    if isinstance(entry, dict):
+        authoring_home = entry.get("authoring_home")
+        if isinstance(authoring_home, str) and authoring_home.startswith("repo-mirrored:"):
+            return (
+                f"authoring_home={authoring_home!r} -- this catalog does not "
+                "own the file's structure"
+            )
+        family = entry.get("family")
+        if isinstance(family, str) and family in HOUSE_STRUCTURE_EXEMPT_FAMILIES:
+            return f"family={family!r} -- a different document kind (see HOUSE_STRUCTURE_EXEMPT_FAMILIES)"
+
+    if dir_name in HOUSE_STRUCTURE_NAMED_EXEMPTIONS:
+        return HOUSE_STRUCTURE_NAMED_EXEMPTIONS[dir_name]
+
+    return None
+
+
+def house_structure_errors(
+    root: Path,
+    skill_dirs: list[Path],
+    skill_meta: dict[str, dict],
+    superseded: set[str],
+    skills_map: dict,
+) -> list[str]:
+    """Every non-exempt SKILL.md carries the five HOUSE_SECTIONS headings, in
+    that order.
+
+    Only runs when `skills_map` (docs/placement-map.json's `skills` object)
+    parsed cleanly -- the family/authoring_home exemptions read it, and a
+    tree without a usable map has nothing to derive them from. Mirrors the
+    rest of this file's posture toward the placement map: absence is
+    tolerated, presence-with-defects is reported by the block above, not
+    duplicated here.
+
+    `skill_meta` carries only skills whose frontmatter already parsed as a
+    mapping (see `run()`) -- a skill with missing/malformed frontmatter is
+    already reported by the per-skill loop above and is skipped here rather
+    than double-counted.
+    """
+    errors: list[str] = []
+    for skill_dir in skill_dirs:
+        dir_name = skill_dir.name
+        meta = skill_meta.get(dir_name)
+        if meta is None:
+            continue
+
+        if _house_structure_exempt_reason(dir_name, meta, superseded, skills_map) is not None:
+            continue
+
+        skill_md = skill_dir / "SKILL.md"
+        content = skill_md.read_text(encoding="utf-8")
+        fm = FRONTMATTER_RE.match(content)
+        body = content[fm.end():] if fm else content
+        present = _house_structure_headings(body)
+
+        missing = [h for h in HOUSE_SECTIONS if h not in present]
+        if missing:
+            errors.append(
+                f"::error file={skill_md}::missing the house section(s) "
+                f"{', '.join(f'`## {h}`' for h in missing)}. Every skill "
+                "carries `## When to use`, `## When NOT to use`, "
+                "`## Verification`, `## Cross-references` and `## Sources` "
+                "(in that order) unless it is exempt -- see "
+                "HOUSE_STRUCTURE_EXEMPT_FAMILIES and "
+                "HOUSE_STRUCTURE_NAMED_EXEMPTIONS in validate_skills.py for "
+                "the legitimate variations, and docs/placement-map.json's "
+                "`family` field to request one."
+            )
+            continue
+
+        if present != list(HOUSE_SECTIONS):
+            errors.append(
+                f"::error file={skill_md}::house sections are present but out "
+                f"of order -- found {present}, expected {list(HOUSE_SECTIONS)}. "
+                "Move the headings; this is a pure structural edit, never a "
+                "reason to reword or cut content."
+            )
+    return errors
+
+
 def _valid_extension_entry(e: object) -> bool:
     """An `applies_to.extensions` entry is a suffix-matched string —
     clud-bug does suffix matching, not strict dotfile-extension
@@ -538,6 +770,125 @@ def _skill_dirs(root: Path) -> list[Path]:
     return sorted(p for p in root.iterdir() if p.is_dir())
 
 
+# One (field, permissive-line-reader, strict-count, malformed-message) tuple
+# per identity field, walked in `identity_errors` below. `digest` and
+# `origin` have exactly one correct value the gate can compute on its own
+# (the content hash, and the constant `skill_version.ORIGIN`); `version`
+# does not -- its correct PATCH digit depends on whether THIS file's own
+# prior claim already matches the freshly computed digest, which is exactly
+# what `skill_version.stamp()` already works out. So every field's "what
+# should this line say" answer is read the same way: render `stamp(raw)`
+# once and compare each actual line against the line it produced.
+_IDENTITY_FIELDS = (
+    (
+        "version",
+        skill_version.version_lines,
+        skill_version.version_line_count,
+        skill_version.stamped_version,
+        'It must be `version: "<major>.<minor>.<patch>"` -- the quotes are '
+        "REQUIRED, an unquoted three-part number is still just text but a "
+        "malformed one is not worth the exception. Never bump PATCH by hand; "
+        "only MAJOR and MINOR are an author's to set.",
+    ),
+    (
+        "digest",
+        skill_version.digest_lines,
+        skill_version.digest_line_count,
+        skill_version.stamped_digest,
+        'It must be `digest: "<12 lowercase hex>"` -- the quotes are '
+        "REQUIRED, because unquoted an all-digit digest parses as an "
+        "integer.",
+    ),
+    (
+        "origin",
+        skill_version.origin_lines,
+        skill_version.origin_line_count,
+        skill_version.stamped_origin,
+        f"It must be `origin: {skill_version.ORIGIN}` -- unquoted, this "
+        "catalog's own URL and nothing else.",
+    ),
+)
+
+
+def identity_errors(prefix: str, raw: bytes) -> list[str]:
+    """`version:` / `digest:` / `origin:` -- the three fields split out of
+    the old single `version:` stamp (see skill_version.py's module
+    docstring): an ordered, human semver; a recomputable content digest; and
+    a machine-readable route home, in place of a YAML comment `yaml.safe_load`
+    discarded before a program ever saw it.
+
+    Checked against the file's own bytes, so none of the three is a promise a
+    human has to keep. A stale stamp is worse than none: every subscriber
+    comparing against it is told they are current when they are not.
+
+    ENFORCED WHEN PRESENT, NOT REQUIRED -- the same posture `version:` alone
+    had, and `source` and `kind` still have. The protocol SPEC owns the
+    frontmatter schema (live §2.1 "The skill file"), and its table already
+    marks `source` REQUIRED against 0 of 49 adopters. Declaring a required key
+    from inside the catalog would widen that divergence rather than close it.
+    Ratification is protocol#39's to grant; until it does, a file naming NONE
+    of the three is not an error -- but naming one and not the others is: the
+    three are gated together, because an index carrying `current` and
+    `version` for a skill whose file only bothered to claim a digest is
+    exactly the kind of half-true state this format exists to make
+    unrepresentable.
+    """
+    opted_in = any(count(raw) for _f, _lf, count, _sv, _msg in _IDENTITY_FIELDS)
+    if not opted_in:
+        return []
+
+    errors: list[str] = []
+    expected_full = skill_version.stamp(raw)
+
+    for field, line_fn, count_fn, stamped_fn, malformed_msg in _IDENTITY_FIELDS:
+        lines = line_fn(raw)
+        expected_line = line_fn(expected_full)[0]
+
+        if len(lines) == 0:
+            # The other two fields are present (`opted_in` is true) but this
+            # one is not -- the file has opted the whole triple in without
+            # actually naming all of it. Reported by name, the same as any
+            # other missing-but-required-together key in this file.
+            errors.append(
+                f"::error file={prefix}::this file stamps `version:`/`digest:`/"
+                f"`origin:` together but is missing `{field}:` -- it must be "
+                f"all three or none. Run `python3 .github/scripts/"
+                f"stamp_versions.py --write`, which would add `{expected_line}`."
+            )
+        elif len(lines) > 1:
+            # Two lines for one field make identity a question of which
+            # reader you ask. A `search`-based gate takes the FIRST and
+            # passes; every YAML consumer takes the LAST (last key wins) and
+            # reads something else. Neither is wrong about its own rule, so
+            # the file has to be rejected rather than adjudicated. Not just
+            # `version:`'s risk -- `yaml.safe_load` applies last-key-wins to
+            # any duplicated key, so `digest:` and `origin:` get the same
+            # check.
+            shown = lines[0].split()[1] if len(lines[0].split()) > 1 else "?"
+            errors.append(
+                f"::error file={prefix}::frontmatter has {len(lines)} `{field}:` "
+                f"lines, and there must be exactly one -- this gate would read "
+                f"{shown} while `yaml.safe_load` reads the last one. Keep one "
+                f"line: `{expected_line}`"
+            )
+        else:
+            claimed = stamped_fn(raw)
+            if claimed is None:
+                errors.append(
+                    f"::error file={prefix}::`{lines[0]}` is not a well-formed "
+                    f"`{field}:` stamp. {malformed_msg} Never type this by hand; "
+                    f"run `python3 .github/scripts/stamp_versions.py --write`."
+                )
+            elif lines[0] != expected_line:
+                errors.append(
+                    f"::error file={prefix}::`{field}` claims {claimed!r} but "
+                    f"should read `{expected_line}`. The stamp is stale, so every "
+                    f"subscriber comparing against it reads a wrong identity. Run "
+                    f"`python3 .github/scripts/stamp_versions.py --write`."
+                )
+    return errors
+
+
 def run(root: Path) -> list[str]:
     """Validate every skill under `root`, returning the `::error ...::` lines.
 
@@ -559,6 +910,14 @@ def run(root: Path) -> list[str]:
     # slug -> content digest, filled in as each skill is read, so the index
     # gate below compares against bytes this run actually saw.
     digests: dict[str, str] = {}
+    # slug -> the semver the file itself claims, or None if it has never
+    # been stamped -- same "filled in as read" reasoning as `digests` above.
+    versions: dict[str, str | None] = {}
+    # slug -> parsed frontmatter, filled in only once it parses as a mapping
+    # -- what `house_structure_errors` below reads its exemption signals
+    # from, so a skill with malformed frontmatter (already reported above)
+    # is never double-counted there.
+    skill_meta: dict[str, dict] = {}
 
     if not root.exists() or not root.is_dir():
         print("::error::skills/ directory not found at repo root")
@@ -605,6 +964,8 @@ def run(root: Path) -> list[str]:
         if _is_superseded(meta):
             superseded.add(dir_name)
 
+        skill_meta[dir_name] = meta
+
         name = meta.get("name")
         if not name or not isinstance(name, str) or not name.strip():
             errors.append(
@@ -629,67 +990,15 @@ def run(root: Path) -> list[str]:
                 f"::error file={prefix}::frontmatter is missing a non-empty `description:` field"
             )
 
-        # --- Content identity (`version:`) ---------------------------------
+        # --- Content identity (`version:` / `digest:` / `origin:`) --------
         #
-        # Checked against the file's own bytes, so it is not a promise a human
-        # has to keep. A stale stamp is worse than none: every subscriber
-        # comparing against it is told they are current when they are not.
-        #
-        # ENFORCED WHEN PRESENT, NOT REQUIRED -- the same posture `source` and
-        # `kind` already have here. The protocol SPEC owns the frontmatter
-        # schema (live §2.1 "The skill file"), and its table already marks
-        # `source` REQUIRED against 0 of 49 adopters. Declaring a second
-        # required key from inside the catalog would widen that divergence
-        # rather than close it. Ratification is protocol#39's to grant; until
-        # it does, an unstamped file is not an error and a WRONG stamp is.
-        #
-        # Read from the RAW line, never from the YAML parse: unquoted, an
-        # all-digit digest is coerced to int -- `766941312459` is a real
-        # historical digest of this catalog's own frontend-a11y, and
-        # `000000123456` is read as octal (42798) and does not round-trip.
-        expected = skill_version.digest(raw)
-        digests[dir_name] = expected
-        expected_line = skill_version.version_line(expected)
-        lines = skill_version.version_lines(raw)
-
-        if len(lines) > 1:
-            # Two `version:` lines make identity a question of which reader
-            # you ask. A `search`-based gate takes the FIRST and passes; every
-            # YAML consumer takes the LAST (last key wins) and reads something
-            # else. Neither is wrong about its own rule, so the file has to be
-            # rejected rather than adjudicated.
-            errors.append(
-                f"::error file={prefix}::frontmatter has {len(lines)} `version:` "
-                f"lines, and there must be exactly one -- this gate would read "
-                f"{lines[0].split()[1] if len(lines[0].split()) > 1 else '?'} while "
-                f"`yaml.safe_load` reads the last one. Keep one line: "
-                f"`{expected_line}`"
-            )
-        elif len(lines) == 1:
-            claimed = skill_version.stamped_value(raw)
-            if claimed is None:
-                errors.append(
-                    f"::error file={prefix}::`{lines[0]}` is not a well-formed "
-                    f'stamp. It must be `version: "<12 lowercase hex>"` -- the '
-                    f"quotes are REQUIRED, because unquoted an all-digit digest "
-                    f"parses as an integer. Never type this by hand; run "
-                    f"`python3 .github/scripts/stamp_versions.py --write`."
-                )
-            elif claimed != expected:
-                errors.append(
-                    f"::error file={prefix}::`version` claims {claimed} but this "
-                    f"file's content digest is {expected}. The stamp is stale, so "
-                    f"every subscriber comparing against it reads a wrong "
-                    f"identity. Run `python3 .github/scripts/stamp_versions.py "
-                    f"--write`."
-                )
-            elif lines[0] != expected_line:
-                errors.append(
-                    f"::error file={prefix}::the `version:` line is generated in "
-                    f"full -- digest and route home have one owner between them. "
-                    f"Expected exactly:\n{expected_line}\nGot:\n{lines[0]}\n"
-                    f"Run `python3 .github/scripts/stamp_versions.py --write`."
-                )
+        # See `identity_errors` above for the rules. `digests`/`versions` are
+        # filled in here regardless of whether this file opts in to the
+        # stamp -- the skill-versions.json currency gate below needs every
+        # skill's digest and semver, stamped or not (None is a value too).
+        digests[dir_name] = skill_version.digest(raw)
+        versions[dir_name] = skill_version.stamped_version(raw)
+        errors.extend(identity_errors(prefix, raw))
 
         # Require an H1 (Markdown title) somewhere in the body after the frontmatter
         body = content[m.end():]
@@ -786,6 +1095,12 @@ def run(root: Path) -> list[str]:
     # --- docs/placement-map.json gate (see the constants above) --------
 
     placement_map_path = root.parent / "docs" / "placement-map.json"
+    # Scoped here, not inside the `if` below, so `house_structure_errors`
+    # (after the block) can read the already-parsed map without a second
+    # read+parse -- one owner for "what does the placement map say", reused
+    # rather than re-derived.
+    pm: dict | None = None
+    skills_map: dict | None = None
 
     if placement_map_path.exists():
         pm_prefix = str(placement_map_path)
@@ -879,6 +1194,16 @@ def run(root: Path) -> list[str]:
                 else:
                     malformed_entry = False
                     for slug, meta in skills_map.items():
+                        if slug.startswith(AGENTS_PREFIX):
+                            # SPEC §5.1's own example ("agents/simplifier") is a
+                            # separate namespace: a role at .claude/agents/, not
+                            # a skill under skills/. Its shape and its 1:1
+                            # reconciliation against the roster directory are
+                            # validate_agents.py's gate, not this one's -- family
+                            # and owns are generated-DIRECTORY concepts that
+                            # (deliberately) do not apply to a role, per SPEC
+                            # §5.1's own example, which carries neither.
+                            continue
                         if not isinstance(meta, dict):
                             errors.append(
                                 f"::error file={pm_prefix}::skills.{slug} must be "
@@ -1003,10 +1328,20 @@ def run(root: Path) -> list[str]:
                     # this set without the guard raised TypeError out of the
                     # whole gate -- a malformed map taking the validator down
                     # instead of being reported by it.
+                    # `agents/`-prefixed entries are filtered here for the same
+                    # reason `map_names` filters them below -- a different
+                    # namespace, reconciled by validate_agents.py. Without the
+                    # filter an `agents/` entry that DID carry a `family` would
+                    # count as live use and silently keep a dead family alive:
+                    # the check would pass, defeated by a key it was never
+                    # meant to read. The two filters are one rule and must stay
+                    # in step; a panel found this half missing.
                     used = {
                         m.get("family")
-                        for m in skills_map.values()
-                        if isinstance(m, dict) and isinstance(m.get("family"), str)
+                        for k, m in skills_map.items()
+                        if not k.startswith(AGENTS_PREFIX)
+                        and isinstance(m, dict)
+                        and isinstance(m.get("family"), str)
                     }
                     dead = [] if malformed_entry else sorted(family_ids - used)
                     if dead:
@@ -1018,7 +1353,13 @@ def run(root: Path) -> list[str]:
                         )
 
                     # Map keys must EXACTLY equal the skills/ directory names.
-                    map_names = set(skills_map.keys())
+                    # `agents/`-prefixed keys are a different namespace (see
+                    # above) and are excluded here rather than counted as
+                    # "extra" -- they are reconciled against .claude/agents/
+                    # by validate_agents.py instead.
+                    map_names = {
+                        k for k in skills_map.keys() if not k.startswith(AGENTS_PREFIX)
+                    }
                     dir_names = {d.name for d in skill_dirs}
                     missing_from_map = sorted(dir_names - map_names)
                     extra_in_map = sorted(map_names - dir_names)
@@ -1032,6 +1373,11 @@ def run(root: Path) -> list[str]:
                             f"::error file={pm_prefix}::{placement_map_path} has an entry "
                             f"for non-existent skills/ dir(s): {', '.join(extra_in_map)}"
                         )
+
+    if isinstance(skills_map, dict):
+        errors.extend(
+            house_structure_errors(root, skill_dirs, skill_meta, superseded, skills_map)
+        )
 
     errors.extend(directory_errors(root, placement_map_path))
     errors.extend(readme_errors(root, skill_dirs))
@@ -1083,13 +1429,26 @@ def run(root: Path) -> list[str]:
                     "being current. Run "
                     "`python3 .github/scripts/gen_skill_versions.py --write`."
                 )
-            elif entry.get("current") != want:
+                continue
+            if entry.get("current") != want:
                 errors.append(
                     f"::error file={sv_prefix}::skills.{slug}.current is "
                     f"{entry.get('current')!r} but skills/{slug}/SKILL.md digests "
                     f"to {want}. The index is stale, so every subscriber it "
                     "answers is told the wrong thing. Run "
                     "`python3 .github/scripts/gen_skill_versions.py --write`."
+                )
+            # `version` is the semver counterpart of the check just above --
+            # same reasoning, same remedy. None is a legitimate value on both
+            # sides (a skill never stamped), so it is compared like any other.
+            want_version = versions.get(slug)
+            if entry.get("version") != want_version:
+                errors.append(
+                    f"::error file={sv_prefix}::skills.{slug}.version is "
+                    f"{entry.get('version')!r} but skills/{slug}/SKILL.md's "
+                    f"`version:` claims {want_version!r}. The index is stale, "
+                    "so every subscriber it answers is told the wrong thing. "
+                    "Run `python3 .github/scripts/gen_skill_versions.py --write`."
                 )
 
     return errors

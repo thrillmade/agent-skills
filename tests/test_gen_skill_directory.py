@@ -513,3 +513,88 @@ def test_the_shipped_directory_names_every_skill(monkeypatch: pytest.MonkeyPatch
     missing = [n for n in names if f"`{n}`" not in body]
     assert missing == []
     assert "`zzz-not-a-skill`" not in body  # control: absence is detectable
+
+
+def test_the_frontmatter_helper_agrees_with_the_regex_copies() -> None:
+    """A sixth and seventh owner of one rule.
+
+    `gen_skill_directory` needs an INDEX, not a match, so it carried the
+    boundary inlined as `text.find("\\n---", 4)` at two call sites. That is
+    the same unanchored search the four `FRONTMATTER_RE` copies were fixed
+    for -- and a grep for `FRONTMATTER_RE` could not find it, which is how it
+    survived the first sweep. Searching for the symbol found four owners;
+    searching for the behaviour found six.
+
+    Pinned against `validate_skills`'s copy because both operate on `str`;
+    `skill_version`'s operates on `bytes`, whose offsets differ on any file
+    containing non-ASCII characters.
+    """
+    import validate_skills
+
+    for md in sorted((REPO_ROOT / "skills").glob("*/SKILL.md")):
+        text = md.read_text(encoding="utf-8")
+        m = validate_skills.FRONTMATTER_RE.match(text)
+        assert m is not None, md.parent.name
+        assert gen._frontmatter_end(text) == m.end() - len("\n---"), md.parent.name
+
+
+def test_the_frontmatter_helper_does_not_stop_at_a_line_merely_starting_with_dashes() -> None:
+    """The control for the test above: on real skills the naive search and
+    the correct one agree, so that test alone would pass against the bug.
+    """
+    probe = '---\nname: x\n--- not a close\nversion: "1.0"\n---\nbody\n'
+    assert gen._frontmatter_end(probe) != probe.find("\n---", 4)
+    assert probe[gen._frontmatter_end(probe):].startswith("\n---\nbody")
+
+
+def test_the_trigger_surface_call_site_uses_the_anchored_boundary(tmp_path: Path) -> None:
+    """Pinned on the CALL SITE, not the helper.
+
+    The helper test above passes even if a call site is reverted to the naive
+    `text.find("\\n---", 4)` -- a test on the helper passes its own mutation
+    and still goes green when the bug ships again. This one reads what the
+    caller actually produces.
+    """
+    md = tmp_path / "SKILL.md"
+    md.write_text(
+        '---\nname: alpha\n--- not a close\ndescription: findable\n---\n\n# T\n\nB.\n',
+        encoding="utf-8",
+    )
+    surface = gen._trigger_surface(md, "alpha")
+    # Everything up to the FIRST line that is exactly `---` is frontmatter, so
+    # the description must be in the surface. Under the naive search the block
+    # ends at `--- not a close` and the description is lost.
+    assert "findable" in surface
+    assert "not a close" in surface
+
+
+def test_the_split_call_site_uses_the_anchored_boundary() -> None:
+    """The SECOND call site, pinned the same way as the first.
+
+    `_split` decides where the directory skill's hand-authored frontmatter
+    ends and its generated body begins. Under the naive search a frontmatter
+    line merely starting with dashes ends the block early, so part of the
+    frontmatter is treated as body -- and `--write` would then overwrite
+    hand-authored fields, while `--check` would report drift that is not
+    there.
+
+    An earlier version of this branch guarded only `_trigger_surface`'s call
+    site. Mutating THIS one back to the naive search left all 39 tests green,
+    which is the same decorative-test defect the guard was added to close --
+    at the other half of the same fix.
+    """
+    text = (
+        "---\n"
+        "name: finding-a-catalog-skill\n"
+        "--- not a close\n"
+        "description: hand-authored, must survive\n"
+        "---\n"
+        "\n"
+        "# Body\n"
+    )
+    front, body = gen._split(text)
+    # Everything up to the FIRST line that is exactly `---` is frontmatter.
+    assert "hand-authored, must survive" in front
+    assert "not a close" in front
+    assert "hand-authored" not in body
+    assert body.lstrip().startswith("# Body")
