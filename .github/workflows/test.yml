@@ -6,7 +6,7 @@ name: test
 # and message text are pinned there so a change to either gate has to be a
 # deliberate one.
 #
-# REQUIRED SINCE 2026-11. Measured, not assumed: the org "CI must pass"
+# REQUIRED. Measured 2026-11-03, not assumed: the org "CI must pass"
 # ruleset requires a status check named exactly `ci` on PRs into both dev and
 # main (`gh api repos/thrillmade/agent-skills/rules/branches/dev` lists it,
 # and nothing else), and `.../rules/branches/main` additionally requires

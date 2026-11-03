@@ -53,8 +53,8 @@ name: check-prose-retention
 # path list rots -- this repository already shipped a size gate that could not
 # see edits to its own budget file. A committed test asserts this stays absent.
 #
-# A REQUIRED CHECK ON MAIN SINCE 2026-11. Measured directly rather than
-# assumed: `gh api repos/thrillmade/agent-skills/rules/branches/main` lists
+# A REQUIRED CHECK ON MAIN. Measured 2026-11-03 rather than assumed:
+# `gh api repos/thrillmade/agent-skills/rules/branches/main` lists
 # five required status checks -- `ci`, `validate skills`, `test`,
 # `check-links` and this job's `check prose retention` -- and
 # `.../rules/branches/dev` -- the branch this repository's PRs actually
