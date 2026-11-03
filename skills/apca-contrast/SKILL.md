@@ -1,5 +1,7 @@
 ---
-version: "c894961136c7"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.0"
+digest: "c894961136c7"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/agent-skills"
 name: apca-contrast
 description: Use when picking text-on-surface contrast, auditing an accessibility budget, or generating a color against a specific contrast target. Names the APCA Lc target table (Lc 90 fluent body, 75 body minimum, 60 secondary, 45 large, 30 spot, 15 non-text), the APCACH inverse-composition rule, the Display-P3 meter rule (score on the same gamut the composer targeted, never sRGB-clamped), and WCAG 2.2 AA as an optional, off-by-default cross-check. Cite when an agent reaches for WCAG 2.x as the primary or required contrast model, or scores Lc through an sRGB-clamped meter — APCA is UDTS's required perceptual gate; WCAG is optional and advisory.
 ---

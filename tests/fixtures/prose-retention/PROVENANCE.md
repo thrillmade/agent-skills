@@ -44,3 +44,19 @@ lines — and lost nothing. The suite asserts the gate stays silent on both:
 
 Without the controls, a detector that simply flagged every touched file would
 pass the three positive tests. They are what makes those three mean something.
+
+## The sixth: `designing-elite-ui`, the churn founding case
+
+Not from #197. `before.md`/`after.md` here are `602bb6c`/`8896dcc` --
+designing-elite-ui's #257 restructure (issue #258): it cut the author-addressed
+`## Deploying This Skill` section (55 words) in the same change that added the
+house's five standard sections. Net-per-scope scored a GAIN, not a loss --
+`over` cannot see it by construction -- and the gate exited 0 on a real,
+undisclosed cut. Both commits are ordinary history on `dev`/`main`, not a topic
+branch, but vendored on the same terms as the other five: hermetic, and
+immune to a future rebase moving what these two hashes mean.
+
+```sh
+git show 602bb6c:skills/designing-elite-ui/SKILL.md   # before
+git show 8896dcc:skills/designing-elite-ui/SKILL.md   # after
+```

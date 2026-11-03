@@ -1,0 +1,31 @@
+{
+  "name": "thrill-skills",
+  "version": "0.1.0",
+  "description": "The thrillmade agent-skills catalog, packaged for npm so a version bump is a normal Dependabot PR. Ships content only — sync it into your repo with the `skills` CLI's `experimental_sync`.",
+  "license": "MIT",
+  "homepage": "https://www.skills.sh/thrillmade/agent-skills",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thrillmade/agent-skills.git"
+  },
+  "bugs": "https://github.com/thrillmade/agent-skills/issues",
+  "author": "thrillmot",
+  "keywords": [
+    "claude",
+    "claude-code",
+    "agent-skills",
+    "skills",
+    "skills.sh",
+    "cursor",
+    "codex",
+    "ai-agents"
+  ],
+  "files": [
+    "skills",
+    "LICENSE",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

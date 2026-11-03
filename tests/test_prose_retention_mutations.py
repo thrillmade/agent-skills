@@ -478,8 +478,8 @@ MUTATIONS = [
         # scores as loss. This is the false-positive direction: the gate turns
         # into noise and people route around it.
         "gains_ignored",
-        "            self.scopes[name] = sum((b - a).values()) - sum((a - b).values())",
-        "            self.scopes[name] = sum((b - a).values())",
+        "            self.scopes[name] = self.gross_loss[name] - self.gross_gain[name]",
+        "            self.scopes[name] = self.gross_loss[name]",
     ),
     # -- scope of the gate --------------------------------------------------
     (
@@ -783,8 +783,8 @@ MUTATIONS = [
         # to the total the author is told to write into the ledger -- leaving
         # two numbers in one message and no way to tell which is real.
         "breakdown_omits_parts_below_their_floor",
-        "            for n, v in sorted(self.scopes.items(), key=lambda kv: -kv[1])",
-        "            for n, v in sorted(self.over.items(), key=lambda kv: -kv[1])",
+        "        parts = [(n, v) for n, v in self.scopes.items() if v > 0 and n not in self.churn]",
+        "        parts = [(n, v) for n, v in self.over.items()]",
     ),
     (
         # The paste-the-row loop, restored. The failure hands over a row whose

@@ -1,8 +1,10 @@
 ---
-version: "be3f7dadd266"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.1.0"
+digest: "ee642a5b1da4"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/agent-skills"
 name: reviewing-design-work
 description: |
-  Entry-point dispatcher for REVIEWING or CRITIQUING design work — a PR that touches UI code, a rendered surface or screenshot, a Figma handoff, or a design spec. Routes the review through ordered lenses: code and markup rules first (web-interface-guidelines-review), then rendered-surface lenses (design-system-consistency, frontend-a11y, visual-polish), then the opinionated bar (designing-elite-ui) — with routing rules for when the browser-driven design-critic pass fires (per orchestrating-elite-agent-qa). Use when the task is judging existing design output; for building a system load designing-a-design-system; for consuming one load consuming-a-design-system.
+  Entry-point dispatcher for REVIEWING or CRITIQUING design work — a PR that touches UI code, a rendered surface or screenshot, a Figma handoff, or a design spec. Routes the review through ordered lenses: code and markup rules first (web-interface-guidelines-review), then rendered-surface lenses (design-system-consistency, frontend-a11y, visual-polish), then the opinionated bar (designing-elite-ui), then the house stance (thrill-design) when the work is that house's — with routing rules for when the browser-driven design-critic pass fires (per orchestrating-elite-agent-qa). Use when the task is judging existing design output; for building a system load designing-a-design-system; for consuming one load consuming-a-design-system.
 ---
 
 # Reviewing design work
@@ -18,7 +20,7 @@ the station's own skill to actually run it.
 ## When to use
 
 - Reviewing a PR that adds or changes UI code, styles, tokens, or theme.
-- Critiquing a rendered surface or screenshot (light and dark).
+- Critiquing a rendered surface or screenshot (every theme and mode).
 - Reviewing a design spec or a Figma → code handoff before the build lands.
 - Running the design-critic gate on a slice (see [orchestrating-elite-agent-qa](../orchestrating-elite-agent-qa/SKILL.md)).
 
@@ -28,39 +30,37 @@ the station's own skill to actually run it.
   [designing-a-design-system](../designing-a-design-system/SKILL.md), not this dispatcher.
 - **Consuming a design system** (wiring an existing token set into a product) — load
   [consuming-a-design-system](../consuming-a-design-system/SKILL.md).
-- Pure logic / backend review with no design surface — this dispatcher adds nothing.
+- Pure logic / backend review with no design surface.
 
 ## Lens order
 
 Run the lenses in this order **within a review session**. (In clud-bug's pipeline the
-code lens and the design lenses are two *orthogonal, independently gated passes* —
-SPEC §2.2 — so this ordering governs how a reviewer or orchestrator sequences
-the work and prioritizes findings, not a cross-pass scheduling constraint; the
-elite-bar-last placement is this dispatcher's guidance.)
+code and design lenses are *independently gated passes* — SPEC §2.2 — so this order
+sequences a reviewer's work and findings, not the passes.)
 
 1. **Code + markup lens — [web-interface-guidelines-review](../web-interface-guidelines-review/SKILL.md).** The opinionated rule set
    (WIG, Material 3, Radix) plus token-driven contrast/typography/spacing rules: APCA-preferred
    contrast cross-checked with WCAG 2.2 AA, atomic typography class, token-not-raw-hex,
    verb-noun labels, the focus-ring contract, the 24 CSS px interactive floor. Findings
    cite rules, not vibes. **REQUIRED BACKGROUND:** [web-interface-guidelines-review](../web-interface-guidelines-review/SKILL.md).
-2. **Rendered-surface lenses — on screenshots in light AND dark.** Three lenses judge the
+2. **Rendered-surface lenses — on screenshots in every theme and mode.** Three lenses judge the
    render itself:
    - **[design-system-consistency](../design-system-consistency/SKILL.md)** — token / scale / color-discipline drift visible on
      the render, not just the source line.
    - **[frontend-a11y](../frontend-a11y/SKILL.md)** — contrast ratios, focus visibility, tap targets, semantics, and
-     motion on the rendered surface, in both themes.
+     motion on the rendered surface, in every mode.
    - **[visual-polish](../visual-polish/SKILL.md)** — alignment, optical centering, spacing rhythm, glyph/pattern
      quality, state coverage, theme parity ("fine but not elite" counts).
 
    **REQUIRED BACKGROUND:** [design-system-consistency](../design-system-consistency/SKILL.md), [frontend-a11y](../frontend-a11y/SKILL.md), [visual-polish](../visual-polish/SKILL.md).
-3. **Opinion lens last — [designing-elite-ui](../designing-elite-ui/SKILL.md).** The concrete elite / Figma-grade bar
-   (one-axis color, APCA-gated contrast, floating stable chrome, dark verified). It runs
-   last because it is the subjective bar; the objective violations should already be
-   caught. **REQUIRED BACKGROUND:** [designing-elite-ui](../designing-elite-ui/SKILL.md).
-
-**Rationale:** objective rule violations before subjective bar judgments, so findings land
-in severity order — and the cheap code lens runs before the browser-driving rendered
-passes.
+3. **Opinion lens — [designing-elite-ui](../designing-elite-ui/SKILL.md).** The concrete elite / Figma-grade bar
+   (one-axis color, gated contrast, subtraction, on-grid sizes, every mode). It runs
+   after the objective lenses because it is the subjective bar; the objective
+   violations should already be caught. **REQUIRED BACKGROUND:** [designing-elite-ui](../designing-elite-ui/SKILL.md).
+4. **House stance last — when the work is that house's.** Apply the L2 stance the
+   work belongs to — [thrill-design](../thrill-design/SKILL.md) for Thrill's; it leans
+   on the bar where the bar leaves room and never overrides an objective finding.
+   Skip for anyone else's work.
 
 Each lens judges against the L0 primitives it does not re-derive — the color / type /
 spacing math: [oklch-color-space](../oklch-color-space/SKILL.md), [apca-contrast](../apca-contrast/SKILL.md), [wcag-contrast](../wcag-contrast/SKILL.md),
@@ -79,25 +79,24 @@ Shneiderman, where the gate is source and edition rather than prediction.
 | Situation | What fires |
 |---|---|
 | PR touches UI code, **no** visual surface change (routing, state wiring, refactor) | Code lens only; the rendered lenses stay silent. |
-| PR changes a visual surface (component, layout, styles, theme) | Code lens **and** rendered lenses, with [designing-elite-ui](../designing-elite-ui/SKILL.md) running last after the objective lenses; the rendered pass is browser-driven — screenshots light + dark, states exercised — per [orchestrating-elite-agent-qa](../orchestrating-elite-agent-qa/SKILL.md) (**REQUIRED BACKGROUND** for orchestrating that gate). |
+| PR changes a visual surface (component, layout, styles, theme) | Code lens **and** rendered lenses, with [designing-elite-ui](../designing-elite-ui/SKILL.md), then any house stance, after the objective lenses; the rendered pass is browser-driven — screenshots in every mode, states exercised — per [orchestrating-elite-agent-qa](../orchestrating-elite-agent-qa/SKILL.md) (**REQUIRED BACKGROUND** for orchestrating that gate). |
 | Design spec / Figma handoff, **no code yet** | [web-interface-guidelines-review](../web-interface-guidelines-review/SKILL.md) applies to the spec; [designing-elite-ui](../designing-elite-ui/SKILL.md) sets the bar the build must hit; the rendered lenses defer to post-build review. |
-| clud-bug-installed repo | The 4 dedicated design lenses ([design-system-consistency](../design-system-consistency/SKILL.md), [frontend-a11y](../frontend-a11y/SKILL.md), [visual-polish](../visual-polish/SKILL.md), [designing-elite-ui](../designing-elite-ui/SKILL.md)) are `kind: design` — they run as the separate **design pass** (SPEC §4.8), never inline with the code review, and **only when the repo opts in**: the design pass is listed in `review.passes` in `.clud-bug.json`, at least one design skill applies to the diff, and the trigger is a pull request. Installation alone never fires the pass, and design findings are advisory unless the repo marks that pass blocking. |
+| clud-bug-installed repo | The 5 `kind: design` skills (four lenses and the house stance: [design-system-consistency](../design-system-consistency/SKILL.md), [frontend-a11y](../frontend-a11y/SKILL.md), [visual-polish](../visual-polish/SKILL.md), [designing-elite-ui](../designing-elite-ui/SKILL.md), [thrill-design](../thrill-design/SKILL.md)) run as the separate **design pass** (SPEC §4.8), never inline with the code review, and **only when the repo opts in**: the design pass is listed in `review.passes` in `.clud-bug.json`, at least one design skill applies to the diff, and the trigger is a pull request. Installation alone never fires the pass, and design findings are advisory unless the repo marks that pass blocking. |
 
 ## System-specific layers
 
-These lenses are generic — they compose with a system's own opinionated stance rather than
-replacing it. [udts-review](../udts-review/SKILL.md) is one system's worked instantiation (incubating): the
-UDTS-specific rules a reviewer checks *on top of* this dispatcher. Treat it as a parity
-marker pointing at tokenomics, not as loadable guidance yet.
+These lenses are generic; an L2 stance composes on top rather than replacing them.
+[thrill-design](../thrill-design/SKILL.md) is one house's (lens 4). [udts-review](../udts-review/SKILL.md) is one
+system's (incubating): a parity marker pointing at tokenomics, not loadable guidance yet.
 
 ## Cross-references
 
 - **L0 primitives:** [oklch-color-space](../oklch-color-space/SKILL.md), [apca-contrast](../apca-contrast/SKILL.md), [wcag-contrast](../wcag-contrast/SKILL.md),
   [palette-relationships](../palette-relationships/SKILL.md), [chroma-harmonization](../chroma-harmonization/SKILL.md), [type-scale](../type-scale/SKILL.md), [line-height-grid](../line-height-grid/SKILL.md),
   [token-naming-conventions](../token-naming-conventions/SKILL.md), [component-sizing-principles](../component-sizing-principles/SKILL.md),
-  [empirical-design-principles](../empirical-design-principles/SKILL.md), [usability-heuristics](../usability-heuristics/SKILL.md).
+  [empirical-design-principles](../empirical-design-principles/SKILL.md), [usability-heuristics](../usability-heuristics/SKILL.md), [motion-continuity](../motion-continuity/SKILL.md).
 - **L0 critic lenses:** [web-interface-guidelines-review](../web-interface-guidelines-review/SKILL.md), [design-system-consistency](../design-system-consistency/SKILL.md),
   [frontend-a11y](../frontend-a11y/SKILL.md), [visual-polish](../visual-polish/SKILL.md), [designing-elite-ui](../designing-elite-ui/SKILL.md); and [orchestrating-elite-agent-qa](../orchestrating-elite-agent-qa/SKILL.md)
-  (the QA gate that drives the browser-driven rendered pass).
-- **L1 sibling dispatchers:** [designing-a-design-system](../designing-a-design-system/SKILL.md), [consuming-a-design-system](../consuming-a-design-system/SKILL.md).
-- **L2 stances (incubating):** [udts-review](../udts-review/SKILL.md).
+  (rendered-pass gate).
+- **L1 siblings:** [designing-a-design-system](../designing-a-design-system/SKILL.md), [consuming-a-design-system](../consuming-a-design-system/SKILL.md).
+- **L2 stances:** [udts-review](../udts-review/SKILL.md) (incubating), [thrill-design](../thrill-design/SKILL.md).

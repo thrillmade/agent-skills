@@ -1,0 +1,127 @@
+name: npm publish
+
+# Publishes the `thrill-skills` package (skills/ content only — no bin, no
+# build, no deps) to npm. This is what lets a subscriber repo run
+# `npm install --save-dev thrill-skills` and get updates as a normal
+# Dependabot PR instead of a hand-run `npx skills update`. See
+# docs/npm-package.md for the consumer-side story.
+#
+# Trigger: a `vX.Y.Z` tag push, or a manual dispatch naming one. NOT on
+# every push to main, and never on a PR — pull_request can't reach this
+# workflow at all (it isn't in the `on:` block), so a fork PR cannot
+# trigger a publish no matter what it edits.
+#
+# Auth: OIDC Trusted Publishing, the same pattern clud-bug's
+# npm-publish.yml already proved out in this org — no NPM_TOKEN secret
+# to store, rotate, or leak. One-time setup on npmjs.com is required
+# before the first real publish (out of scope for this workflow file):
+#   npmjs.com → thrill-skills package → Settings → Publishing access
+#   → Trusted Publisher: thrillmade/agent-skills, workflow: npm-publish.yml,
+#     environment: blank.
+# `thrill-skills` has never been published, so that setting can't exist
+# yet — npm's package-creation flow lets you register a Trusted Publisher
+# for a name before its first publish; that first publish is the
+# repository owner's to run, not this workflow's to attempt unattended.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to check out and publish (e.g. v0.1.0)'
+        required: true
+        type: string
+
+permissions: {}
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write    # OIDC for npm Trusted Publishing + provenance
+    steps:
+      # Guard the workflow_dispatch path. `inputs.tag || github.ref` falls
+      # back to github.ref, which on workflow_dispatch is the BRANCH the
+      # dispatch was fired from -- typically main, not a tag. A stray
+      # dispatch with an empty tag would therefore publish main's HEAD as a
+      # release. `required: true` covers the web form; it is not a runtime
+      # guarantee for an API- or CLI-triggered dispatch, so this checks at
+      # run time. Ported from thrillmade/clud-bug's own npm-publish.yml,
+      # which carries this guard for exactly this reason -- an earlier
+      # version of THIS file cited that workflow as its pattern and then
+      # dropped the guard the pattern exists for.
+      # Tag-push triggers skip it (event_name == 'push').
+      - name: Validate dispatch inputs
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          TAG_INPUT: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${TAG_INPUT}" ]]; then
+            echo "::error::workflow_dispatch requires an explicit tag. Without one this would publish the branch HEAD, not a release."
+            exit 1
+          fi
+          if [[ ! "${TAG_INPUT}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+            echo "::error::tag '${TAG_INPUT}' is not vX.Y.Z shaped."
+            exit 1
+          fi
+
+      - name: Checkout the tag
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+
+      # Cheap insurance: re-run the same gate every PR to main already
+      # passed, at the exact ref being published. A tag pointed at a
+      # stale or hand-picked commit shouldn't get a pass just because
+      # some other commit on main was validated.
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install PyYAML
+        run: pip install pyyaml
+
+      - name: Validate every SKILL.md at this ref
+        run: python3 .github/scripts/validate_skills.py
+
+      - name: Set up Node + npm registry
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Upgrade npm to a Trusted-Publishing-capable version
+        # Node 20 ships npm 10.x, which signs provenance attestations but
+        # does not exchange the OIDC token for a publish token — it falls
+        # back to looking for NPM_TOKEN, finds none, and the publish PUT
+        # gets rejected with a misleading 404. End-to-end OIDC publish
+        # needs npm 11.5.1+. Pinned to @11 rather than @latest: npm 12
+        # requires Node >=22.22, which this Node-20 runner doesn't have.
+        run: npm install -g npm@11
+
+      - name: Publish
+        # --provenance triggers the OIDC exchange + attestation generation.
+        # --access public is required for an unscoped package's first
+        # publish. Prerelease-aware dist-tag: npm does not automatically
+        # route a `-rc.N`/`-beta.N` version away from `latest`, so a bare
+        # `npm publish` on a prerelease tag would still point the default
+        # install channel at it.
+        run: |
+          set -euo pipefail
+          VERSION="$(node -p "require('./package.json').version")"
+          # The tag and package.json must agree. npm refuses to re-publish a
+          # version, so a v9.9.9 tag on a 0.1.0 package would publish 0.1.0
+          # and leave the git tag and the registry permanently disagreeing,
+          # with nothing to catch it. Fail instead.
+          REF="${{ inputs.tag || github.ref }}"
+          TAG_VERSION="${REF#refs/tags/}"; TAG_VERSION="${TAG_VERSION#v}"
+          if [[ -n "${TAG_VERSION}" && "${TAG_VERSION}" != "${VERSION}" ]]; then
+            echo "::error::tag says ${TAG_VERSION}, package.json says ${VERSION}. Bump one to match the other."
+            exit 1
+          fi
+          if [[ "${VERSION}" == *-* ]]; then DIST_TAG=next; else DIST_TAG=latest; fi
+          echo "Publishing thrill-skills@${VERSION} to dist-tag '${DIST_TAG}'"
+          npm publish --provenance --access public --tag "${DIST_TAG}"

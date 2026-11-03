@@ -1,20 +1,24 @@
 #!/usr/bin/env python3
-"""Write the `version:` stamp into every SKILL.md under skills/.
+"""Write the version/digest/origin stamp into every SKILL.md under skills/.
 
     python3 .github/scripts/stamp_versions.py            # report, change nothing
     python3 .github/scripts/stamp_versions.py --write     # stamp
     python3 .github/scripts/stamp_versions.py --check     # exit 1 if any is stale
 
-Never edit a stamp by hand -- the digest is the file's own bytes, so a typed
-value is wrong the moment the file next changes, and a wrong stamp is worse
-than no stamp: every subscriber comparing against it reads a false identity
-and is told they are current when they are not.
+Never edit any of the three by hand. `digest` is the file's own bytes, so a
+typed value is wrong the moment the file next changes; `origin` has exactly
+one correct value for every file; `version`'s PATCH digit is `stamp()`'s to
+compute, not an author's to guess (MAJOR and MINOR are the author's -- see
+`skill_version.py`). A wrong stamp is worse than no stamp: every subscriber
+comparing against it reads a false identity and is told they are current
+when they are not.
 
 Line-oriented on purpose. 18 of 49 descriptions are `|`/`>-` block scalars and
 a YAML round-trip rewrites them, so this never parses-and-re-emits; it splices
-one line into the frontmatter and leaves every other byte alone. Both of those
-are ASSERTED per file, not intended: the body must come out byte-identical, and
-the result must re-parse with `name` and `description` unchanged.
+three lines into the frontmatter and leaves every other byte alone. Both of
+those are ASSERTED per file, not intended: the body must come out
+byte-identical, and the result must re-parse with `name` and `description`
+unchanged.
 
 Exit codes:
   0  nothing to do (or --write succeeded)
@@ -61,22 +65,59 @@ def restamp(raw: bytes) -> bytes:
     old_meta, new_meta = _meta(old_front), _meta(new_front)
     for key in ("name", "description"):
         assert new_meta.get(key) == old_meta.get(key), f"stamping changed `{key}`"
-    assert new_meta.get("version") == skill_version.digest(new), "stamp does not re-parse"
 
-    assert skill_version.stamped_value(new) == skill_version.digest(new), "not a fixed point"
-    # Idempotence is a DIFFERENT property from the fixed point above, not a
-    # stronger restatement of it: it was believed to imply the fixed point
+    assert new_meta.get("digest") == skill_version.digest(new), "stamp does not re-parse"
+    assert new_meta.get("origin") == skill_version.ORIGIN, "origin does not re-parse"
+    assert new_meta.get("version") == skill_version.stamped_version(new), "version does not re-parse"
+
+    # Each of the three is its own fixed point: what the STRICT reader
+    # extracts from the freshly written line must equal what the field is
+    # actually FOR -- the hash of the elided bytes, the one true origin, and
+    # whatever semver `stamp()` just decided. Verified independently rather
+    # than folded into one assertion, because a regression that corrupts only
+    # one of the three lines (see `version_line`/`digest_line`/`origin_line`)
+    # must not hide behind the other two still agreeing with themselves.
+    assert skill_version.stamped_digest(new) == skill_version.digest(new), "digest is not a fixed point"
+    assert skill_version.stamped_origin(new) == skill_version.ORIGIN, "origin is not a fixed point"
+    assert skill_version.stamped_version(new) is not None, "version is not a fixed point"
+    # Idempotence is a DIFFERENT property from the fixed points above, not a
+    # stronger restatement of them: it was believed to imply the fixed point
     # because `restamp` calls `stamp` twice, but a regression that lives
-    # inside `version_line` itself -- not in the call site -- fires
-    # identically on both calls, corrupting both sides of `stamp(new) == new`
-    # the same way and leaving them equal to each other while both are wrong.
-    # An unquoted `version_line` is exactly that: `stamped_value(new)` comes
-    # back `None` while `stamp(new) == new` still holds, so only the
-    # fixed-point assertion above catches it. Verified by mutation on
-    # `skill_version.version_line`, not on `stamp` -- see
+    # inside `*_line` itself -- not in the call site -- fires identically on
+    # both calls, corrupting both sides of `stamp(new) == new` the same way
+    # and leaving them equal to each other while both are wrong. An unquoted
+    # `digest_line` is exactly that: `stamped_digest(new)` comes back `None`
+    # while `stamp(new) == new` still holds, so only the fixed-point
+    # assertions above catch it. Verified by mutation on
+    # `skill_version.digest_line`, not on `stamp` -- see
     # `test_restamp_refuses_a_persistent_unquoting_regression`.
     assert skill_version.stamp(new) == new, "not idempotent"
     return new
+
+
+_FIELDS = (
+    ("version", skill_version.version_lines, skill_version.version_line_count),
+    ("digest", skill_version.digest_lines, skill_version.digest_line_count),
+    ("origin", skill_version.origin_lines, skill_version.origin_line_count),
+)
+
+
+def _why(raw: bytes) -> str:
+    """Name every field this file's stamp gets wrong -- there can be more
+    than one at once, e.g. a file carrying none of the three is wrong about
+    all of them.
+    """
+    counts = {name: count(raw) for name, _lines, count in _FIELDS}
+    if any(n != 1 for n in counts.values()):
+        return ", ".join(f"{n} `{name}:` line(s)" for name, n in counts.items()) + " -- exactly one of each"
+
+    want = skill_version.stamp(raw)
+    wrong = [
+        f"`{name}` claims {lines(raw)[0].split(': ', 1)[1]!s}"
+        for name, lines, _count in _FIELDS
+        if lines(raw)[0] != lines(want)[0]
+    ]
+    return "; ".join(wrong) if wrong else "the stamp is correct"  # pragma: no cover -- unreachable: raw != new implies at least one line differs
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -113,18 +154,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     for path in stale:
-        raw = path.read_bytes()
-        n = skill_version.version_line_count(raw)
-        if n == 0:
-            why = f"no `version:` line; should be {skill_version.digest(raw)}"
-        elif n > 1:
-            why = f"{n} `version:` lines -- there must be exactly one"
-        else:
-            why = (
-                f"claims {skill_version.stamped_value(raw)}, "
-                f"content digest is {skill_version.digest(raw)}"
-            )
-        print(f"{path}: {why}")
+        print(f"{path}: {_why(path.read_bytes())}")
     print(
         f"{len(stale)} of {len(paths)} stamp(s) stale. "
         f"Run `python3 {Path(__file__).name} --write` -- never type one by hand."

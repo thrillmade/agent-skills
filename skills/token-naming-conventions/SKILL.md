@@ -1,5 +1,7 @@
 ---
-version: "e89a261fddd8"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.0"
+digest: "acd03a0caa94"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/agent-skills"
 name: token-naming-conventions
 description: |
   Use when designing, auditing, or critiquing a design-token naming scheme for any design system. Names the universal principles: hyphen-separated kebab-case names; prefix-loaded naming where the first segment declares the token's class and kind, so a linter or agent can derive contrast obligations from the name alone; redundant class encoding in metadata so validators catch name/metadata mismatches; physical, non-semantic primitive names (hue angles, not accent-teal) with semantic labels reserved for the theme layer; resolution-chain naming (direct vs via-semantic component-token shapes); and the rule that theme and density are runtime axes that never appear in a token name. Cite when an agent proposes dot-separated paths, semantic primitive names, or names whose class isn't derivable from the prefix. For UDTS's concrete instantiation see udts-naming-convention.
@@ -46,8 +48,9 @@ prefix without opening the token body.
 Split prefixes into two disjoint groups:
 
 - **Contrast-bound** prefixes (e.g. `content-*`, `surface-*`) name tokens that
-  carry a contrast-pairing obligation — every value must clear an APCA/WCAG
-  check against its intended background.
+  carry a contrast-pairing obligation — every value must clear its declared
+  APCA Lc target against its intended background. WCAG 2.2 AA is an optional,
+  off-by-default cross-check, never a second required gate.
 - **Free** prefixes name tokens with no contrast obligation — decorative,
   illustration, and brand-spot colors that are never asked to be legible text.
 

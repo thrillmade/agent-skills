@@ -29,13 +29,29 @@ legitimately moves down is a rule nobody can satisfy and everyone learns to
 bypass. What IS gated, on every PR and needing no history at all, is that each
 `current` equals the digest of the file on disk -- see validate_skills.py.
 
-WHAT IS NOT GATED, STATED PLAINLY: the history rows. They are derived from git,
-and `.github/workflows/validate-skills.yml` checks out at depth 1, so CI cannot
-recompute them. This is the same defect that disqualifies putting a revision
-ordinal in the file itself -- relocating it into the index does not eliminate
-it, and pretending otherwise would be the dishonesty this file exists to
-replace. The index carries the split in its own `verification` block so a
-reader is told which half they can rely on.
+WHAT IS NOT GATED, STATED PLAINLY: the history rows' CONTENT. They are derived
+from git, and CI cannot recompute them. This is the same defect that
+disqualifies putting a revision ordinal in the file itself -- relocating it into
+the index does not eliminate it, and pretending otherwise would be the
+dishonesty this file exists to replace. The index carries the split in its own
+`verification` block so a reader is told which half they can rely on.
+
+WHAT IS GATED ABOUT THEM, since #290: that every row's VERSION was published.
+A squash merge discards the branch commits a row cited, so a row written on a
+branch names a commit the integration branch will never carry -- stale, but
+repairable, because the same digest is carried by the squash commit. `--check`
+therefore has two tiers. It FAILS a row whose digest no commit reachable from
+HEAD or a publishing ref carries (a fabricated or never-published version), and
+only WARNS about a row whose commit is unreachable but whose digest has a
+reachable carrier, naming the repair. "Reachable" includes both publishing refs
+-- subscribers install from main, and merged work lives on origin/dev until
+promotion -- so a version either ref carries is published. The generator makes the
+repair deterministic: it prefers a reachable carrier of each digest, `--write`
+re-points a stale row at the earliest one, and prunes a row no reachable commit
+carries (a branch-only intermediate a squash did not keep); see
+`prune_unreachable`. Admission is stricter than the check: `--write` lets a row
+in only if origin/dev or origin/main carries its digest, so a branch regen
+records no in-flight row and the squash orphans cannot enter the file at all.
 """
 
 from __future__ import annotations
@@ -56,6 +72,7 @@ import skill_version
 # result.
 REFSPEC = "origin/*"
 PUBLISHING_REF = "origin/main"
+PUBLISHING_REFS = ("origin/dev", PUBLISHING_REF)
 OUT = Path("docs/skill-versions.json")
 
 # Every stamped SKILL.md points a reader here, so this file has to answer the
@@ -63,11 +80,13 @@ OUT = Path("docs/skill-versions.json")
 README = (
     "Content identity for every SKILL.md this catalog has published. "
     "To check a copy you hold, by hand: normalise CRLF to LF, delete the "
-    "`version:` line from its frontmatter, sha256 the rest, take the first 12 "
-    "hex characters -- then find your skill's slug below. Matching `current` "
-    "means you are up to date; a match in `history` means you are that many "
-    "versions behind; no match means your copy was edited locally. To check a "
-    "whole repo at once, run "
+    "`version:`, `digest:` and `origin:` lines from its frontmatter, sha256 "
+    "the rest, take the first 12 hex characters -- then find your skill's "
+    "slug below. Matching `current` means you are up to date; a match in "
+    "`history` means you are that many versions behind; no match means your "
+    "copy was edited locally. `version` and each row's `version` are the "
+    "skill's own semver, null for anything published before that field "
+    "existed. To check a whole repo at once, run "
     "https://raw.githubusercontent.com/thrillmade/agent-skills/main/"
     ".github/scripts/skills_current.py -- stdlib only, no install. Update "
     "with `npx skills add thrillmade/agent-skills --skill <slug>`. The "
@@ -81,6 +100,52 @@ def git(*args: str, check: bool = True) -> str:
     if check and p.returncode != 0:
         raise SystemExit(f"error: `git {' '.join(args)}` failed: {p.stderr.strip()}")
     return p.stdout
+
+
+def reachable_commits(rev: str = "HEAD") -> set[str]:
+    """Every full sha reachable from `rev`; empty if `rev` does not resolve."""
+    return set(git("rev-list", rev, check=False).split())
+
+
+def published_reachable() -> tuple[set[str], bool]:
+    """ADMISSION: the full shas whose carried versions may be a history row,
+    and whether a publishing ref contributed.
+
+    A row may enter or stay in the file only if its digest is carried by a
+    commit reachable from origin/dev or origin/main -- never bare HEAD, never a
+    branch-local commit. This is the one gate every path routes through
+    (enumeration's carrier preference, the re-point, the prune). A branch regen
+    therefore records no in-flight row at all: the version that churned again
+    before the squash would otherwise ride the file onto dev as a digest dev
+    never carries. `current` is read from disk and is unaffected; a PR's new
+    versions get their rows from the first regen after the squash, citing the
+    squash commit. With neither ref present (a local-only repository) HEAD is
+    the fallback and the caller says so.
+    """
+    shas: set[str] = set()
+    for ref in PUBLISHING_REFS:
+        shas |= reachable_commits(ref)
+    if shas:
+        return shas, True
+    return reachable_commits(), False
+
+
+def carried_digests(commits: set[str]) -> set[tuple[str, str]]:
+    """{(slug, digest)} of every SKILL.md carried by any of `commits`."""
+    blobs: dict[str, set[str]] = {}
+    for sha in commits:
+        listing = git("ls-tree", "-r", "--format=%(objectname) %(path)", sha, "skills/")
+        for line in listing.splitlines():
+            obj, path = line.split(" ", 1)
+            parts = path.split("/")
+            if len(parts) == 3 and parts[2] == "SKILL.md":
+                blobs.setdefault(obj, set()).add(parts[1])
+    contents = _batch_read(sorted(blobs))
+    return {
+        (slug, skill_version.digest(contents[obj]))
+        for obj, slugs in blobs.items()
+        for slug in slugs
+    }
 
 
 def enumerate_history() -> tuple[dict[str, list[tuple[str, str, str]]], set[str], dict]:
@@ -103,6 +168,12 @@ def enumerate_history() -> tuple[dict[str, list[tuple[str, str, str]]], set[str]
             "built from nothing. Run in a full clone with a fetched origin."
         )
 
+    # Plus whatever HEAD reaches that no remote ref does (an unpushed local
+    # commit): a reachable carrier must be findable or the prune below would
+    # read its row as carried by nothing.
+    known = set(commits)
+    commits += [c for c in git("rev-list", "HEAD", check=False).split() if c not in known]
+
     # `check=False`: a missing ref is a git error, and the message below says
     # what to do about it rather than surfacing a traceback.
     published = set(git("rev-list", PUBLISHING_REF, check=False).split())
@@ -114,9 +185,17 @@ def enumerate_history() -> tuple[dict[str, list[tuple[str, str, str]]], set[str]
         )
     on_main: set[str] = set()
 
-    # (slug, blob_sha) -> the OLDEST commit that carried it. rev-list is
-    # newest-first, so the last write wins.
+    # Commits that admit a row (see `published_reachable`). A squash merge
+    # leaves the branch commits behind, so the oldest carrier of a blob may be
+    # one dev will never have; an admitted carrier always outranks it.
+    reachable, _ = published_reachable()
+
+    # (slug, blob_sha) -> the OLDEST commit that carried it, among the
+    # reachable ones where any exists. rev-list is newest-first, so the last
+    # write wins -- except that an unreachable commit never displaces a
+    # reachable one.
     seen: dict[tuple[str, str], tuple[str, str]] = {}
+    seen_full: dict[tuple[str, str], str] = {}
     blobs: set[str] = set()
     for sha in commits:
         # Keep the full timestamp for ordering and publish only the date.
@@ -130,30 +209,66 @@ def enumerate_history() -> tuple[dict[str, list[tuple[str, str, str]]], set[str]
             parts = path.split("/")
             if len(parts) != 3 or parts[2] != "SKILL.md":
                 continue
-            seen[(parts[1], obj)] = (sha[:7], when)
+            key = (parts[1], obj)
+            prior = seen_full.get(key)
+            if prior is None or sha in reachable or prior not in reachable:
+                seen[key] = (sha[:7], when)
+                seen_full[key] = sha
             blobs.add(obj)
             if sha in published:
                 on_main.add(parts[1])
 
     contents = _batch_read(sorted(blobs))
 
-    # Rows are (digest, short_sha, published date, sort key). The last two
-    # differ once a row has been published: see `merge_published`.
-    history: dict[str, list[tuple[str, str, str, str]]] = {}
+    # Rows are (digest, semver, short_sha, published date, sort key). The
+    # last two differ once a row has been published: see `merge_published`.
+    # `semver` is `skill_version.stamped_version` of the SAME blob the digest
+    # came from -- a pure function of content, unlike `sha`/`when`, so it
+    # needs no append-only protection of its own; every commit before the
+    # three-field format shipped reads back None here, because their
+    # `version:` line held a digest, not a semver -- the same "no valid
+    # claim" case `stamped_version` already treats identically to absence.
+    history: dict[str, list[tuple[str, str | None, str, str, str]]] = {}
     for (slug, obj), (sha, when) in seen.items():
         history.setdefault(slug, []).append(
-            (skill_version.digest(contents[obj]), sha, when[:10], when)
+            (
+                skill_version.digest(contents[obj]),
+                skill_version.stamped_version(contents[obj]),
+                sha,
+                when[:10],
+                when,
+            )
         )
 
-    out: dict[str, list[tuple[str, str, str, str]]] = {}
+    out: dict[str, list[tuple[str, str | None, str, str, str]]] = {}
+    reach7 = {c[:7] for c in reachable}
+    # The timestamp alone is not a total order: commits land in the same
+    # second on a fast runner, and %cI cannot see inside a second. The only
+    # sub-second chronology git has is topology, so ties break by rev-list
+    # rank, oldest first (rev-list is newest-first, hence the negation).
+    # A row whose commit this enumeration never walked (a published legacy
+    # row) ranks oldest within its tie; the sha is a determinism backstop
+    # among those only. HEAD-only commits sit after the remote ones in
+    # `commits`, so within a tie they also read as oldest -- they can carry
+    # re-point candidates but never admitted rows, so order there is moot.
+    rank = {sha[:7]: i for i, sha in enumerate(commits)}
+    never = len(commits)
+    row_order = lambda r: (r[4], -rank.get(r[2], never), r[2])  # noqa: E731
     for slug, rows in history.items():
-        rows.sort(key=lambda r: r[3])
-        # Two blobs can normalise to one digest (they differed only in a
-        # `version:` line, which is elided). Keep the earliest appearance.
-        dedup: dict[str, tuple[str, str, str, str]] = {}
+        rows.sort(key=row_order)
+        # Two blobs can normalise to one digest (they differed only in the
+        # version/digest/origin lines, which are elided). Keep the earliest
+        # appearance.
+        dedup: dict[str, tuple[str, str | None, str, str, str]] = {}
+        # Earliest REACHABLE row per digest, earliest overall only when none is
+        # reachable: the earliest carrier can be a branch commit a squash
+        # dropped while a reachable commit carries the same digest, and
+        # keeping the former hides the latter from the re-point and the prune.
         for row in rows:
-            dedup.setdefault(row[0], row)
-        out[slug] = sorted(dedup.values(), key=lambda r: r[3])
+            held = dedup.get(row[0])
+            if held is None or (held[2] not in reach7 and row[2] in reach7):
+                dedup[row[0]] = row
+        out[slug] = sorted(dedup.values(), key=row_order)
 
     if not blobs:
         raise SystemExit(
@@ -209,13 +324,15 @@ def merge_published(history: dict[str, list], root: Path) -> dict[str, list]:
     path = root / OUT
     if not path.exists():
         return history
+    reachable = {c[:7] for c in published_reachable()[0]}
     published = json.loads(path.read_text(encoding="utf-8")).get("skills", {})
     for slug, entry in published.items():
-        # A published row WINS over a freshly derived one. Once a date is out
-        # there a subscriber may have read it, and re-deriving it from a
-        # different set of refs can move it. Correcting a published row is
-        # then an explicit edit to this file, which is visible in review --
-        # rather than something that happens to whoever regenerates next.
+        # A published row's `commit`/`date` WIN over a freshly derived one.
+        # Once a date is out there a subscriber may have read it, and
+        # re-deriving it from a different set of refs can move it. Correcting
+        # a published row is then an explicit edit to this file, which is
+        # visible in review -- rather than something that happens to whoever
+        # regenerates next.
         rows = {r[0]: r for r in history.get(slug, [])}
         for old in entry.get("history", []):
             # Keep the enumerated SORT key where there is one. A published row
@@ -223,15 +340,82 @@ def merge_published(history: dict[str, list], root: Path) -> dict[str, list]:
             # the two as strings reorders versions that landed on the same
             # day -- which this catalog already has.
             was = rows.get(old["v"])
-            rows[old["v"]] = (old["v"], old["commit"], old["date"],
-                              was[3] if was else old["date"])
-        history[slug] = sorted(rows.values(), key=lambda r: r[3])
+            # `version` is NOT append-only the way `commit`/`date` are: it is
+            # a pure function of the blob's own bytes, so a freshly-derived
+            # value is never wrong, only sometimes MISSING when this run
+            # cannot read the blob at all (a digest that only survives in an
+            # already-published row, from a ref nobody still fetches). Every
+            # row published before this field existed has no "version" key at
+            # all -- `.get` reads that the same way `stamped_version` reads a
+            # pre-migration blob: as no claim, not as a claim of None.
+            version = old.get("version")
+            if version is None and was is not None:
+                version = was[1]
+            # The one exception to "published wins", and only for the commit:
+            # a row citing a commit this checkout cannot reach (a branch
+            # commit a squash merge removed) is re-pointed at the fresh
+            # enumeration's carrier of the SAME digest when that one is
+            # reachable. The date stays -- it is what a subscriber read.
+            commit = old["commit"]
+            if commit not in reachable and was is not None and was[2] in reachable:
+                commit = was[2]
+            rows[old["v"]] = (old["v"], version, commit, old["date"],
+                              was[4] if was else old["date"])
+        history[slug] = sorted(rows.values(), key=lambda r: r[4])
     return history
 
 
-def build(root: Path) -> dict:
+def prune_unreachable(
+    history: dict[str, list],
+    root: Path,
+    pruned: list[tuple[str, str, str]] | None = None,
+    skipped: list[tuple[str, str, str]] | None = None,
+) -> dict[str, list]:
+    """Drop every row whose commit this checkout (or origin/main) cannot reach.
+
+    `pruned` collects the rows that were in the published file and are now
+    gone; `skipped` the branch-only versions enumeration found that were never
+    in it, which are not added and so are not "pruned".
+
+    By the time this runs `merge_published` and the enumeration have already
+    re-pointed every row that HAS a reachable carrier, so a row still citing an
+    unreachable commit is one NO reachable commit carries: a version that only
+    ever existed on a branch (an intermediate state a squash merge never kept)
+    and so was never published. This file is the record of PUBLISHED versions
+    -- the digests a subscriber's copy is classified against -- so such a row
+    is a regen-on-branch artifact, not history, and append-only protection is
+    for the real kind. Both conditions must hold, in the never-guess spirit of
+    the repair: reachable-but-unmatched is kept, unreachable-but-matched was
+    re-pointed above. On a PR branch a version in flight is reachable from the
+    branch HEAD, so it is never pruned before the squash.
+    """
+    reachable = {c[:7] for c in published_reachable()[0]}
+    in_file: set[tuple[str, str]] = set()
+    path = root / OUT
+    if path.exists():
+        for slug, entry in json.loads(path.read_text(encoding="utf-8")).get("skills", {}).items():
+            in_file.update((slug, r["v"]) for r in entry.get("history", []))
+    for slug, rows in history.items():
+        kept = []
+        for row in rows:
+            if row[2] in reachable:
+                kept.append(row)
+                continue
+            bucket = pruned if (slug, row[0]) in in_file else skipped
+            if bucket is not None:
+                bucket.append((slug, row[0], row[2]))
+        history[slug] = kept
+    return history
+
+
+def build(
+    root: Path,
+    pruned: list[tuple[str, str, str]] | None = None,
+    skipped: list[tuple[str, str, str]] | None = None,
+) -> dict:
     history, on_main, provenance = enumerate_history()
     history = merge_published(history, root)
+    history = prune_unreachable(history, root, pruned, skipped)
     live = {p.parent.name: p for p in sorted((root / "skills").glob("*/SKILL.md"))}
     if not live:
         raise SystemExit(f"error: no SKILL.md under {root / 'skills'}")
@@ -246,7 +430,12 @@ def build(root: Path) -> dict:
         rows = history.get(slug, [])
         entry: dict = {}
         if slug in live:
-            entry["current"] = skill_version.digest(live[slug].read_bytes())
+            live_raw = live[slug].read_bytes()
+            entry["current"] = skill_version.digest(live_raw)
+            # The semver counterpart of `current` -- None for a skill never
+            # stamped under the three-field format, same as `stamped_version`
+            # itself reads it.
+            entry["version"] = skill_version.stamped_version(live_raw)
             # `authoring_home` has exactly one owner -- the CI-gated placement
             # map. Copied, never invented: a slug the map does not carry gets
             # no value rather than a plausible one.
@@ -256,6 +445,7 @@ def build(root: Path) -> dict:
             # Published once, gone from the tree. `current: null` says so, and
             # the checker must not tell anyone to reinstall it.
             entry["current"] = None
+            entry["version"] = None
             entry["retired"] = True
         else:
             # Seen only on a feature branch. It has never been published, so
@@ -263,7 +453,9 @@ def build(root: Path) -> dict:
             # the checker then reports `local-skill`, which is exactly right
             # for a skill somebody else authored and nominated.
             continue
-        entry["history"] = [{"v": v, "commit": c, "date": d} for v, c, d, _ in rows]
+        entry["history"] = [
+            {"v": v, "version": ver, "commit": c, "date": d} for v, ver, c, d, _ in rows
+        ]
         skills[slug] = entry
 
     rows_total = sum(len(s["history"]) for s in skills.values())
@@ -280,10 +472,11 @@ def build(root: Path) -> dict:
                 "history, so it holds at the depth-1 checkout CI uses."
             ),
             "history": (
-                "NOT GATED. History is derived from git and validate-skills.yml "
-                "checks out at fetch-depth 1, so CI cannot recompute these rows. "
-                "Regenerate them in a full clone with "
-                "`.github/scripts/gen_skill_versions.py --write`."
+                "NOT GATED. History content is derived from git and CI "
+                "cannot recompute these rows; only that every row's `commit` "
+                "is an ancestor of the checked revision is gated "
+                "(`gen_skill_versions.py --check`). Regenerate them in a full "
+                "clone with `.github/scripts/gen_skill_versions.py --write`."
             ),
             "history_rows_ungated": rows_total - len(live),
         },
@@ -291,17 +484,111 @@ def build(root: Path) -> dict:
     }
 
 
+def stale_rows(
+    root: Path, head: str
+) -> tuple[list[tuple[str, str, str, str]], list[tuple[str, str, str, str]], bool]:
+    """(failing, stale, main_present). Both lists hold (slug, digest, commit,
+    why) for published rows whose `commit` is not an ancestor of `head`.
+
+    `failing` rows have a digest NO commit reachable from `head` or a
+    publishing ref (origin/dev, origin/main) carries -- fabricated or never
+    published. `stale` rows have a reachable carrier, so the pointer is
+    repairable by `--write`. One definition of "published" serves admission
+    and this check alike: `published_reachable()`.
+
+    Refuses on a shallow clone: there an ancestor looks missing, and a gate
+    that reports on a history it cannot see is reporting on the clone.
+    """
+    if git("rev-parse", "--is-shallow-repository").strip() == "true":
+        raise SystemExit(
+            "error: shallow clone. Ancestry cannot be checked without the "
+            "full history; fetch with depth 0 before running --check."
+        )
+    if subprocess.run(
+        ["git", "rev-parse", "--verify", "-q", f"{head}^{{commit}}"],
+        capture_output=True,
+    ).returncode != 0:
+        raise SystemExit(f"error: `{head}` does not resolve to a commit.")
+    published = json.loads((root / OUT).read_text(encoding="utf-8")).get("skills", {})
+    reach = reachable_commits(head)
+    pub, pub_present = published_reachable()
+    carried: set[tuple[str, str]] | None = None
+    failing, stale = [], []
+    for slug, entry in published.items():
+        for row in entry.get("history", []):
+            rc = subprocess.run(
+                ["git", "merge-base", "--is-ancestor", row["commit"], head],
+                capture_output=True,
+            ).returncode
+            if rc == 0:
+                continue
+            if carried is None:
+                carried = carried_digests(reach | pub)
+            why = "not an ancestor" if rc == 1 else "not a commit in this clone"
+            (stale if (slug, row["v"]) in carried else failing).append(
+                (slug, row["v"], row["commit"], why)
+            )
+    return failing, stale, pub_present
+
+
+def check(root: Path, head: str) -> int:
+    """Two tiers, deliberately. FAILS a row whose digest nothing reachable from
+    `head` or a publishing ref carries: published-version integrity is the property
+    protected. WARNS about a row whose pointer is unreachable but whose digest
+    is carried: pointers are repairable metadata, so a fabricated pointer
+    beside a real digest is accepted by design. `--write` admits rows only
+    from origin/dev and origin/main, so this state does not arise from it."""
+    failing, stale, pub_present = stale_rows(root, head)
+    if not pub_present:
+        print(f"note: neither origin/dev nor origin/main is present; reachability considered {head} alone")
+    for slug, v, commit, why in stale:
+        print(f"::warning file={OUT}::{slug} {v}: commit {commit} is {why} of {head}, but a reachable commit carries this digest")
+    if stale:
+        print(
+            f"{len(stale)} stale history row(s): repair with "
+            "`python3 .github/scripts/gen_skill_versions.py --write` in a full "
+            "clone with origin fetched, then commit docs/skill-versions.json."
+        )
+    for slug, v, commit, why in failing:
+        print(f"::error file={OUT}::{slug} {v}: commit {commit} is {why} of {head} and no commit reachable from {head} or a publishing ref carries this digest")
+    if failing:
+        print(
+            f"{len(failing)} history row(s) name a version nothing reachable "
+            "carries -- fabricated or never published. `--write` prunes them."
+        )
+        return 1
+    print(f"OK: every history row's digest is carried by a commit reachable from {head} or a publishing ref (origin/dev, origin/main).")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--write", action="store_true")
+    ap.add_argument(
+        "--check",
+        action="store_true",
+        help="fail if any history row names a digest no commit reachable from --head or a publishing ref (origin/dev, origin/main) carries; warn on stale pointers",
+    )
+    ap.add_argument("--head", default="HEAD", help="revision --check measures against")
     ap.add_argument("--root", default=".")
     args = ap.parse_args(argv)
 
     root = Path(args.root)
-    index = build(root)
+    if args.check:
+        return check(root, args.head)
+    pruned: list[tuple[str, str, str]] = []
+    skipped: list[tuple[str, str, str]] = []
+    index = build(root, pruned, skipped)
     text = json.dumps(index, indent=1, sort_keys=False) + "\n"
     if args.write:
         (root / OUT).write_text(text, encoding="utf-8")
+        for slug, v, commit in pruned:
+            print(f"pruned {slug} {v} (commit {commit}: unreachable, carried by no reachable commit)")
+        print(f"pruned {len(pruned)} unpublished row(s)")
+        if skipped:
+            print(f"skipped {len(skipped)} branch-only never-published version(s)")
+        if not published_reachable()[1]:
+            print("note: neither origin/dev nor origin/main is present; admission used HEAD alone")
         print(
             f"wrote {OUT}: {len(index['skills'])} skills, "
             f"{index['versions_enumerated']} versions, {len(text)} bytes"

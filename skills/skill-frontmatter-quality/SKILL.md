@@ -1,5 +1,7 @@
 ---
-version: "59d61f22e7e7"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.0"
+digest: "59d61f22e7e7"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/agent-skills"
 name: skill-frontmatter-quality
 description: Review SKILL.md frontmatter for trigger surface, specificity, voice, and completeness. Apply on PRs that add or modify a skills/*/SKILL.md file. Catches descriptions that won't be discoverable, that wave at the topic instead of naming concrete buckets, that drift from the prescriptive house voice, or that omit fields downstream tools depend on.
 ---
