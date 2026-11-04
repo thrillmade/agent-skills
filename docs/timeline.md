@@ -13,16 +13,16 @@ PR's CI run, so this file is always coherent with current `main`.
 ---
 
 
-## 2026-11 (6 decisions)
+## 2026-11 (7 decisions)
 
-- **2026-11-03** — AGENTS.md: replace the frozen clud-bug outage claim with the measured three-era history *(docs/clud-bug-review-truth)* — [decisions-branches/docs__clud-bug-review-truth.md](decisions-branches/docs__clud-bug-review-truth.md)
-- *... 4 more decisions ...*
+- **2026-11-03** — Neutralize private repo names in the public tree and drop departed private subscribers from placement-map.json *(chore/neutralize-private-names)* — [decisions-branches/chore__neutralize-private-names.md](decisions-branches/chore__neutralize-private-names.md)
+- *... 5 more decisions ...*
 - **2026-11-02** — Design skills: thrill-design house principles, motion-continuity, ios-safari-surfaces; designing-elite-ui and orchestrating-elite-agent-qa amended *(feat/design-skills-nov)* — [decisions-branches/feat__design-skills-nov.md](decisions-branches/feat__design-skills-nov.md)
 
 ## 2026-10
 
 - **2026-10-28** — Correction: restore the dropped attribution rule; fix the headroom claim *(feat/sync-local-skills-agents)* — [decisions-branches/feat__sync-local-skills-agents.md](decisions-branches/feat__sync-local-skills-agents.md)
-- **2026-10-28** — Sync the CEO's October local edits: 3 orchestration/design skills merged, all 15 agent roles updated *(feat/sync-local-skills-agents)* — [decisions-branches/feat__sync-local-skills-agents.md](decisions-branches/feat__sync-local-skills-agents.md)
+- **2026-10-28** — Sync the owner's October local edits: 3 orchestration/design skills merged, all 15 agent roles updated *(feat/sync-local-skills-agents)* — [decisions-branches/feat__sync-local-skills-agents.md](decisions-branches/feat__sync-local-skills-agents.md)
 
 ## 2026-09 (4 decisions)
 
@@ -32,7 +32,7 @@ PR's CI run, so this file is always coherent with current `main`.
 
 ## 2026-08 (58 decisions)
 
-- **2026-08-24** — Correct the house-structure-gate record: swap an invented CEO citation for the real ruling, credit PR #216's reversal, fix two arithmetic errors, and close the two dead SHAs the version index shipped *(feat/house-structure-gate)* — [decisions-branches/feat__house-structure-gate.md](decisions-branches/feat__house-structure-gate.md)
+- **2026-08-24** — Correct the house-structure-gate record: swap an invented owner citation for the real ruling, credit PR #216's reversal, fix two arithmetic errors, and close the two dead SHAs the version index shipped *(feat/house-structure-gate)* — [decisions-branches/feat__house-structure-gate.md](decisions-branches/feat__house-structure-gate.md)
 - *... 56 more decisions ...*
 - **2026-08-14** — Gate skill size with a shrink-only ratchet, and deprecate skillforge into the three skills that own its job *(feat/skill-depth-and-interlinking)* — [decisions-branches/feat__skill-depth-and-interlinking.md](decisions-branches/feat__skill-depth-and-interlinking.md)
 

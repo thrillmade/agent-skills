@@ -156,7 +156,7 @@ def enumerate_history() -> tuple[dict[str, list[tuple[str, str, str]]], set[str]
     feature branch has not been published; a slug that was on `main` and is
     gone from the tree has been retired. Collapsing them makes the index
     announce "the catalog no longer publishes this skill" about skills it has
-    never published -- which is what it did, about five of arlyn-working's own
+    never published -- which is what it did, about five of a private consumer repo's own
     locally-authored skills, the moment a nomination branch appeared on origin.
     """
     commits = git("rev-list", f"--remotes={REFSPEC}").split()

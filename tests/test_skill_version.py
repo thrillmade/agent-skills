@@ -287,7 +287,7 @@ def test_origin_is_always_the_one_constant_value() -> None:
 
 def test_unquoted_all_digit_digest_is_coerced_by_yaml():
     """The landmine the quotes exist for. `766941312459` is a REAL historical
-    digest (arlyn-delivery's installed frontend-a11y), and unquoted it stops
+    digest (a private consumer repo's installed frontend-a11y), and unquoted it stops
     being a string; `000000123456` is read as octal and does not round-trip.
     """
     assert yaml.safe_load("digest: 766941312459") == {"digest": 766941312459}

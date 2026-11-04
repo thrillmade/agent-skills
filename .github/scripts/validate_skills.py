@@ -526,7 +526,7 @@ def _is_superseded(meta: dict) -> bool:
 
 # --- house section structure gate -------------------------------------------
 #
-# CEO ruling (2026-08-24, in session): the house section order IS enforced --
+# owner ruling (2026-08-24, in session): the house section order IS enforced --
 # five sections, this order: When to use / When NOT to use / Verification /
 # Cross-references / Sources. No CONTRIBUTING.md, no template, no validator
 # rule stated this shape before now; this makes it one. The reasoning, which

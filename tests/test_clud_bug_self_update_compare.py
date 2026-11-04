@@ -10,7 +10,7 @@ update", with no notion of version *direction*.
 This repo's `.claude/skills/.clud-bug.json` records `lastUpdateVersion:
 "0.7.0-rc.20"` (a 0.7.x prerelease). npm's `latest` tag is `0.6.34` — an
 older release line. `0.6.34 != 0.7.0-rc.20`, so the naive check fires,
-generates a downgrade PR (#187, closed by the CEO specifically because it
+generates a downgrade PR (#187, closed by the owner specifically because it
 was a downgrade), and — every week since, because npm's `latest` tag does
 not move — regenerates the exact same branch name and collides with the
 undeleted remnant of that closed PR.
@@ -134,7 +134,7 @@ def test_pin_is_skipped():
 def test_downgrade_from_prerelease_is_skipped():
     """#192's actual failure mode: installed is a 0.7.x prerelease, npm's
     `latest` tag is still 0.6.34. This is not an update — it is the exact
-    downgrade the CEO rejected in #187 — and must not be attempted again.
+    downgrade the owner rejected in #187 — and must not be attempted again.
     """
     out = _run_compare(installed="0.7.0-rc.20", latest="0.6.34")
     assert out.get("skip") == "true", (

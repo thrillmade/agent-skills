@@ -56,14 +56,14 @@
       "owns": "voice in user-facing strings",
       "authoring_home": "catalog",
       "distribution": "opt-in",
-      "subscribers": ["tokenomics", "arlyn-working"]
+      "subscribers": ["tokenomics"]
     },
     "designing-elite-ui": {
       "family": "design-critic-lenses",
       "owns": "the visual standard to build to",
       "authoring_home": "catalog",
       "distribution": "opt-in",
-      "subscribers": ["arlyn-delivery", "arlyn-working"],
+      "subscribers": [],
       "notes": "authoring-home decided (clud-bug#243 Ruling 2): catalog is the edit point; clud-bug's templates/skills/design/ is a vendored mirror refreshed only by an explicit release PR, never by automation"
     },
     "design-system-consistency": {
@@ -71,7 +71,7 @@
       "owns": "rendered drift from the tokens",
       "authoring_home": "catalog",
       "distribution": "opt-in",
-      "subscribers": ["arlyn-delivery", "arlyn-working"],
+      "subscribers": [],
       "notes": "authoring-home decided (clud-bug#243 Ruling 2): catalog is the edit point; clud-bug's templates/skills/design/ is a vendored mirror refreshed only by an explicit release PR, never by automation"
     },
     "frontend-a11y": {
@@ -79,7 +79,7 @@
       "owns": "contrast, focus, targets, motion",
       "authoring_home": "catalog",
       "distribution": "opt-in",
-      "subscribers": ["arlyn-delivery", "arlyn-working"],
+      "subscribers": [],
       "notes": "authoring-home decided (clud-bug#243 Ruling 2): catalog is the edit point; clud-bug's templates/skills/design/ is a vendored mirror refreshed only by an explicit release PR, never by automation"
     },
     "thrill-design": {
@@ -111,7 +111,7 @@
       "owns": "the fine-but-not-elite lens",
       "authoring_home": "catalog",
       "distribution": "opt-in",
-      "subscribers": ["arlyn-delivery", "arlyn-working"],
+      "subscribers": [],
       "notes": "authoring-home decided (clud-bug#243 Ruling 2): catalog is the edit point; clud-bug's templates/skills/design/ is a vendored mirror refreshed only by an explicit release PR, never by automation"
     },
     "orchestrating-elite-agent-qa": {
@@ -119,7 +119,7 @@
       "owns": "the panel and design-critic gate",
       "authoring_home": "catalog",
       "distribution": "opt-in",
-      "subscribers": ["arlyn-working"],
+      "subscribers": [],
       "notes": "tokenomics flip from authored-here to subscribed is pending (nomination in flight); tokenomics census says it would subscribe once accepted"
     },
     "udts-component-sizing-ladders": {
@@ -207,7 +207,7 @@
       "owns": "using a system in a product",
       "authoring_home": "catalog",
       "distribution": "catalog-only",
-      "subscribers": ["arlyn-delivery", "arlyn-working"],
+      "subscribers": [],
       "notes": "L1 dispatcher — entry point that routes to the L0 primitives; a repo consumes what it routes to, not the dispatcher itself as a standing subscription"
     },
     "designing-a-design-system": {
@@ -215,7 +215,7 @@
       "owns": "building or extending a system",
       "authoring_home": "catalog",
       "distribution": "catalog-only",
-      "subscribers": ["arlyn-working"],
+      "subscribers": [],
       "notes": "L1 dispatcher — entry point that routes to the L0 primitives; a repo consumes what it routes to, not the dispatcher itself as a standing subscription"
     },
     "reviewing-design-work": {
@@ -223,7 +223,7 @@
       "owns": "critiquing design output",
       "authoring_home": "catalog",
       "distribution": "catalog-only",
-      "subscribers": ["arlyn-delivery", "arlyn-working"],
+      "subscribers": [],
       "notes": "L1 dispatcher — entry point that routes to review lenses; a repo consumes what it routes to, not the dispatcher itself as a standing subscription"
     },
     "composing-a-screen": {
@@ -263,7 +263,7 @@
       "owns": "minor+major units, 24px floor",
       "authoring_home": "catalog",
       "distribution": "opt-in",
-      "subscribers": ["arlyn-delivery", "arlyn-working"],
+      "subscribers": [],
       "notes": "L0 primitive; a repo building or extending its own token system might subscribe directly"
     },
     "test-discipline": {
@@ -287,7 +287,7 @@
       "owns": "what belongs in a token name",
       "authoring_home": "catalog",
       "distribution": "opt-in",
-      "subscribers": ["arlyn-delivery", "arlyn-working"],
+      "subscribers": [],
       "notes": "L0 primitive; successor to deprecated design-token-naming; a repo building or extending its own token system might subscribe directly"
     },
     "type-scale": {
@@ -295,7 +295,7 @@
       "owns": "modular ratios and rounding",
       "authoring_home": "catalog",
       "distribution": "opt-in",
-      "subscribers": ["arlyn-delivery", "arlyn-working"],
+      "subscribers": [],
       "notes": "L0 primitive; a repo building or extending its own token system might subscribe directly"
     },
     "wcag-contrast": {
@@ -303,7 +303,7 @@
       "owns": "ratios, the legal cross-check",
       "authoring_home": "catalog",
       "distribution": "opt-in",
-      "subscribers": ["arlyn-delivery", "arlyn-working"],
+      "subscribers": [],
       "notes": "L0 primitive; a repo building or extending its own token system might subscribe directly"
     },
     "web-interface-guidelines-review": {
@@ -311,7 +311,7 @@
       "owns": "the code and markup lens",
       "authoring_home": "catalog",
       "distribution": "opt-in",
-      "subscribers": ["arlyn-delivery", "arlyn-working"],
+      "subscribers": [],
       "notes": "review-discipline skill (review_mode: dedicated) for UI code a repo might subscribe to"
     },
     "apca-contrast": {
@@ -319,7 +319,7 @@
       "owns": "Lc targets, the primary model",
       "authoring_home": "catalog",
       "distribution": "opt-in",
-      "subscribers": ["arlyn-delivery", "arlyn-working"],
+      "subscribers": [],
       "notes": "L0 primitive; tokenomics census names this as a would-subscribe (build-agent grounding), not yet subscribed"
     },
     "api-contract-enforcement": {
@@ -343,7 +343,7 @@
       "owns": "per-stop cross-hue chroma caps",
       "authoring_home": "catalog",
       "distribution": "opt-in",
-      "subscribers": ["arlyn-working"],
+      "subscribers": [],
       "notes": "L0 primitive; a repo building or extending its own token system might subscribe directly"
     },
     "component-sizing-principles": {
@@ -351,7 +351,7 @@
       "owns": "curated height and icon ladders",
       "authoring_home": "catalog",
       "distribution": "opt-in",
-      "subscribers": ["arlyn-delivery", "arlyn-working"],
+      "subscribers": [],
       "notes": "L0 primitive; successor to deprecated component-sizing; a repo building or extending its own token system might subscribe directly"
     },
     "conventions-template": {
@@ -367,7 +367,7 @@
       "owns": "the W3C DTCG interchange file",
       "authoring_home": "catalog",
       "distribution": "opt-in",
-      "subscribers": ["arlyn-delivery", "arlyn-working"],
+      "subscribers": [],
       "notes": "L0 primitive; a repo building or extending its own token system might subscribe directly"
     },
     "line-height-grid": {
@@ -375,7 +375,7 @@
       "owns": "two-track line height on grid",
       "authoring_home": "catalog",
       "distribution": "opt-in",
-      "subscribers": ["arlyn-delivery", "arlyn-working"],
+      "subscribers": [],
       "notes": "L0 primitive; a repo building or extending its own token system might subscribe directly"
     },
     "oklch-color-space": {
@@ -383,7 +383,7 @@
       "owns": "OKLCH ranges and gamut mapping",
       "authoring_home": "catalog",
       "distribution": "opt-in",
-      "subscribers": ["arlyn-delivery", "arlyn-working"],
+      "subscribers": [],
       "notes": "L0 primitive; tokenomics census names this as a would-subscribe (build-agent grounding), not yet subscribed"
     },
     "orchestrating-a-multi-agent-run": {
@@ -399,7 +399,7 @@
       "owns": "the brief, model tiering, verify",
       "authoring_home": "catalog",
       "distribution": "opt-in",
-      "subscribers": ["arlyn-working"],
+      "subscribers": [],
       "notes": "agent-orchestration discipline a repo doing multi-agent build/review work might subscribe to"
     },
     "session-heartbeat": {
@@ -423,7 +423,7 @@
       "owns": "hue-angle palette relationships",
       "authoring_home": "catalog",
       "distribution": "opt-in",
-      "subscribers": ["arlyn-working"],
+      "subscribers": [],
       "notes": "L0 primitive; a repo building or extending its own token system might subscribe directly"
     },
     "pii-and-compliance": {
@@ -439,7 +439,7 @@
       "owns": "SemVer from the value diff",
       "authoring_home": "catalog",
       "distribution": "opt-in",
-      "subscribers": ["arlyn-delivery", "arlyn-working"],
+      "subscribers": [],
       "notes": "L0 primitive; a repo building or extending its own token system might subscribe directly"
     },
     "finding-a-catalog-skill": {
@@ -448,7 +448,7 @@
       "subscribers": ["clud-bug", "clud-bug-app", "logmind", "tokenomics", "protocol", "reporulez", "rezgen", "skdd"],
       "family": "catalog-and-tooling",
       "owns": "this directory",
-      "notes": "the generated catalog directory (#229). Every repo holding ANY catalog skill should hold this one -- it is the only artifact that travels and names the rest -- so all eight census-visible consumers are declared here and none subscribes yet: the weekly placement cross-check will file `missing` until each runs `npx skills add ... --skill finding-a-catalog-skill`. Measured 2026-08-18: `npx skills update` refreshes but never ADDS, so that is one PR per repo and nothing in this catalog performs it; six of the eight carry no skills-lock at all and receive catalog skills only as vendored clud-bug baselines, so those rows clear by adopting the CLI rather than by regenerating anything here. thrillmade/arlyn-working is deliberately NOT declared: it holds 23 catalog subscriptions but is absent from census_counters.CONSUMER_REPOS, so the census structurally cannot observe it and a declaration there would be a verdict that can never clear. Adding it to CONSUMER_REPOS is its own change"
+      "notes": "the generated catalog directory (#229). Every repo holding ANY catalog skill should hold this one -- it is the only artifact that travels and names the rest -- so all eight census-visible consumers are declared here and none subscribes yet: the weekly placement cross-check will file `missing` until each runs `npx skills add ... --skill finding-a-catalog-skill`. Measured 2026-08-18: `npx skills update` refreshes but never ADDS, so that is one PR per repo and nothing in this catalog performs it; six of the eight carry no skills-lock at all and receive catalog skills only as vendored clud-bug baselines, so those rows clear by adopting the CLI rather than by regenerating anything here. A private consumer repo is deliberately NOT declared: it holds 23 catalog subscriptions but is absent from census_counters.CONSUMER_REPOS, so the census structurally cannot observe it and a declaration there would be a verdict that can never clear. Adding it to CONSUMER_REPOS is its own change"
     },
     "empirical-design-principles": {
       "family": "design-primitives",
