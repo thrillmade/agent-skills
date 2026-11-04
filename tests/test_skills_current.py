@@ -111,7 +111,7 @@ def test_both_roots_are_discovered(tmp_path: Path) -> None:
 
 def test_a_symlinked_copy_is_counted_once(tmp_path: Path) -> None:
     """`.claude/skills/<slug>` is a symlink into `.agents/skills/<slug>` in
-    every repo here that has both -- 17 of 17 in arlyn-delivery. Counting the
+    every repo here that has both -- 17 of 17 in a private consumer repo. Counting the
     link and its target separately double-reports the whole install.
     """
     real = write_skill(tmp_path / ".agents" / "skills", "alpha").parent
@@ -225,7 +225,7 @@ def test_an_unknown_digest_is_diverged() -> None:
 
 
 def test_an_unknown_slug_is_a_local_skill_not_an_accusation() -> None:
-    """arlyn-working authors 6 skills of its own alongside 23 subscribed
+    """a private consumer repo authors 6 skills of its own alongside 23 subscribed
     ones. Reporting those 6 as edited-locally would be six accusations
     against files this catalog has never had an opinion about.
     """

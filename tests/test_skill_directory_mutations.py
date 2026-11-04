@@ -393,7 +393,7 @@ MUTATIONS = [
     (
         VALIDATOR,
         # The whole gate never runs. Every skill missing a house section, or
-        # carrying them out of order, ships silently -- the drift #266's CEO
+        # carrying them out of order, ships silently -- the drift #266's owner
         # ruling exists to close, reopened at the call site rather than
         # inside either check.
         "the_house_structure_gate_never_runs",

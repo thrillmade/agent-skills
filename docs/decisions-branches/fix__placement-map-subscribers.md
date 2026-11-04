@@ -7,7 +7,7 @@
 **Alternatives considered:** Do a full reconciliation of every consumer's skills-lock.json against every skill's subscribers array -- rejected for this change: most skills carry an empty subscribers array by design (opt-in, untracked), and the GitHub issue's own ask is scoped to these four default-on entries; a broader sweep belongs to its own issue with its own evidence
 
 **Implications:**
-- The map still doesn't track opt-in installs (e.g. arlyn-working's 23 installed skills, tokenomics' non-default-on installs) -- those remain unreconciled and are not claimed fixed here
+- The map still doesn't track opt-in installs (e.g. a private consumer repo's 23 installed skills, tokenomics' non-default-on installs) -- those remain unreconciled and are not claimed fixed here
 
 ---
 

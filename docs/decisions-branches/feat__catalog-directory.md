@@ -10,7 +10,7 @@
 - docs/placement-map.json gains a top-level ordered families array and two REQUIRED per-skill keys. Adding a skill now needs both, and the gate says so on the PR that adds it
 - The directory ceiling is 75 skills, stated not discovered. gen_skill_directory.size_error() refuses past a 7900-byte reserve and names four ladder rungs, each with the value measured when the format was chosen; the last rung is retirement, which curating-a-skill-catalog already owns
 - The 'deliberately not here' section is measured at generation time against skills/, with a control probe that MUST match -- so a gap that gets filled refuses to render rather than going on advertising itself, and an uncontrolled zero cannot ship
-- Eight census-visible consumer repos are declared as subscribers and none subscribes yet, so the weekly placement cross-check will file a missing verdict until each runs npx skills add. thrillmade/arlyn-working -- the repo #229 measured -- is deliberately NOT declared: it is absent from census_counters.CONSUMER_REPOS, so a declaration there could never clear
+- Eight census-visible consumer repos are declared as subscribers and none subscribes yet, so the weekly placement cross-check will file a missing verdict until each runs npx skills add. a private consumer repo -- the one #229 measured -- is deliberately NOT declared: it is absent from census_counters.CONSUMER_REPOS, so a declaration there could never clear
 - Still open from #229: the per-skill footer linking up to the directory. Measured, a 65-byte footer breaks 8 of 49 skills at the cap (test-discipline has 1 byte of headroom) and each trim needs a docs/prose-removals.md row, so it is its own item. And the README table remains a second hand-kept owner of the same fact
 
 ---

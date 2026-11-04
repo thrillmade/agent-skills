@@ -2,7 +2,7 @@
 
 ## 2026-08-18 02:04 - Add composing-a-screen: the prescriptive spine the design catalog never had
 
-**Reasoning:** Measured coverage against the seven basics a free Figma resource page covers: contrast 12 skills, accessibility 12, consistency 3, hierarchy 1, alignment 1, proximity 0, progressive disclosure 0 (control: zorkmid 0, design 24). The catalog grew out of design-critic needing citable lenses, so depth accumulated exactly where a finding can be argued numerically and nowhere near where design judgement lives. Every design skill was review-framed; nothing told an agent how to compose a screen. The CEO's test was that a ten-second Google search covered our four zeros.
+**Reasoning:** Measured coverage against the seven basics a free Figma resource page covers: contrast 12 skills, accessibility 12, consistency 3, hierarchy 1, alignment 1, proximity 0, progressive disclosure 0 (control: zorkmid 0, design 24). The catalog grew out of design-critic needing citable lenses, so depth accumulated exactly where a finding can be argued numerically and nowhere near where design judgement lives. Every design skill was review-framed; nothing told an agent how to compose a screen. The owner's test was that a ten-second Google search covered our four zeros.
 
 **Alternatives considered:** Extend designing-elite-ui, or grow empirical-design-principles into the spine. Rejected: the first is the visual bar and this is structure, and the second explicitly scopes itself to falsifiable prediction and disclaims usability heuristics including progressive disclosure. A third option, doing nothing on the grounds that the depth already exists, fails because depth an agent cannot route to is not coverage.
 

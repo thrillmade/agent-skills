@@ -121,7 +121,7 @@ For a repo that predates this system (all current thrillmade repos):
 
 ## Am I current?
 
-Answerable from inside your own repo, with no access to this one. Until now it wasn't: `npx skills add` copies a `SKILL.md` wholesale and records a `computedHash` produced by the CLI's own normalisation, and the lock stores no version, ref, commit or date — so a subscriber holding a months-old copy had nothing to compare and nothing told them. The first run of the checker below found 21 of `arlyn-working`'s 23 subscribed skills behind, some by three versions and some since May.
+Answerable from inside your own repo, with no access to this one. Until now it wasn't: `npx skills add` copies a `SKILL.md` wholesale and records a `computedHash` produced by the CLI's own normalisation, and the lock stores no version, ref, commit or date — so a subscriber holding a months-old copy had nothing to compare and nothing told them. The first run of the checker below found 21 of a private consumer repo's 23 subscribed skills behind, some by three versions and some since May.
 
 Every `SKILL.md` here now opens with three fields, each answering a question the old single `version:` line couldn't:
 
