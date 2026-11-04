@@ -225,7 +225,7 @@ def test_an_unknown_digest_is_diverged() -> None:
 
 
 def test_an_unknown_slug_is_a_local_skill_not_an_accusation() -> None:
-    """a private consumer repo authors 6 skills of its own alongside 23 subscribed
+    """A private consumer repo authors 6 skills of its own alongside 23 subscribed
     ones. Reporting those 6 as edited-locally would be six accusations
     against files this catalog has never had an opinion about.
     """
