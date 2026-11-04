@@ -116,7 +116,7 @@ def discover(repo: Path, roots: list[str] | None) -> list[Path]:
 
     And resolved, because in the repos that have both, `.claude/skills/<slug>`
     is usually a SYMLINK to `.agents/skills/<slug>` -- 17 of 17 in
-    arlyn-delivery, 23 of 29 in arlyn-working. Counting the link and its
+    one private consumer repo, 23 of 29 in another. Counting the link and its
     target separately double-reports every one of them.
     """
     explicit = roots is not None

@@ -8,7 +8,7 @@
 
 **Implications:**
 - Corrected a factual error in shipped accessibility guidance. wcag-contrast stated SC 2.4.13 Focus Appearance as Level AA in three places and web-interface-guidelines-review in one. It is Level AAA — verified against the published WCAG 2.2 Recommendation at w3.org, not against a secondary source. The AA hooks are 1.4.11 for the ring's contrast and 2.4.11 for the ring being obscured, and neither skill named 2.4.11 at all. An agent following the old text would report a AAA enhancement as an AA compliance failure, which in an accessibility audit is a claim about legal baseline
-- The WCAG fix consumed 43 of web-interface-guidelines-review's 46 bytes of headroom, leaving 3. A file at 3 bytes forces the next editor to delete something, which is exactly the #213 failure. Rather than cut a rule elsewhere I rewrote my own sentence tighter, per the CEO's ruling that a file at the ceiling gets rewritten rather than trimmed. Headroom is back to 49
+- The WCAG fix consumed 43 of web-interface-guidelines-review's 46 bytes of headroom, leaving 3. A file at 3 bytes forces the next editor to delete something, which is exactly the #213 failure. Rather than cut a rule elsewhere I rewrote my own sentence tighter, per the owner's ruling that a file at the ceiling gets rewritten rather than trimmed. Headroom is back to 49
 - All three land at 146 to 194 bytes of headroom and should be treated as at-ceiling: any future addition must displace something. 303 relative skill links across the catalog, zero broken; 112 tests pass; validator clean at 49 skills
 
 ---
@@ -21,7 +21,7 @@
 
 **Implications:**
 - Also tightened 2.4.11 from covering to hiding entirely, since the criterion requires the component not be entirely hidden and partial occlusion is 2.4.12 at AAA. Same error shape as the 2.4.13 level: an AAA obligation reported as an AA failure
-- The correction pushed the body 45 bytes over the ceiling and the gate caught it — a live instance of #213, resolved the way the CEO ruled. I rewrote my own two additions tighter rather than cutting a rule elsewhere; 8,237 down to 8,128, headroom 64
+- The correction pushed the body 45 bytes over the ceiling and the gate caught it — a live instance of #213, resolved the way the owner ruled. I rewrote my own two additions tighter rather than cutting a rule elsewhere; 8,237 down to 8,128, headroom 64
 - This is the second WCAG level error found in this PR's own subject matter, and both were found by an independent panel rather than by the author. The first was 2.4.13 stated as AA in two skills. Guidance that asserts conformance levels needs the primary source read at review time, not recalled
 
 ---

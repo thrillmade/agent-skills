@@ -33,7 +33,7 @@ police it), so a body-only digest would report a rewritten description as
 "current".
 
 `version` is NOT a second copy of the digest. It is semver, one skill at a
-time, ruled by the CEO as:
+time, ruled by the owner as:
 
     MAJOR  the guidance reversed -- we now say the opposite of what we said.
            Rare by design; the real case is SC 2.5.8's `or` -> `and` in

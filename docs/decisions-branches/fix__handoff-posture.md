@@ -2,7 +2,7 @@
 
 ## 2026-08-18 04:51 - Document the fourth handoff posture: a subscribed repo that leaves the org
 
-**Reasoning:** arlyn-delivery leaves the org 20 Aug; docs/integrating-with-agent-skills.md documented Subscribed/Published/Local but no posture covers a repo that was subscribed and becomes a frozen copy outside org reach (#215)
+**Reasoning:** a private consumer repo leaves the org 20 Aug; docs/integrating-with-agent-skills.md documented Subscribed/Published/Local but no posture covers a repo that was subscribed and becomes a frozen copy outside org reach (#215)
 
 **Alternatives considered:** leave it undocumented and let each departing repo improvise; the guide's 'Questions this guide will absorb answers to' section already exists for exactly this kind of gap, so silence wasn't chosen deliberately, just not yet written
 
