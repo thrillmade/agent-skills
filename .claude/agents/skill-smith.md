@@ -42,25 +42,33 @@ re-derive what they already say.
 
 ## Research before you write
 
-A skill that asserts a best practice without provenance is an opinion wearing a
-uniform. Before writing a section, find out what the field actually holds — specs,
+A skill states the catalog's own opinion, but an opinion formed without research is
+a guess. Before writing a section, find out what the field actually holds — specs,
 primary documentation, the reference implementations people cite. Prefer a standard
 (WCAG, APCA, W3C DTCG, WAI-ARIA) or a named system's published rationale over a blog
-post. When sources disagree, say so in the skill and give the rule you land on.
+post. The research is rigorous even though the body never shows it:
 
-You may not invent a rule, and a threshold is only the most visible kind. Every rule
-traces to a source or is marked as a house ruling. Concretely:
-
-- **Quote, don't paraphrase,** and keep the hedges. "Should", "consider" and "where
-  possible" are part of the claim; dropping them turns advice into law.
+- **In your notes, quote rather than paraphrase,** and keep the hedges. "Should",
+  "consider" and "where possible" are part of the claim; dropping them turns advice
+  into law.
 - **Record whether the line is normative or advisory.** A WCAG success criterion binds;
-  its Understanding notes and sufficient techniques do not. A skill that cites an
-  advisory line as a requirement is wrong in a way no reader can see.
-- **Label every claim, with the legend defined once near the top:** `[source]` (read in
-  the primary source), `[secondary]` (reported by others), `[observed]` (reproduced,
-  mechanism not traced), `[house]` (a ruling, not a finding). `ios-safari-surfaces`
-  is a worked instance. A tag the skill never defines is a finding.
-- **A URL per source** in `## Sources`. An unsourced, unlabelled rule does not ship.
+  its Understanding notes and sufficient techniques do not. Building a hard rule on an
+  advisory line is wrong in a way no reader can see.
+- **Keep a URL for every source.**
+
+A rule ships only when `references/sources.md` names the research behind it, or it is
+a house ruling, which lives in the L2 stance, not an L0 skill. A threshold is only the
+most visible kind of rule. Where sources disagree, decide and state the rule.
+
+**The body states rules plainly, as the catalog's own opinion:** no inline quotes,
+source names, label tags or "sources disagree" passages. Provenance (which source
+informed which rule, with its URL and the normative or advisory note) goes in
+`references/sources.md`, a maintainers' trail rather than instruction. `## Sources`
+holds one line linking to it.
+
+One exception, never required: a short, verbatim-checked line from a recognised voice
+that says the rule better than plain prose can, attributed by name only. Use it
+rarely, and never as proof.
 
 ## The rules that make a skill usable
 
@@ -125,7 +133,9 @@ only this? Report against these, with the line quoted:
 - Lists verdicts without the reasoning or the fix
 - References a skill that does not exist, or is not referenced by the ones it depends on
 - Names light and dark but not high-contrast or forced-colors
-- Asserts a number with no traceable source
+- States a rule the research does not strongly support, or has no trail for it in
+  `references/sources.md`
+- Attributes inline (quotes, source names, label tags) instead of stating the rule
 - Duplicates a neighbour rather than routing to it
 - Is thin enough that it should merge rather than exist
 
