@@ -1,6 +1,6 @@
 ---
-version: "1.0.0"
-digest: "057a7ec84fbe"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.1"
+digest: "84dccb5e3159"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: consuming-a-design-system
 description: |
@@ -31,7 +31,7 @@ Product source references tokens through CSS variables or framework bindings —
 
 **REQUIRED BACKGROUND:** [token-naming-conventions](../token-naming-conventions/SKILL.md)
 
-For user-facing string consistency alongside token consistency, see [brand-voice-review](../brand-voice-review/SKILL.md).
+For user-facing string consistency alongside token consistency, see [writing-interface-copy](../writing-interface-copy/SKILL.md), under the system's own voice guide if it ships one ([defining-a-voice](../defining-a-voice/SKILL.md)).
 
 ## 2. Composition rules
 
@@ -67,7 +67,7 @@ One system's worked instantiation of a consumer-facing contract (incubating, not
 - [token-naming-conventions](../token-naming-conventions/SKILL.md) — name-shape rules for picking/validating a token by its name.
 - [dtcg-format](../dtcg-format/SKILL.md) — the DTCG interchange format a system's snapshot is published in.
 - [semver-design-tokens](../semver-design-tokens/SKILL.md) — SemVer bump severity and deprecation-cycle discipline for token releases.
-- [brand-voice-review](../brand-voice-review/SKILL.md) — microcopy voice consistency for user-facing strings.
+- [writing-interface-copy](../writing-interface-copy/SKILL.md) — wording rules for user-facing strings; [defining-a-voice](../defining-a-voice/SKILL.md) — finding and obeying the system's voice guide.
 
 **L2 stances (incubating — parity markers, not yet loadable guidance):**
 - [udts-token-model](../udts-token-model/SKILL.md) — one system's worked token taxonomy as a consumer-facing contract.

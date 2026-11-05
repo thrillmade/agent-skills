@@ -1,6 +1,6 @@
 ---
-version: "1.1.1"
-digest: "f1a43e83f033"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.1.3"
+digest: "14e5f0314e5e"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: designing-elite-ui
 description: Visual review — hold the rendered UI to a concrete elite/Figma-grade bar (one-axis color, APCA-gated contrast, subtraction with a test, one source per primitive, on-grid and derived sizes, distinct and consistent copy, floating stable chrome, every theme verified) instead of a vague "looks fine." The STANDARD a design-critic measures against, for tools and content-led pages alike.
@@ -39,7 +39,7 @@ The design *bar* is the standard; the QA loop is the enforcement (see `orchestra
 9. **Subtract until it breaks.** Retire what carries no meaning. *Test:* name what each element is for; remove it in the render — if no task, meaning or grouping is lost, it goes. Repeat.
 10. **Reuse one source.** One primitive per job — one icon rule, one curve per kind of motion, one color per role; a second copy drifts the first time one is tuned. *Test:* one definition per primitive.
 11. **On the grid, by rule.** Box sizes and gaps land on the spacing grid ([spacing-system](../spacing-system/SKILL.md)); type sizes come from the type scale ([type-scale](../type-scale/SKILL.md)). Fluid values snap too — `round(clamp(min, pref, max), <step>)` — or land between steps at most widths. A glyph beside text takes its size from that text by one ratio everywhere, then snaps; control heights keep their curated ladder ([component-sizing-principles](../component-sizing-principles/SKILL.md)).
-12. **Copy is part of the bar.** Siblings (cards, tabs, heads) differ in their first words, share one punctuation and case style, and every sentence-form line has a truthful actor, not a noun list; names, titles and labels are exempt. Wording: [ux-copy](../ux-copy/SKILL.md), which routes tone on.
+12. **Copy is part of the bar.** Siblings (cards, tabs, heads) differ in first words, share one punctuation and case style, and every sentence-form line has a truthful actor, not a noun list; names, titles, labels are exempt. Copy: [UI](../writing-interface-copy/SKILL.md), [pages](../writing-marketing-copy/SKILL.md).
 
 ## Gotchas That Quietly Break the Bar
 
@@ -66,7 +66,7 @@ The design *bar* is the standard; the QA loop is the enforcement (see `orchestra
 **B — content-led: an index of articles or projects and their detail pages.**
 - **Subtract:** an entry is image, title and one fact — nothing the reader doesn't need to choose. Hover is a tone change on the neutral ramp.
 - **Grid:** fluid headline `round(clamp(…), <the system's step>)`; entry gaps on the major unit.
-- **Copy:** titles differ in their first word and share one punctuation style.
+- **Copy:** titles differ in their first word (12).
 - **Continuity:** where an entry opens its detail in place, the entry becomes it ([motion-continuity](../motion-continuity/SKILL.md) rule 1); page navigation is fine.
 
 ## Verification

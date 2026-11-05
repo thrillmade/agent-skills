@@ -1,6 +1,6 @@
 # Further reading: interface copy
 
-Supplementary to [ux-copy](../SKILL.md); nothing here is a rule the skill depends on. Each link below was opened in November 2026. For the books, title, author, publisher, year and ISBN come from the Open Library record cited; the publisher pages are linked for reference and may refuse automated requests.
+Supplementary to [writing-interface-copy](../SKILL.md); nothing here is a rule the skill depends on. Each link below was opened in November 2026. For the books, title, author, publisher, year and ISBN come from the Open Library record cited; the publisher pages are linked for reference and may refuse automated requests.
 
 ## Style guides
 

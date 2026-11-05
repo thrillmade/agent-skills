@@ -1515,11 +1515,12 @@ def _container_only_scopes(text: str) -> dict[str, str]:
 
 
 # The skills this catalog ships with a BLOCK-QUOTED worked example in them, and
-# therefore the only four whose scope the container reading may move. Named
+# therefore the only ones whose scope the container reading may move. Named
 # rather than counted, because the number is what went wrong: see below.
+# brand-voice-review left this set in #302, when it was retired to a pointer and
+# its quoted finding example went with the rest of its body.
 QUOTED_EXAMPLES = {
     "api-contract-enforcement",
-    "brand-voice-review",
     "pii-and-compliance",
     "test-discipline",
 }
@@ -1528,16 +1529,16 @@ QUOTED_EXAMPLES = {
 def test_only_the_files_with_a_quoted_example_change_scope():
     """THE REGRESSION THAT MATTERS, and the round that inverted what it asserts.
 
-    It used to pin the new split to the fence-only one across all 49 files, and
-    "0 of 49 move" was offered as the proof that reading a second spelling was
+    It used to pin the new split to the fence-only one across every file, and
+    "none move" was offered as the proof that reading a second spelling was
     safe. It was also proof that a reading was MISSING: a block quote suppressed
-    both spellings at once, so the four files carrying a quoted example agreed
+    both spellings at once, so the files carrying a quoted example agreed
     with the fence-only reading because both were wrong about them. A test that
     pins a new reading to an old one goes green exactly where the old one's
     defect is inherited.
 
     So the assertion is not weakened to accommodate them -- it is inverted, and
-    both halves are named. These four must move; the other 45 must not. Weakening
+    both halves are named. These must move; every other skill must not. Weakening
     this to "at most a few move" is how the defect survived seven rounds.
     """
     files = sorted(SKILLS.glob("*/SKILL.md"))
@@ -1552,11 +1553,11 @@ def test_only_the_files_with_a_quoted_example_change_scope():
     assert moved == QUOTED_EXAMPLES, sorted(moved ^ QUOTED_EXAMPLES)
 
 
-def test_what_moved_in_those_four_is_the_quoted_example_itself():
+def test_what_moved_in_those_files_is_the_quoted_example_itself():
     """The other half: that they move is not enough, it has to be the bug.
 
     A file could differ from the fence-only reading for any number of reasons.
-    In each of these four the difference is one direction only -- lines the old
+    In each of these the difference is one direction only -- lines the old
     reading scored as prose that are a code block to every renderer -- and each
     one carries a `>` and a fence, which is the shape the container reading was
     written for.
@@ -1574,12 +1575,12 @@ def test_what_moved_in_those_four_is_the_quoted_example_itself():
         assert not {ln for ln in lost if ln.strip()}, (name, lost)
 
 
-def test_the_other_45_are_unchanged_by_the_container_reading_too():
-    """The four are the whole of the difference from EITHER older reading.
+def test_every_other_skill_is_unchanged_by_the_container_reading_too():
+    """The named files are the whole of the difference from EITHER older reading.
 
     Compared against the container-less reading rather than the fence-only one,
     so this cannot pass by the two older readings happening to cancel out. The
-    45 have no `>`-marked code in them at all, so the peel must be a no-op on
+    rest have no `>`-marked code in them at all, so the peel must be a no-op on
     every line of them.
     """
     for path in sorted(SKILLS.glob("*/SKILL.md")):
