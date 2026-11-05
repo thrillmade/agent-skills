@@ -13,10 +13,10 @@ PR's CI run, so this file is always coherent with current `main`.
 ---
 
 
-## 2026-11 (9 decisions)
+## 2026-11 (11 decisions)
 
-- **2026-11-05** — fix: ux-copy is L0 — house copy calls move to thrill-design; copy lens wired into reviewing-design-work *(feat/ux-copy-skill)* — [decisions-branches/feat__ux-copy-skill.md](decisions-branches/feat__ux-copy-skill.md)
-- *... 7 more decisions ...*
+- **2026-11-05** — fix: #302 review round — L0 pronoun policy and caption rule move to the brand/house layer; filler rules stop flagging copy where the word is the meaning *(feat/ux-copy-skill)* — [decisions-branches/feat__ux-copy-skill.md](decisions-branches/feat__ux-copy-skill.md)
+- *... 9 more decisions ...*
 - **2026-11-02** — Design skills: thrill-design house principles, motion-continuity, ios-safari-surfaces; designing-elite-ui and orchestrating-elite-agent-qa amended *(feat/design-skills-nov)* — [decisions-branches/feat__design-skills-nov.md](decisions-branches/feat__design-skills-nov.md)
 
 ## 2026-10
