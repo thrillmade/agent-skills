@@ -247,8 +247,8 @@ or the retention gate fails it. A PR that changes 20 or more non-docs lines (scr
 tests) needs a decision entry, written with `logmind log`, or `check-decisions` fails it.
 
 Gates that read HEAD, such as prose retention, cannot see uncommitted work. Run them in
-a disposable scratch clone, where committing is allowed, and name that commit's SHA in
-the report. "0 changed" on work that changed skills is a failed run, not a pass. Never
+a disposable scratch clone: copy your changed files in, commit there, and name that
+commit's SHA in the report. "0 changed" on work that changed skills is a failed run, not a pass. Never
 commit in the real tree.
 
 ## Format
