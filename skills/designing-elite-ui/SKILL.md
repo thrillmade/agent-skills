@@ -1,6 +1,6 @@
 ---
-version: "1.1.0"
-digest: "d7e3d3cf37f8"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.1.1"
+digest: "f1a43e83f033"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: designing-elite-ui
 description: Visual review — hold the rendered UI to a concrete elite/Figma-grade bar (one-axis color, APCA-gated contrast, subtraction with a test, one source per primitive, on-grid and derived sizes, distinct and consistent copy, floating stable chrome, every theme verified) instead of a vague "looks fine." The STANDARD a design-critic measures against, for tools and content-led pages alike.
@@ -39,7 +39,7 @@ The design *bar* is the standard; the QA loop is the enforcement (see `orchestra
 9. **Subtract until it breaks.** Retire what carries no meaning. *Test:* name what each element is for; remove it in the render — if no task, meaning or grouping is lost, it goes. Repeat.
 10. **Reuse one source.** One primitive per job — one icon rule, one curve per kind of motion, one color per role; a second copy drifts the first time one is tuned. *Test:* one definition per primitive.
 11. **On the grid, by rule.** Box sizes and gaps land on the spacing grid ([spacing-system](../spacing-system/SKILL.md)); type sizes come from the type scale ([type-scale](../type-scale/SKILL.md)). Fluid values snap too — `round(clamp(min, pref, max), <step>)` — or land between steps at most widths. A glyph beside text takes its size from that text by one ratio everywhere, then snaps; control heights keep their curated ladder ([component-sizing-principles](../component-sizing-principles/SKILL.md)).
-12. **Copy is part of the bar.** Siblings (cards, tabs, heads) differ in their first words, share one punctuation and case style, and every sentence-form line has a truthful actor, not a noun list; names, titles and labels are exempt. Tone: [brand-voice-review](../brand-voice-review/SKILL.md).
+12. **Copy is part of the bar.** Siblings (cards, tabs, heads) differ in their first words, share one punctuation and case style, and every sentence-form line has a truthful actor, not a noun list; names, titles and labels are exempt. Wording: [ux-copy](../ux-copy/SKILL.md), which routes tone on.
 
 ## Gotchas That Quietly Break the Bar
 

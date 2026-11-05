@@ -456,7 +456,7 @@
       "authoring_home": "catalog",
       "distribution": "opt-in",
       "subscribers": [],
-      "notes": "L0 primitive; the falsifiable half of the design-principle literature. The only skill in the catalog shipping a references/ subdirectory (3 files, ~112 KB), so its SKILL.md links them by RELATIVE on-disk path (`references/gestalt.md`), because `npx skills add` copies the subdirectory wholesale and an installed reader already holds the files -- a blob/main URL would send them to the network for something on disk, and promises a path that never moves. OPEN QUESTION, not verified either way: skills.sh renders SKILL.md alone, so a relative reference link may 404 on that web surface. If it does, the answer is a web-only fallback, not reverting the on-disk form. Two consequences to keep in view on any re-sync: the references ship as a straight copy with no cleaning step in their path, so a future re-sync from a consumer repo needs one; and a reviewer that reads SKILL.md alone never loads them."
+      "notes": "L0 primitive; the falsifiable half of the design-principle literature. Ships a references/ subdirectory (3 files, ~112 KB; ux-copy also ships one, for its quotation index and further reading), so its SKILL.md links them by RELATIVE on-disk path (`references/gestalt.md`), because `npx skills add` copies the subdirectory wholesale and an installed reader already holds the files -- a blob/main URL would send them to the network for something on disk, and promises a path that never moves. OPEN QUESTION, not verified either way: skills.sh renders SKILL.md alone, so a relative reference link may 404 on that web surface. If it does, the answer is a web-only fallback, not reverting the on-disk form. Two consequences to keep in view on any re-sync: the references ship as a straight copy with no cleaning step in their path, so a future re-sync from a consumer repo needs one; and a reviewer that reads SKILL.md alone never loads them."
     },
     "usability-heuristics": {
       "family": "design-primitives",
@@ -465,6 +465,14 @@
       "distribution": "opt-in",
       "subscribers": [],
       "notes": "L0 primitive; the judgement half, paired with empirical-design-principles - Nielsen/Norman/Shneiderman by source and edition. Deliberately carries no kind: or applies_to:, matching the other 12 L0 universal primitives: its own trigger includes a findings write-up in .md, which a rendered-surface glob would gate out."
+    },
+    "ux-copy": {
+      "family": "design-primitives",
+      "owns": "labels, status, actions, errors",
+      "authoring_home": "catalog",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "L0 primitive; the wording rules interface content guides share (GOV.UK, Microsoft, Apple, NN/g, Polaris, Atlassian, Mailchimp, Material), with each disagreement and its resolution stated in the rule. kind: writing because it judges shipped prose. No applies_to: interface strings live in locale JSON, .ts, templates and .md alike, so a path or extension glob would gate out real triggers. Splits user-facing strings with brand-voice-review: this skill owns economy and naming, that one voice and tone; moving brand-voice-review's overlapping sections (dead phrases, empty hedging, filler verbs, verb-first CTAs) here is deferred to its own PR until a subscriber or trigger covers ux-copy."
     },
     "proving-an-absence": {
       "family": "review-discipline",

@@ -1,6 +1,6 @@
 ---
-version: "1.0.1"
-digest: "5481a6863ea9"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.1.0"
+digest: "06cf4b5aa07c"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: thrill-design
 description: |
@@ -13,7 +13,7 @@ applies_to:
 
 # Thrill design
 
-Thrill's house taste, for any surface on any project: an L2 house stance layered on [designing-elite-ui](../designing-elite-ui/SKILL.md). That skill is the bar every system shares; this one says which way the house leans where the bar leaves room. Each principle carries the test that shows it holds.
+Thrill's house taste, for any surface on any project: an L2 house stance layered on [designing-elite-ui](../designing-elite-ui/SKILL.md). That skill is the bar every system shares; this one says which way the house leans where the bar leaves room.
 
 ## When to use
 
@@ -37,7 +37,7 @@ Where [designing-elite-ui](../designing-elite-ui/SKILL.md) owns the universal ru
 
 **3. The work is the hero.** Content over chrome. Imagery gets the room it needs — full-bleed where the image is the work, contained where cropping loses content; the facts that matter surface first, in the reader's terms; nav, controls, borders and grounds step back until needed. *Holds when:* at each tested width the largest element in the first viewport is the work, and a search of the page copy finds each key figure once.
 
-**4. Big type, few words, distinct names** (DEU 12). Headlines as short as the meaning allows, at the top of the hierarchy the surface can afford. DEU 12's actor rule, read strictly: never a claim of credit the person does not hold. Tone is [brand-voice-review](../brand-voice-review/SKILL.md)'s. *Holds when:* sibling headlines listed in one column are distinct, and every sentence's subject did what it says.
+**4. Big type, few words, distinct names** (DEU 12). Headlines as short as the meaning allows, as high as the hierarchy affords. DEU 12's actor rule, strictly: never a claim of credit the person does not hold. Wording is [ux-copy](../ux-copy/SKILL.md)'s, tone [brand-voice-review](../brand-voice-review/SKILL.md)'s. Headings name the reader's situation ("Needs a look", not "Exceptions"); empty states answer it, scoped ("Nothing due this week"); counts sit in a chip; deadlines say "by" or "due"; "please" only beside an apology for our failure. *Holds when:* sibling headlines in one column differ; every subject did what it says; no heading is a system noun; each empty state names its scope; no label's text carries its count; and a search finds no "through" deadline or unapologetic "please".
 
 **5. Continuity over cuts.** Objects never jump between states; mechanics are [motion-continuity](../motion-continuity/SKILL.md)'s. The house lean on interruption: user-triggered state changes are atomic — input during a change queues, the change lands, then the next state is computed from current input. Only an ambient or intro sequence may be cut short by input. *Holds when:* motion-continuity's Verification 1 passes, and a click during a change never produces a half-state.
 

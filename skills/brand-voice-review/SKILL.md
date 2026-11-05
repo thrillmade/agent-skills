@@ -1,6 +1,6 @@
 ---
-version: "1.0.0"
-digest: "a91cade05131"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.1"
+digest: "90efe2344b09"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: brand-voice-review
 description: Review user-facing strings for brand-voice consistency. Catch dead phrases ("click here", "you should"), accidental shouting (exclamation marks, ALL CAPS), and jargon that leaks past the design team. Apply to button labels, error messages, marketing copy, headings — not to internal code identifiers or logs.
@@ -31,6 +31,8 @@ This skill applies to **user-facing strings**: button labels, headings, body cop
 Your job is to catch microcopy that escaped the design team's review — the kinds of phrasings that read fine in isolation but, in aggregate, make the product sound like every other SaaS dashboard. Most projects don't have an explicit brand-voice guide; this skill is the default backstop until they do.
 
 If the repository ships a brand-voice guide (e.g. `BRAND.md`, `docs/voice.md`, a `.brandvoice` config), defer to it. The rules below are the fallback when there's no project-specific guidance.
+
+Wording — narration, padded labels, status words, repetition, filler, action labels, error content — is [ux-copy](../ux-copy/SKILL.md)'s. Where a section below overlaps one of its rules, that rule and its sources govern; this skill owns voice and tone.
 
 ## What to scan for
 
@@ -75,7 +77,7 @@ The words **just**, **simply**, **easy**, **quick** add nothing and quietly insu
 **Good:** "Save your work."
 
 **Bad:** "Go ahead and click Continue."
-**Good:** "Click Continue." (or, per rule 1: "Continue.")
+**Good:** "Continue." ("click" is a dead phrase, rule 1)
 
 "Make sure", "go ahead", "feel free", "be sure to" are stage directions, not instructions. Cut them.
 
@@ -90,13 +92,10 @@ If the project's existing buttons use sentence case, flag any new buttons that d
 
 ### 6. Verb-first calls to action
 
-Buttons and links should start with the verb that names the user's intent.
+A button that changes data starts with the verb that names the change. A control that only navigates may name its destination — "Settings", "Profile" — per [ux-copy](../ux-copy/SKILL.md) rule 9, which owns action labels.
 
-**Bad:** "Profile" (on a button that opens the profile editor)
-**Good:** "Edit profile"
-
-**Bad:** "Settings"
-**Good:** "Open settings"
+**Bad:** "Profile" (on a button that saves edits to the profile)
+**Good:** "Save profile"
 
 **Bad:** "Submit"
 **Good:** "Send invitation" / "Save changes" / "Publish post" — name the *thing* the user is doing, not the form mechanic.

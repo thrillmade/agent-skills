@@ -363,6 +363,14 @@ def test_the_ceiling_matches_an_independent_arithmetic_model(
     """
     monkeypatch.chdir(REPO_ROOT)
     dirs, families, skills, nh = gen._inputs()
+    # A fixed-size slice of the real catalog, not the whole of it. The check
+    # must be able to tell a worst-case `owns` from a half-size one, and that
+    # difference is ~16 bytes a row: on the full catalog the headroom left
+    # room for one or two synthetic rows, so the two models agreed within the
+    # +-1 tolerance and the mutation `growth_prices_owns_below_the_cap` went
+    # green the moment one more skill was added. Twenty real skills leave
+    # ~3.5 KB of headroom at today's density, wherever the catalog's size goes.
+    dirs = sorted(dirs)[:20]
     n = len(gen._body(dirs, families, skills, nh).encode("utf-8"))
 
     shown = [

@@ -1,6 +1,6 @@
 ---
-version: "1.0.4"
-digest: "497ded87346d"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.5"
+digest: "ed7620061825"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: finding-a-catalog-skill
 description: >-
@@ -102,6 +102,7 @@ Math and standards any design system can build on. No product opinions.
 - `token-naming-conventions` — what belongs in a token name
 - `type-scale` — modular ratios and rounding
 - `usability-heuristics` — what the heuristics say
+- `ux-copy` — labels, status, actions, errors
 - `wcag-contrast` — ratios, the legal cross-check
 
 ## Web platform behaviour (L0)
