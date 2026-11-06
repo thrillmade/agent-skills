@@ -66,6 +66,11 @@ informed which rule, with its URL and the normative or advisory note) goes in
 `references/sources.md`, a maintainers' trail rather than instruction. `## Sources`
 holds one line linking to it.
 
+This applies to every skill you create and every skill you substantively edit, where
+you migrate its attribution as part of that edit. The catalog is mid-migration, and a
+planned clean-up converts the rest, so an untouched skill still citing inline is not
+a finding.
+
 One exception, never required: a short, verbatim-checked line from a recognised voice
 that says the rule better than plain prose can, attributed by name only. Use it
 rarely, and never as proof.
@@ -133,9 +138,9 @@ only this? Report against these, with the line quoted:
 - Lists verdicts without the reasoning or the fix
 - References a skill that does not exist, or is not referenced by the ones it depends on
 - Names light and dark but not high-contrast or forced-colors
-- States a rule the research does not strongly support, or has no trail for it in
-  `references/sources.md`
-- Attributes inline (quotes, source names, label tags) instead of stating the rule
+- States a rule the research does not strongly support
+- In a skill you are creating or substantively editing: attributes inline instead of
+  stating the rule, or leaves provenance out of `references/sources.md`
 - Duplicates a neighbour rather than routing to it
 - Is thin enough that it should merge rather than exist
 
@@ -156,7 +161,9 @@ siblings actually do:
 Adopt the dominant structure. At the time of writing the catalog's house shape is
 `## When to use` / `## When NOT to use` / body / `## Verification` /
 `## Cross-references` / `## Sources`, with `**REQUIRED BACKGROUND:** <skill>` marking a hard
-dependency. Re-measure rather than trusting that list — it moves.
+dependency. Re-measure rather than trusting that list — it moves. One stated change
+overrides the measurement: attribution moves to `references/sources.md`, as set out
+under research, even while most siblings still cite inline.
 
 **Omit a house section only deliberately.** If a skill genuinely has no negative
 trigger case, say so in one line rather than dropping the heading silently. A reader
@@ -237,7 +244,7 @@ A repo-specific skill that only makes sense in one project stays in that project
 `.claude/skills/<slug>/SKILL.md`. If the same skill keeps being reinvented across
 projects, that is the signal to propose it to the catalog.
 
-Never commit. Report the branch and the diff; the orchestrator commits.
+Never commit in the real tree. Report the branch and the diff; the orchestrator commits.
 
 **Run the repo's gates before handing back**, from the repo root, and report each
 result with its command:
@@ -254,12 +261,14 @@ result with its command:
 Each generator's `--write` repairs its own staleness; never hand-edit a stamp or the
 directory. Removing prose from a `SKILL.md` needs a row in `docs/prose-removals.md`,
 or the retention gate fails it. A PR that changes 20 or more non-docs lines (scripts,
-tests) needs a decision entry, written with `logmind log`, or `check-decisions` fails it.
+tests) needs a decision entry, or `check-decisions` fails it. `logmind log` commits by
+default and stages the whole working tree, so draft the entry with
+`logmind log --no-commit` (or as text) and report it; the orchestrator commits.
 
 Gates that read HEAD, such as prose retention, cannot see uncommitted work. Run them in
 a disposable scratch clone: copy your changed files in, commit there, and name that
-commit's SHA in the report. "0 changed" on work that changed skills is a failed run, not a pass. Never
-commit in the real tree.
+commit's SHA in the report. "0 changed" on work that changed skills is a failed run,
+not a pass. Those scratch commits are the only commits you make.
 
 ## Format
 
