@@ -7,6 +7,7 @@
     {"id": "catalog-and-tooling", "title": "The catalog itself", "routes": "Finding, censusing and authoring skills; decision logging; CLI conventions."},
     {"id": "design-dispatchers", "title": "Design: start here (L1)", "routes": "Three entry points. Each routes to the primitives below in work order."},
     {"id": "design-primitives", "title": "Design primitives (L0)", "routes": "Math and standards any design system can build on. No product opinions."},
+    {"id": "writing", "title": "Writing (L0)", "routes": "One skill per kind of copy. A brand's voice guide sets tone on top."},
     {"id": "web-platform", "title": "Web platform behaviour (L0)", "routes": "What a shipping engine does that its spec and an emulator do not show."},
     {"id": "design-critic-lenses", "title": "Design review lenses (L0)", "routes": "Judging the rendered surface -- and the standard it is judged against."},
     {"id": "design-stances", "title": "Design stances (L2)", "routes": "One system's or one studio's lean on L0. The udts-* stubs are not guidance yet."},
@@ -52,11 +53,12 @@
       "notes": "release-sync: logmind's release workflow PRs its skill update here"
     },
     "brand-voice-review": {
-      "family": "review-discipline",
-      "owns": "voice in user-facing strings",
+      "family": "deprecated",
+      "owns": "use writing-*, defining-a-voice",
       "authoring_home": "catalog",
       "distribution": "opt-in",
-      "subscribers": ["tokenomics"]
+      "subscribers": ["tokenomics"],
+      "notes": "SUPERSEDED (#302) -- split three ways, one owner per rule: wording to writing-interface-copy (#301), voice and tone to defining-a-voice, buzzwords and marketing copy to writing-marketing-copy. Reduced to a pointer that keeps its applies_to so a subscriber that loads it is routed on. tokenomics still subscribes: it must add the three successors before running npx skills update on this one (follow-up to be filed in tokenomics; not filed yet)."
     },
     "designing-elite-ui": {
       "family": "design-critic-lenses",
@@ -88,7 +90,7 @@
       "authoring_home": "catalog",
       "distribution": "opt-in",
       "subscribers": [],
-      "notes": "House stance layered on designing-elite-ui: principles, not a token spec. Applies to any surface Thrill designs, on any project; carries no project nouns by rule. L2: a house stance, filed with the udts-* system stances; reviewing-design-work applies it as the last lens when the work is Thrill's"
+      "notes": "House stance layered on designing-elite-ui: principles, not a token spec. Applies to any surface Thrill designs, on any project; carries no project nouns by rule. L2: a house stance, filed with the udts-* system stances; reviewing-design-work applies it as the last lens when the work is Thrill's. Ships references/voice.md: the house voice guide, voice-template filled in, linked from principle 4."
     },
     "motion-continuity": {
       "family": "design-primitives",
@@ -362,6 +364,14 @@
       "subscribers": [],
       "notes": "template — copy + customize per maintainer's applies_to.author, not a live subscription"
     },
+    "voice-template": {
+      "family": "templates",
+      "owns": "a brand voice guide scaffold",
+      "authoring_home": "catalog",
+      "distribution": "catalog-only",
+      "subscribers": [],
+      "notes": "template -- copy to .claude/skills/voice-<brand>/SKILL.md and fill in; applies_to.author: _REPLACE_ME_ holds a half-filled guide off until it is deleted. Not a live subscription. Sections and their rationale: defining-a-voice."
+    },
     "dtcg-format": {
       "family": "design-primitives",
       "owns": "the W3C DTCG interchange file",
@@ -456,7 +466,7 @@
       "authoring_home": "catalog",
       "distribution": "opt-in",
       "subscribers": [],
-      "notes": "L0 primitive; the falsifiable half of the design-principle literature. The only skill in the catalog shipping a references/ subdirectory (3 files, ~112 KB), so its SKILL.md links them by RELATIVE on-disk path (`references/gestalt.md`), because `npx skills add` copies the subdirectory wholesale and an installed reader already holds the files -- a blob/main URL would send them to the network for something on disk, and promises a path that never moves. OPEN QUESTION, not verified either way: skills.sh renders SKILL.md alone, so a relative reference link may 404 on that web surface. If it does, the answer is a web-only fallback, not reverting the on-disk form. Two consequences to keep in view on any re-sync: the references ship as a straight copy with no cleaning step in their path, so a future re-sync from a consumer repo needs one; and a reviewer that reads SKILL.md alone never loads them."
+      "notes": "L0 primitive; the falsifiable half of the design-principle literature. Ships a references/ subdirectory (3 files, ~112 KB; writing-interface-copy also ships one, for its research trail and further reading), so its SKILL.md links them by RELATIVE on-disk path (`references/gestalt.md`), because `npx skills add` copies the subdirectory wholesale and an installed reader already holds the files -- a blob/main URL would send them to the network for something on disk, and promises a path that never moves. OPEN QUESTION, not verified either way: skills.sh renders SKILL.md alone, so a relative reference link may 404 on that web surface. If it does, the answer is a web-only fallback, not reverting the on-disk form. Two consequences to keep in view on any re-sync: the references ship as a straight copy with no cleaning step in their path, so a future re-sync from a consumer repo needs one; and a reviewer that reads SKILL.md alone never loads them."
     },
     "usability-heuristics": {
       "family": "design-primitives",
@@ -465,6 +475,30 @@
       "distribution": "opt-in",
       "subscribers": [],
       "notes": "L0 primitive; the judgement half, paired with empirical-design-principles - Nielsen/Norman/Shneiderman by source and edition. Deliberately carries no kind: or applies_to:, matching the other 12 L0 universal primitives: its own trigger includes a findings write-up in .md, which a rendered-surface glob would gate out."
+    },
+    "writing-interface-copy": {
+      "family": "writing",
+      "owns": "labels, status, actions, errors",
+      "authoring_home": "catalog",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "L0; the wording rules for interface strings, stated as the catalog's opinion with the research trail in references/sources.md. kind: writing because it judges shipped prose. No applies_to: interface strings live in locale JSON, .ts, templates and .md alike, so a path or extension glob would gate out real triggers, and a skill with no filter applies everywhere. Absorbed brand-voice-review's wording sections (#301). Tone defers to the brand's voice guide (defining-a-voice)."
+    },
+    "writing-marketing-copy": {
+      "family": "writing",
+      "owns": "pages, headlines, case studies",
+      "authoring_home": "catalog",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "L0; the clarity rules for marketing, brand and web copy (landing pages, case studies, headlines, decks, taglines, About pages), stated as the catalog's opinion with the research trail in references/sources.md. kind: writing. Tone defers to the brand's voice guide (defining-a-voice); interface strings are writing-interface-copy's."
+    },
+    "defining-a-voice": {
+      "family": "writing",
+      "owns": "brand voice; tone vs clarity",
+      "authoring_home": "catalog",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "L0; what a brand voice guide contains, where it lives, how the writing skills find it, and the one statement of precedence (the brand's guide sets tone, the clarity rules hold regardless). kind: writing. The scaffold is voice-template; Thrill's filled guide is thrill-design/references/voice.md."
     },
     "proving-an-absence": {
       "family": "review-discipline",

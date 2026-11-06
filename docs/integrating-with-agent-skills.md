@@ -67,7 +67,7 @@ npx clud-bug init
 
 # 2. Subscribe to the catalog skills this repo needs (per-skill opt-in):
 npx skills add https://github.com/thrillmade/agent-skills --skill logmind
-npx skills add https://github.com/thrillmade/agent-skills --skill brand-voice-review
+npx skills add https://github.com/thrillmade/agent-skills --skill writing-interface-copy   # + defining-a-voice, writing-marketing-copy
 # ...whatever fits the repo. Browse: https://www.skills.sh/thrillmade/agent-skills
 
 # 3. Commit the manifests (skills-lock.json + .clud-bug.json). Do not gitignore them.
