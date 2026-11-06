@@ -55,6 +55,7 @@ agent-skills
 │   ├── ios-safari-surfaces
 │   ├── line-height-grid
 │   ├── logmind
+│   ├── making-decision-artifacts
 │   ├── motion-continuity
 │   ├── oklch-color-space
 │   ├── orchestrating-a-multi-agent-run
