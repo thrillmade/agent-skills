@@ -346,7 +346,11 @@ def test_a_cheaper_owns_raises_the_ceiling_and_bare_names_raise_it_further(
     measured, so the ordering is checkable rather than asserted in prose.
     """
     monkeypatch.chdir(REPO_ROOT)
-    args = gen._inputs()
+    # The same fixed-size slice the arithmetic model below uses: on the whole
+    # catalog the rungs can meet once a skill is added, and the order is a
+    # claim about the ladder, not about the catalog's size today.
+    dirs, families, skills, nh = gen._inputs()
+    args = (sorted(dirs)[:20], families, skills, nh)
     base = gen.ceiling(*args)
     cheaper = gen.ceiling(*args, owns_max=24)
     shorter = gen.ceiling(*args, owns_max=24, route_scale=0.5)
