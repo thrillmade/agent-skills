@@ -58,7 +58,7 @@
       "authoring_home": "catalog",
       "distribution": "opt-in",
       "subscribers": ["tokenomics"],
-      "notes": "SUPERSEDED (#302) -- split three ways, one owner per rule: wording to writing-interface-copy (#301), voice and tone to defining-a-voice, buzzwords and marketing copy to writing-marketing-copy. Reduced to a pointer that keeps its applies_to so a subscriber that loads it is routed on. tokenomics still subscribes: it must add the three successors before running npx skills update on this one (follow-up filed in tokenomics)."
+      "notes": "SUPERSEDED (#302) -- split three ways, one owner per rule: wording to writing-interface-copy (#301), voice and tone to defining-a-voice, buzzwords and marketing copy to writing-marketing-copy. Reduced to a pointer that keeps its applies_to so a subscriber that loads it is routed on. tokenomics still subscribes: it must add the three successors before running npx skills update on this one (follow-up to be filed in tokenomics; not filed yet)."
     },
     "designing-elite-ui": {
       "family": "design-critic-lenses",

@@ -6,7 +6,7 @@ Licence note: the Mailchimp Content Style Guide is CC BY-NC 4.0. The skill borro
 
 ## Precedence
 
-Ten guides put clarity above personality, and none put it the other way.
+Seven guides, listed below, put clarity above personality, and none of the guides read for this skill puts it the other way.
 
 - Mailchimp, [Voice and tone](https://styleguide.mailchimp.com/voice-and-tone/): "Mailchimp’s tone is usually informal, but it’s always more important to be clear than entertaining." (the line the skill quotes)
 - Monzo, [Tone of voice](https://monzo.com/tone-of-voice): "we never want our sense of humour to get in the way of the core message."
