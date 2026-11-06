@@ -5,14 +5,14 @@
  "enumeration": {
   "refs": "refs/remotes/origin/*",
   "publishing_ref": "origin/main",
-  "commits": 159,
-  "blobs": 334
+  "commits": 163,
+  "blobs": 337
  },
- "versions_enumerated": 221,
+ "versions_enumerated": 232,
  "verification": {
   "current": "GATED. validate_skills.py recomputes every `current` from skills/<slug>/SKILL.md on every pull request. Needs no git history, so it holds at the depth-1 checkout CI uses.",
   "history": "NOT GATED. History content is derived from git and CI cannot recompute these rows; only that every row's `commit` is an ancestor of the checked revision is gated (`gen_skill_versions.py --check`). Regenerate them in a full clone with `.github/scripts/gen_skill_versions.py --write`.",
-  "history_rows_ungated": 157
+  "history_rows_ungated": 167
  },
  "skills": {
   "apca-contrast": {
@@ -87,6 +87,12 @@
      "version": null,
      "commit": "2dc8360",
      "date": "2026-07-31"
+    },
+    {
+     "v": "682367fb898d",
+     "version": "1.0.2",
+     "commit": "9807626",
+     "date": "2026-11-06"
     }
    ]
   },
@@ -291,6 +297,12 @@
      "version": null,
      "commit": "d3963dd",
      "date": "2026-08-23"
+    },
+    {
+     "v": "84dccb5e3159",
+     "version": "1.0.1",
+     "commit": "9807626",
+     "date": "2026-11-06"
     }
    ]
   },
@@ -367,7 +379,14 @@
    "current": "25e825b3cc5a",
    "version": "1.0.2",
    "authoring_home": "catalog",
-   "history": []
+   "history": [
+    {
+     "v": "25e825b3cc5a",
+     "version": "1.0.2",
+     "commit": "9807626",
+     "date": "2026-11-06"
+    }
+   ]
   },
   "design-system-consistency": {
    "current": "c4adcac2a7fb",
@@ -520,6 +539,12 @@
      "version": "1.1.0",
      "commit": "f649720",
      "date": "2026-11-02"
+    },
+    {
+     "v": "14e5f0314e5e",
+     "version": "1.1.3",
+     "commit": "9807626",
+     "date": "2026-11-06"
     }
    ]
   },
@@ -593,8 +618,8 @@
    ]
   },
   "finding-a-catalog-skill": {
-   "current": "233ecac1b1f2",
-   "version": "1.0.6",
+   "current": "f5f92f771470",
+   "version": "1.0.7",
    "authoring_home": "catalog",
    "history": [
     {
@@ -620,6 +645,12 @@
      "version": "1.0.4",
      "commit": "f649720",
      "date": "2026-11-02"
+    },
+    {
+     "v": "233ecac1b1f2",
+     "version": "1.0.6",
+     "commit": "9807626",
+     "date": "2026-11-06"
     }
    ]
   },
@@ -843,6 +874,12 @@
      "date": "2026-11-03"
     }
    ]
+  },
+  "making-decision-artifacts": {
+   "current": "df971df563bd",
+   "version": "1.0.5",
+   "authoring_home": "catalog",
+   "history": []
   },
   "motion-continuity": {
    "current": "d1f117138319",
@@ -1140,6 +1177,12 @@
      "version": "1.1.0",
      "commit": "f649720",
      "date": "2026-11-02"
+    },
+    {
+     "v": "5d73da7af6df",
+     "version": "1.2.1",
+     "commit": "9807626",
+     "date": "2026-11-06"
     }
    ]
   },
@@ -1334,6 +1377,12 @@
      "version": "1.0.1",
      "commit": "f649720",
      "date": "2026-11-02"
+    },
+    {
+     "v": "ab76bd518928",
+     "version": "1.1.3",
+     "commit": "9807626",
+     "date": "2026-11-06"
     }
    ]
   },
@@ -1679,7 +1728,14 @@
    "current": "5af48963998c",
    "version": "1.0.1",
    "authoring_home": "catalog",
-   "history": []
+   "history": [
+    {
+     "v": "5af48963998c",
+     "version": "1.0.1",
+     "commit": "9807626",
+     "date": "2026-11-06"
+    }
+   ]
   },
   "wcag-contrast": {
    "current": "c2c3bd386622",
@@ -1770,6 +1826,12 @@
      "version": "1.0.3",
      "commit": "f649720",
      "date": "2026-11-02"
+    },
+    {
+     "v": "e5f3424d3dc1",
+     "version": "1.0.5",
+     "commit": "9807626",
+     "date": "2026-11-06"
     }
    ]
   },
@@ -1777,13 +1839,27 @@
    "current": "2d2d0dc59dad",
    "version": "1.0.3",
    "authoring_home": "catalog",
-   "history": []
+   "history": [
+    {
+     "v": "2d2d0dc59dad",
+     "version": "1.0.3",
+     "commit": "9807626",
+     "date": "2026-11-06"
+    }
+   ]
   },
   "writing-marketing-copy": {
    "current": "9211a67b1846",
    "version": "1.0.1",
    "authoring_home": "catalog",
-   "history": []
+   "history": [
+    {
+     "v": "9211a67b1846",
+     "version": "1.0.1",
+     "commit": "9807626",
+     "date": "2026-11-06"
+    }
+   ]
   }
  }
 }
