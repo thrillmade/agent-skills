@@ -13,10 +13,10 @@ PR's CI run, so this file is always coherent with current `main`.
 ---
 
 
-## 2026-11 (12 decisions)
+## 2026-11 (13 decisions)
 
-- **2026-11-06** — Add the making-decision-artifacts skill: how a call that is the owner's reaches them as a page *(skill/making-decision-artifacts)* — [decisions-branches/skill__making-decision-artifacts.md](decisions-branches/skill__making-decision-artifacts.md)
-- *... 10 more decisions ...*
+- **2026-11-06** — The moves page is pictures, a digest and one ask; the rows are linked *(skill/making-decision-artifacts)* — [decisions-branches/skill__making-decision-artifacts.md](decisions-branches/skill__making-decision-artifacts.md)
+- *... 11 more decisions ...*
 - **2026-11-02** — Design skills: thrill-design house principles, motion-continuity, ios-safari-surfaces; designing-elite-ui and orchestrating-elite-agent-qa amended *(feat/design-skills-nov)* — [decisions-branches/feat__design-skills-nov.md](decisions-branches/feat__design-skills-nov.md)
 
 ## 2026-10
