@@ -1,6 +1,6 @@
 ---
-version: "1.0.0"
-digest: "6ad2af428f4f"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.5"
+digest: "df971df563bd"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: making-decision-artifacts
 description: |
@@ -11,14 +11,13 @@ description: |
 
 A decision artifact is the page an orchestrator publishes when a call belongs to the
 owner and not to the law. The owner decides by looking, so every rule here makes the
-looking cheap and the answer unambiguous. The **call page** asks one question with
+looking cheap and the answer unambiguous: the **call page** asks one question with
 pictures; the **moves page** shows what a landing moved.
 
 ## When to use
 
 - A call is taste: two or three lawful candidates differ in how they look or read.
-- A default-config choice: bring it with pictures as it arises, and never let it block
-  a lane; lanes build the law and the row takes the word when it comes.
+- A default-config choice: bring it with pictures as it arises; it never blocks a lane.
 - A landing moves output; the owner sees the moves before it merges.
 - A page the owner reads is republished, or retired once its call is recorded.
 
@@ -32,18 +31,16 @@ Classify first; most findings are not the owner's call.
   decision. It stays when its call is recorded; deleting it is irreversible.
 - **A sketch from the owner** carries an idea, not a layout. Ask what it carries before
   building its likeness; the answer may be an audit, not a page.
-- **Status** (a move list, launch steps) never sits on a call page.
 
 ## The call page
 
 1. **Pictures, after the build.** Render candidates from the real emission, never a
    mock. Never ask for a word before its picture exists, and never publish a call
    without one, even as a placeholder.
-2. **One decision per screen**, with Back and Next. A question that follows from an
-   earlier word is still its own screen.
-3. **One scene, large, at one scale.** Each candidate is an instance of the same scene
-   with one thing changed, cropped to the part under judgment, beside the others: a
-   comparison needs both in one glance at one size.
+2. **One decision per screen**, with Back and Next; a follow-up question is its own
+   screen.
+3. **One scene, large, at one scale.** Each candidate is the same scene with one thing
+   changed, cropped to the part under judgment, beside the others in one glance.
 4. **One block per candidate:** a one-line name, two or three plain sentences on what
    it is and where it works or fails, then light beside dark. Never all light then all
    dark: the owner compares a candidate's two modes against each other.
@@ -54,26 +51,30 @@ Classify first; most findings are not the owner's call.
    preselected and quietly marked, with one sentence of recommendation; the chosen
    words collect into one copyable line.
 7. **Nothing else.** No contact sheets, tables or ladders of rows; a number lives on a
-   chip or caption, and the panel's figures in a file linked once. Strip every item a
-   law or ruling decides.
+   chip, the panel's figures in a file linked once; strip what a law decides.
 8. **Frame within the law.** Offer no candidate the law refuses and no figure no rule
    asks for (a hover step owes visibility, not contrast); it reads as doubting the law.
 
 ## The moves page
 
-A reading page: no candidates, no reply words.
+A reading page a person takes in within minutes: pictures, then a digest, then one
+ask. The rows are the panel's reference, linked once, never the page.
 
 - **Since the tip the owner last read**, named in the title; the cumulative page runs
   against the bundle's base.
-- **Printed, not written.** One grammar over the comparison data: fixed columns and
-  order, every section present, absence printed "none". The builder refuses when a
-  count differs from the data's and prints the generation line in the footer.
-- **What it rows:** names added, removed and re-aliased, values, floors, figures moved
-  by at least the unit shown, exit-code changes with the last refusal line, printed
-  lines and notices; each row is kind, name, was, now, tier, aliases, check. The configs
-  a person reads (the default, the examples) are in full; the rest are counts.
-- **A metadata-only landing is still shown**, as "nothing a person sees moved" with
-  its metadata counts. Silence reads as unchecked.
+- **Pictures first.** The configs a person reads, rendered from the real emission at
+  each tip as one scene of the parts whose tokens moved, light beside dark per tip,
+  before above after; under each, chips naming the moved tokens and their values.
+- **A digest of at most twenty lines**, one per class of move, each with its count
+  across the store, the law it follows in a few words and one example; the counts sum
+  to the comparison's summary and the page prints that check. A class whose law is not
+  recorded says so.
+- **One ask:** reply `seen`, or name the picture and the part that looks wrong.
+- **Printed, not written.** One grammar over the comparison data writes the rows file
+  (every figure move at or above the unit shown, with its ground before and after); the
+  builder refuses when a count differs from the data's and prints its generation line.
+- **A metadata-only landing is still shown** as "nothing a person sees moved" with its
+  counts. Silence reads as unchecked.
 
 ## Building, publishing, recording
 
@@ -89,16 +90,15 @@ A reading page: no candidates, no reply words.
   pointer. A private page opens only for its publishing account: after a sign-in
   change, republish each source as a new artifact and re-link.
 - **Record the answer as a numbered ruling**: the reply word quoted, the tip it was
-  read at, the link. A moves page's reading is "the moves at `<sha>` are seen", and
-  the next moves page runs from that tip.
+  read at, the link. A moves page's reading is "the moves at `<sha>` are seen"; the
+  next moves page runs from that tip.
 
 ## Anti-patterns
 
 - **Lettered text options:** eight glass calls as text, "no visuals or anything"
   (10 Oct 2026).
 - **The dense page:** contact sheets and tables, "hard to compare" (12 Oct); five
-  questions on one page, "very confusing" (22 Oct); open calls as prose, "not the
-  format for making a call" (29 Oct).
+  questions on one page, "very confusing" (22 Oct); calls as prose (29 Oct).
 - **A defect asked as taste:** a value vanishing on dark grounds asked as "ring old or
   new" over two identical pictures; a word asked before its picture (18 Oct).
 - **Building the sketch:** a drawn state grid meant "follow the conventions"; a grid
@@ -107,13 +107,14 @@ A reading page: no candidates, no reply words.
   `neutral-grey-surface-base` (10 Oct); a percentage for a rung (12 Oct).
 - **Hand-written rows:** a form written part by part named one fact two ways
   (16 Oct).
-- **Black text in dark mode:** the page set color only on `html` and shipped its own
-  wrapper, so the host's reset turned body text black (10 Oct).
-- **A rebuild that reverts:** one picture re-rendered, the prose regenerated, hand
-  edits lost (17 Oct).
+- **Black text in dark mode:** color set only on `html` under the page's own wrapper,
+  so the host's reset turned body text black (10 Oct).
+- **A rebuild that reverts:** the prose regenerated, hand edits lost (17 Oct).
 - **A reference deleted as decided:** the chosen look, among 26 pages (10 Oct).
-- **Merging unseen moves:** fourteen output-moving merges 18 to 52 s after their
+- **Merging unseen moves:** fourteen output-moving merges seconds after their
   comparison, two before their ruling (11 Oct).
+- **The row table as the reading page:** 807 rows over three configs, "massive, i
+  cant really go through this manually" (6 Nov). The owner looks; the panel reads.
 
 ## Verification
 
@@ -123,8 +124,8 @@ Before publishing, every line holds:
 - [ ] Every picture is from the real build at a named tip; no figure is typed.
 - [ ] One decision per screen; each candidate a block, light beside dark, one scale.
 - [ ] Every candidate has an exact token name and a reply word; one is preselected.
-- [ ] Moves page: counts equal the data's, the configs a person reads are in full, an
-      empty landing prints "nothing a person sees moved".
+- [ ] Moves page: pictures from the real build at both tips, a digest under twenty
+      lines whose counts sum to the data's, one ask; the rows linked, not shown.
 - [ ] Each mode forced (headless Chrome `--blink-settings=preferredColorScheme=0` is
       dark, `=1` light; unforced follows the machine): a paragraph's computed color
       differs between them and is light in dark.
@@ -140,11 +141,9 @@ Before publishing, every line holds:
 - [orchestrating-elite-agent-qa](../orchestrating-elite-agent-qa/SKILL.md): the lanes
   that check the page without shaping it.
 - [designing-elite-ui](../designing-elite-ui/SKILL.md): the bar the page is built to.
-- [thrill-design](../thrill-design/SKILL.md): "decide, then ship"; this skill is how
-  the options reach the decider.
-- [retiring-a-superseded-decision](../retiring-a-superseded-decision/SKILL.md): landing
-  the ruling wherever the old value still stands.
+- [thrill-design](../thrill-design/SKILL.md): "decide, then ship"; this is how the
+  options reach the decider.
 
 ## Sources
 
-Why each rule holds, with the ruling or incident behind it: [references/sources.md](references/sources.md).
+Why each rule holds, and the ruling or incident behind it: [sources](references/sources.md).

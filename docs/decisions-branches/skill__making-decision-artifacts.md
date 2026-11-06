@@ -12,3 +12,14 @@
 
 ---
 
+## 2026-11-06 12:49 - The moves page is pictures, a digest and one ask; the rows are linked
+
+**Reasoning:** The owner could not read an 807-row moves table (6 Nov 2026): a person judges a design system by looking, and the rows are the panel's reference. The section is rewritten to pictures from the real build at both tips, a digest under twenty lines whose counts sum to the comparison, and one reply word; the incident joins the anti-patterns; the body is trimmed under the 8,192-byte cap.
+
+**Alternatives considered:** Keep the row table and add a summary above it
+
+**Implications:**
+- Every output-moving landing builds the digest page; the rows file is generated and linked once
+
+---
+
