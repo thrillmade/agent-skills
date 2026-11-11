@@ -141,7 +141,7 @@ MAX_BODY_BYTES = 7900
 HEADER = """
 # Finding a catalog skill
 
-Every skill in the **thrillmade/agent-skills** catalog, grouped by what it
+Every skill in the **thrillmade/thrill-skills** catalog, grouped by what it
 owns. Generated from `docs/placement-map.json` and gated: add, rename or
 delete a skill without regenerating and `validate-skills` fails, so this list
 cannot go quietly incomplete the way a hand-kept table does.
@@ -158,7 +158,7 @@ freshness against that skill's own body. Enough to shortlist two or three;
 then open them. A skill you do not have yet:
 
 ```
-npx skills add https://github.com/thrillmade/agent-skills --skill <name>
+npx skills add https://github.com/thrillmade/thrill-skills --skill <name>
 ```
 
 **What this is not.** Not a listing of your `.claude/skills/` -- a repo holds
@@ -213,10 +213,10 @@ SOURCES = """
 ## Sources
 
 - Published by [thrillmot](https://thrillmot.com)
-- The catalog: <https://github.com/thrillmade/agent-skills>
+- The catalog: <https://github.com/thrillmade/thrill-skills>
 - Placement, distribution and subscribers per skill: `docs/placement-map.json`
 - The census that promotes, revises and retires these:
-  <https://github.com/thrillmade/agent-skills/tree/main/skills/curating-a-skill-catalog>
+  <https://github.com/thrillmade/thrill-skills/tree/main/skills/curating-a-skill-catalog>
 """
 
 

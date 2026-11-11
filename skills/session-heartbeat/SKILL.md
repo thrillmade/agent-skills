@@ -1,7 +1,7 @@
 ---
-version: "1.0.0"
-digest: "ceee4cf10ea4"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
-origin: "https://github.com/thrillmade/agent-skills"
+version: "1.0.1"
+digest: "4cf9fd345913"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/thrill-skills"
 name: session-heartbeat
 description: |
   Use when a session must keep working across a stretch longer than one uninterrupted sitting — an orchestrator rolling through a multi-slice plan for hours, a run that will cross a usage-limit reset, a session resumed after a limit or a compaction with someone else's work in flight, or the moment before dispatching an agent when you do not know whether the remaining window can finish it. Also use when a long run is accumulating wakeups but no landed commits, when you are polling for a result the harness would have pushed to you, or when a resumed session is re-deriving pipeline state it should have read off a checkpoint. Names the per-beat order, the largest-dispatch threshold rule, the checkpoint's required slots, and the resume-as-survivor protocol. Not for a single task inside one sitting, and not the unattended-operation policy — that is `unattended-operation`, which builds on this.
@@ -45,7 +45,7 @@ The interval is set by **how often new information actually arrives** — the co
 
 **Establish once, at entry, whether your harness pushes completion notifications into the session.** If it does, the beat is a safety net and should be long — polling for what will be pushed to you is the commonest way a heartbeat burns a night. If it does not, the beat is your only harvest and must be no longer than your shortest dispatch.
 
-*(One instantiation: agent-skills#173 reports ~20-minute beats — one operator's number for one shape of work, not a default.)*
+*(One instantiation: thrill-skills#173 reports ~20-minute beats — one operator's number for one shape of work, not a default.)*
 
 ## The threshold is your largest dispatch, not a round number
 
@@ -113,4 +113,4 @@ Each of these leaves a green tree and reports nothing.
 
 - Cache lifetime/refresh: Anthropic prompt-caching docs — 5-minute default TTL, 1-hour option at 2× write price, refreshed free on use, measured from request start.
 - Pending-work survivor rule: thrillmade/protocol `SPEC.md` §6.2 — "A check MUST NOT be left pending… the rule needs a survivor."
-- Cadence and threshold practice as reported: thrillmade/agent-skills#173. Mid-write kill hazards, owned-files recovery: #169 (discipline 6). The review lifecycle a resume re-fires: thrillmade/protocol#44, thrillmade/clud-bug#239.
+- Cadence and threshold practice as reported: thrillmade/thrill-skills#173. Mid-write kill hazards, owned-files recovery: #169 (discipline 6). The review lifecycle a resume re-fires: thrillmade/protocol#44, thrillmade/clud-bug#239.

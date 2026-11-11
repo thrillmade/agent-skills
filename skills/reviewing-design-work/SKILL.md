@@ -1,7 +1,7 @@
 ---
 version: "1.2.2"
-digest: "33d849ca81f8"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
-origin: "https://github.com/thrillmade/agent-skills"
+digest: "33d849ca81f8"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/thrill-skills"
 name: reviewing-design-work
 description: |
   Entry-point dispatcher for REVIEWING or CRITIQUING design work — a PR that touches UI code, a rendered surface or screenshot, a Figma handoff, or a design spec. Routes the review through ordered lenses: code and markup rules first (web-interface-guidelines-review), then rendered-surface lenses (design-system-consistency, frontend-a11y, visual-polish), then the opinionated bar (designing-elite-ui), then the house stance (thrill-design) when the work is that house's, and the copy lens (writing-interface-copy, writing-marketing-copy and defining-a-voice, in the prose pass) — with routing rules for when the browser-driven design-critic pass fires (per orchestrating-elite-agent-qa). Use when the task is judging existing design output; for building a system load designing-a-design-system; for consuming one load consuming-a-design-system.

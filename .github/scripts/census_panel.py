@@ -111,7 +111,7 @@ CATALOG_DESC_LIMIT = 400
 # READ-ONLY docket fetch. gh reads GH_TOKEN from the environment itself.
 GH_ISSUE_LIST_CMD = [
     "gh", "issue", "list",
-    "-R", "thrillmade/agent-skills",
+    "-R", "thrillmade/thrill-skills",
     "--state", "open",
     "--label", "census",
     "--json", "number,title,body,labels,updatedAt",

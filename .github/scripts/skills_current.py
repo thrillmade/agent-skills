@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Are the agent-skills copies in THIS repo current? Run it from your repo root.
+"""Are the thrill-skills copies in THIS repo current? Run it from your repo root.
 
-    curl -fsSLO https://raw.githubusercontent.com/thrillmade/agent-skills/main/.github/scripts/skills_current.py
+    curl -fsSLO https://raw.githubusercontent.com/thrillmade/thrill-skills/main/.github/scripts/skills_current.py
     python3 skills_current.py
 
 Stdlib only, one HTTPS GET, and it reads nothing but your own files. No git
@@ -60,7 +60,7 @@ import urllib.request
 from pathlib import Path
 
 INDEX_URL = (
-    "https://raw.githubusercontent.com/thrillmade/agent-skills/main/"
+    "https://raw.githubusercontent.com/thrillmade/thrill-skills/main/"
     "docs/skill-versions.json"
 )
 ROOTS = (".agents/skills", ".claude/skills")
@@ -208,7 +208,7 @@ def main(argv: list[str] | None = None) -> int:
         lines.append(f"{verdict:12} {d.name}  {why}")
         if head == "STALE":
             lines.append(
-                f"{'':12} update:  npx skills add thrillmade/agent-skills "
+                f"{'':12} update:  npx skills add thrillmade/thrill-skills "
                 f"--skill {d.name}"
             )
 

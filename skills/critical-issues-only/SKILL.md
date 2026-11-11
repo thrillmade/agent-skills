@@ -1,7 +1,7 @@
 ---
 version: "1.0.0"
-digest: "0527da0fc07d"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
-origin: "https://github.com/thrillmade/agent-skills"
+digest: "0527da0fc07d"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/thrill-skills"
 name: critical-issues-only
 description: PR review discipline - flag only correctness, security, and performance issues. Skip nits.
 ---

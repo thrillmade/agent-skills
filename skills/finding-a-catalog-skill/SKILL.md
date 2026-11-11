@@ -1,10 +1,10 @@
 ---
-version: "1.0.7"
-digest: "f5f92f771470"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
-origin: "https://github.com/thrillmade/agent-skills"
+version: "1.0.9"
+digest: "a1020f100a06"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/thrill-skills"
 name: finding-a-catalog-skill
 description: >-
-  The directory of the thrillmade/agent-skills catalog — that catalog only,
+  The directory of the thrillmade/thrill-skills catalog — that catalog only,
   not the wider skills.sh ecosystem — naming every skill in it, what each one
   owns, and what it deliberately does not cover. Load it BEFORE authoring any
   rule, convention, checklist, standard, guideline or house style, and before
@@ -19,7 +19,7 @@ source: manual
 ---
 # Finding a catalog skill
 
-Every skill in the **thrillmade/agent-skills** catalog, grouped by what it
+Every skill in the **thrillmade/thrill-skills** catalog, grouped by what it
 owns. Generated from `docs/placement-map.json` and gated: add, rename or
 delete a skill without regenerating and `validate-skills` fails, so this list
 cannot go quietly incomplete the way a hand-kept table does.
@@ -36,7 +36,7 @@ freshness against that skill's own body. Enough to shortlist two or three;
 then open them. A skill you do not have yet:
 
 ```
-npx skills add https://github.com/thrillmade/agent-skills --skill <name>
+npx skills add https://github.com/thrillmade/thrill-skills --skill <name>
 ```
 
 **What this is not.** Not a listing of your `.claude/skills/` -- a repo holds
@@ -173,7 +173,7 @@ know is there, the way the counts above are controlled.
 ## Sources
 
 - Published by [thrillmot](https://thrillmot.com)
-- The catalog: <https://github.com/thrillmade/agent-skills>
+- The catalog: <https://github.com/thrillmade/thrill-skills>
 - Placement, distribution and subscribers per skill: `docs/placement-map.json`
 - The census that promotes, revises and retires these:
-  <https://github.com/thrillmade/agent-skills/tree/main/skills/curating-a-skill-catalog>
+  <https://github.com/thrillmade/thrill-skills/tree/main/skills/curating-a-skill-catalog>

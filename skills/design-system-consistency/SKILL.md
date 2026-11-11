@@ -1,7 +1,7 @@
 ---
 version: "1.0.1"
-digest: "c4adcac2a7fb"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
-origin: "https://github.com/thrillmade/agent-skills"
+digest: "c4adcac2a7fb"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/thrill-skills"
 name: design-system-consistency
 description: >-
   Use when judging whether a RENDERED surface obeys its own design system —

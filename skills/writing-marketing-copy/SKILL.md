@@ -1,7 +1,7 @@
 ---
 version: "1.0.1"
-digest: "9211a67b1846"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
-origin: "https://github.com/thrillmade/agent-skills"
+digest: "9211a67b1846"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/thrill-skills"
 name: writing-marketing-copy
 description: >-
   Use when writing, editing or reviewing marketing, brand or web copy — a

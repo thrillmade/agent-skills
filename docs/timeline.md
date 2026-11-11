@@ -13,10 +13,10 @@ PR's CI run, so this file is always coherent with current `main`.
 ---
 
 
-## 2026-11 (16 decisions)
+## 2026-11 (17 decisions)
 
-- **2026-11-11** — The catalog calls the design-token project udts: every live mention of tokenomics is renamed *(fix/tokenomics-to-udts)* — [decisions-branches/fix__tokenomics-to-udts.md](decisions-branches/fix__tokenomics-to-udts.md)
-- *... 14 more decisions ...*
+- **2026-11-11** — The repository is thrill-skills: every live reference to the old name is updated *(chore/repo-rename-thrill-skills)* — [decisions-branches/chore__repo-rename-thrill-skills.md](decisions-branches/chore__repo-rename-thrill-skills.md)
+- *... 15 more decisions ...*
 - **2026-11-02** — Design skills: thrill-design house principles, motion-continuity, ios-safari-surfaces; designing-elite-ui and orchestrating-elite-agent-qa amended *(feat/design-skills-nov)* — [decisions-branches/feat__design-skills-nov.md](decisions-branches/feat__design-skills-nov.md)
 
 ## 2026-10

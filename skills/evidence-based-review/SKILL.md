@@ -1,7 +1,7 @@
 ---
 version: "1.0.0"
-digest: "f7b9b5572200"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
-origin: "https://github.com/thrillmade/agent-skills"
+digest: "f7b9b5572200"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/thrill-skills"
 name: evidence-based-review
 description: Every PR review claim must quote the specific code being criticized. No hand-waving.
 ---

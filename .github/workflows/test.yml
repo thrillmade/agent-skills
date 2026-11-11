@@ -8,7 +8,7 @@ name: test
 #
 # REQUIRED. Measured 2026-11-03, not assumed: the org "CI must pass"
 # ruleset requires a status check named exactly `ci` on PRs into both dev and
-# main (`gh api repos/thrillmade/agent-skills/rules/branches/dev` lists it,
+# main (`gh api repos/thrillmade/thrill-skills/rules/branches/dev` lists it,
 # and nothing else), and `.../rules/branches/main` additionally requires
 # `validate skills`, `test`, `check-links` and `check prose retention` by
 # name. The `ci` job below carries the required name by relaying `test`'s

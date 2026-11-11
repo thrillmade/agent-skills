@@ -1,4 +1,4 @@
-# thrillmade/agent-skills
+# thrillmade/thrill-skills
 
 A collection of [skills.sh](https://www.skills.sh)-compatible agent skills published by [thrillmot](https://thrillmot.com).
 
@@ -11,12 +11,12 @@ These skills run inside any agent that loads skills.sh — Claude Code, Cursor, 
 **It does not install itself.** Measured: `npx skills update` refreshes the skills a repo already has and never adds one, so each repo opts in once —
 
 ```bash
-npx skills add https://github.com/thrillmade/agent-skills --skill finding-a-catalog-skill
+npx skills add https://github.com/thrillmade/thrill-skills --skill finding-a-catalog-skill
 ```
 
 — and from then on every regeneration arrives with a plain `npx skills update`. That is the claim worth making: the one-time `add` is the whole cost, and the map cannot go stale in a repo that has it.
 
-The table below is the same list in long form — it has no byte cap, so it can afford sentences the directory cannot. Its **membership** is gated: `validate-skills` reconciles the `skills/<name>/SKILL.md` links here 1:1 against the tree, so a skill cannot be added without a row and a row cannot outlive its skill. The purpose column is hand-written prose on purpose — [#229](https://github.com/thrillmade/agent-skills/issues/229) proposed generating the table, and generating it from a 32-byte fragment would make it worse in order to make it derived.
+The table below is the same list in long form — it has no byte cap, so it can afford sentences the directory cannot. Its **membership** is gated: `validate-skills` reconciles the `skills/<name>/SKILL.md` links here 1:1 against the tree, so a skill cannot be added without a row and a row cannot outlive its skill. The purpose column is hand-written prose on purpose — [#229](https://github.com/thrillmade/thrill-skills/issues/229) proposed generating the table, and generating it from a 32-byte fragment would make it worse in order to make it derived.
 
 | Skill | Purpose |
 |---|---|
@@ -41,7 +41,7 @@ The table below is the same list in long form — it has no byte cap, so it can 
 | [`making-decision-artifacts`](skills/making-decision-artifacts/SKILL.md) | The page an orchestrator publishes when a call is the owner's, not the law's — the triage first (a defect is ruled, never asked; a config question never blocks; a reference page is not a decision; a sketch is the idea, not the spec), then the call page (one decision per screen, rendered candidates at one scale, light beside dark per candidate, exact token names, the reply words), the moves page (printed from the comparison data by one grammar), and building, publishing and recording the answer as a ruling. |
 | [`curating-a-skill-catalog`](skills/curating-a-skill-catalog/SKILL.md) | The skill-census rubric — lifecycle states, the five verdict kinds with evidence standards, the top-5-plus-digest noise budget, and the human-editor gate. Applied weekly by the census workflow; recursive (the rubric censuses itself). |
 | [`token-frugal-tooling`](skills/token-frugal-tooling/SKILL.md) | Quick-reference for the org's token-frugal CLI conventions in repos running both logmind and clud-bug — the clud-bug quiet-mode env var, artifact defaults. Detail lives in the per-tool skills. |
-| [`skillforge`](skills/skillforge/SKILL.md) ✨ | **Superseded** ([#203](https://github.com/thrillmade/agent-skills/issues/203)) — skill authoring is now split three ways: `skill-creator` owns measurement, `superpowers:writing-skills` owns wording form, and the `skill-smith` agent owns the authoring craft, with this catalog's house rules in [AGENTS.md](AGENTS.md#changing-a-skill-here). Kept unchanged during the migration window; new work should load the successors. **Vendored from [zakelfassi/skills-driven-development](https://github.com/zakelfassi/skills-driven-development) with attribution** — the canonical SkDD meta-skill. MIT, Zak El Fassi. |
+| [`skillforge`](skills/skillforge/SKILL.md) ✨ | **Superseded** ([#203](https://github.com/thrillmade/thrill-skills/issues/203)) — skill authoring is now split three ways: `skill-creator` owns measurement, `superpowers:writing-skills` owns wording form, and the `skill-smith` agent owns the authoring craft, with this catalog's house rules in [AGENTS.md](AGENTS.md#changing-a-skill-here). Kept unchanged during the migration window; new work should load the successors. **Vendored from [zakelfassi/skills-driven-development](https://github.com/zakelfassi/skills-driven-development) with attribution** — the canonical SkDD meta-skill. MIT, Zak El Fassi. |
 
 ## Writing skills — one per kind of copy
 
@@ -55,7 +55,7 @@ One generic skill per kind of copy, each with its review built in. **A brand's v
 
 ## Design & design-system skills — three layers
 
-The design catalog is organized in three layers (locked by the CDO; executed in [PR #136](https://github.com/thrillmade/agent-skills/pull/136), decision log: [skill-unification entry](docs/decisions-branches/feat__skill-unification-k0-k1-k3.md); the normative contracts are graduating to the protocol SPEC via [protocol#39](https://github.com/thrillmade/protocol/issues/39)):
+The design catalog is organized in three layers (locked by the CDO; executed in [PR #136](https://github.com/thrillmade/thrill-skills/pull/136), decision log: [skill-unification entry](docs/decisions-branches/feat__skill-unification-k0-k1-k3.md); the normative contracts are graduating to the protocol SPEC via [protocol#39](https://github.com/thrillmade/protocol/issues/39)):
 
 - **L0 — universal primitives.** Math, standards, and principles any design system can build on. No product opinions.
 - **L1 — purpose dispatchers.** Thin entry points that route an agent (or a human landing cold) to the right L0 primitives and L2 stances for a given mode of work. Start here.
@@ -161,16 +161,16 @@ New repo, today: `brew install thrillmade/tap/logmind && logmind init` + `npx cl
 Pick a single skill:
 
 ```bash
-npx skills add https://github.com/thrillmade/agent-skills --skill logmind
+npx skills add https://github.com/thrillmade/thrill-skills --skill logmind
 ```
 
 Or install the whole collection:
 
 ```bash
-npx skills add https://github.com/thrillmade/agent-skills
+npx skills add https://github.com/thrillmade/thrill-skills
 ```
 
-Browse on skills.sh: <https://www.skills.sh/thrillmade/agent-skills>
+Browse on skills.sh: <https://github.com/thrillmade/thrill-skills>
 
 Or add it as an npm dependency and let Dependabot open the update PRs — see [docs/npm-package.md](docs/npm-package.md):
 
@@ -188,12 +188,12 @@ There are two distinct ways a tool can consume a SKILL.md:
 **2. Fetch + cache + bundled fallback (e.g. [clud-bug](https://github.com/thrillmade/clud-bug)).** The tool itself loads the SKILL.md text into a prompt at runtime — e.g. a bot reviewer needs the skill contents as context for the LLM call. The recommended shape:
 
 ```text
-1. Try fetching from https://raw.githubusercontent.com/thrillmade/agent-skills/main/skills/<name>/SKILL.md
+1. Try fetching from https://raw.githubusercontent.com/thrillmade/thrill-skills/main/skills/<name>/SKILL.md
 2. On any failure (network, 404, timeout, non-200) fall back to the bundled copy
    shipped inside the tool's npm/PyPI/etc. package
 3. Cache successful fetches to ~/.cache/<tool>/skills/<sha-of-source>.md
 4. A scheduled CI job in your tool's repo pulls the bundled copies from
-   agent-skills periodically so the offline fallback doesn't drift
+   thrill-skills periodically so the offline fallback doesn't drift
 ```
 
 The bundled copies are the source of truth for the offline path; this repo is the source of truth for the canonical content. Both stay in sync via the scheduled refresh.
@@ -232,7 +232,7 @@ python .github/scripts/check_prose_retention.py
 Skills marked with ✨ are **vendored verbatim from upstream authors** — kept here so they install alongside the thrillmade catalog and stay reachable from the same `npx skills add` command, but with original author + spec metadata preserved in the SKILL.md frontmatter.
 
 Current vendored skills:
-- `skillforge` — from Zak El Fassi's [skills-driven-development](https://github.com/zakelfassi/skills-driven-development) repo. The canonical SkDD meta-skill (the skill that creates skills). MIT licensed. Vendored at v2.0. **Superseded here** ([#203](https://github.com/thrillmade/agent-skills/issues/203)) and filed under `deprecated` in the directory, so no listing routes work to it; the vendored copy stays for the migration window.
+- `skillforge` — from Zak El Fassi's [skills-driven-development](https://github.com/zakelfassi/skills-driven-development) repo. The canonical SkDD meta-skill (the skill that creates skills). MIT licensed. Vendored at v2.0. **Superseded here** ([#203](https://github.com/thrillmade/thrill-skills/issues/203)) and filed under `deprecated` in the directory, so no listing routes work to it; the vendored copy stays for the migration window.
 
 **Why vendor:** the upstream skill is canonical for its methodology; reimplementing would fragment. Vendoring with attribution keeps users on the canonical artifact + makes it installable through the same channel as the rest of our catalog. Both source-of-truth (upstream) and local-copy (here) stay in sync via periodic refresh PRs.
 
@@ -248,7 +248,7 @@ MIT.
 
 - **[logmind](https://github.com/thrillmade/logmind)** — the *why* behind every change (decision logging as commit primitive); skill-creation + testing + auditing
 - **[clud-bug](https://github.com/thrillmade/clud-bug)** — skill-driven PR review at gate time; every finding cites the skill that motivated it
-- **[agent-skills](https://github.com/thrillmade/agent-skills)** — public catalog of reusable skills (this repo)
+- **[thrill-skills](https://github.com/thrillmade/thrill-skills)** — public catalog of reusable skills (this repo)
 - **[skills.sh](https://skills.sh)** — skill discovery + install
 
 End-to-end agentic auto dev: write skills first → log the *why* → run them against PRs → iterate based on usage. The tools work independently; better together.

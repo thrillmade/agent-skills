@@ -1,7 +1,7 @@
 ---
 version: "1.0.4"
-digest: "3e0f00ab09c4"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
-origin: "https://github.com/thrillmade/agent-skills"
+digest: "3e0f00ab09c4"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/thrill-skills"
 name: token-frugal-tooling
 description: |
   Use in any project that has BOTH logmind (`.logmind/config.yml` or

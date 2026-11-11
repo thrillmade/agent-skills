@@ -1,7 +1,7 @@
 ---
 version: "1.1.3"
-digest: "ab76bd518928"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
-origin: "https://github.com/thrillmade/agent-skills"
+digest: "ab76bd518928"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/thrill-skills"
 name: thrill-design
 description: |
   Use when designing, critiquing or choosing between options for any surface Thrill makes or ships for a client — a page, a product screen, a deck, an artifact, a component set — on any project; the interaction rules in principle 7 name web media features but apply to any platform's input model. Thrill's house taste, stated as nine principles each with a test: subtract until it breaks, reuse one source, the work is the hero, big type with few and distinct words, continuity over cuts, measured not eyeballed, intent travels across screens, delight stays quiet, decide then ship. Cite when a surface reads busy, too much or "not us", when two siblings drifted apart, when chrome competes with the content, when sibling headlines blur together, when a state change cuts or jumps, when a value was eyeballed, when the phone version was invented rather than mirrored, when an easter egg announces itself, or when a decided thing is being reopened. Layered on designing-elite-ui; not for a project already governed by another house's system.

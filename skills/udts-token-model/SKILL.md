@@ -1,7 +1,7 @@
 ---
 version: "1.0.1"
-digest: "62c73dc244e3"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
-origin: "https://github.com/thrillmade/agent-skills"
+digest: "62c73dc244e3"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/thrill-skills"
 name: udts-token-model
 description: "[L2 stub — incubating] UDTS's token taxonomy and resolution model — classes, kinds, and the layer chain its other udts-* skills build on. Full content is being authored in thrillmade/udts and lands here via an upstream PR once the UDTS spec stabilizes; do not treat this stub as guidance yet."
 ---

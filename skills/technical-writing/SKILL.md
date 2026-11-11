@@ -1,7 +1,7 @@
 ---
 version: "1.0.0"
-digest: "13e8b85d472a"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
-origin: "https://github.com/thrillmade/agent-skills"
+digest: "13e8b85d472a"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/thrill-skills"
 name: technical-writing
 description: Flag a PR that ships a new env var, CLI flag, config key, exported function/type, or endpoint with no matching doc or changelog entry — working and undocumented, not broken. Apply to any addition, a new capability with no removal or behavior change to existing surface. Not for a reversed or superseded value (see retiring-a-superseded-decision) or a breaking API change (see api-contract-enforcement); pairs with the latter when a finding also touches behavior.
 kind: writing

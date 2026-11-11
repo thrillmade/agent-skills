@@ -1,7 +1,7 @@
 ---
 version: "1.0.1"
-digest: "d1f117138319"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
-origin: "https://github.com/thrillmade/agent-skills"
+digest: "d1f117138319"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/thrill-skills"
 name: motion-continuity
 description: |
   Use when designing, building or reviewing a transition between two states of the same thing — a card that grows into its detail view, a list that reorders, a panel or sheet that slides in and out, a column of items moving as one, an indicator that follows a moving target — or when an animation cuts, jumps when interrupted, runs ahead of what drives it, fades on its own timer, stutters on a phone, or ignores reduced motion in its script path. Framework-neutral: CSS transitions and keyframes, the Web Animations API, View Transitions, scroll-driven animations, or a per-frame loop. Cite when two objects appear mid-transition where there should be one, when a follower overtakes its driver, when related elements land on different frames, when width, height, top or left are animated, or when a requestAnimationFrame loop reads layout every frame. Not the accessibility criteria for motion (frontend-a11y) and not easing or duration token naming (token-naming-conventions).
