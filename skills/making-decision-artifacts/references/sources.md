@@ -1,45 +1,61 @@
 # Sources: making-decision-artifacts
 
-Why [making-decision-artifacts](../SKILL.md) holds what it holds: the research trail for maintainers. Almost every rule here is a **house ruling**: the owner's word on a page they were shown, recorded either as a numbered ruling in the UDTS handoff archive or as one of the orchestrator's feedback memories. Those bind this organization's orchestrators; nothing outside it. Rulings posted to the archive's handoff issue carry a URL; the memories and the archive's `rulings.md` and `standards.md` are local files with no public URL, named here by file. Quotes are verbatim from those files, matched on 2026-11-06.
+Why [making-decision-artifacts](../SKILL.md) holds what it holds: the research trail for maintainers. Each rule below names the kind of source behind it:
 
-## The standing rule (the opening paragraph)
+- **House ruling:** the owner's decision on a page they were shown. It binds the orchestrators of the organization that made it, and nothing outside it. Those decisions live in that organization's private records, so none is linked or quoted here; each is stated as the point it made.
+- **Incident:** something that went wrong in practice, described by what failed and what the rule prevents.
+- **Specification or observation:** an external source with its URL and its true status, or a measurement, labelled with how far it reaches.
 
-- Standards, "Out of the standards" (`tokenomics-baselines/handoff-orch/standards.md`): "L147 (taste calls reach the owner as rendered pictures, side by side in light and dark, after the build; r90, r108, r196) and r96 (UI is one agent) belong to the working method, not to the system." House ruling, binding; deliberately kept out of the system's laws.
-- Ruling 90 ([udts-archive#408 comment](https://github.com/thrillmade/udts-archive/issues/408#issuecomment-6104836419), 11 Oct 2026): "The calls that remain are taste calls, put to the owner only as rendered pictures, side by side in light and dark, after the build; no call is open on glass until then." Binding.
-- Ruling 108 ([udts-archive#408 comment](https://github.com/thrillmade/udts-archive/issues/408#issuecomment-6131897052), 12 Oct 2026): "every example for them sits over a white band, a black band and a picture; … call pages are minimal and ask plain questions." Binding.
-- Ruling 196 (`rulings.md`, 16 Oct 2026): "A visible move the proof finds (the glass sheen) is shown to the owner as pictures before the hand sheet retires." Binding.
+Two entries are neither. A **catalog boundary** names the skill that owns a neighbouring question, and a **stated rule** is an instruction not yet backed by practice. Each says which it is.
 
-## When to use / When NOT to use (the triage)
+## The opening paragraph
 
-- Memory `defects-are-not-taste-calls` (owner, 18 Oct 2026): "I don't understand what I'm looking at and what change we're trying to make, unclear and badly presented." Its rule: "when a finding has a right answer by law or by measurement, rule it myself, record it as reversible, and tell the owner in one sentence." Source of the defect rule and the anti-pattern.
-- Memory `taste-calls-need-pictures` (10 Oct 2026): "Calls the law already decides are not calls"; strip "every item the law or a prior ruling decides".
-- Memory `config-questions-never-block` (owner, 28 Oct 2026): "default config is important but our rules should allow work to continue since config changes are simple. but engine is important." Its rule: "never let an open config word block a lane". The skill keeps the hedge: config questions are still calls, brought with pictures.
-- Memory `reference-pages-are-not-decisions` (10 Oct 2026): twenty-six decided pages deleted, including the chosen look reference; "a reference page is the thing the call points at, and the archive does not hold it. Deletion is irreversible."
-- Memory `call-pages-state-grid` (owner, 18 Oct 2026): "stop being so literal", "just follow the ideas", and "why build it as a grid? that's not what I'm saying". Its rule: "ask what idea it carries before building anything that looks like it".
-- Memory `call-pages-are-minimal`, 29 Oct addendum: "status items (a move list, launch steps) are never on a call page at all."
+- Taste calls reach the owner as rendered pictures, light beside dark, after the build, and how they are put is a matter for the working method, not for the design system. House ruling.
+
+## When to use
+
+- A taste call between lawful candidates goes to the owner as pictures. House ruling (as above).
+- A default-config choice is still a call and still brought with pictures, but it never blocks a lane, because a config change is cheap to make later. House ruling.
+- A landing that moves output is seen by the owner before it merges. Incident: output-moving changes merged automatically before the owner saw what they moved, some ahead of the ruling they depended on.
+- A page the owner reads is republished after a sign-in change, or retired once its call is recorded. Incident (see the publishing entry below).
+
+## When NOT to use (the triage)
+
+- A defect or a law question is ruled, recorded as a reversible ruling and reported in one sentence, never asked. House ruling, made after an incident: a defect was put to the owner as a taste choice over two pictures that showed no difference, and the owner could not tell what was being asked.
+- A reference page is not a decision and stays when its call is recorded. Incident: a batch of decided pages was deleted, the chosen reference among them, and a deletion cannot be undone.
+- An owner's sketch carries an idea, not a layout. House ruling, made after an incident: a drawn grid was copied as a layout when it was pointing at existing conventions.
+- A direction not yet built belongs to the cheap-mock stage of [thrill-design](../../thrill-design/SKILL.md) (principle 9); this skill begins once the build emits candidates. Catalog boundary, set so the two skills do not contradict each other.
 
 ## The call page
 
-- Rule 1, pictures after the build: ruling 90 above; memory `taste-calls-need-pictures` (owner, 10 Oct 2026: "these are really hard to read or understand? no visuals or anything"); memory `defects-are-not-taste-calls`: "never ask for the word before the picture"; memory `call-pages-are-minimal`, 29 Oct: "Never publish a call without its picture, even as a placeholder list."
-- Rule 2, one decision per screen: memory `call-pages-are-minimal`, 22 Oct ("very confusing") and 29 Oct ("this is not the format for making a call"): "Every open call is its own section … even when it is a consequence of an earlier word." The Back and Next shape is the alpha decision page's brief (`briefs/alpha-call/DESIGNER-BRIEF.md`).
-- Rule 3, one scene at one scale: memory `call-pages-are-minimal` (owner, 12 Oct 2026: "really small stuff and hard to compare, I need minimalism"; confirmed shape: "every candidate its own live instance of the scene beside the others with one thing changed, cropped to the part that matters"). Supporting, advisory and secondhand: Tufte, *Envisioning Information* (1990), "comparisons must be enforced within the scope of the eyespan", cited at p. 76 by a course outline ([UWO lecture notes](https://publish.uwo.ca/~pazner/180/lecture6.html)); not checked against the book, and not the basis of the rule.
-- Rule 4, one block per candidate: memory `call-pages-light-beside-dark` (owner, 17 Oct 2026): "i need explanation of each one on the page simply with both light and dark next to each other per thing. dont do all light then all dark."
-- Rule 5, exact names: memory `say-the-token-name` (owner, 10 Oct 2026: "very confusing" of a paraphrase; 12 Oct: "everything must be tokenized"; "a chip names the rung, never a percentage; a rung's actual alpha differs by mode").
-- Rule 6, reply words: memory `call-pages-are-minimal`, confirmed shape (owner, 12 Oct 2026: "I love the layout of this artifact, really easy"): "the recommended chip preselected and marked quietly; one sentence of recommendation; the chosen chips collected into one copyable line." Worked example: `briefs/glass-call/` and `briefs/alpha-call/`; ruling 375 records a reply ("R lock it") taken from such a page.
-- Rule 7, nothing else: memory `call-pages-are-minimal`: "the figures live in a figures file linked once, never in tables on the page. Contact sheets and measurement tables stay in the critic's folder."
-- Rule 8, frame within the law: memory `hover-press-not-certified` (owner, 10 Oct 2026: "we don't care about clearing Lc in hover and press that much, we don't want invisible"); reporting an unasked figure "reads to the owner as blob second-guessing tier 2". Reaffirmed by ruling 170.
+- Rule 1, pictures after the build, from the real emission, never a word before its picture, never a call published without one: house ruling, made after an incident where calls went out as lettered text the owner could not judge.
+- Rule 2, one decision per screen with Back and Next: house ruling, made after several questions on one page confused the owner; a follow-up question gets its own screen even when it follows from an earlier answer.
+- Rule 3, one scene, large, at one scale: house ruling, made after small, dense comparisons were hard to read; the confirmed shape is each candidate as its own instance of the same scene with one thing changed, cropped to the part that matters. Supporting, advisory and secondhand: Tufte's principle that compared items belong within a single glance, as summarised in a course outline ([UWO lecture notes](https://publish.uwo.ca/~pazner/180/lecture6.html)); not checked against the book, and not the basis of the rule.
+- Rule 4, one block per candidate with light beside dark: house ruling; the owner asked for each candidate explained simply, with its two modes next to each other, and not all light followed by all dark.
+- Rule 5, exact names: house ruling, made after a paraphrased token name confused the owner. A step on a scale is named, never given as a percentage, because the same step can resolve to different values in each mode; everything on the scene is a token.
+- Rule 6, reply words: house ruling, confirming a page layout the owner found easy to use: the recommended choice preselected and quietly marked, one sentence of recommendation, the chosen words collected into one copyable line.
+- Rule 7, nothing else: house ruling. Figures live in a file linked once; contact sheets and measurement tables stay with the panel. Status items (a move list, launch steps) never appear on a call page. An item a law or a prior ruling already decides is not a call and is stripped.
+- Rule 8, frame within the law: house ruling, made after the owner read an unrequested figure as the page second-guessing a settled law.
 
 ## The moves page
 
-- Why it exists: memory `output-moves-wait-for-the-owner` (a commissioned review, 11 Oct 2026): fourteen output-moving PRs "merged by auto-merge 18 to 52 seconds after their pin job ended, two before the ruling they depended on was recorded".
-- Printed by one grammar: memory `plain-forms-are-printed` (16 Oct 2026): "one printer over the data (fixed columns, fixed order, every section present even when empty)"; "absent prints as 'none', never vanishes".
-- What it rows, the configs shown in full, the generation line: the moves brief and report (`briefs/e3/MOVES-PAGE.md`, `MOVES-PAGE-REPORT.md`) and its generator (`owner-moves.py`: the default config, the preview and the minimal example shown; figure moves under one unit dropped) and page builder (`page/build.py`: "Every figure on the page is read from the data; nothing is typed by hand"; it asserts every count against the data).
-- Since the tip the owner last read, and the reading recorded: ruling 373 (3 Nov 2026): "The moves at 3119f4a are seen; the next list the owner sees is READING-GROUND's."
-- A metadata-only landing shown as "nothing a person sees moved": the orchestrator's instruction for this skill. No archived page has printed that line yet; it is the stated rule, not a measured practice.
+- Why it exists: incident, as under "When to use": output-moving merges the owner never saw.
+- The page as it now stands (pictures first, then a digest of at most twenty lines, then one ask, with the rows linked once as the panel's reference): house ruling, re-ruling the earlier form after a full table of rows proved too long to read by hand. A class whose law is not recorded says so: house ruling, part of the same re-ruling.
+- The configs a person reads, the default and the examples, rendered from the real emission at each tip: house ruling, part of the same re-ruling.
+- Since the tip the owner last read, named in the title, and the reading recorded as the moves at that tip being seen: house ruling.
+- Printed, not written, by one grammar with fixed columns and order and absence printed as "none": house ruling, made after an incident in which a form written part by part named one fact two ways. The builder checks every count against the data so that no figure on the page is typed.
+- A metadata-only landing shown as "nothing a person sees moved": a stated rule, not a measured practice.
 
 ## Building, publishing, recording
 
-- One designer lane: memory `single-designer-for-ui` (owner, 11 Oct 2026: "splitting it up creates serious issues sometimes because the agents go down different paths"); ruling 96. The catalog's owner of the rule is [orchestrating-agent-delegation](../../orchestrating-agent-delegation/SKILL.md).
-- The page contract: the host's `artifact-design` skill, as restated in the alpha and moves briefs; memory `artifact-pages-from-agents` (10 Oct 2026: "artifact has black text that is impossible to read"; the page "set `color` only on `html` and shipped its own … wrapper"). The dark-mode media feature is normative in W3C [Media Queries Level 5, `prefers-color-scheme`](https://www.w3.org/TR/mediaqueries-5/#prefers-color-scheme). The memory recorded "`--force-dark-mode` alone leaves the page light" and prescribed it with `--blink-settings=preferredColorScheme=0`. Re-measured for this skill (Chrome 157, headless, on a machine in dark mode, 6 Nov 2026): an unforced render follows the machine's scheme, so a dark check run with no flag passes on a dark machine and proves nothing; `preferredColorScheme=0` forces dark and `=1` forces light. The skill's check therefore forces each mode and compares. Planted both ways: a page whose only text color sits on `html` under a body reset read `rgb(0, 0, 0)` in both forced modes (the check fires); the same page with explicit tokens on `body` and `p` read `rgb(238, 238, 238)` dark and `rgb(17, 17, 17)` light (silent).
-- A rebuild that reverts: memory `artifact-pages-from-agents`, 17 Oct addendum: "After any lane rebuild, grep the page for every sentence I rewrote before publishing."
-- Links die with the account: memory `artifact-links-die-with-the-account` (18 Oct 2026): "a private artifact opens only for its owner, and a publish to the old path is refused under the new account"; the handoff pointer records the 3 Nov republish.
+- One designer lane builds the page: house ruling, made because lanes splitting one surface go down different paths and the seams show. The catalog's owner of the rule is [orchestrating-agent-delegation](../../orchestrating-agent-delegation/SKILL.md); review and QA as separate lanes are owned by [orchestrating-elite-agent-qa](../../orchestrating-elite-agent-qa/SKILL.md). The lane builds from a script that computes every figure, and leaves out a candidate it cannot compute rather than typing one: house ruling, the same one that keeps every figure on a page read from the data.
+- The host's page contract: specification, the publishing host's own constraints on a page it wraps; it is the host's document, read when the page is built, so no URL is fixed here. The explicit body and text-container colours come from an incident: a page set its text colour only on `html` under its own wrapper, the host's reset won, and dark mode showed black text.
+- The colour-scheme media feature, `prefers-color-scheme`, is defined in [Media Queries Level 5](https://www.w3.org/TR/mediaqueries-5/#prefers-color-scheme), a W3C Working Draft: not a Recommendation, though browsers ship the feature.
+- The forced-mode check in Verification rests on a single observation, on one machine set to dark, in headless Chrome 157: an unforced render followed the machine's scheme, so an unforced dark check on a dark machine proves nothing; `--blink-settings=preferredColorScheme=0` forced dark and `=1` forced light. The check was planted both ways on a test page: with text colour only on `html` under a body reset, a paragraph read black in both forced modes (the check fires); with explicit colours on `body` and `p`, it read light in dark and dark in light (silent). Other browsers and versions are not measured.
+- Grep every hand-edited sentence after a lane rebuild: incident, in which a lane regenerated the page's prose and hand edits were lost.
+- Publish privately from a kept source, and republish after a sign-in change: incident, in which a private page opened only for the account that published it and a publish to the old path was refused under the new account. The link goes on the checkpoint, the note a resuming session reads first, owned by [session-heartbeat](../../session-heartbeat/SKILL.md); where a repository keeps none, the rule is to create it.
+- Record the answer as a numbered ruling, with the reply word, the tip it was read at and the link: house ruling. Landing that ruling wherever the old value still stands is owned by [retiring-a-superseded-decision](../../retiring-a-superseded-decision/SKILL.md).
+
+## Anti-patterns
+
+Each is an incident named above, stated by its failure: lettered text options (rule 1), the dense page (rules 2, 3 and 7), a defect asked as taste (the triage), building the sketch (the triage), a paraphrased name (rule 5), hand-written rows (the moves page), black text in dark mode (the page contract), a rebuild that reverts (Verification), a reference deleted as decided (the triage), merging unseen moves (the moves page), and the row table as the reading page (the moves page).
