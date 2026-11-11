@@ -57,7 +57,7 @@ CONSUMER_REPOS = (
     "clud-bug",
     "clud-bug-app",
     "logmind",
-    "tokenomics",
+    "udts",
     "protocol",
     "reporulez",
     "rezgen",
@@ -82,7 +82,7 @@ PLACEMENT_MAP_PATH = "docs/placement-map.json"
 # Grace: catalog skills that are EXPECTED to have zero subscribers, so a
 # zero-subscription count for them is not a coverage gap. Two families:
 #
-#   1. udts-* — L2 stubs incubating in thrillmade/tokenomics, published here
+#   1. udts-* — L2 stubs incubating in thrillmade/udts, published here
 #      as parity markers only ("do not treat as guidance yet"). Detected by
 #      the UDTS_STUB_PREFIX below, not enumerated, so new stubs are covered
 #      automatically.
@@ -631,7 +631,7 @@ def _grace_reason(skill: str) -> str | None:
     if its zero-subscription state is a genuine coverage gap.
     """
     if skill.startswith(UDTS_STUB_PREFIX):
-        return "udts-* L2 stub (incubating in tokenomics — parity marker, not yet guidance)"
+        return "udts-* L2 stub (incubating in udts — parity marker, not yet guidance)"
     if skill in STRUCTURAL_L0:
         return "structural L0 (composed by L1 dispatchers, not subscribed directly)"
     return None
