@@ -1,6 +1,6 @@
 ---
-version: "1.0.6"
-digest: "233ecac1b1f2"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.7"
+digest: "f5f92f771470"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: finding-a-catalog-skill
 description: >-
@@ -60,6 +60,7 @@ What a review flags, what it lets go, and what a claim has to cite.
 ## Running agents
 Handing work out, gating what comes back, surviving a long session.
 
+- `making-decision-artifacts` — the owner's call and moves pages
 - `orchestrating-a-multi-agent-run` — start here: the four obligations
 - `orchestrating-agent-delegation` — the brief, model tiering, verify
 - `orchestrating-elite-agent-qa` — the panel and design-critic gate

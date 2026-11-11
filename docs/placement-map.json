@@ -524,6 +524,14 @@
       "subscribers": [],
       "notes": "documentation-discipline skill; hunting the old value after a reversal. Pairs with semver-design-tokens for the versioned token case"
     },
+    "making-decision-artifacts": {
+      "family": "orchestration",
+      "owns": "the owner's call and moves pages",
+      "authoring_home": "catalog",
+      "distribution": "opt-in",
+      "subscribers": [],
+      "notes": "House method, not a design primitive: the triage (defects and law ruled, never asked), the call page and the moves page, and how a designer lane builds, the orchestrator publishes and the answer becomes a ruling. Research trail in references/sources.md (house rulings and the orchestrator's incident record). orchestrating-a-multi-agent-run does not route to it yet."
+    },
     "agents/builder": {"authoring_home": "catalog", "distribution": "catalog-only", "subscribers": []},
     "agents/citation-verifier": {"authoring_home": "catalog", "distribution": "catalog-only", "subscribers": []},
     "agents/code-improver": {"authoring_home": "catalog", "distribution": "catalog-only", "subscribers": []},
