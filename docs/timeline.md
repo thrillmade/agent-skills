@@ -13,10 +13,10 @@ PR's CI run, so this file is always coherent with current `main`.
 ---
 
 
-## 2026-11 (11 decisions)
+## 2026-11 (12 decisions)
 
-- **2026-11-05** — fix: #302 review round — L0 pronoun policy and caption rule move to the brand/house layer; filler rules stop flagging copy where the word is the meaning *(feat/ux-copy-skill)* — [decisions-branches/feat__ux-copy-skill.md](decisions-branches/feat__ux-copy-skill.md)
-- *... 9 more decisions ...*
+- **2026-11-11** — skill-smith is generic; this catalog's skill rules move to AGENTS.md *(feat/skill-smith-generic)* — [decisions-branches/feat__skill-smith-generic.md](decisions-branches/feat__skill-smith-generic.md)
+- *... 10 more decisions ...*
 - **2026-11-02** — Design skills: thrill-design house principles, motion-continuity, ios-safari-surfaces; designing-elite-ui and orchestrating-elite-agent-qa amended *(feat/design-skills-nov)* — [decisions-branches/feat__design-skills-nov.md](decisions-branches/feat__design-skills-nov.md)
 
 ## 2026-10
