@@ -571,7 +571,7 @@ HOUSE_SECTION_HEADING_RE = re.compile(r"^## (.+)$", re.MULTILINE)
 
 # A skill with nothing to structure yet. Self-declaring, in the skill's OWN
 # frontmatter `description` -- every udts-* stub opens with this exact marker
-# (see docs/placement-map.json's `authoring_home: repo-mirrored:tokenomics`
+# (see docs/placement-map.json's `authoring_home: repo-mirrored:udts`
 # rows for the same 8 skills). Anchored by `.match()` for the same reason
 # SUPERSEDED_RE above is: with both `.match()` and a literal `^`, neither is
 # provably load-bearing, and a mutation can only prove the one actually

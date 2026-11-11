@@ -59,7 +59,7 @@ The design catalog is organized in three layers (locked by the CDO; executed in 
 
 - **L0 — universal primitives.** Math, standards, and principles any design system can build on. No product opinions.
 - **L1 — purpose dispatchers.** Thin entry points that route an agent (or a human landing cold) to the right L0 primitives and L2 stances for a given mode of work. Start here.
-- **L2 — stances.** An opinionated instantiation of the L0 principles by one system or one studio: the `udts-*` system stances (incubating in `thrillmade/tokenomics`; published here as stubs until stable) and the `thrill-design` house stance.
+- **L2 — stances.** An opinionated instantiation of the L0 principles by one system or one studio: the `udts-*` system stances (incubating in [`thrillmade/udts`](https://github.com/thrillmade/udts); published here as stubs until stable) and the `thrill-design` house stance.
 
 ### L1 — start here
 
@@ -110,7 +110,7 @@ One system's or one studio's lean on the L0 principles, applied on top of the ba
 |---|---|
 | [`thrill-design`](skills/thrill-design/SKILL.md) | Thrill's house taste, layered on `designing-elite-ui` for any surface Thrill designs — nine principles, each with a test: subtract until it breaks, reuse one source, the work is the hero, few and distinct words, continuity over cuts, measured not eyeballed, intent across screens, quiet delight, decide then ship. |
 
-The `udts-*` stubs below are incubating parity markers: each names a `udts-*` skill being authored in `thrillmade/tokenomics` and PR'd here once the UDTS spec stabilizes. Don't load these as guidance yet.
+The `udts-*` stubs below are incubating parity markers: each names a `udts-*` skill being authored in `thrillmade/udts` and PR'd here once the UDTS spec stabilizes. Don't load these as guidance yet.
 
 | Stub | Will hold |
 |---|---|
@@ -127,9 +127,9 @@ The `udts-*` stubs below are incubating parity markers: each names a `udts-*` sk
 
 | Skill | Superseded by |
 |---|---|
-| [`design-token-naming`](skills/design-token-naming/SKILL.md) | `token-naming-conventions` (L0) + `udts-naming-convention` (L2). Kept unchanged until tokenomics migrates. |
-| [`component-sizing`](skills/component-sizing/SKILL.md) | `component-sizing-principles` (L0) + `udts-component-sizing-ladders` (L2). Kept unchanged until tokenomics migrates. |
-| [`brand-voice-review`](skills/brand-voice-review/SKILL.md) | `writing-interface-copy` (wording), `defining-a-voice` (voice and tone) and `writing-marketing-copy` (buzzwords, page copy). Unlike the two above it is reduced to a pointer, with its `applies_to` kept, because its rules now have one owner each; a pinned copy keeps working until tokenomics adds the successors and updates. |
+| [`design-token-naming`](skills/design-token-naming/SKILL.md) | `token-naming-conventions` (L0) + `udts-naming-convention` (L2). Kept unchanged until udts migrates. |
+| [`component-sizing`](skills/component-sizing/SKILL.md) | `component-sizing-principles` (L0) + `udts-component-sizing-ladders` (L2). Kept unchanged until udts migrates. |
+| [`brand-voice-review`](skills/brand-voice-review/SKILL.md) | `writing-interface-copy` (wording), `defining-a-voice` (voice and tone) and `writing-marketing-copy` (buzzwords, page copy). Unlike the two above it is reduced to a pointer, with its `applies_to` kept, because its rules now have one owner each; a pinned copy keeps working until udts adds the successors and updates. |
 
 ### Skill census
 

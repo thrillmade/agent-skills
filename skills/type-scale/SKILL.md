@@ -1,6 +1,6 @@
 ---
-version: "1.0.1"
-digest: "5ddf65fe6700"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.2"
+digest: "144fc0534f16"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: type-scale
 description: Use when designing, auditing, or extending a typography size scale built on a modular ratio. Names the canonical preset ratios (1.067 minor second → 1.618 golden), the picking heuristic by context (UI vs editorial vs marketing), the stops-up / stops-down convention (−2 to +8 default), the rounding rule (round to nearest integer px, rem derived after), and the upper-bound on ratios for product UI. Cite when an agent proposes a ratio above 1.5 for a product system or hand-picks scale steps outside a modular ratio.
@@ -95,4 +95,4 @@ After picking a ratio and emitting the scale:
 
 - [Modular Scale by Tim Brown](https://www.modularscale.com/) — interactive picker for the canonical ratios.
 - [Type Scale](https://typescale.com/) — same idea with live preview.
-- One worked instantiation: the UDTS typography foundations (its L2 skills are incubating in thrillmade/tokenomics).
+- One worked instantiation: the UDTS typography foundations (its L2 skills are incubating in thrillmade/udts).
