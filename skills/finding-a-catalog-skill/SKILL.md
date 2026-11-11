@@ -1,6 +1,6 @@
 ---
-version: "1.0.4"
-digest: "497ded87346d"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.7"
+digest: "f5f92f771470"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: finding-a-catalog-skill
 description: >-
@@ -47,7 +47,6 @@ view of the wider skills.sh ecosystem. This indexes one catalog.
 What a review flags, what it lets go, and what a claim has to cite.
 
 - `api-contract-enforcement` — public API shape changes
-- `brand-voice-review` — voice in user-facing strings
 - `critical-issues-only` — correctness, security, perf only
 - `evidence-based-review` — quote the code or cut the claim
 - `guarding-a-regression` — trusting a regression test
@@ -61,6 +60,7 @@ What a review flags, what it lets go, and what a claim has to cite.
 ## Running agents
 Handing work out, gating what comes back, surviving a long session.
 
+- `making-decision-artifacts` — the owner's call and moves pages
 - `orchestrating-a-multi-agent-run` — start here: the four obligations
 - `orchestrating-agent-delegation` — the brief, model tiering, verify
 - `orchestrating-elite-agent-qa` — the panel and design-critic gate
@@ -104,6 +104,13 @@ Math and standards any design system can build on. No product opinions.
 - `usability-heuristics` — what the heuristics say
 - `wcag-contrast` — ratios, the legal cross-check
 
+## Writing (L0)
+One skill per kind of copy. A brand's voice guide sets tone on top.
+
+- `defining-a-voice` — brand voice; tone vs clarity
+- `writing-interface-copy` — labels, status, actions, errors
+- `writing-marketing-copy` — pages, headlines, case studies
+
 ## Web platform behaviour (L0)
 What a shipping engine does that its spec and an emulator do not show.
 
@@ -134,6 +141,7 @@ One system's or one studio's lean on L0. The udts-* stubs are not guidance yet.
 ## Deprecated (migration window)
 Superseded. Each one names its successors; load those, not these.
 
+- `brand-voice-review` — use writing-*, defining-a-voice
 - `component-sizing` — use component-sizing-principles
 - `design-token-naming` — use token-naming-conventions
 - `skillforge` — use skill-creator / skill-smith
@@ -142,6 +150,7 @@ Superseded. Each one names its successors; load those, not these.
 Copy-and-edit scaffolds. They fail the slug check until you customise.
 
 - `conventions-template` — a review-like-me scaffold
+- `voice-template` — a brand voice guide scaffold
 
 ## Deliberately not here
 

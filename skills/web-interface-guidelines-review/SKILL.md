@@ -1,10 +1,10 @@
 ---
-version: "1.0.3"
-digest: "1705e127d146"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.0.5"
+digest: "e5f3424d3dc1"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: web-interface-guidelines-review
 description: |
-  Use when reviewing UI code or design output (React, Vue, Svelte, Astro, plain HTML, design specs) for adherence to web-interface guidelines — Vercel's WIG, Material 3, Radix patterns, and similar opinionated rule sets — extended with token-driven contrast, typography-scale, and spacing-system rules. Names the APCA-preferred contrast stance (cross-check WCAG 2.2 AA, never WCAG-only), the atomic typography class convention (one class binds font + size + lh + tracking + weight), the token-not-raw-hex rule, verb-noun action labels, the focus-ring contract (>= 2 px, 3:1 against both control and adjacent surface, never suppressed), the 24 CSS px WCAG 2.5.8 interactive floor, and the link-vs-button distinction. Cite when an agent reviews UI without checking token discipline, hardcoded values, or atomic typography compliance.
+  Use when reviewing UI code or design output (React, Vue, Svelte, Astro, plain HTML, design specs) for adherence to web-interface guidelines — Vercel's WIG, Material 3, Radix patterns, and similar opinionated rule sets — extended with token-driven contrast, typography-scale, and spacing-system rules. Names the APCA-preferred contrast stance (cross-check WCAG 2.2 AA, never WCAG-only), the atomic typography class convention (one class binds font + size + lh + tracking + weight), the token-not-raw-hex rule, action labels per writing-interface-copy, the focus-ring contract (>= 2 px, 3:1 against both control and adjacent surface, never suppressed), the 24 CSS px WCAG 2.5.8 interactive floor, and the link-vs-button distinction. Cite when an agent reviews UI without checking token discipline, hardcoded values, or atomic typography compliance.
 ---
 
 # Web interface guidelines review
@@ -47,11 +47,10 @@ Apply each section in order. Stop and flag at the first failure in each section.
 - **Interactive heights ≥ 24 CSS px** per WCAG 2.5.8 (AA, Target Size Minimum). Rungs below that floor are non-interactive only; whether a ladder's smallest rung is *additionally* reserved is owned by `component-sizing-principles`.
 - Flag inconsistent rung mixing in the same UI surface (`sm` + `md` buttons side by side reads as a typo, not a hierarchy).
 
-### 4. Action labels: verb-noun
+### 4. Action labels
 
-- Buttons that perform an action use verb-noun ("Save changes", "Send invitation", "Open settings"). Never "Click here!", "Submit", or "OK" alone.
+- Wording is [writing-interface-copy](../writing-interface-copy/SKILL.md) rule 9: flag a data-changing button not naming its change ("Submit", "OK").
 - Links that navigate use destination-descriptive text ("Browse all results", not "Click here"). WCAG 2.4.4.
-- Flag tone drift: marketing exclamation marks, hedging ("might want to"), emoji in interactive labels.
 
 ### 5. Link vs button
 
@@ -112,7 +111,7 @@ After completing a review:
 ## Cross-references
 
 - **REQUIRED BACKGROUND:** contrast — [apca-contrast](../apca-contrast/SKILL.md), [wcag-contrast](../wcag-contrast/SKILL.md); typography — [type-scale](../type-scale/SKILL.md), [line-height-grid](../line-height-grid/SKILL.md); spacing — [spacing-system](../spacing-system/SKILL.md), [component-sizing-principles](../component-sizing-principles/SKILL.md); tokens — [token-naming-conventions](../token-naming-conventions/SKILL.md), [dtcg-format](../dtcg-format/SKILL.md).
-- **UI-string voice:** [brand-voice-review](../brand-voice-review/SKILL.md).
+- **UI strings:** [writing-interface-copy](../writing-interface-copy/SKILL.md), [defining-a-voice](../defining-a-voice/SKILL.md).
 
 ## Sources
 

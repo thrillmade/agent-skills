@@ -13,10 +13,10 @@ PR's CI run, so this file is always coherent with current `main`.
 ---
 
 
-## 2026-11 (7 decisions)
+## 2026-11 (15 decisions)
 
-- **2026-11-03** — Neutralize private repo names in the public tree and drop departed private subscribers from placement-map.json *(chore/neutralize-private-names)* — [decisions-branches/chore__neutralize-private-names.md](decisions-branches/chore__neutralize-private-names.md)
-- *... 5 more decisions ...*
+- **2026-11-11** — making-decision-artifacts carries the method, not the case: private pointers and verbatim quotes removed, review findings fixed *(fix/decision-artifacts-public-safety)* — [decisions-branches/fix__decision-artifacts-public-safety.md](decisions-branches/fix__decision-artifacts-public-safety.md)
+- *... 13 more decisions ...*
 - **2026-11-02** — Design skills: thrill-design house principles, motion-continuity, ios-safari-surfaces; designing-elite-ui and orchestrating-elite-agent-qa amended *(feat/design-skills-nov)* — [decisions-branches/feat__design-skills-nov.md](decisions-branches/feat__design-skills-nov.md)
 
 ## 2026-10

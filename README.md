@@ -27,7 +27,6 @@ The table below is the same list in long form — it has no byte cap, so it can 
 | [`respect-existing-conventions`](skills/respect-existing-conventions/SKILL.md) | A code review is not a redesign. Don't suggest changes that fight the codebase's established patterns. Match what's already there. Ships as a baseline with clud-bug. |
 | [`clud-bug-collaboration`](skills/clud-bug-collaboration/SKILL.md) | How Claude Code agents working in a clud-bug-installed repo coexist with the bot's review threads, strict-mode gate, and skill set. Activates in any repo with a `clud-bug-review` workflow installed — even if the user didn't mention clud-bug by name. |
 | [`skill-frontmatter-quality`](skills/skill-frontmatter-quality/SKILL.md) | Review SKILL.md frontmatter for trigger surface, specificity, voice, and `review_mode` completeness. Apply on PRs that add or modify a `skills/*/SKILL.md`. Layers above `validate-skills.yml`'s mechanical checks. Pair with clud-bug as a dedicated-mode skill. |
-| [`brand-voice-review`](skills/brand-voice-review/SKILL.md) | Review user-facing strings for brand voice — kill "click here", strip "just"/"simply", catch accidental shouting and title-case drift. Applies to button labels, headings, error messages, marketing copy. Pair with clud-bug as a dedicated-mode skill: each PR gets a brand review alongside the code review. |
 | [`api-contract-enforcement`](skills/api-contract-enforcement/SKILL.md) | Flag PRs that change the shape, semantics, or error behavior of a public API without versioning or a migration path. Catches removed fields, renamed parameters, changed status codes, broken pagination, silent enum drift across HTTP/gRPC/GraphQL/SDK/CLI surfaces. |
 | [`technical-writing`](skills/technical-writing/SKILL.md) | Flag a PR that ships a new env var, CLI flag, config key, exported function/type, or endpoint with no matching doc or changelog entry — working and undocumented, not broken. Excludes reversed values (`retiring-a-superseded-decision`) and breaking API changes (`api-contract-enforcement`); pairs with the latter when a finding also touches behavior. |
 | [`pii-and-compliance`](skills/pii-and-compliance/SKILL.md) | Catch PII and auth material leaking into logs, error traces, analytics events, URLs, or third-party SDKs. Apply to logging calls, telemetry, error handlers, debug statements, and committed test fixtures. |
@@ -39,9 +38,20 @@ The table below is the same list in long form — it has no byte cap, so it can 
 | [`orchestrating-agent-delegation`](skills/orchestrating-agent-delegation/SKILL.md) | The CTO-as-orchestrator discipline for handing work to subagents — model tiering, the load-bearing agent-brief shape (with a copyable skeleton), trust-but-verify every "done" against the diff, refute-first review panels, design→rule→build separation. The general delegation mechanics beneath [`orchestrating-elite-agent-qa`](skills/orchestrating-elite-agent-qa/SKILL.md)'s UI-quality pipeline. |
 | [`session-heartbeat`](skills/session-heartbeat/SKILL.md) | Keeping a session working across a stretch longer than one sitting — the per-beat order (standing before spend), the largest-dispatch threshold instead of a round percentage, the checkpoint's required slots, and resume-as-survivor after a limit or compaction. The temporal-continuity layer under [`orchestrating-agent-delegation`](skills/orchestrating-agent-delegation/SKILL.md)'s dispatch mechanics. |
 | [`unattended-operation`](skills/unattended-operation/SKILL.md) | Policy for a session a human explicitly handed over to run **unattended** (often called "night mode", but the trigger is the handover, never the clock) — the handover contract, the reversible-and-invisible boundary on action, "a scheduled wake is never consent", named hard stops, and the handback digest. Layers on [`session-heartbeat`](skills/session-heartbeat/SKILL.md). Not dark mode. |
+| [`making-decision-artifacts`](skills/making-decision-artifacts/SKILL.md) | The page an orchestrator publishes when a call is the owner's, not the law's — the triage first (a defect is ruled, never asked; a config question never blocks; a reference page is not a decision; a sketch is the idea, not the spec), then the call page (one decision per screen, rendered candidates at one scale, light beside dark per candidate, exact token names, the reply words), the moves page (printed from the comparison data by one grammar), and building, publishing and recording the answer as a ruling. |
 | [`curating-a-skill-catalog`](skills/curating-a-skill-catalog/SKILL.md) | The skill-census rubric — lifecycle states, the five verdict kinds with evidence standards, the top-5-plus-digest noise budget, and the human-editor gate. Applied weekly by the census workflow; recursive (the rubric censuses itself). |
 | [`token-frugal-tooling`](skills/token-frugal-tooling/SKILL.md) | Quick-reference for the org's token-frugal CLI conventions in repos running both logmind and clud-bug — the clud-bug quiet-mode env var, artifact defaults. Detail lives in the per-tool skills. |
-| [`skillforge`](skills/skillforge/SKILL.md) ✨ | **Superseded** ([#203](https://github.com/thrillmade/agent-skills/issues/203)) — skill authoring is now split three ways: `skill-creator` owns measurement, `superpowers:writing-skills` owns wording form, and the studio's `skill-smith` agent owns house rules. Kept unchanged during the migration window; new work should load the successors. **Vendored from [zakelfassi/skills-driven-development](https://github.com/zakelfassi/skills-driven-development) with attribution** — the canonical SkDD meta-skill. MIT, Zak El Fassi. |
+| [`skillforge`](skills/skillforge/SKILL.md) ✨ | **Superseded** ([#203](https://github.com/thrillmade/agent-skills/issues/203)) — skill authoring is now split three ways: `skill-creator` owns measurement, `superpowers:writing-skills` owns wording form, and the `skill-smith` agent owns the authoring craft, with this catalog's house rules in [AGENTS.md](AGENTS.md#changing-a-skill-here). Kept unchanged during the migration window; new work should load the successors. **Vendored from [zakelfassi/skills-driven-development](https://github.com/zakelfassi/skills-driven-development) with attribution** — the canonical SkDD meta-skill. MIT, Zak El Fassi. |
+
+## Writing skills — one per kind of copy
+
+One generic skill per kind of copy, each with its review built in. **A brand's voice guide sets tone; the generic clarity rules hold regardless** — that precedence is stated once, in `defining-a-voice`, and both writing skills link it. Voice is per brand: copy [`voice-template`](skills/voice-template/SKILL.md) and fill it in. A client uses the same writing skills with its own guide on top; Thrill's own guide is `thrill-design`'s `references/voice.md`. The rules are stated as the catalog's opinion; each skill's `references/sources.md` is the research trail behind them.
+
+| Skill | Purpose |
+|---|---|
+| [`writing-interface-copy`](skills/writing-interface-copy/SKILL.md) | Interface wording — name it rather than narrate it, labels as bare nouns, statuses as state words, the user's situation over the system's category, say it once, active voice with a named actor, one name and one case style per thing, no filler or vague links, actions that say what they do, errors that give a cause and a next step without blame. Each rule ends in a test; a grep pass runs over a string set. Absorbed `brand-voice-review`'s wording rules (#301). |
+| [`writing-marketing-copy`](skills/writing-marketing-copy/SKILL.md) | Marketing, brand and web copy — landing pages, case studies, headlines, decks, taglines, About pages. Specific over vague, proof over claims, one idea per line, the point first, a named actor, no filler or AI-slop patterns, headlines as short as the meaning allows, consistent names; each rule with a test and before/after examples, plus a quick pass. |
+| [`defining-a-voice`](skills/defining-a-voice/SKILL.md) | How to define a brand voice — "X, not Y" traits with examples, a tone map by situation, a tone baseline, humour off by default, person and pronouns, vocabulary, exceptions — where the guide lives in a repo, how a writer finds it, the voice checks (shouting, pronoun drift, register), and the precedence rule. |
 
 ## Design & design-system skills — three layers
 
@@ -119,8 +129,7 @@ The `udts-*` stubs below are incubating parity markers: each names a `udts-*` sk
 |---|---|
 | [`design-token-naming`](skills/design-token-naming/SKILL.md) | `token-naming-conventions` (L0) + `udts-naming-convention` (L2). Kept unchanged until tokenomics migrates. |
 | [`component-sizing`](skills/component-sizing/SKILL.md) | `component-sizing-principles` (L0) + `udts-component-sizing-ladders` (L2). Kept unchanged until tokenomics migrates. |
-
-Also design-adjacent, listed in the main table above: [`brand-voice-review`](skills/brand-voice-review/SKILL.md) (microcopy voice for user-facing strings).
+| [`brand-voice-review`](skills/brand-voice-review/SKILL.md) | `writing-interface-copy` (wording), `defining-a-voice` (voice and tone) and `writing-marketing-copy` (buzzwords, page copy). Unlike the two above it is reduced to a pointer, with its `applies_to` kept, because its rules now have one owner each; a pinned copy keeps working until tokenomics adds the successors and updates. |
 
 ### Skill census
 
@@ -133,6 +142,7 @@ These are **copy-and-edit starting points**, not skills you install as-is. Each 
 | Template | Purpose |
 |---|---|
 | [`conventions-template`](skills/conventions-template/SKILL.md) | Scaffold for a "review like me" skill — captures one maintainer's review conventions (what they flag, what they ignore, structural preferences). Copy into `.claude/skills/conventions-<your-gh-login>/SKILL.md`, set the `applies_to.author` frontmatter to your login (per SPEC v0.5.1), customize the body, and clud-bug applies your conventions ONLY to PRs you open. Layers on top of org-wide review-discipline skills. |
+| [`voice-template`](skills/voice-template/SKILL.md) | Scaffold for one brand's voice guide — scope and precedence, "X, not Y" traits, tone baseline and map, humour, person, vocabulary, exceptions, mechanics, before/after. Copy into `.claude/skills/voice-<brand>/SKILL.md`, fill it in, then delete the `applies_to.author: _REPLACE_ME_` line that holds a half-filled guide off. The writing skills find and apply it per `defining-a-voice`. |
 
 ## Integrating your repo
 
@@ -195,6 +205,8 @@ Whichever pattern applies, prefer the **collection layout** (`skills/<name>/SKIL
 1. Create `skills/<name>/SKILL.md` with frontmatter (`name`, `description`).
 2. Add a row to the table above.
 3. Open a PR.
+
+The rest — placement, frontmatter, size, every gate — is in [AGENTS.md](AGENTS.md#changing-a-skill-here).
 
 ## Editing an existing skill
 

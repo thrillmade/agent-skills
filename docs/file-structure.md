@@ -41,6 +41,7 @@ agent-skills
 │   ├── conventions-template
 │   ├── critical-issues-only
 │   ├── curating-a-skill-catalog
+│   ├── defining-a-voice
 │   ├── design-system-consistency
 │   ├── design-token-naming
 │   ├── designing-a-design-system
@@ -54,6 +55,7 @@ agent-skills
 │   ├── ios-safari-surfaces
 │   ├── line-height-grid
 │   ├── logmind
+│   ├── making-decision-artifacts
 │   ├── motion-continuity
 │   ├── oklch-color-space
 │   ├── orchestrating-a-multi-agent-run
@@ -87,8 +89,11 @@ agent-skills
 │   ├── unattended-operation
 │   ├── usability-heuristics
 │   ├── visual-polish
+│   ├── voice-template
 │   ├── wcag-contrast
-│   └── web-interface-guidelines-review
+│   ├── web-interface-guidelines-review
+│   ├── writing-interface-copy
+│   └── writing-marketing-copy
 ├── tests
 │   ├── fixtures
 │   ├── conftest.py
