@@ -1,6 +1,6 @@
 ---
-version: "1.2.1"
-digest: "5d73da7af6df"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
+version: "1.2.2"
+digest: "33d849ca81f8"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/agent-skills"
 name: reviewing-design-work
 description: |
@@ -86,7 +86,7 @@ Shneiderman, where the gate is source and edition rather than prediction.
 
 These lenses are generic; an L2 stance composes on top rather than replacing them.
 [thrill-design](../thrill-design/SKILL.md) is one house's (lens 4). [udts-review](../udts-review/SKILL.md) is one
-system's (incubating): a parity marker pointing at tokenomics, not loadable guidance yet.
+system's (incubating): a parity marker pointing at udts, not loadable guidance yet.
 
 ## Cross-references
 

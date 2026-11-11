@@ -5,14 +5,14 @@
  "enumeration": {
   "refs": "refs/remotes/origin/*",
   "publishing_ref": "origin/main",
-  "commits": 173,
-  "blobs": 338
+  "commits": 133,
+  "blobs": 323
  },
- "versions_enumerated": 234,
+ "versions_enumerated": 235,
  "verification": {
   "current": "GATED. validate_skills.py recomputes every `current` from skills/<slug>/SKILL.md on every pull request. Needs no git history, so it holds at the depth-1 checkout CI uses.",
   "history": "NOT GATED. History content is derived from git and CI cannot recompute these rows; only that every row's `commit` is an ancestor of the checked revision is gated (`gen_skill_versions.py --check`). Regenerate them in a full clone with `.github/scripts/gen_skill_versions.py --write`.",
-  "history_rows_ungated": 169
+  "history_rows_ungated": 170
  },
  "skills": {
   "apca-contrast": {
@@ -183,8 +183,8 @@
    ]
   },
   "component-sizing": {
-   "current": "f93f0d21ed7b",
-   "version": "1.0.1",
+   "current": "262311c2310e",
+   "version": "1.0.2",
    "authoring_home": "catalog",
    "history": [
     {
@@ -432,8 +432,8 @@
    ]
   },
   "design-token-naming": {
-   "current": "7bd0a88c9948",
-   "version": "1.0.1",
+   "current": "7e9df5a37a55",
+   "version": "1.0.2",
    "authoring_home": "catalog",
    "history": [
     {
@@ -891,6 +891,12 @@
      "version": "1.0.5",
      "commit": "d60ef2d",
      "date": "2026-11-11"
+    },
+    {
+     "v": "608788c2b9df",
+     "version": "1.0.6",
+     "commit": "81847a3",
+     "date": "2026-11-11"
     }
    ]
   },
@@ -1151,8 +1157,8 @@
    ]
   },
   "reviewing-design-work": {
-   "current": "5d73da7af6df",
-   "version": "1.2.1",
+   "current": "33d849ca81f8",
+   "version": "1.2.2",
    "authoring_home": "catalog",
    "history": [
     {
@@ -1468,8 +1474,8 @@
    ]
   },
   "type-scale": {
-   "current": "5ddf65fe6700",
-   "version": "1.0.1",
+   "current": "144fc0534f16",
+   "version": "1.0.2",
    "authoring_home": "catalog",
    "history": [
     {
@@ -1505,9 +1511,9 @@
    ]
   },
   "udts-component-sizing-ladders": {
-   "current": "3aaa13374fc8",
-   "version": "1.0.0",
-   "authoring_home": "repo-mirrored:tokenomics",
+   "current": "b5d795964cf2",
+   "version": "1.0.1",
+   "authoring_home": "repo-mirrored:udts",
    "history": [
     {
      "v": "56c275935b2b",
@@ -1524,9 +1530,9 @@
    ]
   },
   "udts-dtcg-extensions": {
-   "current": "574e1d81d2fb",
-   "version": "1.0.0",
-   "authoring_home": "repo-mirrored:tokenomics",
+   "current": "7aa3bf61ea7e",
+   "version": "1.0.1",
+   "authoring_home": "repo-mirrored:udts",
    "history": [
     {
      "v": "9d3fb5186964",
@@ -1543,9 +1549,9 @@
    ]
   },
   "udts-linter-rules": {
-   "current": "b2fe986666fd",
-   "version": "1.0.0",
-   "authoring_home": "repo-mirrored:tokenomics",
+   "current": "37bd4447fb59",
+   "version": "1.0.1",
+   "authoring_home": "repo-mirrored:udts",
    "history": [
     {
      "v": "e5fe1969e579",
@@ -1562,9 +1568,9 @@
    ]
   },
   "udts-naming-convention": {
-   "current": "aaffc5a6e563",
-   "version": "1.0.0",
-   "authoring_home": "repo-mirrored:tokenomics",
+   "current": "dcad12aa1dac",
+   "version": "1.0.1",
+   "authoring_home": "repo-mirrored:udts",
    "history": [
     {
      "v": "d87f64071563",
@@ -1581,9 +1587,9 @@
    ]
   },
   "udts-review": {
-   "current": "2a6f6efa01bb",
-   "version": "1.0.0",
-   "authoring_home": "repo-mirrored:tokenomics",
+   "current": "781f484d5efd",
+   "version": "1.0.1",
+   "authoring_home": "repo-mirrored:udts",
    "history": [
     {
      "v": "1f1909ab2144",
@@ -1600,9 +1606,9 @@
    ]
   },
   "udts-semver-defaults": {
-   "current": "4a0714f6b061",
-   "version": "1.0.0",
-   "authoring_home": "repo-mirrored:tokenomics",
+   "current": "632a6efa7531",
+   "version": "1.0.1",
+   "authoring_home": "repo-mirrored:udts",
    "history": [
     {
      "v": "679a493b441a",
@@ -1619,9 +1625,9 @@
    ]
   },
   "udts-spacing-defaults": {
-   "current": "1887d0c306ca",
-   "version": "1.0.0",
-   "authoring_home": "repo-mirrored:tokenomics",
+   "current": "afa889d5b8aa",
+   "version": "1.0.1",
+   "authoring_home": "repo-mirrored:udts",
    "history": [
     {
      "v": "88dfe5aa7e80",
@@ -1638,9 +1644,9 @@
    ]
   },
   "udts-token-model": {
-   "current": "de1736a0c81f",
-   "version": "1.0.0",
-   "authoring_home": "repo-mirrored:tokenomics",
+   "current": "62c73dc244e3",
+   "version": "1.0.1",
+   "authoring_home": "repo-mirrored:udts",
    "history": [
     {
      "v": "dc0ffe2c8667",
