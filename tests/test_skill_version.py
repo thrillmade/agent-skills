@@ -279,7 +279,7 @@ def test_a_duplicated_prior_version_line_is_read_as_absent_and_seeds() -> None:
 def test_origin_is_always_the_one_constant_value() -> None:
     stamped = skill_version.stamp(BASE)
     assert skill_version.stamped_origin(stamped) == skill_version.ORIGIN
-    assert skill_version.ORIGIN == "https://github.com/thrillmade/agent-skills"
+    assert skill_version.ORIGIN == "https://github.com/thrillmade/thrill-skills"
 
 
 # --- the quotes, and why they are not optional for digest and version ------
@@ -344,7 +344,7 @@ def test_the_generated_digest_line_carries_a_route_home():
     resolvable coordinate the line is decoration.
     """
     line = skill_version.digest_line("e606dd248a0a")
-    assert "github.com/thrillmade/agent-skills" in line
+    assert "github.com/thrillmade/thrill-skills" in line
     assert "skill-versions.json" in line
     assert line.startswith('digest: "e606dd248a0a"')
     assert "\n" not in line

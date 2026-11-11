@@ -1,18 +1,18 @@
 {
  "version": 1,
- "_readme": "Content identity for every SKILL.md this catalog has published. To check a copy you hold, by hand: normalise CRLF to LF, delete the `version:`, `digest:` and `origin:` lines from its frontmatter, sha256 the rest, take the first 12 hex characters -- then find your skill's slug below. Matching `current` means you are up to date; a match in `history` means you are that many versions behind; no match means your copy was edited locally. `version` and each row's `version` are the skill's own semver, null for anything published before that field existed. To check a whole repo at once, run https://raw.githubusercontent.com/thrillmade/agent-skills/main/.github/scripts/skills_current.py -- stdlib only, no install. Update with `npx skills add thrillmade/agent-skills --skill <slug>`. The `history` rows are not gated by CI and the `current` values are: see `verification` below.",
+ "_readme": "Content identity for every SKILL.md this catalog has published. To check a copy you hold, by hand: normalise CRLF to LF, delete the `version:`, `digest:` and `origin:` lines from its frontmatter, sha256 the rest, take the first 12 hex characters -- then find your skill's slug below. Matching `current` means you are up to date; a match in `history` means you are that many versions behind; no match means your copy was edited locally. `version` and each row's `version` are the skill's own semver, null for anything published before that field existed. To check a whole repo at once, run https://raw.githubusercontent.com/thrillmade/thrill-skills/main/.github/scripts/skills_current.py -- stdlib only, no install. Update with `npx skills add thrillmade/thrill-skills --skill <slug>`. The `history` rows are not gated by CI and the `current` values are: see `verification` below.",
  "generated_from": "remotes-exhaustive",
  "enumeration": {
   "refs": "refs/remotes/origin/*",
   "publishing_ref": "origin/main",
-  "commits": 133,
-  "blobs": 323
+  "commits": 135,
+  "blobs": 335
  },
- "versions_enumerated": 235,
+ "versions_enumerated": 247,
  "verification": {
   "current": "GATED. validate_skills.py recomputes every `current` from skills/<slug>/SKILL.md on every pull request. Needs no git history, so it holds at the depth-1 checkout CI uses.",
   "history": "NOT GATED. History content is derived from git and CI cannot recompute these rows; only that every row's `commit` is an ancestor of the checked revision is gated (`gen_skill_versions.py --check`). Regenerate them in a full clone with `.github/scripts/gen_skill_versions.py --write`.",
-  "history_rows_ungated": 170
+  "history_rows_ungated": 182
  },
  "skills": {
   "apca-contrast": {
@@ -128,8 +128,8 @@
    ]
   },
   "clud-bug-collaboration": {
-   "current": "fc49f8cc5029",
-   "version": "1.0.2",
+   "current": "1f4f09dfe73f",
+   "version": "1.0.3",
    "authoring_home": "catalog",
    "history": [
     {
@@ -216,6 +216,12 @@
      "version": "1.0.1",
      "commit": "8a77c44",
      "date": "2026-08-24"
+    },
+    {
+     "v": "262311c2310e",
+     "version": "1.0.2",
+     "commit": "6056f8e",
+     "date": "2026-11-11"
     }
    ]
   },
@@ -345,8 +351,8 @@
    ]
   },
   "curating-a-skill-catalog": {
-   "current": "8ced4d8ed56b",
-   "version": "1.0.1",
+   "current": "40a77e631003",
+   "version": "1.0.2",
    "authoring_home": "catalog",
    "history": [
     {
@@ -432,8 +438,8 @@
    ]
   },
   "design-token-naming": {
-   "current": "7e9df5a37a55",
-   "version": "1.0.2",
+   "current": "bfbad874a415",
+   "version": "1.0.3",
    "authoring_home": "catalog",
    "history": [
     {
@@ -465,6 +471,12 @@
      "version": "1.0.1",
      "commit": "8a77c44",
      "date": "2026-08-24"
+    },
+    {
+     "v": "7e9df5a37a55",
+     "version": "1.0.2",
+     "commit": "6056f8e",
+     "date": "2026-11-11"
     }
    ]
   },
@@ -618,8 +630,8 @@
    ]
   },
   "finding-a-catalog-skill": {
-   "current": "f5f92f771470",
-   "version": "1.0.7",
+   "current": "a1020f100a06",
+   "version": "1.0.9",
    "authoring_home": "catalog",
    "history": [
     {
@@ -957,8 +969,8 @@
    ]
   },
   "orchestrating-a-multi-agent-run": {
-   "current": "c3a7455321c3",
-   "version": "1.0.1",
+   "current": "33f6ecf8dc38",
+   "version": "1.0.2",
    "authoring_home": "catalog",
    "history": [
     {
@@ -976,8 +988,8 @@
    ]
   },
   "orchestrating-agent-delegation": {
-   "current": "f68272def8c6",
-   "version": "1.0.2",
+   "current": "ad31d9a4e927",
+   "version": "1.0.3",
    "authoring_home": "catalog",
    "history": [
     {
@@ -1202,6 +1214,12 @@
      "version": "1.2.1",
      "commit": "9807626",
      "date": "2026-11-06"
+    },
+    {
+     "v": "33d849ca81f8",
+     "version": "1.2.2",
+     "commit": "6056f8e",
+     "date": "2026-11-11"
     }
    ]
   },
@@ -1243,8 +1261,8 @@
    ]
   },
   "session-heartbeat": {
-   "current": "ceee4cf10ea4",
-   "version": "1.0.0",
+   "current": "4cf9fd345913",
+   "version": "1.0.1",
    "authoring_home": "catalog",
    "history": [
     {
@@ -1507,6 +1525,12 @@
      "version": "1.0.1",
      "commit": "8a77c44",
      "date": "2026-08-24"
+    },
+    {
+     "v": "144fc0534f16",
+     "version": "1.0.2",
+     "commit": "6056f8e",
+     "date": "2026-11-11"
     }
    ]
   },
@@ -1526,6 +1550,12 @@
      "version": null,
      "commit": "02d7a69",
      "date": "2026-07-16"
+    },
+    {
+     "v": "b5d795964cf2",
+     "version": "1.0.1",
+     "commit": "6056f8e",
+     "date": "2026-11-11"
     }
    ]
   },
@@ -1545,6 +1575,12 @@
      "version": null,
      "commit": "02d7a69",
      "date": "2026-07-16"
+    },
+    {
+     "v": "7aa3bf61ea7e",
+     "version": "1.0.1",
+     "commit": "6056f8e",
+     "date": "2026-11-11"
     }
    ]
   },
@@ -1564,6 +1600,12 @@
      "version": null,
      "commit": "02d7a69",
      "date": "2026-07-16"
+    },
+    {
+     "v": "37bd4447fb59",
+     "version": "1.0.1",
+     "commit": "6056f8e",
+     "date": "2026-11-11"
     }
    ]
   },
@@ -1583,6 +1625,12 @@
      "version": null,
      "commit": "02d7a69",
      "date": "2026-07-16"
+    },
+    {
+     "v": "dcad12aa1dac",
+     "version": "1.0.1",
+     "commit": "6056f8e",
+     "date": "2026-11-11"
     }
    ]
   },
@@ -1602,6 +1650,12 @@
      "version": null,
      "commit": "02d7a69",
      "date": "2026-07-16"
+    },
+    {
+     "v": "781f484d5efd",
+     "version": "1.0.1",
+     "commit": "6056f8e",
+     "date": "2026-11-11"
     }
    ]
   },
@@ -1621,6 +1675,12 @@
      "version": null,
      "commit": "02d7a69",
      "date": "2026-07-16"
+    },
+    {
+     "v": "632a6efa7531",
+     "version": "1.0.1",
+     "commit": "6056f8e",
+     "date": "2026-11-11"
     }
    ]
   },
@@ -1640,6 +1700,12 @@
      "version": null,
      "commit": "02d7a69",
      "date": "2026-07-16"
+    },
+    {
+     "v": "afa889d5b8aa",
+     "version": "1.0.1",
+     "commit": "6056f8e",
+     "date": "2026-11-11"
     }
    ]
   },
@@ -1659,12 +1725,18 @@
      "version": null,
      "commit": "02d7a69",
      "date": "2026-07-16"
+    },
+    {
+     "v": "62c73dc244e3",
+     "version": "1.0.1",
+     "commit": "6056f8e",
+     "date": "2026-11-11"
     }
    ]
   },
   "unattended-operation": {
-   "current": "7c623d1f1b06",
-   "version": "1.0.0",
+   "current": "439932705292",
+   "version": "1.0.1",
    "authoring_home": "catalog",
    "history": [
     {
@@ -1744,8 +1816,8 @@
    ]
   },
   "voice-template": {
-   "current": "5af48963998c",
-   "version": "1.0.1",
+   "current": "61e0306e7f65",
+   "version": "1.0.2",
    "authoring_home": "catalog",
    "history": [
     {

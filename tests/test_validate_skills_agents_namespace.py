@@ -8,7 +8,7 @@ that do not apply to a role, and the 1:1 reconcile below is against
 `skills/` directory names, which an `agents/<name>` key was never meant to
 equal. Before this file's `AGENTS_PREFIX` carve-out landed, adding the
 first `agents/` entry to `docs/placement-map.json` failed CI on both counts
--- exactly the blocker agent-skills#180 names. These tests pin the fix:
+-- exactly the blocker thrill-skills#180 names. These tests pin the fix:
 `validate_agents.py` (see `tests/test_validate_agents.py`) owns that
 namespace's shape and its own 1:1 reconcile against `.claude/agents/`; this
 file only proves `validate_skills.py` gets out of its way.
@@ -47,7 +47,7 @@ def test_an_agent_entry_with_no_family_or_owns_is_not_an_error(tree: SkillTree) 
 
 def test_an_agent_entry_is_never_extra_against_skills_dirs(tree: SkillTree) -> None:
     # Before the carve-out, `agents/builder` read as "an entry for a
-    # non-existent skills/ dir" -- the exact defect agent-skills#180 names.
+    # non-existent skills/ dir" -- the exact defect thrill-skills#180 names.
     tree.valid_skill("alpha")
     tree.placement_map(valid_map(alpha=SKILL_ENTRY, **{"agents/builder": AGENT_ENTRY}))
     errors = tree.validate()

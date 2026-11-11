@@ -1,7 +1,7 @@
 ---
 version: "1.0.1"
-digest: "781f484d5efd"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
-origin: "https://github.com/thrillmade/agent-skills"
+digest: "781f484d5efd"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/thrill-skills"
 name: udts-review
 description: "[L2 stub — incubating] UDTS-specific review lens — system rules a reviewer checks on top of the generic reviewing-design-work dispatcher. Full content is being authored in thrillmade/udts and lands here via an upstream PR once the UDTS spec stabilizes; do not treat this stub as guidance yet."
 ---

@@ -1,7 +1,7 @@
 ---
-version: "1.0.1"
-digest: "c3a7455321c3"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
-origin: "https://github.com/thrillmade/agent-skills"
+version: "1.0.2"
+digest: "33f6ecf8dc38"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/thrill-skills"
 name: orchestrating-a-multi-agent-run
 description: |
   Entry-point dispatcher for RUNNING work through subagents — you are the orchestrator holding judgment, not the one typing the code. Use when about to dispatch a subagent or draft its brief, when planning parallel lanes, when standing up an adversarial review panel, when an agent reports "done" and you are deciding what to believe, when a run will cross a usage-limit reset or has just resumed after one, when a human hands the session over to run while they are away, or when landing work in a repo that has a decision log or a PR-review bot installed. Routes the run's four obligations: hand the work out (orchestrating-agent-delegation), gate what comes back (orchestrating-elite-agent-qa), record the decision and clear the automated reviewer (logmind, clud-bug-collaboration, token-frugal-tooling), survive time (session-heartbeat, unattended-operation). Use when the unit of work is the run; for judging what is inside one diff load the review lenses, for a rendered surface load reviewing-design-work, for whether a skill earns its catalog place load curating-a-skill-catalog.
@@ -146,10 +146,10 @@ surface of the skills your agents load.
 This dispatcher owns no threshold of its own — every number lives in the station that
 owns it. Routing and the four axioms are practitioner-derived:
 
-- The family-size measurement behind it: thrillmade/agent-skills#205, with the
+- The family-size measurement behind it: thrillmade/thrill-skills#205, with the
   reference-graph and reference-syntax findings under it (#200, #197).
 - Run-continuity practice — pacing, limit hazards, mid-write kills, owned-files recovery:
-  thrillmade/agent-skills#169, #173, #174.
+  thrillmade/thrill-skills#169, #173, #174.
 - Roles as files on disk; work outliving its producer needing a survivor:
   thrillmade/protocol `SPEC.md` §2.4, §6.2.
 

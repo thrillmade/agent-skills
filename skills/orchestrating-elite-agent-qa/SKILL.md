@@ -1,7 +1,7 @@
 ---
 version: "1.1.4"
-digest: "8ca1bd16dd76"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
-origin: "https://github.com/thrillmade/agent-skills"
+digest: "8ca1bd16dd76"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/thrill-skills"
 name: orchestrating-elite-agent-qa
 description: Use when orchestrating multi-agent feature work (build/review/merge with subagents or workflows) and the quality bar is high — shipping UI, interactive editors, or anything where a single build pass plus a polite review would let real bugs through. Cite when a pass came from a headless engine, a responsive emulator or a narrowed desktop window rather than the shipping engine and device, or from a check never shown able to fail.
 ---

@@ -50,4 +50,4 @@ body:
   - type: markdown
     attributes:
       value: |
-        Filed by the weekly census or by hand — either way the editor decides; see [skills/curating-a-skill-catalog/SKILL.md](https://github.com/thrillmade/agent-skills/tree/main/skills/curating-a-skill-catalog).
+        Filed by the weekly census or by hand — either way the editor decides; see [skills/curating-a-skill-catalog/SKILL.md](https://github.com/thrillmade/thrill-skills/tree/main/skills/curating-a-skill-catalog).

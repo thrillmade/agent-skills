@@ -1,5 +1,5 @@
 name: New Skill Proposal
-description: Propose a new reusable skill for the agent-skills catalog (human-gated approval)
+description: Propose a new reusable skill for the thrill-skills catalog (human-gated approval)
 title: "[skill-proposal] "
 labels: ["skill-proposal", "needs-review"]
 body:
@@ -8,7 +8,7 @@ body:
       value: |
         ## Skills-Driven Development — new-skill approval gate
 
-        Per the [thrillmade SkDD pragmatic-governance design](https://github.com/thrillmade/agent-skills#part-of-the-thrillmade-skdd-toolchain):
+        Per the [thrillmade SkDD pragmatic-governance design](https://github.com/thrillmade/thrill-skills#part-of-the-thrillmade-skdd-toolchain):
         every new skill in this catalog needs a **human-approved issue
         before a PR can land**. This gate exists because skill catalogs
         accumulate noise faster than they accumulate signal — a maintainer
@@ -93,7 +93,7 @@ body:
     attributes:
       label: Scope
       options:
-        - cross-repo catalog skill (goes in thrillmade/agent-skills)
+        - cross-repo catalog skill (goes in thrillmade/thrill-skills)
         - single-repo custom skill (lives in one repo's .claude/skills/)
       default: 0
     validations:

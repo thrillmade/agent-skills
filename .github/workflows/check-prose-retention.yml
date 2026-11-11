@@ -54,7 +54,7 @@ name: check-prose-retention
 # see edits to its own budget file. A committed test asserts this stays absent.
 #
 # A REQUIRED CHECK ON MAIN. Measured 2026-11-03 rather than assumed:
-# `gh api repos/thrillmade/agent-skills/rules/branches/main` lists
+# `gh api repos/thrillmade/thrill-skills/rules/branches/main` lists
 # five required status checks -- `ci`, `validate skills`, `test`,
 # `check-links` and this job's `check prose retention` -- and
 # `.../rules/branches/dev` -- the branch this repository's PRs actually

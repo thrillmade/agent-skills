@@ -17,7 +17,7 @@ name: skill-census
 # Auth: the thrillmade-orchestrator App installation token (all-install scope,
 # minted per-run) reads consumer repos across the org and files issues here.
 # Requires the org secrets THRILLMADE_ORCHESTRATOR_APP_ID +
-# THRILLMADE_ORCHESTRATOR_PRIVATE_KEY to be visible to agent-skills — the
+# THRILLMADE_ORCHESTRATOR_PRIVATE_KEY to be visible to thrill-skills — the
 # secret-guard step fails loudly with remediation if they are not.
 #
 # Idempotency: one digest issue per ISO-week cycle (commented on re-run, not
@@ -73,28 +73,28 @@ jobs:
           set -euo pipefail
           missing=0
           if [ -z "${ORCH_APP_ID:-}" ]; then
-            echo "::error::THRILLMADE_ORCHESTRATOR_APP_ID is empty. Remediation: extend org-secret visibility to agent-skills (org Settings -> Secrets and variables -> Actions -> the secret -> Repository access -> add agent-skills)."
+            echo "::error::THRILLMADE_ORCHESTRATOR_APP_ID is empty. Remediation: extend org-secret visibility to thrill-skills (org Settings -> Secrets and variables -> Actions -> the secret -> Repository access -> add thrill-skills)."
             missing=1
           fi
           if [ -z "${ORCH_PRIVATE_KEY:-}" ]; then
-            echo "::error::THRILLMADE_ORCHESTRATOR_PRIVATE_KEY is empty. Remediation: extend org-secret visibility to agent-skills (org Settings -> Secrets and variables -> Actions -> the secret -> Repository access -> add agent-skills)."
+            echo "::error::THRILLMADE_ORCHESTRATOR_PRIVATE_KEY is empty. Remediation: extend org-secret visibility to thrill-skills (org Settings -> Secrets and variables -> Actions -> the secret -> Repository access -> add thrill-skills)."
             missing=1
           fi
           if [ "$missing" -ne 0 ]; then
             exit 1
           fi
           if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
-            echo "::warning::ANTHROPIC_API_KEY is empty — degrading to Mode B (deterministic digest only, no LLM panel). Extend the ANTHROPIC_API_KEY org secret to agent-skills to enable verdicts."
+            echo "::warning::ANTHROPIC_API_KEY is empty — degrading to Mode B (deterministic digest only, no LLM panel). Extend the ANTHROPIC_API_KEY org secret to thrill-skills to enable verdicts."
             echo "panel_enabled=false" >> "$GITHUB_OUTPUT"
           else
             echo "panel_enabled=true" >> "$GITHUB_OUTPUT"
           fi
 
       # Scoped to the consumer repos census_counters.py reads cross-repo
-      # (STEWARD_TOKEN), plus agent-skills itself. The App has held Issues:
+      # (STEWARD_TOKEN), plus thrill-skills itself. The App has held Issues:
       # read/write since 2026-07-17 (#183) — the panel and File issues steps
       # below now file under this token, as the steward identity, so
-      # agent-skills must be in scope here or those steps have nothing to
+      # thrill-skills must be in scope here or those steps have nothing to
       # write with.
       - name: Mint steward App token
         id: app_token
@@ -104,7 +104,7 @@ jobs:
           private-key: ${{ secrets.THRILLMADE_ORCHESTRATOR_PRIVATE_KEY }}
           owner: thrillmade
           repositories: |
-            agent-skills
+            thrill-skills
             clud-bug
             clud-bug-app
             logmind
@@ -151,7 +151,7 @@ jobs:
           # under the steward App identity. The App has held Issues:
           # read/write since 2026-07-17 (#183) — the blocker was never a
           # missing grant, it was this token's repo scope omitting
-          # agent-skills, which the mint step above now fixes.
+          # thrill-skills, which the mint step above now fixes.
           GH_TOKEN: ${{ steps.app_token.outputs.token }}
         run: |
           set -euo pipefail
@@ -168,9 +168,9 @@ jobs:
         env:
           # Files under the steward App identity, not github-actions[bot].
           # The App has held Issues: read/write since 2026-07-17 (#183); this
-          # is the same token minted above, now scoped to agent-skills.
+          # is the same token minted above, now scoped to thrill-skills.
           GH_TOKEN: ${{ steps.app_token.outputs.token }}
-          GH_REPO: thrillmade/agent-skills
+          GH_REPO: thrillmade/thrill-skills
           CENSUS_DIR: ${{ runner.temp }}/census
           DRY_RUN: ${{ inputs.dry_run }}
         run: |

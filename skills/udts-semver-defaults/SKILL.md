@@ -1,7 +1,7 @@
 ---
 version: "1.0.1"
-digest: "632a6efa7531"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
-origin: "https://github.com/thrillmade/agent-skills"
+digest: "632a6efa7531"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/thrill-skills"
 name: udts-semver-defaults
 description: "[L2 stub — incubating] UDTS's SemVer policy choices for token releases (pre-1.0 relaxation, snapshot conventions) — its instantiation of semver-design-tokens. Full content is being authored in thrillmade/udts and lands here via an upstream PR once the UDTS spec stabilizes; do not treat this stub as guidance yet."
 ---

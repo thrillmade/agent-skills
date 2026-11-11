@@ -1,7 +1,7 @@
 ---
 version: "1.0.3"
-digest: "2d2d0dc59dad"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
-origin: "https://github.com/thrillmade/agent-skills"
+digest: "2d2d0dc59dad"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/thrill-skills"
 name: writing-interface-copy
 description: >-
   Use when writing, editing or reviewing the words inside a product interface —

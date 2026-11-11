@@ -1,7 +1,7 @@
 ---
 version: "1.0.1"
-digest: "37bd4447fb59"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
-origin: "https://github.com/thrillmade/agent-skills"
+digest: "37bd4447fb59"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/thrill-skills"
 name: udts-linter-rules
 description: "[L2 stub — incubating] UDTS's machine-enforceable linter rules over its token catalog. Full content is being authored in thrillmade/udts and lands here via an upstream PR once the UDTS spec stabilizes; do not treat this stub as guidance yet."
 ---

@@ -2,8 +2,8 @@
 minted App token cannot actually write to this repo.
 
 #183: `skill-census.yml` used to file under `github.token` because the App
-token's `repositories:` scope omitted `agent-skills`. The fix flips both
-`GH_TOKEN` lines to the App token now that `agent-skills` is in scope. That
+token's `repositories:` scope omitted `thrill-skills`. The fix flips both
+`GH_TOKEN` lines to the App token now that `thrill-skills` is in scope. That
 flip introduces a new way for the token handed to `gh` to be wrong (mint
 succeeds but the resulting token still can't write here — repo dropped from
 the list again, installation permission revoked, etc.). The brief for that
@@ -61,7 +61,7 @@ if len(argv) >= 2 and argv[0] == "issue" and argv[1] == "list":
 if len(argv) >= 2 and argv[0] == "issue" and argv[1] in ("create", "comment"):
     print(
         "HTTP 403: Resource not accessible by integration "
-        "(https://api.github.com/repos/thrillmade/agent-skills/issues)",
+        "(https://api.github.com/repos/thrillmade/thrill-skills/issues)",
         file=sys.stderr,
     )
     sys.exit(1)
@@ -112,7 +112,7 @@ def _run_with_bad_token(*, dry_run: bool) -> subprocess.CompletedProcess:
         # "succeeded" (no non-zero exit to fail the job outright) but the
         # token it produced does not work.
         env["GH_TOKEN"] = ""
-        env["GH_REPO"] = "thrillmade/agent-skills"
+        env["GH_REPO"] = "thrillmade/thrill-skills"
         env["CENSUS_DIR"] = str(census_dir)
         env["DRY_RUN"] = "true" if dry_run else "false"
 

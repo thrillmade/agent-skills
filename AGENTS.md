@@ -21,7 +21,7 @@ guidance lives in one place.
 logmind log "summary" -r "why" -a "alternative" -i "implication"
 ```
 
-This project uses [logmind](https://logmind.dev). What counts as a decision, branch routing, `--stage scoped` for unrelated WIP, `logmind doctor`, and the required-reading list ([`docs/timeline.md`](docs/timeline.md), [`docs/decisions.md`](docs/decisions.md), [`docs/file-structure.md`](docs/file-structure.md), `docs/decisions-branches/<branch>.md`) all live in the **`logmind` agent skill** at https://github.com/thrillmade/agent-skills/tree/main/skills/logmind.
+This project uses [logmind](https://logmind.dev). What counts as a decision, branch routing, `--stage scoped` for unrelated WIP, `logmind doctor`, and the required-reading list ([`docs/timeline.md`](docs/timeline.md), [`docs/decisions.md`](docs/decisions.md), [`docs/file-structure.md`](docs/file-structure.md), `docs/decisions-branches/<branch>.md`) all live in the **`logmind` agent skill** at https://github.com/thrillmade/thrill-skills/tree/main/skills/logmind.
 <!-- logmind-end -->
 
 ## Project Overview
@@ -69,7 +69,7 @@ This catalog's own rules for writing a skill. The authoring craft lives in the `
 agent (`.claude/agents/skill-smith.md`), which is generic and obeys whatever repo it works in;
 this is what it finds here.
 
-- **Upstream.** This repo, `thrillmade/agent-skills`, is the origin every skill's `origin` field
+- **Upstream.** This repo, `thrillmade/thrill-skills`, is the origin every skill's `origin` field
   names. A change to an installed copy is made here, by PR into `dev`, with the research behind
   it in the PR body.
 - **Placement.** A new skill gets its row and family in `docs/placement-map.json` before it is
@@ -176,6 +176,6 @@ panels. Re-check before relying on it, and control-test an empty result against 
 head SHA (the cleanest known hit) before reading absence as fact:
 
 ```bash
-gh api repos/thrillmade/agent-skills/commits/<sha>/check-runs \
+gh api repos/thrillmade/thrill-skills/commits/<sha>/check-runs \
   --jq '.check_runs[] | select(.name=="clud-bug-review") | "\(.conclusion) \(.output.title)"'
 ```

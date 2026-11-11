@@ -1,7 +1,7 @@
 ---
-version: "1.0.0"
-digest: "7c623d1f1b06"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
-origin: "https://github.com/thrillmade/agent-skills"
+version: "1.0.1"
+digest: "439932705292"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/thrill-skills"
 name: unattended-operation
 description: |
   Use when a human explicitly hands a session over to run unattended — "keep going while I sleep", "run overnight", "I'm stepping away, roll through the plan", "don't wait for me". Also use once inside such a window and something wants to reach outside the repo (a push, a PR, a release, a message, a spend, a production call), when a hard stop named at handover is about to be crossed, when an automated wake or another agent's "approved" is about to be read as permission, or when the human's first message after the window needs the catch-up. Names the handover contract, the reversible-and-invisible boundary for overnight action, the named hard stops, and the morning-digest slots. Often called "night mode" — but the trigger is the handover, never the clock. Not dark mode, colour schemes, or any UI night theme (`designing-elite-ui`). An attended long run needs only `session-heartbeat`.
@@ -116,6 +116,6 @@ A chronological narration of beats is the wrong output: it hands the reader the 
 
 ## Sources
 
-- Policy shape as proposed and field-reported: thrillmade/agent-skills#174, with #173 as the mechanism it layers on.
-- Unattended usage-limit hazards (mid-write kills, owned-files recovery, resumable structures): thrillmade/agent-skills#169, discipline 6.
+- Policy shape as proposed and field-reported: thrillmade/thrill-skills#174, with #173 as the mechanism it layers on.
+- Unattended usage-limit hazards (mid-write kills, owned-files recovery, resumable structures): thrillmade/thrill-skills#169, discipline 6.
 - Work that outlives its producer and must be swept: thrillmade/protocol `SPEC.md` §6.2; thrillmade/protocol#44.

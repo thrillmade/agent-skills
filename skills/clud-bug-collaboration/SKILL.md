@@ -1,7 +1,7 @@
 ---
-version: "1.0.2"
-digest: "fc49f8cc5029"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
-origin: "https://github.com/thrillmade/agent-skills"
+version: "1.0.3"
+digest: "1f4f09dfe73f"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/thrill-skills"
 name: clud-bug-collaboration
 description: How Claude Code agents working in a clud-bug-installed repo should interact with the bot's review threads, strict-mode gate, and skill set. Use this skill whenever you're about to push a commit, address a clud-bug PR review comment, edit anything under .claude/skills/, modify .github/workflows/clud-bug-*.yml, or wonder why a PR check is red. Also use when planning work in a repo that has a `clud-bug-review` workflow installed — even if the user didn't mention clud-bug by name.
 ---
@@ -180,4 +180,4 @@ its color, don't just push and move on.
 
 - https://cludbug.dev
 - https://github.com/thrillmade/clud-bug
-- https://github.com/thrillmade/agent-skills
+- https://github.com/thrillmade/thrill-skills

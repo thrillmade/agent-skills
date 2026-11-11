@@ -1,7 +1,7 @@
 ---
-version: "1.0.1"
-digest: "8ced4d8ed56b"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
-origin: "https://github.com/thrillmade/agent-skills"
+version: "1.0.2"
+digest: "40a77e631003"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/thrill-skills"
 name: curating-a-skill-catalog
 description: |
   Use when judging whether a skill earns its place — running or reviewing a skill census cycle, triaging gap:/placement:/revise:/promotion-candidate:/demotion-candidate: issues, deciding to deprecate or promote a skill, or auditing a skill catalog's health. Names the lifecycle state machine (incubating → active → needs-revision → deprecated → retired), the six verdict kinds with their evidence standards (Keep is silent — no issue; Revise needs a fought-usage or stale-source quote; Demote needs zero citations across cycles AND no structural role, with L0-primitive grace; Promotion-candidate needs convergent evolution or a named consumer; Placement needs an applies_to profile or placement-map row naming the repo; Gap needs the concrete recurring case), the prosecutor/defender judgment frame, the top-5-plus-digest noise budget, and the human-editor gate (the census proposes; it never merges or demotes by itself). Cite when a census run files more than ~6 issues, when a demotion is proposed without usage evidence, or when a verdict issue lacks quoted grounds.
@@ -140,7 +140,7 @@ catch.
 ## The human editor gate
 
 Every verdict is a **proposal**, addressed to the human editor (the
-agent-skills maintainer / CDO). A census cycle never merges a PR, deprecates
+thrill-skills maintainer / CDO). A census cycle never merges a PR, deprecates
 a skill, or promotes/demotes one by its own authority — it files the issue
 and stops. The editor decides.
 

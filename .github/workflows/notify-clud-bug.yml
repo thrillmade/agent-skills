@@ -12,7 +12,7 @@ name: sync skill to clud-bug
 #   - push to main on changes to any tracked baseline SKILL.md path — fires
 #     automatically per baseline-skill commit. The detect job below figures
 #     out which of the 4 baselines actually changed (matrix strategy per
-#     option (a) in the agent-skills handoff). Confirmed safe after the
+#     option (a) in the thrill-skills handoff). Confirmed safe after the
 #     smoke-test phase (manual dispatch from main) produced shape-correct
 #     PRs on clud-bug.
 #
@@ -130,7 +130,7 @@ jobs:
       matrix:
         skill: ${{ fromJson(needs.detect.outputs.skills) }}
     steps:
-      - name: Checkout agent-skills
+      - name: Checkout thrill-skills
         uses: actions/checkout@v7
 
       - name: Verify source SKILL.md exists
@@ -270,7 +270,7 @@ jobs:
 
           ### Changed
 
-          - **Bundled \`${SKILL}\` SKILL.md refreshed** from \`thrillmade/agent-skills@${SHORT}\`. \`BASELINE_SKILLS_REF\` in \`src/cli/skills.ts\` pinned to the same commit so the install-time fetch path and the bundled offline-fallback path resolve to byte-identical content. Auto-synced by \`agent-skills/.github/workflows/notify-clud-bug.yml\`.
+          - **Bundled \`${SKILL}\` SKILL.md refreshed** from \`thrillmade/thrill-skills@${SHORT}\`. \`BASELINE_SKILLS_REF\` in \`src/cli/skills.ts\` pinned to the same commit so the install-time fetch path and the bundled offline-fallback path resolve to byte-identical content. Auto-synced by \`thrill-skills/.github/workflows/notify-clud-bug.yml\`.
 
           EOF
           # awk inserts the entry on the line after the [Unreleased] header.
@@ -295,7 +295,7 @@ jobs:
           # Match on the skill name + source SHA rather than a version number:
           # this workflow no longer assigns a version (see step 3), and the
           # skill+SHA pair is what actually identifies this refresh.
-          if ! grep -qF "thrillmade/agent-skills@${SHORT}" CHANGELOG.md; then
+          if ! grep -qF "thrillmade/thrill-skills@${SHORT}" CHANGELOG.md; then
             echo "::error::CHANGELOG entry for ${SKILL}@${SHORT} not inserted — check the [Unreleased] header shape in clud-bug's CHANGELOG.md."
             exit 1
           fi
@@ -316,30 +316,30 @@ jobs:
           git config user.email "agent-skills-sync@users.noreply.github.com"
           git checkout -b "${BRANCH}"
           git add -A
-          git commit -m "chore(skills): refresh bundled ${SKILL} from agent-skills@${SHORT}"
+          git commit -m "chore(skills): refresh bundled ${SKILL} from thrill-skills@${SHORT}"
           git push -u origin "${BRANCH}"
 
-          PR_BODY="Automated bundled-copy sync from \`thrillmade/agent-skills\`.
+          PR_BODY="Automated bundled-copy sync from \`thrillmade/thrill-skills\`.
 
-          **Trigger:** \`${EVENT}\` on \`thrillmade/agent-skills\`.
-          **Source SKILL.md:** https://github.com/thrillmade/agent-skills/blob/${SHA}/skills/${SKILL}/SKILL.md
-          **Source commit:** https://github.com/thrillmade/agent-skills/commit/${SHA}
+          **Trigger:** \`${EVENT}\` on \`thrillmade/thrill-skills\`.
+          **Source SKILL.md:** https://github.com/thrillmade/thrill-skills/blob/${SHA}/skills/${SKILL}/SKILL.md
+          **Source commit:** https://github.com/thrillmade/thrill-skills/commit/${SHA}
 
           ## Changes applied
 
           - \`templates/skills/baseline/${SKILL}.md\` ← byte-for-byte copy of the source above.
-          - \`src/cli/skills.ts\` — \`BASELINE_SKILLS_REF\` bumped to \`${SHA}\` so the install-time fetch from \`thrillmade/agent-skills\` and the bundled offline-fallback both resolve to identical content.
+          - \`src/cli/skills.ts\` — \`BASELINE_SKILLS_REF\` bumped to \`${SHA}\` so the install-time fetch from \`thrillmade/thrill-skills\` and the bundled offline-fallback both resolve to identical content.
           - \`CHANGELOG.md\` — entry under [Unreleased] documenting the refresh.
 
           **\`package.json\` is deliberately untouched.** This PR proposes *content*; assigning a version is your release decision, not ours. The CHANGELOG entry sits under [Unreleased] for your own release process to fold in.
 
           ## How this was generated
 
-          \`agent-skills/.github/workflows/notify-clud-bug.yml\` — fires on push to \`main\` matching one of the tracked baseline-skill paths, or via manual \`workflow_dispatch\` for a chosen skill."
+          \`thrill-skills/.github/workflows/notify-clud-bug.yml\` — fires on push to \`main\` matching one of the tracked baseline-skill paths, or via manual \`workflow_dispatch\` for a chosen skill."
 
           gh pr create \
             --repo thrillmade/clud-bug \
             --base main \
             --head "${BRANCH}" \
-            --title "chore(skills): refresh bundled ${SKILL} from agent-skills@${SHORT}" \
+            --title "chore(skills): refresh bundled ${SKILL} from thrill-skills@${SHORT}" \
             --body "${PR_BODY}"

@@ -6,7 +6,7 @@ way to ask:
 
     version: "1.4.2"    ordered, human -- which revision, and how it compares
     digest:  "c894961136c7"   exact, machine-recomputable -- which bytes
-    origin:  "https://github.com/thrillmade/agent-skills"   where to check
+    origin:  "https://github.com/thrillmade/thrill-skills"   where to check
 
 `digest` used to be all there was, spelled `version:` -- a fixed point, but
 one that answers "same or different," never "newer." `origin` used to be a
@@ -132,7 +132,7 @@ ORIGIN_RE = re.compile(rb'(?m)^origin:[ \t]*"([^"\n]+)"[ \t]*$')
 # catalog, and this is the only thing in the file that tells whoever holds it
 # where the answer lives. It sits in the frontmatter, which the size gate does
 # not charge for, rather than in the body, which it does.
-HOME = "github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json"
+HOME = "github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json"
 COMMENT = f"# is your copy current? {HOME}"
 
 # The `origin:` field's one value, for every skill this catalog publishes --
@@ -141,7 +141,7 @@ COMMENT = f"# is your copy current? {HOME}"
 # is always THIS catalog, never the authoring repo. `skills_current.py`
 # already resolves a mirrored skill's verdict through this same index; origin
 # says so as a real field instead of leaving it implicit.
-ORIGIN = "https://github.com/thrillmade/agent-skills"
+ORIGIN = "https://github.com/thrillmade/thrill-skills"
 
 
 def _lf(raw: bytes) -> bytes:

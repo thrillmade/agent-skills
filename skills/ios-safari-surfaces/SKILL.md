@@ -1,7 +1,7 @@
 ---
 version: "1.0.1"
-digest: "d7c99a6a1d1d"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
-origin: "https://github.com/thrillmade/agent-skills"
+digest: "d7c99a6a1d1d"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/thrill-skills"
 name: ios-safari-surfaces
 description: |
   Use when a web page ships to Safari on iPhone and the browser's own surfaces misbehave — the address or tab bar shows the wrong colour, flips colour on scroll, or takes on a fixed header's or toast's colour; theme-color does nothing; a scroll lock, sheet, modal or scroll-to-top works on desktop but not on the phone, or the page reports scrollY 0 while the screen shows it scrolled; a full-bleed first screen is the wrong height or jumps as the bars move (svh, lvh, dvh, 100vh) — and when planning how to test any iPhone-Safari bug, since Responsive Design Mode and headless WebKit do not reproduce these. Covers iOS 26 and later, the WebKit bar-tint sampling rule, the screen-versus-page scroll desync, viewport units for a first screen, and the iOS Simulator as the test harness (xcrun simctl). Not for native iOS apps, not for Android Chrome's theme-color, and not for general responsive layout (composing-a-screen).

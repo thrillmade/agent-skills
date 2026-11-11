@@ -52,7 +52,7 @@ from datetime import datetime, timezone
 # --- Constants -------------------------------------------------------------
 
 # Consumer repos surveyed for subscription state. The catalog repo
-# (agent-skills) is intentionally absent — it is the source, not a consumer.
+# (thrill-skills) is intentionally absent — it is the source, not a consumer.
 CONSUMER_REPOS = (
     "clud-bug",
     "clud-bug-app",
@@ -65,7 +65,7 @@ CONSUMER_REPOS = (
 )
 
 ORG = "thrillmade"
-CATALOG_REPO = "agent-skills"
+CATALOG_REPO = "thrill-skills"
 CATALOG_DIR = "skills"  # read locally from the checkout cwd
 CATALOG_SOURCE = f"{ORG}/{CATALOG_REPO}"  # lock `source` value for catalog subs
 
@@ -418,7 +418,7 @@ def parse_lock_hashes(lock: object) -> tuple[list[dict], list[str]]:
 
     A subscription is drift-*checkable* iff, in addition to carrying a
     non-empty `computedHash` and a `skillPath` under the catalog dir, its
-    `source` equals `CATALOG_SOURCE` (`thrillmade/agent-skills`) — i.e. the
+    `source` equals `CATALOG_SOURCE` (`thrillmade/thrill-skills`) — i.e. the
     lock itself attributes the pin to this catalog. Three-way scoping:
 
       - `source == CATALOG_SOURCE`  -> checkable (appended to `checkable`).
@@ -427,7 +427,7 @@ def parse_lock_hashes(lock: object) -> tuple[list[dict], list[str]]:
         distinctly via `unscoped` rather than silently dropped or miscounted
         as drift-checkable.
       - any other non-matching `source` (a foreign lock source) -> excluded
-        entirely; it is not an agent-skills subscription at all, so it never
+        entirely; it is not a thrill-skills subscription at all, so it never
         enters catalog-subscription counting in either bucket.
 
     Entries without a stored hash, or whose skillPath isn't under the catalog
@@ -458,7 +458,7 @@ def parse_lock_hashes(lock: object) -> tuple[list[dict], list[str]]:
             unscoped.append(resolved_name)
             return
         if not (isinstance(src, str) and src == CATALOG_SOURCE):
-            # Foreign source — not an agent-skills subscription; excluded
+            # Foreign source — not a thrill-skills subscription; excluded
             # entirely from catalog-subscription counting (neither bucket).
             return
         out.append(

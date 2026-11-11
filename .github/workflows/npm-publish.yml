@@ -16,7 +16,7 @@ name: npm publish
 # to store, rotate, or leak. One-time setup on npmjs.com is required
 # before the first real publish (out of scope for this workflow file):
 #   npmjs.com → thrill-skills package → Settings → Publishing access
-#   → Trusted Publisher: thrillmade/agent-skills, workflow: npm-publish.yml,
+#   → Trusted Publisher: thrillmade/thrill-skills, workflow: npm-publish.yml,
 #     environment: blank.
 # `thrill-skills` has never been published, so that setting can't exist
 # yet — npm's package-creation flow lets you register a Trusted Publisher

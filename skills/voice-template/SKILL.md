@@ -1,7 +1,7 @@
 ---
-version: "1.0.1"
-digest: "5af48963998c"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
-origin: "https://github.com/thrillmade/agent-skills"
+version: "1.0.2"
+digest: "61e0306e7f65"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/thrill-skills"
 name: voice-template
 description: Template for one brand's voice guide - scope and precedence, who we are, three to five "X, not Y" traits with examples, a tone baseline, a tone map by situation, humour, person and pronouns, vocabulary, exceptions and owners, mechanics, before/after rewrites and how to check it. Copy to .claude/skills/voice-<brand>/SKILL.md, fill it in, and the writing skills apply it per defining-a-voice.
 kind: writing
@@ -11,7 +11,7 @@ applies_to:
 
 # Voice: <BRAND>
 
-How <BRAND> sounds, for anyone writing its interface, marketing or web copy. The writing skills find this file and apply it as [defining-a-voice](https://github.com/thrillmade/agent-skills/blob/main/skills/defining-a-voice/SKILL.md) describes.
+How <BRAND> sounds, for anyone writing its interface, marketing or web copy. The writing skills find this file and apply it as [defining-a-voice](https://github.com/thrillmade/thrill-skills/blob/main/skills/defining-a-voice/SKILL.md) describes.
 
 ## How to use this template
 
@@ -25,7 +25,7 @@ How <BRAND> sounds, for anyone writing its interface, marketing or web copy. The
 
 <What this guide governs: which products, surfaces and channels.>
 
-This guide sets tone. The generic clarity rules — [writing-interface-copy](https://github.com/thrillmade/agent-skills/blob/main/skills/writing-interface-copy/SKILL.md), [writing-marketing-copy](https://github.com/thrillmade/agent-skills/blob/main/skills/writing-marketing-copy/SKILL.md) and accessibility — hold regardless. This guide may tighten them, never loosen them; where it is silent, they apply.
+This guide sets tone. The generic clarity rules — [writing-interface-copy](https://github.com/thrillmade/thrill-skills/blob/main/skills/writing-interface-copy/SKILL.md), [writing-marketing-copy](https://github.com/thrillmade/thrill-skills/blob/main/skills/writing-marketing-copy/SKILL.md) and accessibility — hold regardless. This guide may tighten them, never loosen them; where it is silent, they apply.
 
 ## Who we are
 

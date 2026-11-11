@@ -1,7 +1,7 @@
 ---
-version: "1.0.2"
-digest: "f68272def8c6"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
-origin: "https://github.com/thrillmade/agent-skills"
+version: "1.0.3"
+digest: "ad31d9a4e927"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/thrill-skills"
 name: orchestrating-agent-delegation
 description: |
   Use when about to dispatch a subagent (or multiple) to execute work, when writing a prompt for another agent that will do the coding, when planning parallel work across agents, when structuring an adversarial review panel, or when a subagent reports "done" and you're about to trust its summary instead of the diff. Names the CTO-as-orchestrator model, the model-tiering table (haiku for exploration, sonnet for build + review + scoped fixes, opus for design agents and load-bearing architecture), the trust-but-verify discipline (verify every "done" against the diff, don't trust the agent's summary), refute-first adversarial reviewer prompts, the design→rule→build separation that prevents agents from silently picking architecture, and the "never delegate the 'should we?' question" rule. Cite when a prompt says "decide whether to do X" (smell — the orchestrator should decide already), when a review panel is prompted to grade rather than refute, when a single agent is asked to both design and build a non-trivial slice, or when a fix agent is dispatched per-finding instead of batched.
@@ -117,4 +117,4 @@ A dispatch names a **role** on disk at `.claude/agents/<name>.md` (SPEC §2.4), 
 
 ## Sources
 
-- Practitioner-derived from multi-agent slices run at the CTO layer, including the agent-skills skill-unification build (PR #136: 23-agent build/verify workflow run on this skill's model).
+- Practitioner-derived from multi-agent slices run at the CTO layer, including the thrill-skills skill-unification build (PR #136: 23-agent build/verify workflow run on this skill's model).

@@ -87,9 +87,9 @@ README = (
     "copy was edited locally. `version` and each row's `version` are the "
     "skill's own semver, null for anything published before that field "
     "existed. To check a whole repo at once, run "
-    "https://raw.githubusercontent.com/thrillmade/agent-skills/main/"
+    "https://raw.githubusercontent.com/thrillmade/thrill-skills/main/"
     ".github/scripts/skills_current.py -- stdlib only, no install. Update "
-    "with `npx skills add thrillmade/agent-skills --skill <slug>`. The "
+    "with `npx skills add thrillmade/thrill-skills --skill <slug>`. The "
     "`history` rows are not gated by CI and the `current` values are: see "
     "`verification` below."
 )

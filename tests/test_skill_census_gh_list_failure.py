@@ -113,7 +113,7 @@ if len(argv) >= 2 and argv[0] == "issue" and argv[1] == "create":
             i += 1
     new_num = os.environ.get("GH_NEW_ISSUE_NUM", "9999")
     log({"cmd": "create", "number": new_num, "title": title})
-    print(f"https://github.com/thrillmade/agent-skills/issues/{new_num}")
+    print(f"https://github.com/thrillmade/thrill-skills/issues/{new_num}")
     sys.exit(0)
 
 if len(argv) >= 2 and argv[0] == "issue" and argv[1] == "close":
@@ -191,7 +191,7 @@ def _run_file_issues(
         env["GH_LABEL_CENSUS_FAILS"] = "1" if label_census_fails else "0"
         env["GH_NEW_ISSUE_NUM"] = new_issue_num
         env["GH_TOKEN"] = "dummy-token"
-        env["GH_REPO"] = "thrillmade/agent-skills"
+        env["GH_REPO"] = "thrillmade/thrill-skills"
         env["CENSUS_DIR"] = str(census_dir)
         env["DRY_RUN"] = "false"
 
