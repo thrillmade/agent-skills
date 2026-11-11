@@ -2,7 +2,7 @@
 
 ## 2026-11-06 10:09 - Add the making-decision-artifacts skill: how a call that is the owner's reaches them as a page
 
-**Reasoning:** One of the studio's programs settled a house method for decision pages across a month of rulings and incidents (taste calls as pictures, one decision per screen, light beside dark, exact token names, the moves page printed from the comparison data, defects ruled and never asked); it lived only in one orchestrator's private notes, so every new orchestrator re-learned it by incident. The catalog is where a house method lives once.
+**Reasoning:** One program settled a house method for decision pages across many rulings and incidents (taste calls as pictures, one decision per screen, light beside dark, exact token names, the moves page printed from the comparison data, defects ruled and never asked); it lived only in one orchestrator's private notes, so every new orchestrator re-learned it by incident. The catalog is where a house method lives once.
 
 **Alternatives considered:** Keep it in a private handoff file only, where only that program's orchestrator reads it, Fold it into orchestrating-a-multi-agent-run, which would push that dispatcher past its byte cap and bury a method under a router
 
@@ -14,7 +14,7 @@
 
 ## 2026-11-06 12:49 - The moves page is pictures, a digest and one ask; the rows are linked
 
-**Reasoning:** The owner could not read a moves table of several hundred rows: a person judges a design system by looking, and the rows are the panel's reference. The section is rewritten to pictures from the real build at both tips, a digest under twenty lines whose counts sum to the comparison, and one reply word; the incident joins the anti-patterns; the body is trimmed under the 8,192-byte cap.
+**Reasoning:** The owner could not read the moves table, which was too long to read by hand: a person judges a design system by looking, and the rows are the panel's reference. The section is rewritten to pictures from the real build at both tips, a digest under twenty lines whose counts sum to the comparison, and one reply word; the incident joins the anti-patterns; the body is trimmed under the 8,192-byte cap.
 
 **Alternatives considered:** Keep the row table and add a summary above it
 

@@ -6,6 +6,8 @@ Why [making-decision-artifacts](../SKILL.md) holds what it holds: the research t
 - **Incident:** something that went wrong in practice, described by what failed and what the rule prevents.
 - **Specification or observation:** an external source with its URL and its true status, or a measurement, labelled with how far it reaches.
 
+Two entries are neither. A **catalog boundary** names the skill that owns a neighbouring question, and a **stated rule** is an instruction not yet backed by practice. Each says which it is.
+
 ## The opening paragraph
 
 - Taste calls reach the owner as rendered pictures, light beside dark, after the build, and how they are put is a matter for the working method, not for the design system. House ruling.
@@ -47,7 +49,7 @@ Why [making-decision-artifacts](../SKILL.md) holds what it holds: the research t
 ## Building, publishing, recording
 
 - One designer lane builds the page: house ruling, made because lanes splitting one surface go down different paths and the seams show. The catalog's owner of the rule is [orchestrating-agent-delegation](../../orchestrating-agent-delegation/SKILL.md); review and QA as separate lanes are owned by [orchestrating-elite-agent-qa](../../orchestrating-elite-agent-qa/SKILL.md). The lane builds from a script that computes every figure, and leaves out a candidate it cannot compute rather than typing one: house ruling, the same one that keeps every figure on a page read from the data.
-- The host's page contract: the publishing host's own constraints on a page it wraps. The explicit body and text-container colours come from an incident: a page set its text colour only on `html` under its own wrapper, the host's reset won, and dark mode showed black text.
+- The host's page contract: specification, the publishing host's own constraints on a page it wraps; it is the host's document, read when the page is built, so no URL is fixed here. The explicit body and text-container colours come from an incident: a page set its text colour only on `html` under its own wrapper, the host's reset won, and dark mode showed black text.
 - The colour-scheme media feature, `prefers-color-scheme`, is defined in [Media Queries Level 5](https://www.w3.org/TR/mediaqueries-5/#prefers-color-scheme), a W3C Working Draft: not a Recommendation, though browsers ship the feature.
 - The forced-mode check in Verification rests on a single observation, on one machine set to dark, in headless Chrome 157: an unforced render followed the machine's scheme, so an unforced dark check on a dark machine proves nothing; `--blink-settings=preferredColorScheme=0` forced dark and `=1` forced light. The check was planted both ways on a test page: with text colour only on `html` under a body reset, a paragraph read black in both forced modes (the check fires); with explicit colours on `body` and `p`, it read light in dark and dark in light (silent). Other browsers and versions are not measured.
 - Grep every hand-edited sentence after a lane rebuild: incident, in which a lane regenerated the page's prose and hand edits were lost.
@@ -56,4 +58,4 @@ Why [making-decision-artifacts](../SKILL.md) holds what it holds: the research t
 
 ## Anti-patterns
 
-Each is an incident named above, stated by its failure and its consequence: lettered text options (rule 1), the dense page (rules 2, 3 and 7), a defect asked as taste (the triage), building the sketch (the triage), a paraphrased name (rule 5), hand-written rows (the moves page), black text in dark mode (the page contract), a rebuild that reverts (Verification), a reference deleted as decided (the triage), merging unseen moves (the moves page), and the row table as the reading page (the moves page).
+Each is an incident named above, stated by its failure: lettered text options (rule 1), the dense page (rules 2, 3 and 7), a defect asked as taste (the triage), building the sketch (the triage), a paraphrased name (rule 5), hand-written rows (the moves page), black text in dark mode (the page contract), a rebuild that reverts (Verification), a reference deleted as decided (the triage), merging unseen moves (the moves page), and the row table as the reading page (the moves page).
