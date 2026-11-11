@@ -31,9 +31,16 @@ This project uses [logmind](https://logmind.dev). What counts as a decision, bra
 ## Development Commands
 
 ```bash
-python3 .github/scripts/validate_skills.py   # the skill gate — run it before you push
-pytest tests/ -q                             # the gates' own regression guard
-logmind log "…" -r "…" -a "…" -i "…"         # the commit primitive (see above)
+python3 .github/scripts/validate_skills.py              # the skill gate — run it before you push
+python3 .github/scripts/validate_agents.py              # the agent-role gate
+python3 .github/scripts/gen_skill_directory.py --check  # the generated directory skill is current
+python3 .github/scripts/gen_skill_versions.py --check   # every version-history row was published
+python3 .github/scripts/stamp_versions.py --check       # every version/digest/origin stamp matches
+python3 .github/scripts/check_prose_retention.py        # no undeclared prose removal
+logmind check-links                                     # every markdown link resolves
+logmind check-decisions                                 # 20+ changed non-markdown lines need a decision entry
+pytest tests/ -q                                        # the gates' own regression guard
+logmind log "…" -r "…" -a "…" -i "…"                    # the commit primitive (see above)
 ```
 
 The validator runs in about a second. The suite takes minutes: most of its wall clock is the
@@ -42,10 +49,51 @@ which each run the real suites in a subprocess once per mutation — that is wha
 guard can fail" a fact rather than a claim, and it is worth the wait. Run the fast subset while
 iterating —
 `pytest tests/ -q --ignore=tests/test_prose_retention_mutations.py --ignore=tests/test_skill_directory_mutations.py`
-— and the whole thing before you push. **Neither command is optional before opening a PR** — CI
-runs the same two, unconditionally. (No test count or duration is quoted here on purpose: a
+— and the whole thing before you push. **Neither the validator nor the suite is optional before opening a
+PR** — CI runs both, unconditionally. (No test count or duration is quoted here on purpose: a
 hand-kept number with no gate reads as true until one quietly isn't. Run it and read the
 output.)
+
+Each `--check` generator has a `--write` that repairs its own staleness; never hand-edit a
+stamp or the directory. `check_prose_retention.py` and `gen_skill_versions.py` read git history,
+not the working tree, so an agent that may not commit runs them in a scratch clone with its changes
+committed there; "0 changed" on a change that touched skills is a failed run. Locally
+`logmind check-decisions` reads only staged changes; CI runs the same rule on the PR diff,
+excluding `docs/` and every `*.md`.
+`logmind log` commits and stages the whole tree by default; an agent that may not commit drafts
+the entry with `logmind log --no-commit` and reports it.
+
+## Changing a skill here
+
+This catalog's own rules for writing a skill. The authoring craft lives in the `skill-smith`
+agent (`.claude/agents/skill-smith.md`), which is generic and obeys whatever repo it works in;
+this is what it finds here.
+
+- **Upstream.** This repo, `thrillmade/agent-skills`, is the origin every skill's `origin` field
+  names. A change to an installed copy is made here, by PR into `dev`, with the research behind
+  it in the PR body.
+- **Placement.** A new skill gets its row and family in `docs/placement-map.json` before it is
+  written; then `python3 .github/scripts/gen_skill_directory.py --write` regenerates
+  `finding-a-catalog-skill`. The README's catalog section owns why.
+- **House shape.** Re-measure it (`grep -h '^## ' skills/*/SKILL.md | sort | uniq -c | sort -rn`).
+  At the time of writing: `## When to use` / `## When NOT to use` / body / `## Verification` /
+  `## Cross-references` / `## Sources`, with `**REQUIRED BACKGROUND:** <skill>` marking a hard
+  dependency.
+- **Provenance.** Each skill's research trail is its `references/sources.md`, and `## Sources` is
+  one line linking it. The catalog is mid-migration from inline citation; a planned clean-up
+  converts the rest.
+- **Frontmatter.** `name` equals the directory name (`^[a-z][a-z0-9-]{0,62}$`); a `description`
+  saying when to reach for it; optional `kind` (`rule` | `writing` | `design`); optional
+  `applies_to` with `paths` globs and `extensions`. Never `review_mode` — removed from the schema;
+  only stale docs mention it. `version`, `digest` and `origin` are written by
+  `stamp_versions.py --write`. `validate_skills.py` owns the contract.
+- **Size.** The body cap is `SIZE_LIMIT` in `validate_skills.py`, which owns the argument; there
+  is no grandfather list and no exception path. The consumer that sets it is clud-bug, which
+  reads `SKILL.md` alone: `references/` appears nowhere in its source or templates, and its
+  prompt does `head -c $MAX_SKILL_BYTES`. Here, moving prose to `references/` takes it out of
+  review.
+- **Removing prose** from a `SKILL.md` needs a row in `docs/prose-removals.md`, or the retention
+  gate fails it (README, "Editing an existing skill").
 
 ## The `dev` branch
 
