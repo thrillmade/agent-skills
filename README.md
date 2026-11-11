@@ -40,7 +40,7 @@ The table below is the same list in long form — it has no byte cap, so it can 
 | [`unattended-operation`](skills/unattended-operation/SKILL.md) | Policy for a session a human explicitly handed over to run **unattended** (often called "night mode", but the trigger is the handover, never the clock) — the handover contract, the reversible-and-invisible boundary on action, "a scheduled wake is never consent", named hard stops, and the handback digest. Layers on [`session-heartbeat`](skills/session-heartbeat/SKILL.md). Not dark mode. |
 | [`curating-a-skill-catalog`](skills/curating-a-skill-catalog/SKILL.md) | The skill-census rubric — lifecycle states, the five verdict kinds with evidence standards, the top-5-plus-digest noise budget, and the human-editor gate. Applied weekly by the census workflow; recursive (the rubric censuses itself). |
 | [`token-frugal-tooling`](skills/token-frugal-tooling/SKILL.md) | Quick-reference for the org's token-frugal CLI conventions in repos running both logmind and clud-bug — the clud-bug quiet-mode env var, artifact defaults. Detail lives in the per-tool skills. |
-| [`skillforge`](skills/skillforge/SKILL.md) ✨ | **Superseded** ([#203](https://github.com/thrillmade/agent-skills/issues/203)) — skill authoring is now split three ways: `skill-creator` owns measurement, `superpowers:writing-skills` owns wording form, and the studio's `skill-smith` agent owns house rules. Kept unchanged during the migration window; new work should load the successors. **Vendored from [zakelfassi/skills-driven-development](https://github.com/zakelfassi/skills-driven-development) with attribution** — the canonical SkDD meta-skill. MIT, Zak El Fassi. |
+| [`skillforge`](skills/skillforge/SKILL.md) ✨ | **Superseded** ([#203](https://github.com/thrillmade/agent-skills/issues/203)) — skill authoring is now split three ways: `skill-creator` owns measurement, `superpowers:writing-skills` owns wording form, and the `skill-smith` agent owns the authoring craft, with this catalog's house rules in [AGENTS.md](AGENTS.md#changing-a-skill-here). Kept unchanged during the migration window; new work should load the successors. **Vendored from [zakelfassi/skills-driven-development](https://github.com/zakelfassi/skills-driven-development) with attribution** — the canonical SkDD meta-skill. MIT, Zak El Fassi. |
 
 ## Writing skills — one per kind of copy
 
@@ -204,6 +204,8 @@ Whichever pattern applies, prefer the **collection layout** (`skills/<name>/SKIL
 1. Create `skills/<name>/SKILL.md` with frontmatter (`name`, `description`).
 2. Add a row to the table above.
 3. Open a PR.
+
+The rest — placement, frontmatter, size, every gate — is in [AGENTS.md](AGENTS.md#changing-a-skill-here).
 
 ## Editing an existing skill
 
