@@ -296,3 +296,34 @@ def test_watchdog_lives_outside_the_census_failure_domain():
     assert census_triggers["schedule"] == [{"cron": "0 12 * * 1"}]
     assert int(env["MAX_AGE_DAYS"]) == 2 * 7
     assert "workflow-failure-key: skill-census" in text
+
+
+# --- notify-clud-bug targets the org's `dev`, not the other repo's default ---
+
+
+def _clud_bug_steps():
+    doc, _ = _load("notify-clud-bug.yml")
+    return doc["jobs"]["sync"]["steps"] if "sync" in doc["jobs"] else next(
+        j["steps"] for j in doc["jobs"].values() if any(
+            "thrillmade/clud-bug" in str(s.get("with", {}).get("repository", ""))
+            for s in j.get("steps", [])
+        )
+    )
+
+
+def test_clud_bug_sync_checks_out_dev():
+    # Omitting `ref:` checks out the default branch (`main`), which would cut
+    # the sync branch from the wrong base.
+    steps = [s for s in _clud_bug_steps()
+             if s.get("with", {}).get("repository") == "thrillmade/clud-bug"]
+    assert len(steps) == 1
+    assert steps[0]["with"].get("ref") == "dev"
+
+
+def test_clud_bug_sync_pr_targets_dev():
+    pr_steps = [s for s in _clud_bug_steps() if "gh pr create" in s.get("run", "")]
+    assert len(pr_steps) == 1
+    run = pr_steps[0]["run"]
+    m = re.search(r"gh pr create.*?--base\s+(\S+)", run, re.DOTALL)
+    assert m, "gh pr create names no --base"
+    assert m.group(1) == "dev"

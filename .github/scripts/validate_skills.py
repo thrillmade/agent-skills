@@ -88,8 +88,6 @@ FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---(?=\n|\Z)", re.DOTALL)
 # and never validated -- only the fields below are checked, and
 # only when present.
 NAME_SLUG_RE = re.compile(r"^[a-z][a-z0-9-]{0,62}$")
-# SPEC §1.10.1: `source: manual | logmind-derived | skills-sh | clud-bug-baseline`
-SOURCE_VALUES = {"manual", "logmind-derived", "skills-sh", "clud-bug-baseline"}
 # SPEC: `kind: rule | writing | design`
 KIND_VALUES = {"rule", "writing", "design"}
 
@@ -1043,12 +1041,9 @@ def run(root: Path) -> list[str]:
         # Unrecognised keys round-trip untouched (SPEC §2.1), so a stale
         # one is ignored rather than rejected.
 
-        source = meta.get("source")
-        if source is not None and source not in SOURCE_VALUES:
-            errors.append(
-                f"::error file={prefix}::`source: {source!r}` is not one of "
-                f"{sorted(SOURCE_VALUES)} (SPEC §1.10.1)"
-            )
+        # `source` is likewise not validated: the spec section that once
+        # enumerated its values no longer defines the field, so any value
+        # is an unknown key like any other and is tolerated.
 
         applies_to = meta.get("applies_to")
         if applies_to is not None:
