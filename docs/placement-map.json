@@ -258,7 +258,7 @@
       "authoring_home": "catalog",
       "distribution": "catalog-only",
       "subscribers": [],
-      "notes": "SUPERSEDED (#203) -- skill authoring split three ways: skill-creator owns measurement, superpowers:writing-skills owns wording form, the skill-smith agent owns house rules. Vendored, author: zakelfassi; kept unchanged during the migration window"
+      "notes": "SUPERSEDED (#203) -- skill authoring split three ways: skill-creator owns measurement, superpowers:writing-skills owns wording form, the skill-smith agent owns the authoring craft, and this catalog's house rules live in AGENTS.md. Vendored, author: zakelfassi; kept unchanged during the migration window"
     },
     "spacing-system": {
       "family": "design-primitives",
