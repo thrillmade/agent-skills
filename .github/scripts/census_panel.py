@@ -108,15 +108,22 @@ DIGEST_PROMPT_LIMIT = 20000
 SKILLS_CATALOG_DIR = "skills"  # cwd-relative, mirrors RUBRIC_PATH
 CATALOG_DESC_LIMIT = 400
 
-# READ-ONLY docket fetch. gh reads GH_TOKEN from the environment itself.
-GH_ISSUE_LIST_CMD = [
-    "gh", "issue", "list",
-    "-R", "thrillmade/thrill-skills",
-    "--state", "open",
-    "--label", "census",
-    "--json", "number,title,body,labels,updatedAt",
-    "--limit", "50",
-]
+# READ-ONLY docket fetch. gh reads GH_TOKEN from the environment itself. The
+# repo is the one this run belongs to (GITHUB_REPOSITORY), so a rename needs no
+# edit here; the literal is only the fallback for a local run.
+_SELF_REPO_FALLBACK = "thrillmade/thrill-skills"
+
+
+def gh_issue_list_cmd() -> list[str]:
+    repo = os.environ.get("GITHUB_REPOSITORY", "").strip() or _SELF_REPO_FALLBACK
+    return [
+        "gh", "issue", "list",
+        "-R", repo,
+        "--state", "open",
+        "--label", "census",
+        "--json", "number,title,body,labels,updatedAt",
+        "--limit", "50",
+    ]
 
 SYSTEM_PROMPT = """\
 You are the CENSUS PANEL — an adversarial reviewer for the thrillmade skill
@@ -299,7 +306,7 @@ def fetch_docket() -> tuple[list[dict], str | None]:
     failure returns ([], error_string) rather than aborting the panel."""
     try:
         proc = subprocess.run(
-            GH_ISSUE_LIST_CMD,
+            gh_issue_list_cmd(),
             capture_output=True,
             text=True,
             timeout=45,

@@ -13,10 +13,10 @@ PR's CI run, so this file is always coherent with current `main`.
 ---
 
 
-## 2026-11 (18 decisions)
+## 2026-11 (19 decisions)
 
-- **2026-11-11** — Three follow-ups: the ungated-row count is computed from the rows, a lock sourced under the catalog's former name stays drift-checkable, and the decision-artifacts description describes the page its body describes *(fix/followups-308-311-312)* — [decisions-branches/fix__followups-308-311-312.md](decisions-branches/fix__followups-308-311-312.md)
-- *... 16 more decisions ...*
+- **2026-11-11** — The census survives a stale repository name, names what it could not read, and raises an alarm when it stops *(fix/census-fails-loudly-313)* — [decisions-branches/fix__census-fails-loudly-313.md](decisions-branches/fix__census-fails-loudly-313.md)
+- *... 17 more decisions ...*
 - **2026-11-02** — Design skills: thrill-design house principles, motion-continuity, ios-safari-surfaces; designing-elite-ui and orchestrating-elite-agent-qa amended *(feat/design-skills-nov)* — [decisions-branches/feat__design-skills-nov.md](decisions-branches/feat__design-skills-nov.md)
 
 ## 2026-10

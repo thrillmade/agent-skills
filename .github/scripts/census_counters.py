@@ -17,23 +17,42 @@ against the local checkout, see `_algo_proven_for_lineage`), never to shell
 out to anything network- or input-derived.
 
 Inputs (env):
-  STEWARD_TOKEN   required — GitHub App installation token with read access
-                  to the thrillmade org. Missing => exit 1 (infra-fatal).
+  STEWARD_TOKEN   required — GitHub App installation token scoped to the
+                  list `--resolve` wrote. Missing => exit 1 (infra-fatal).
+  GITHUB_REPOSITORY  this repository's own `owner/name` (Actions sets it).
+                  Unset only in a local run, which falls back to the literal.
   OUT_DIR         optional — output directory. Default: $RUNNER_TEMP/census.
   GITHUB_API_URL  optional — API base (Actions sets it). Default public API.
 
 Outputs (written to OUT_DIR):
-  census.json     machine-readable snapshot consumed by census_panel.py.
+  census.json     machine-readable snapshot consumed by census_panel.py,
+                  including `coverage` (how many consumers were read).
   digest.md       deterministic human-readable rendering (the Mode-B-optional
                   deliverable — always filed even when the panel is off).
 
+`--resolve` mode (env LOOKUP_TOKEN, a metadata-only installation token, plus
+GITHUB_REPOSITORY and GITHUB_OUTPUT) runs before the steward token exists:
+it writes `repositories=<this repo>,<each visible consumer>` for the token
+step, so one stale name costs a warning rather than the whole run (#313).
+
 Failure posture:
+  - A repo counts as READ only if it answers under the name asked for. The
+    repository itself is checked before its contents: a 404 (renamed,
+    deleted, or not visible to the token — GitHub answers all three the same)
+    or an answer under another name (a rename behind a redirect) is NOT READ,
+    with a reason, and the run is reported `partial`.
   - A single repo's fetch failing (network, 5xx, malformed lock) never kills
     the run — the error is collected into that repo's `error` field and
-    surfaced in both census.json and the digest. Never silently dropped.
-  - HTTP 404 on a contents path means "repo doesn't carry that file" and is
-    tolerated as None (most repos have no skills-lock.json / .clud-bug.json).
-  - exit 1 is reserved for infra-fatal conditions (missing STEWARD_TOKEN).
+    surfaced in both census.json and the digest. Never silently dropped. That
+    repo is NOT READ too.
+  - HTTP 404 on a contents path of a repo that WAS read means "repo doesn't
+    carry that file" and is tolerated as None (most repos have no
+    skills-lock.json / .clud-bug.json).
+  - exit 1 is reserved for infra-fatal conditions: missing STEWARD_TOKEN, or
+    zero consumers read (artifacts are still written, then `::error::census
+    examined nothing`). In `--resolve`: a failed lookup, this repo not
+    visible, or no consumer visible — and then NO output is written, because
+    an empty `repositories` input widens the token to the whole installation.
 """
 
 from __future__ import annotations
@@ -51,8 +70,10 @@ from datetime import datetime, timezone
 
 # --- Constants -------------------------------------------------------------
 
-# Consumer repos surveyed for subscription state. The catalog repo
-# (thrill-skills) is intentionally absent — it is the source, not a consumer.
+# Consumer repos surveyed for subscription state — the ONLY list: the
+# workflow's token scope is computed from it at run time by `--resolve`. The
+# catalog repo (this one) is intentionally absent — it is the source, not a
+# consumer.
 CONSUMER_REPOS = (
     "clud-bug",
     "clud-bug-app",
@@ -65,9 +86,19 @@ CONSUMER_REPOS = (
 )
 
 ORG = "thrillmade"
-CATALOG_REPO = "thrill-skills"
+# Fallback ONLY for a local run with no GITHUB_REPOSITORY. In Actions this
+# repo's name comes from the run context, so renaming it needs no edit here —
+# a stale literal of exactly this kind is what stopped the census in #313.
+_SELF_REPO_FALLBACK = f"{ORG}/thrill-skills"
+
+
+def self_repository() -> str:
+    """This repository's `owner/name`, from the run context."""
+    return os.environ.get("GITHUB_REPOSITORY", "").strip() or _SELF_REPO_FALLBACK
+
+
 CATALOG_DIR = "skills"  # read locally from the checkout cwd
-CATALOG_SOURCE = f"{ORG}/{CATALOG_REPO}"  # lock `source` value for catalog subs
+CATALOG_SOURCE = self_repository()  # lock `source` value for catalog subs
 # The catalog's former repo name. Every subscriber lock written before the
 # rename says this, and GitHub redirects it; a repo of that name will never be
 # recreated, so it is an alias for good — not dead code, do not delete it.
@@ -565,11 +596,65 @@ def _dedupe(items: list[str]) -> list[str]:
 # --- Per-repo survey -------------------------------------------------------
 
 
+NOT_FOUND_REASON = (
+    "the repository does not answer under this name (renamed, deleted, "
+    "transferred, or not visible to the census App installation)"
+)
+# Deliberately names neither the redirect's target nor anything about it:
+# this repo, its Actions logs and its digest issues are public, and the
+# target may be private.
+RENAMED_REASON = (
+    "the repository answers under a different name (renamed or transferred; "
+    "GitHub redirects the old name); update CONSUMER_REPOS in "
+    ".github/scripts/census_counters.py"
+)
+
+
+def _unread_reason(repo: str, token: str) -> str | None:
+    """Check the repository itself before reading its contents. None means it
+    answered under the name asked for; otherwise the NOT READ reason.
+
+    Without this, a repo the token cannot see read as "carries no lock file":
+    GitHub answers 404 for both, so an unreadable consumer was counted as read
+    with zero subscriptions. And urllib follows a rename's redirect, so a
+    renamed consumer would have been read under whatever its old name now
+    points at.
+    """
+    payload = _request(f"repos/{ORG}/{repo}", token)
+    if payload is None:
+        return NOT_FOUND_REASON
+    if not isinstance(payload, dict):
+        raise RuntimeError(f"repos/{ORG}/{repo} returned a {type(payload).__name__}, not a repository")
+    full_name = payload.get("full_name")
+    if not isinstance(full_name, str) or full_name.lower() != f"{ORG}/{repo}".lower():
+        return RENAMED_REASON
+    return None
+
+
+def _empty_record() -> dict:
+    return {
+        "read": False,
+        "subscribed": [],
+        "untracked": [],
+        "local": [],
+        "lock_subscriptions": [],
+        "unscoped_subscriptions": [],
+        "usage": {},
+        "usage_rejected": [],
+    }
+
+
 def survey_repo(repo: str, token: str) -> dict:
-    """Return the per-repo census record. On any non-404 fetch/parse failure,
-    returns a record carrying an `error` string instead of crashing the run.
+    """Return the per-repo census record, with `read` True only if the repo
+    answered under its own name and every fetch succeeded. An unreadable repo
+    carries `not_read` (a reason); any other fetch/parse failure carries an
+    `error` string instead of crashing the run.
     """
     try:
+        reason = _unread_reason(repo, token)
+        if reason is not None:
+            return {**_empty_record(), "not_read": reason}
+
         lock = _get_file_json(repo, LOCK_PATH, token)
         lock_names, _lock_sources = parse_lock(lock) if lock is not None else ([], [])
         lock_subscriptions, unscoped_subscriptions = (
@@ -603,6 +688,7 @@ def survey_repo(repo: str, token: str) -> dict:
 
         # untracked == local_dirs: present on disk, in neither manifest.
         return {
+            "read": True,
             "subscribed": sorted(subscribed),
             "untracked": list(local_dirs),
             "local": list(local_dirs),
@@ -612,16 +698,30 @@ def survey_repo(repo: str, token: str) -> dict:
             "usage_rejected": usage_rejected,
         }
     except Exception as exc:  # noqa: BLE001 — collect, never die on one repo.
-        return {
-            "subscribed": [],
-            "untracked": [],
-            "local": [],
-            "lock_subscriptions": [],
-            "unscoped_subscriptions": [],
-            "usage": {},
-            "usage_rejected": [],
-            "error": str(exc),
-        }
+        return {**_empty_record(), "error": str(exc)}
+
+
+def compute_coverage(repos: dict[str, dict]) -> dict:
+    """How many consumers this census actually read, and why each other one
+    was not. A record without `read: True` is never counted as read."""
+    not_read: dict[str, str] = {}
+    for name in CONSUMER_REPOS:
+        record = repos.get(name, {})
+        if record.get("read") is True:
+            continue
+        if record.get("not_read"):
+            not_read[name] = record["not_read"]
+        elif record.get("error"):
+            not_read[name] = f"error: {record['error']}"
+        else:
+            not_read[name] = "not surveyed"
+    consumers = len(CONSUMER_REPOS)
+    return {
+        "consumers": consumers,
+        "read": consumers - len(not_read),
+        "complete": not not_read,
+        "not_read": not_read,
+    }
 
 
 # --- Org-wide signals ------------------------------------------------------
@@ -966,7 +1066,7 @@ def survey_docket(token: str, now: datetime) -> dict:
     """
     try:
         payload = _request(
-            f"repos/{ORG}/{CATALOG_REPO}/issues"
+            f"repos/{self_repository()}/issues"
             f"?labels=census&state=open&per_page=100",
             token,
         )
@@ -1031,8 +1131,26 @@ def render_digest(census: dict) -> str:
     """Deterministic markdown rendering of the census snapshot."""
     signals = census["signals"]
     lines: list[str] = []
+    # The title line stays exactly this: the workflow closes the previous
+    # digest by matching its issue title, and the partial banner below must
+    # not move or reword it.
     lines.append(f"# Skill census digest — {census['cycle']}")
     lines.append("")
+
+    # A partial census opens by saying so, before any number a reader might
+    # take as covering every consumer.
+    coverage = census.get("coverage")
+    if coverage and not coverage.get("complete", True):
+        not_read = coverage.get("not_read", {})
+        named = "; ".join(f"`{name}` ({reason})" for name, reason in not_read.items())
+        lead = "Census examined nothing" if coverage["read"] == 0 else "Partial census"
+        lines.append(
+            f"> **{lead} — read {coverage['read']} of {coverage['consumers']} consumer "
+            f"repositories.** Not read: {named}. Every count below covers only the "
+            "repositories that were read."
+        )
+        lines.append("")
+
     lines.append(f"Generated {census['generated_at']} (Mode A — deterministic counters).")
     lines.append("")
 
@@ -1044,7 +1162,10 @@ def render_digest(census: dict) -> str:
     for name in CONSUMER_REPOS:
         record = census["repos"].get(name, {})
         if record.get("error"):
-            lines.append(f"| `{name}` | — | — | ⚠️ error: {record['error']} |")
+            lines.append(f"| `{name}` | — | — | ⚠️ not read — error: {record['error']} |")
+            continue
+        if record.get("not_read"):
+            lines.append(f"| `{name}` | — | — | ⚠️ not read — {record['not_read']} |")
             continue
         subscribed = record.get("subscribed", [])
         untracked = record.get("untracked", [])
@@ -1317,10 +1438,12 @@ def main() -> int:
         read_placement_map(), repos
     )
     stale_docket = survey_docket(token, now)
+    coverage = compute_coverage(repos)
 
     census = {
         "cycle": _cycle_tag(now),
         "generated_at": now.isoformat(),
+        "coverage": coverage,
         "repos": repos,
         "catalog": catalog,
         "signals": signals,
@@ -1335,18 +1458,41 @@ def main() -> int:
     with open(digest_path, "w", encoding="utf-8") as fh:
         fh.write(render_digest(census))
 
-    # One-line ok summary to stdout (matches the org's `ok <k=v>` house style).
+    # One warning per consumer not read, naming it — a partial census is not
+    # a failure (the run stays green), but it must not read as a full one.
+    for name, reason in coverage["not_read"].items():
+        print(f"::warning::{name} NOT READ by the census: {reason}")
+
+    if coverage["read"] == 0:
+        # Artifacts are already written above, so the run can be inspected;
+        # the non-zero exit keeps File issues from filing an empty digest.
+        print(
+            f"::error::census examined nothing: 0 of {coverage['consumers']} consumer "
+            f"repositories read (not read: {', '.join(coverage['not_read'])}). "
+            "See the warnings above for each reason."
+        )
+        return 1
+
+    # One-line summary to stdout (the org's `ok <k=v>` house style). `ok` only
+    # when every consumer was read; otherwise `partial`, so the line itself
+    # says the counts are incomplete.
     error_repos = len(signals["per_repo_errors"])
     drift_recs = signals["subscription_drift"]
     drift_count = sum(1 for r in drift_recs if r["status"] == "drift")
     indeterminate_count = sum(1 for r in drift_recs if r["status"] == "indeterminate")
     unscoped_count = sum(1 for r in drift_recs if r["status"] == "unscoped")
     usage_rejected_count = signals["usage"].get("rejected_count", 0)
+    status = "ok" if coverage["complete"] else "partial"
+    not_read_field = (
+        f"not_read={','.join(coverage['not_read'])} " if coverage["not_read"] else ""
+    )
     print(
-        "ok "
+        f"{status} "
         f"cycle={census['cycle']} "
         f"catalog={len(catalog)} "
         f"repos={len(repos)} "
+        f"repos_read={coverage['read']}/{coverage['consumers']} "
+        f"{not_read_field}"
         f"repo_errors={error_repos} "
         f"convergent={len(signals['convergent_local'])} "
         f"unsubscribed={len(signals['unsubscribed_catalog_skills'])} "
@@ -1360,6 +1506,99 @@ def main() -> int:
         f"stale_docket={stale_docket.get('stale_count', 0)} "
         f"out={out_dir}"
     )
+    return 0
+
+
+_INSTALLATION_PAGE_CAP = 50  # 5,000 repositories; beyond that, fail loudly
+
+
+def _installation_repositories(token: str) -> list[str]:
+    """Every `full_name` the App installation can see, all pages. The result
+    contains private names: it is compared against, never printed."""
+    names: list[str] = []
+    for page in range(1, _INSTALLATION_PAGE_CAP + 1):
+        path = f"installation/repositories?per_page=100&page={page}"
+        payload = _request(path, token)
+        if not isinstance(payload, dict) or not isinstance(payload.get("repositories"), list):
+            raise RuntimeError(f"unexpected answer on {path}")
+        batch = payload["repositories"]
+        names += [
+            r["full_name"]
+            for r in batch
+            if isinstance(r, dict) and isinstance(r.get("full_name"), str)
+        ]
+        total = payload.get("total_count")
+        if not batch:
+            return names
+        if isinstance(total, int):
+            if len(names) >= total:
+                return names
+        elif len(batch) < 100:
+            return names
+    raise RuntimeError(f"installation listing exceeded {_INSTALLATION_PAGE_CAP} pages")
+
+
+def resolve() -> int:
+    """Write the steward token's repository list to GITHUB_OUTPUT: this repo,
+    then every consumer the App installation can see.
+
+    The token is requested for a list of names, and GitHub refuses the whole
+    request (HTTP 422) if one does not resolve — one renamed consumer stopped
+    the census four Mondays running (#313). Here a consumer that is not
+    visible costs one warning and is reported NOT READ by the counters.
+
+    NEVER writes an empty list. create-github-app-token reads an empty
+    `repositories` input together with `owner` as "every repository the App
+    can see", so an empty output would silently widen the steward token to the
+    whole installation. Every path that could leave the list without this
+    repo or without a consumer exits 1 having written nothing.
+    """
+    self_repo = self_repository()
+    token = os.environ.get("LOOKUP_TOKEN", "").strip()
+    if not token:
+        print("::error::LOOKUP_TOKEN is empty — cannot look up which repositories the census can read; the census examined nothing.")
+        return 1
+    try:
+        visible = {name.lower() for name in _installation_repositories(token)}
+    except RuntimeError as exc:
+        print(
+            "::error::could not list the repositories the census App installation can see "
+            f"({exc}); the census examined nothing."
+        )
+        return 1
+
+    if self_repo.lower() not in visible:
+        print(
+            f"::error::{self_repo} (this repository) is not visible to the census App "
+            "installation, so the census has nowhere to file; the census examined nothing."
+        )
+        return 1
+
+    wanted = [f"{ORG}/{name}" for name in CONSUMER_REPOS]
+    found = [name for name in wanted if name.lower() in visible]
+    for name in wanted:
+        if name not in found:
+            print(
+                f"::warning::{name} is not visible to the census App installation "
+                "(renamed, deleted, transferred or not installed); it will be reported "
+                "as NOT READ. If it was renamed, update CONSUMER_REPOS in "
+                ".github/scripts/census_counters.py."
+            )
+    if not found:
+        print(
+            f"::error::no consumer repository is visible to the census App installation "
+            f"(0 of {len(wanted)}); the census examined nothing."
+        )
+        return 1
+
+    line = "repositories=" + ",".join([self_repo] + found)
+    output = os.environ.get("GITHUB_OUTPUT", "").strip()
+    if output:
+        with open(output, "a", encoding="utf-8") as fh:
+            fh.write(line + "\n")
+    else:
+        print(line)  # a local run: no step output to write to
+    print(f"ok resolved repositories={1 + len(found)} consumers_visible={len(found)}/{len(wanted)}")
     return 0
 
 
@@ -1488,4 +1727,6 @@ def local_selftest(argv: list[str]) -> int:
 if __name__ == "__main__":
     if "--local-selftest" in sys.argv:
         sys.exit(local_selftest(sys.argv[1:]))
+    if "--resolve" in sys.argv:
+        sys.exit(resolve())
     sys.exit(main())

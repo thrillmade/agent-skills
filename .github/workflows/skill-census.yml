@@ -14,11 +14,22 @@ name: skill-census
 #     JUDGMENT; filing those verdicts as issues is the FILING step below —
 #     dry_run suppresses filing, never judgment.
 #
-# Auth: the thrillmade-orchestrator App installation token (all-install scope,
-# minted per-run) reads consumer repos across the org and files issues here.
+# Auth: two thrillmade-orchestrator App installation tokens, minted per run.
+# A metadata-only lookup token lets `census_counters.py --resolve` check which
+# repositories the installation can see; the steward token is then scoped to
+# exactly that list (this repository plus every visible consumer in
+# CONSUMER_REPOS, the only list) and reads the consumers and files issues
+# here. A consumer that cannot be seen costs a warning and is reported NOT
+# READ — it no longer fails the token request for every repository (#313).
 # Requires the org secrets THRILLMADE_ORCHESTRATOR_APP_ID +
-# THRILLMADE_ORCHESTRATOR_PRIVATE_KEY to be visible to thrill-skills — the
+# THRILLMADE_ORCHESTRATOR_PRIVATE_KEY to be visible to this repository — the
 # secret-guard step fails loudly with remediation if they are not.
+#
+# Alarms: the `alarm` job files (or comments on) one "Scheduled workflow
+# failing: skill-census" issue when a scheduled run does not succeed, and
+# census-watchdog.yml files into the same issue when no scheduled run has
+# succeeded for two weekly cadences — which also catches a census that never
+# started. This repo's own name comes from the run context everywhere.
 #
 # Idempotency: one digest issue per ISO-week cycle (commented on re-run, not
 # duplicated); every OTHER open digest is closed as superseded once this
@@ -49,7 +60,9 @@ permissions:
   # inputs and so inherits the installation's own permissions (Issues:
   # read/write since 2026-07-17, #183) — this block does not govern it.
   # Widen this only if a future step goes back to github.token for
-  # something that needs it.
+  # something that needs it. The `alarm` job is the one exception and
+  # carries its own job-level `issues: write`, so the census job never holds
+  # it.
   contents: read
 
 jobs:
@@ -71,51 +84,77 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           set -euo pipefail
+          SELF_NAME="${GITHUB_REPOSITORY#*/}"
           missing=0
           if [ -z "${ORCH_APP_ID:-}" ]; then
-            echo "::error::THRILLMADE_ORCHESTRATOR_APP_ID is empty. Remediation: extend org-secret visibility to thrill-skills (org Settings -> Secrets and variables -> Actions -> the secret -> Repository access -> add thrill-skills)."
+            echo "::error::THRILLMADE_ORCHESTRATOR_APP_ID is empty. Remediation: extend org-secret visibility to ${SELF_NAME} (org Settings -> Secrets and variables -> Actions -> the secret -> Repository access -> add ${SELF_NAME})."
             missing=1
           fi
           if [ -z "${ORCH_PRIVATE_KEY:-}" ]; then
-            echo "::error::THRILLMADE_ORCHESTRATOR_PRIVATE_KEY is empty. Remediation: extend org-secret visibility to thrill-skills (org Settings -> Secrets and variables -> Actions -> the secret -> Repository access -> add thrill-skills)."
+            echo "::error::THRILLMADE_ORCHESTRATOR_PRIVATE_KEY is empty. Remediation: extend org-secret visibility to ${SELF_NAME} (org Settings -> Secrets and variables -> Actions -> the secret -> Repository access -> add ${SELF_NAME})."
             missing=1
           fi
           if [ "$missing" -ne 0 ]; then
             exit 1
           fi
           if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
-            echo "::warning::ANTHROPIC_API_KEY is empty — degrading to Mode B (deterministic digest only, no LLM panel). Extend the ANTHROPIC_API_KEY org secret to thrill-skills to enable verdicts."
+            echo "::warning::ANTHROPIC_API_KEY is empty — degrading to Mode B (deterministic digest only, no LLM panel). Extend the ANTHROPIC_API_KEY org secret to ${SELF_NAME} to enable verdicts."
             echo "panel_enabled=false" >> "$GITHUB_OUTPUT"
           else
             echo "panel_enabled=true" >> "$GITHUB_OUTPUT"
           fi
 
-      # Scoped to the consumer repos census_counters.py reads cross-repo
-      # (STEWARD_TOKEN), plus thrill-skills itself. The App has held Issues:
-      # read/write since 2026-07-17 (#183) — the panel and File issues steps
-      # below now file under this token, as the steward identity, so
-      # thrill-skills must be in scope here or those steps have nothing to
-      # write with.
-      - name: Mint steward App token
-        id: app_token
+      # Names are looked up before the steward token is requested: GitHub
+      # refuses a token request outright (HTTP 422) if one listed name does
+      # not resolve, and one renamed consumer stopped the census four Mondays
+      # running that way (#313). This token is limited to metadata read and is
+      # used for nothing but listing what the installation can see. No
+      # `repositories:` here on purpose — the listing must cover the whole
+      # installation to tell a missing name from a present one. The listing
+      # contains private names and is never printed.
+      - name: Mint repository-lookup token (metadata only)
+        id: lookup_token
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3
         with:
           app-id: ${{ secrets.THRILLMADE_ORCHESTRATOR_APP_ID }}
           private-key: ${{ secrets.THRILLMADE_ORCHESTRATOR_PRIVATE_KEY }}
           owner: thrillmade
-          repositories: |
-            thrill-skills
-            clud-bug
-            clud-bug-app
-            logmind
-            udts
-            protocol
-            reporulez
-            rezgen
-            skdd
+          permission-metadata: read
+
+      # Writes `repositories=<this repo>,<each visible consumer>` from
+      # CONSUMER_REPOS (the only list). A consumer the installation cannot see
+      # gets one ::warning:: and is reported NOT READ by the counters. Exits 1
+      # with NO output if this repo or every consumer is invisible.
+      - name: Resolve census repositories
+        id: resolve
+        env:
+          LOOKUP_TOKEN: ${{ steps.lookup_token.outputs.token }}
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/census_counters.py --resolve
+
+      # Scoped to exactly the resolved list. The App has held Issues:
+      # read/write since 2026-07-17 (#183) — the panel and File issues steps
+      # below file under this token, as the steward identity, which is why
+      # this repository leads the list. The `if:` is belt and braces on top of
+      # --resolve never writing an empty list: an EMPTY `repositories` input
+      # together with `owner` makes create-github-app-token mint a token for
+      # every repository the App can see.
+      - name: Mint steward App token
+        id: app_token
+        if: ${{ steps.resolve.outputs.repositories != '' }}
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3
+        with:
+          app-id: ${{ secrets.THRILLMADE_ORCHESTRATOR_APP_ID }}
+          private-key: ${{ secrets.THRILLMADE_ORCHESTRATOR_PRIVATE_KEY }}
+          owner: thrillmade
+          repositories: ${{ steps.resolve.outputs.repositories }}
 
       # Mode A — deterministic counters. Stdlib only; runs on the bare runner
-      # (no setup-python / pip) before the panel step installs anything.
+      # (no setup-python / pip) before the panel step installs anything. A
+      # consumer it cannot read under its own name is named in a ::warning::
+      # and at the top of the digest, and the summary line says `partial`;
+      # the step fails only when it read no consumer at all.
       - name: Census counters (Mode A)
         id: counters
         env:
@@ -147,11 +186,11 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           CENSUS_DIR: ${{ runner.temp }}/census
-          # Reads the open `census` docket via `gh issue list` in THIS repo,
-          # under the steward App identity. The App has held Issues:
-          # read/write since 2026-07-17 (#183) — the blocker was never a
-          # missing grant, it was this token's repo scope omitting
-          # thrill-skills, which the mint step above now fixes.
+          # Reads the open `census` docket via `gh issue list` in THIS repo
+          # (GITHUB_REPOSITORY), under the steward App identity. The App has
+          # held Issues: read/write since 2026-07-17 (#183) — the blocker was
+          # never a missing grant, it was this token's repo scope omitting
+          # this repository, which the resolved list above always leads with.
           GH_TOKEN: ${{ steps.app_token.outputs.token }}
         run: |
           set -euo pipefail
@@ -168,9 +207,9 @@ jobs:
         env:
           # Files under the steward App identity, not github-actions[bot].
           # The App has held Issues: read/write since 2026-07-17 (#183); this
-          # is the same token minted above, now scoped to thrill-skills.
+          # is the same token minted above, scoped to include this repository.
           GH_TOKEN: ${{ steps.app_token.outputs.token }}
-          GH_REPO: thrillmade/thrill-skills
+          GH_REPO: ${{ github.repository }}
           CENSUS_DIR: ${{ runner.temp }}/census
           DRY_RUN: ${{ inputs.dry_run }}
         run: |
@@ -381,11 +420,19 @@ jobs:
             # marker as a comment rather than in the body — search both so
             # dedup works for those as well as for every issue this workflow
             # creates from here on (which embeds the marker in the body).
+            #
+            # A FAILED lookup is not "nothing filed" (#264): read that way it
+            # falls through to `gh issue create` and re-files a verdict that
+            # is already open. So a failure on either lookup holds the verdict
+            # back this cycle, with a warning naming it — the panel proposes
+            # the same census_key again next cycle.
+            LOOKUP_FAILED=""
             KEY_MATCH=""
             if [ -n "$V_KEY" ]; then
               KEY_MATCH=$(gh issue list --state open \
                 --search "\"<!-- census-key: ${V_KEY} -->\" in:body,comments" \
-                --json number 2>/dev/null | jq -r '.[0].number // empty') || KEY_MATCH=""
+                --json number 2>/dev/null | jq -r '.[0].number // empty') \
+                || { KEY_MATCH=""; LOOKUP_FAILED="the census_key lookup (census_key=${V_KEY})"; }
             fi
 
             if [ -n "$KEY_MATCH" ]; then
@@ -407,9 +454,24 @@ jobs:
             # Fallback: no census_key (or no match) — exact-title dedup, same
             # as before, so a verdict never double-files within one title's
             # lifetime even without a usable key.
-            EXISTS=$(gh issue list --state open --search "${V_TITLE} in:title" \
-              --json number,title 2>/dev/null \
-              | jq -r --arg t "$V_TITLE" 'map(select(.title == $t)) | .[0].number // empty') || EXISTS=""
+            EXISTS=""
+            if [ -z "$LOOKUP_FAILED" ]; then
+              EXISTS=$(gh issue list --state open --search "${V_TITLE} in:title" \
+                --json number,title 2>/dev/null \
+                | jq -r --arg t "$V_TITLE" 'map(select(.title == $t)) | .[0].number // empty') \
+                || { EXISTS=""; LOOKUP_FAILED="the exact-title lookup"; }
+            fi
+
+            if [ -n "$LOOKUP_FAILED" ]; then
+              echo "::warning::gh issue list failed during ${LOOKUP_FAILED} for verdict '${V_TITLE}' — held back this cycle rather than risk filing a duplicate of an issue that is already open."
+              if [ "$DRY_RUN" = "true" ]; then
+                echo "=== DRY-RUN: verdict $((i + 1))/${FILE_N} ==="
+                echo "Would HOLD BACK (lookup failed): ${V_TITLE}"
+              fi
+              rm -f "$V_BODY_FILE"
+              i=$((i + 1))
+              continue
+            fi
 
             if [ "$DRY_RUN" = "true" ]; then
               echo "=== DRY-RUN: verdict $((i + 1))/${FILE_N} ==="
@@ -445,3 +507,64 @@ jobs:
             ${{ runner.temp }}/census/panel_failed.marker
           if-no-files-found: ignore
           retention-days: 30
+
+  # The census failed four scheduled Mondays running and nobody noticed: it is
+  # the thing that files issues, so a census that stops files nothing (#313).
+  # This job is outside the census job's failure domain only as far as a job
+  # can be — it runs on github.token, with its own `issues: write`, and needs
+  # none of the App secrets the census needs. It cannot catch a census that
+  # never started (disabled schedule, broken YAML); census-watchdog.yml does,
+  # and files into this same issue. Same pattern as logmind-self-update.yml's
+  # "Notify on failure": one issue per workflow, found by its marker, then
+  # commented on rather than re-filed. Scheduled runs only — a failed manual
+  # run already has someone watching it.
+  alarm:
+    needs: census
+    if: ${{ always() && github.event_name == 'schedule' && needs.census.result != 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: Notify on failure
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          CENSUS_RESULT: ${{ needs.census.result }}
+        run: |
+          set -euo pipefail
+          MARKER="<!-- workflow-failure-key: skill-census -->"
+          TITLE="Scheduled workflow failing: skill-census"
+          RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+
+          gh label create automation-failure --color B60205 --force >/dev/null 2>&1 || true
+
+          # AUTHOR FILTER, NOT OPTIONAL. `--search` matches any issue whose body
+          # carries the marker, and anyone can open an issue containing it. Without
+          # this filter an outsider redirects every future failure notice onto an
+          # issue they control, silently defeating the visibility this step exists
+          # to provide. Only a workflow in THIS repo can author as github-actions,
+          # and changing a workflow requires a merged PR through the gate. A failed
+          # lookup files a new issue: a duplicate alarm beats a silent one.
+          EXISTING=$(gh issue list --state open --search "\"${MARKER}\" in:body,comments" \
+            --json number,author 2>/dev/null \
+            | jq -r '[.[] | select(.author.is_bot == true and (.author.login | test("^(app/)?github-actions$")))][0].number // empty') \
+            || { EXISTING=""; echo "::warning::gh issue list failed while looking for an open skill-census failure issue — filing a new one."; }
+
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" --body "Still failing as of $(date -u +%Y-%m-%dT%H:%MZ) (census job: ${CENSUS_RESULT}): ${RUN_URL}"
+            echo "::notice::Commented on existing failure issue #${EXISTING}."
+          else
+            BODY_FILE="$(mktemp)"
+            {
+              echo "The **skill-census** scheduled workflow (\`.github/workflows/skill-census.yml\`) did not succeed (census job: ${CENSUS_RESULT})."
+              echo ""
+              echo "Failing run: ${RUN_URL}"
+              echo ""
+              echo "This issue is commented on (not re-filed) on every subsequent failure, and by census-watchdog.yml when no scheduled census has succeeded for two weeks — see the marker below."
+              echo ""
+              echo "$MARKER"
+            } > "$BODY_FILE"
+            gh issue create --title "$TITLE" --label automation-failure --body-file "$BODY_FILE"
+            echo "::notice::Filed new failure issue."
+          fi
