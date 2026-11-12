@@ -5,18 +5,18 @@
  "enumeration": {
   "refs": "refs/remotes/origin/*",
   "publishing_ref": "origin/main",
-  "commits": 151,
-  "blobs": 415
+  "commits": 152,
+  "blobs": 419
  },
  "versions_enumerated": 258,
  "verification": {
   "current": "GATED. validate_skills.py recomputes every `current` from skills/<slug>/SKILL.md on every pull request. Needs no git history, so it holds at the depth-1 checkout CI uses.",
   "history": "NOT GATED. History content is derived from git and CI cannot recompute these rows; only that every row's `commit` is an ancestor of the checked revision is gated (`gen_skill_versions.py --check`). Regenerate them in a full clone with `.github/scripts/gen_skill_versions.py --write`.",
-  "history_rows_ungated": 206
+  "history_rows_ungated": 207
  },
  "skills": {
   "apca-contrast": {
-   "current": "8a8695478a44",
+   "current": "18825ab46a63",
    "version": "1.0.1",
    "authoring_home": "catalog",
    "history": [
@@ -97,7 +97,7 @@
    ]
   },
   "chroma-harmonization": {
-   "current": "2cf2a434138c",
+   "current": "eafea2443af3",
    "version": "1.0.1",
    "authoring_home": "catalog",
    "history": [
@@ -319,8 +319,8 @@
    ]
   },
   "conventions-template": {
-   "current": "6963f02bb4bd",
-   "version": "1.0.0",
+   "current": "ce439283491f",
+   "version": "1.0.1",
    "authoring_home": "catalog",
    "history": [
     {
@@ -956,7 +956,7 @@
    ]
   },
   "oklch-color-space": {
-   "current": "c9d79469fef3",
+   "current": "6c044711e042",
    "version": "1.0.2",
    "authoring_home": "catalog",
    "history": [

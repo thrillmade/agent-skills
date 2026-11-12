@@ -1,9 +1,9 @@
 ---
 version: "1.0.1"
-digest: "2cf2a434138c"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+digest: "eafea2443af3"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/thrill-skills"
 name: chroma-harmonization
-description: Use when constructing or auditing a multi-hue palette where all hues should appear equally saturated at each contrast stop. Names the per-stop chroma cap rule (take the minimum achievable chroma across hues at the stop), the gamut bottleneck pattern (blue at mid-L is the classic limiter in sRGB; Display P3 reshapes it), and the palette variants built on the cap. Generalizes Evil Martians' Harmony algorithm.
+description: Use when constructing or auditing a multi-hue palette where all hues should appear equally saturated at each contrast stop. Names the per-stop chroma cap rule (take the minimum achievable chroma across hues at the stop), the gamut bottleneck pattern (at mid-L the limiting hue is cyan to azure, near 200°, in sRGB and Display P3 alike; blue limits only at high L), and the palette variants built on the cap. Generalizes Evil Martians' Harmony algorithm.
 ---
 
 # Chroma harmonization
@@ -20,8 +20,8 @@ Multi-hue palettes look unbalanced when one hue is more saturated than the rest 
 ## When NOT to use
 
 - Single-hue palettes (no other hues to harmonize against — chroma is unconstrained by the procedure).
-- Brand-spot or accent palettes where one hue *should* dominate. Use the `max` palette variant instead — see [oklch-color-space](../oklch-color-space/SKILL.md).
-- Palettes constrained to legacy sRGB-only output, where the narrower gamut shifts the bottleneck calculus back toward the classic blue-at-~220° limiter (the procedure still applies — Display P3 is the default target space; substitute the sRGB boundary deliberately for legacy-only catalogs).
+- Brand-spot or accent palettes where one hue *should* dominate. Use an uncapped cut instead, each hue at its own gamut ceiling (`max` in the example below).
+- Not an exception: palettes constrained to legacy sRGB-only output. The procedure still applies — Display P3 is the default target space; substitute the sRGB boundary deliberately for legacy-only catalogs. Every ceiling drops; the limiting hue barely moves.
 
 ## The algorithm
 
@@ -43,7 +43,7 @@ for each stop L_target:
 
 **Recognise the shortcut in code:** `{ l: original.l, c: min(original.c, ceiling), h: original.h }` clamps chroma and keeps the original L. That is the Lc drift step 3 rules out; an implementation shaped like it is the bug to fix, not the pattern to copy.
 
-The bottleneck pattern: at moderate lightness (L ≈ 0.5), **blue (~220°)** is the classic limiter in sRGB — its gamut is narrowest there. In Display P3 (the default compose gamut) the boundary is wider and reshaped, so blue is not guaranteed to be the tightest hue — treat the bottleneck as empirical per palette rather than assuming ~220° holds. At the extremes (L near 0 or 1) the gamut shrinks for all hues in either space, so the ceiling collapses naturally.
+The bottleneck pattern: below L ≈ 0.7 the narrowest hue is **cyan to azure (~200°)**, in sRGB and Display P3 alike — not blue (~265°), which is among the widest at mid-L and becomes the limiter only above L ≈ 0.75. P3 lifts every ceiling (at L 0.5, ~200° goes from ~0.085 in sRGB to ~0.114) and barely moves the bottleneck; still compute it per palette rather than assume it. At the extremes (L near 0 or 1) the gamut shrinks for all hues in either space, so the ceiling collapses naturally.
 
 **Recompose can't fix the bottleneck hue's own residual.** Recomposing corrects the *other* hues' Lc drift once they're capped to the bottleneck hue's ceiling — it can't correct the bottleneck hue itself, whose compose/measure residual (see [apca-contrast](../apca-contrast/SKILL.md)'s meter-vs-composer gamut mismatch) is a property of that one hue's own gamut edge. Only a matched meter — scoring on the same gamut the composer targeted — closes that residual; recompose alone can't.
 
@@ -57,7 +57,7 @@ Stay ≥ 10% below the computed ceiling. This headroom is for the **emission edg
 
 ## Palette variants built on the cap
 
-A system usually ships more than one cut per hue. One worked instantiation, UDTS's five:
+A system can ship more than one cut per hue. One worked instantiation, UDTS's five:
 
 - **`harmony`** (its default): this algorithm exactly. Every hue capped to the cross-hue minimum.
 - **`max`**: each hue uncapped at its own gamut ceiling. Useful for brand or accent palettes where consistency yields to vibrancy.
@@ -71,7 +71,7 @@ A catalog can ship several variants per hue and bind theme roles to specific (hu
 
 After harmonizing a stop:
 
-1. **Gamut check:** every emitted `oklch(L, c_ceiling, h)` is `displayable()` in the target color space.
+1. **Gamut check:** every emitted `oklch(L, c_ceiling, h)` is in the target color space (culori `inGamut('p3')`; `displayable()` tests sRGB only).
 2. **Visual check:** at the same stop, all hues should report identical (or near-identical) saturation in a side-by-side swatch. Use [oklch.com](https://oklch.com) or a culori-based tool.
 3. **Headroom check:** the actual ceiling sits ≥ 10% below the computed **Display P3**-gamut maximum at every (L, H) in the set (verify the sRGB-fallback headroom separately, at emission).
 
@@ -87,4 +87,5 @@ If any hue clips at the ceiling or visually "pops," recompute with a tighter chr
 ## Sources
 
 - [Evil Martians' Harmony](https://evilmartians.com/opensource/harmony) — the original algorithm + interactive demo.
-- [Evil Martians' Harmonizer](https://github.com/evilmartians/harmonizer) — Figma plugin implementation.
+- [Evil Martians' Harmonizer](https://github.com/evilmartians/harmonizer) — Figma plugin implementation; its [`maxCommonChroma`](https://github.com/evilmartians/harmonizer/blob/4b454396eb8806ccca7d155f2979eead2a65dccb/packages/core/src/utils/colors/maxCommonChroma.ts) takes the minimum of each hue's maximum chroma at a level's contrast, and every hue is then composed at it.
+- Bottleneck hues and ceilings: from practice, computed from the OKLab and CSS Color 4 matrices at L 0.1–0.95.

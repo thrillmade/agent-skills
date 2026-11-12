@@ -11,3 +11,14 @@
 
 ---
 
+## 2026-11-12 17:42 - Review fixes to the content tranche: colour claims checked against the libraries and recomputed, one more private-spec citation removed, apca-contrast says one thing
+
+**Reasoning:** Three reviewers read the first commit. They found a fourth skill (conventions-template) still citing the private spec; apca-contrast made conditional in its description but absolute in its body; two claims about the apcach library that its README and source do not support (an accuracy guarantee, and a forced sRGB hex round-trip for the background); a chroma-limiter claim that a computation contradicts (the narrowest hue below L 0.7 is near 200, cyan to azure, in sRGB and Display P3 alike, not blue); and WCAG's large-text thresholds given in px where the standard says points.
+
+**Alternatives considered:** Finishing the gating-stance change inside this PR (it is the owner's pending decision, so the skill is restored to dev's stance wording instead). Leaving the pre-existing colour errors for a later pass (they sat in sentences this change rewrote).
+
+**Implications:**
+- Fourteen skills changed in total. The apcach round-trip correction listed as not done in the first entry is now done. culori's displayable() is named as an sRGB check, with inGamut('p3') for Display P3. Still unsupported and left as they were: the px and weight pairings in the Lc table, and the drift of about 5 Lc across hues. No trigger evaluation was run on the three changed descriptions.
+
+---
+

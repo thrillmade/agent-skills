@@ -13,10 +13,10 @@ PR's CI run, so this file is always coherent with current `main`.
 ---
 
 
-## 2026-11 (23 decisions)
+## 2026-11 (24 decisions)
 
-- **2026-11-12** — Skill content tranche: public skills stop citing the private spec; UDTS specifics in three colour primitives become marked examples; decision-artifact anti-patterns name their cost (#311); interface-copy rule 11, siblings of one role take one shape (#305) *(fix/skill-content-tranche)* — [decisions-branches/fix__skill-content-tranche.md](decisions-branches/fix__skill-content-tranche.md)
-- *... 21 more decisions ...*
+- **2026-11-12** — Review fixes to the content tranche: colour claims checked against the libraries and recomputed, one more private-spec citation removed, apca-contrast says one thing *(fix/skill-content-tranche)* — [decisions-branches/fix__skill-content-tranche.md](decisions-branches/fix__skill-content-tranche.md)
+- *... 22 more decisions ...*
 - **2026-11-02** — Design skills: thrill-design house principles, motion-continuity, ios-safari-surfaces; designing-elite-ui and orchestrating-elite-agent-qa amended *(feat/design-skills-nov)* — [decisions-branches/feat__design-skills-nov.md](decisions-branches/feat__design-skills-nov.md)
 
 ## 2026-10
