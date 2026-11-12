@@ -5,19 +5,19 @@
  "enumeration": {
   "refs": "refs/remotes/origin/*",
   "publishing_ref": "origin/main",
-  "commits": 147,
-  "blobs": 401
+  "commits": 151,
+  "blobs": 415
  },
- "versions_enumerated": 257,
+ "versions_enumerated": 258,
  "verification": {
   "current": "GATED. validate_skills.py recomputes every `current` from skills/<slug>/SKILL.md on every pull request. Needs no git history, so it holds at the depth-1 checkout CI uses.",
   "history": "NOT GATED. History content is derived from git and CI cannot recompute these rows; only that every row's `commit` is an ancestor of the checked revision is gated (`gen_skill_versions.py --check`). Regenerate them in a full clone with `.github/scripts/gen_skill_versions.py --write`.",
-  "history_rows_ungated": 193
+  "history_rows_ungated": 206
  },
  "skills": {
   "apca-contrast": {
-   "current": "c894961136c7",
-   "version": "1.0.0",
+   "current": "8a8695478a44",
+   "version": "1.0.1",
    "authoring_home": "catalog",
    "history": [
     {
@@ -97,8 +97,8 @@
    ]
   },
   "chroma-harmonization": {
-   "current": "e710f973d63c",
-   "version": "1.0.0",
+   "current": "2cf2a434138c",
+   "version": "1.0.1",
    "authoring_home": "catalog",
    "history": [
     {
@@ -128,8 +128,8 @@
    ]
   },
   "clud-bug-collaboration": {
-   "current": "1f4f09dfe73f",
-   "version": "1.0.3",
+   "current": "d7d6a17419a4",
+   "version": "1.0.4",
    "authoring_home": "catalog",
    "history": [
     {
@@ -918,8 +918,8 @@
    ]
   },
   "making-decision-artifacts": {
-   "current": "b981895c363a",
-   "version": "1.0.7",
+   "current": "696134bd49f7",
+   "version": "1.0.8",
    "authoring_home": "catalog",
    "history": [
     {
@@ -956,8 +956,8 @@
    ]
   },
   "oklch-color-space": {
-   "current": "2686571dd8f2",
-   "version": "1.0.1",
+   "current": "c9d79469fef3",
+   "version": "1.0.2",
    "authoring_home": "catalog",
    "history": [
     {
@@ -999,8 +999,8 @@
    ]
   },
   "orchestrating-a-multi-agent-run": {
-   "current": "33f6ecf8dc38",
-   "version": "1.0.2",
+   "current": "f1f2d3b55611",
+   "version": "1.0.3",
    "authoring_home": "catalog",
    "history": [
     {
@@ -1024,8 +1024,8 @@
    ]
   },
   "orchestrating-agent-delegation": {
-   "current": "ad31d9a4e927",
-   "version": "1.0.3",
+   "current": "243890029b28",
+   "version": "1.0.4",
    "authoring_home": "catalog",
    "history": [
     {
@@ -1211,8 +1211,8 @@
    ]
   },
   "reviewing-design-work": {
-   "current": "33d849ca81f8",
-   "version": "1.2.2",
+   "current": "25c17cc88e7b",
+   "version": "1.2.3",
    "authoring_home": "catalog",
    "history": [
     {
@@ -1303,8 +1303,8 @@
    ]
   },
   "session-heartbeat": {
-   "current": "4cf9fd345913",
-   "version": "1.0.1",
+   "current": "df41921a1df2",
+   "version": "1.0.2",
    "authoring_home": "catalog",
    "history": [
     {
@@ -1322,8 +1322,8 @@
    ]
   },
   "skill-frontmatter-quality": {
-   "current": "59d61f22e7e7",
-   "version": "1.0.0",
+   "current": "a411e589f386",
+   "version": "1.0.1",
    "authoring_home": "catalog",
    "history": [
     {
@@ -1362,6 +1362,12 @@
      "version": null,
      "commit": "b0cb5dd",
      "date": "2026-08-14"
+    },
+    {
+     "v": "0f32372d52db",
+     "version": "1.0.1",
+     "commit": "930f3cf",
+     "date": "2026-11-12"
     }
    ]
   },
@@ -1415,8 +1421,8 @@
    ]
   },
   "technical-writing": {
-   "current": "13e8b85d472a",
-   "version": "1.0.0",
+   "current": "6c13727cf30d",
+   "version": "1.0.1",
    "authoring_home": "catalog",
    "history": [
     {
@@ -1783,8 +1789,8 @@
    ]
   },
   "unattended-operation": {
-   "current": "439932705292",
-   "version": "1.0.1",
+   "current": "eed659f38ba4",
+   "version": "1.0.2",
    "authoring_home": "catalog",
    "history": [
     {
@@ -1987,8 +1993,8 @@
    ]
   },
   "writing-interface-copy": {
-   "current": "2d2d0dc59dad",
-   "version": "1.0.3",
+   "current": "4bd70d23c3e8",
+   "version": "1.0.4",
    "authoring_home": "catalog",
    "history": [
     {

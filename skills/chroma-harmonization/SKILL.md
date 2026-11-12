@@ -1,9 +1,9 @@
 ---
-version: "1.0.0"
-digest: "e710f973d63c"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+version: "1.0.1"
+digest: "2cf2a434138c"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/thrill-skills"
 name: chroma-harmonization
-description: Use when constructing or auditing a multi-hue palette where all hues should appear equally saturated at each contrast stop. Names the per-stop chroma cap rule (take the minimum achievable chroma across hues at the stop), the gamut bottleneck pattern (blue at mid-L is the classic limiter in sRGB; Display P3 — UDTS's default compose gamut — reshapes it), and the relationship to UDTS's default `harmony` palette variant. Generalizes Evil Martians' Harmony algorithm.
+description: Use when constructing or auditing a multi-hue palette where all hues should appear equally saturated at each contrast stop. Names the per-stop chroma cap rule (take the minimum achievable chroma across hues at the stop), the gamut bottleneck pattern (blue at mid-L is the classic limiter in sRGB; Display P3 reshapes it), and the palette variants built on the cap. Generalizes Evil Martians' Harmony algorithm.
 ---
 
 # Chroma harmonization
@@ -14,7 +14,7 @@ Multi-hue palettes look unbalanced when one hue is more saturated than the rest 
 
 - Constructing a multi-hue palette (3+ hues at the same set of contrast stops).
 - Auditing an existing palette where one hue looks "off" against the others.
-- Generating UDTS's default `harmony` palette variant.
+- Generating a palette's harmonized variant.
 - Code review: flag per-hue chroma values picked independently — propose the cross-hue cap.
 
 ## When NOT to use
@@ -27,7 +27,7 @@ Multi-hue palettes look unbalanced when one hue is more saturated than the rest 
 
 For each contrast stop in the palette (each L value):
 
-1. For each hue in the set, find the maximum in-gamut chroma at that (L, H) in the target color space (**Display P3 by default** — UDTS composes end-to-end in P3 via apcach's `colorSpace: 'p3'`; sRGB only when a catalog is deliberately constrained to legacy-only output).
+1. For each hue in the set, find the maximum in-gamut chroma at that (L, H) in the target color space (**Display P3 by default** — apcach's `colorSpace: 'p3'`; sRGB only when a catalog is deliberately constrained to legacy-only output).
 2. Take the **minimum** of those per-hue maxima. This is the stop's chroma ceiling.
 3. **Recompose, don't just clamp:** at the shared ceiling, re-solve L per hue (apcach's constant-chroma branch) so each hue still hits the stop's target Lc against its background. Clamping chroma while leaving L untouched lets achieved Lc drift off target by up to ~5 across hues — the invariant is chroma constant AND Lc constant; hue and lightness are what's allowed to drift.
 4. Emit every hue at the stop using the recomposed (L, c_ceiling, h).
@@ -41,7 +41,7 @@ for each stop L_target:
     emit oklch(l_solved, c_ceiling, h)
 ```
 
-**Known counterexample, not a template:** UDTS's own `harmonizeChroma` does *not* recompose — it clamps chroma and leaves the original L untouched (`{ l: original.l, c: min(original.c, ceiling), h: original.h }`). That's exactly the Lc drift this rule warns about. If you're reading the shipped code as a reference, its chroma-clamp-without-recompose is the bug to fix, not the pattern to copy.
+**Recognise the shortcut in code:** `{ l: original.l, c: min(original.c, ceiling), h: original.h }` clamps chroma and keeps the original L. That is the Lc drift step 3 rules out; an implementation shaped like it is the bug to fix, not the pattern to copy.
 
 The bottleneck pattern: at moderate lightness (L ≈ 0.5), **blue (~220°)** is the classic limiter in sRGB — its gamut is narrowest there. In Display P3 (the default compose gamut) the boundary is wider and reshaped, so blue is not guaranteed to be the tightest hue — treat the bottleneck as empirical per palette rather than assuming ~220° holds. At the extremes (L near 0 or 1) the gamut shrinks for all hues in either space, so the ceiling collapses naturally.
 
@@ -55,15 +55,17 @@ Average would push half the hues out of gamut at the bottleneck. Maximum would p
 
 Stay ≥ 10% below the computed ceiling. This headroom is for the **emission edge**, not the harmonization math itself: rounding when materializing the sRGB hex fallback (the compatibility export for legacy consumers — see [oklch-color-space](../oklch-color-space/SKILL.md)) and display-driver quirks can push a borderline-in-gamut P3 value out of gamut once flattened to 8-bit sRGB. A headroom margin prevents those fallback-materialization failures; it does not change the P3-native chroma math above.
 
-## Relationship to UDTS palette variants
+## Palette variants built on the cap
 
-- **`harmony`** (UDTS default): this algorithm exactly. Every hue capped to the cross-hue minimum.
+A system usually ships more than one cut per hue. One worked instantiation, UDTS's five:
+
+- **`harmony`** (its default): this algorithm exactly. Every hue capped to the cross-hue minimum.
 - **`max`**: each hue uncapped at its own gamut ceiling. Useful for brand or accent palettes where consistency yields to vibrancy.
 - **`muted`**: harmony or max with an additional user-supplied flat chroma cap (e.g. C ≤ 0.06) — produces tonal greys like sand, stone, slate.
 - **`flat`**: a single chroma across all stops for one hue (no cross-hue constraint).
 - **`grey`**: zero chroma, always generated.
 
-A UDTS catalog can ship multiple variants per hue and bind theme roles to specific (hue, variant) pairs — see the UDTS theme docs.
+A catalog can ship several variants per hue and bind theme roles to specific (hue, variant) pairs.
 
 ## Verification
 
@@ -86,4 +88,3 @@ If any hue clips at the ceiling or visually "pops," recompute with a tighter chr
 
 - [Evil Martians' Harmony](https://evilmartians.com/opensource/harmony) — the original algorithm + interactive demo.
 - [Evil Martians' Harmonizer](https://github.com/evilmartians/harmonizer) — Figma plugin implementation.
-- UDTS's `harmony` palette variant — the canonical productized form of this algorithm.

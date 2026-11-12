@@ -1,6 +1,6 @@
 ---
-version: "1.0.7"
-digest: "b981895c363a"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+version: "1.0.8"
+digest: "696134bd49f7"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/thrill-skills"
 name: making-decision-artifacts
 description: |
@@ -59,8 +59,8 @@ Classify first; most findings are not the owner's call.
 
 ## The moves page
 
-A reading page taken in within minutes: pictures, then a digest, then one ask. The
-rows are the panel's reference, linked once, never the page.
+A reading page taken in within minutes. The rows are the panel's reference, linked
+once, never the page.
 
 - **Since the tip the owner last read**, named in the title; the cumulative page runs
   against the bundle's base.
@@ -103,18 +103,20 @@ rows are the panel's reference, linked once, never the page.
 - **The dense page:** sheets, tables, several questions or prose on one page; nothing
   compares.
 - **A defect asked as taste:** a value lost on dark grounds put as a choice over
-  identical pictures; a word asked before its picture.
-- **Building the sketch:** a drawn grid copied as a layout; it carried a convention.
+  identical pictures; the owner cannot see the question and the defect waits.
+- **Building the sketch:** a drawn grid copied as a layout; it carried a convention, so
+  the build answered the wrong question.
 - **A paraphrased name:** a description for a token, a percentage for a rung; the reply
   maps to no code.
 - **Hand-written rows:** a form written part by part named one fact two ways.
-- **Black text in dark mode:** color only on `html` under the page's own wrapper; the
-  host's reset turned the text black.
+- **Black text in dark mode:** color only on `html`; the host's reset turned the text
+  black.
 - **A rebuild that reverts:** the prose regenerated, hand edits lost.
-- **A reference deleted as decided:** the chosen look, gone with decided pages.
-- **Merging unseen moves:** merges the owner never saw, some ahead of their ruling.
-- **The row table as the reading page:** too long to read by hand. The owner looks;
-  the panel reads.
+- **A reference deleted as decided:** the chosen look, gone with decided pages; later
+  calls lose their anchor for good.
+- **Merging unseen moves:** merges the owner never saw, some ahead of their ruling; a
+  move they would refuse ships first.
+- **The row table as the reading page:** too long to read by hand.
 
 ## Verification
 
@@ -141,8 +143,7 @@ Before publishing, every line holds:
 - [orchestrating-elite-agent-qa](../orchestrating-elite-agent-qa/SKILL.md): review
   and QA as separate lanes that check, never shape.
 - [designing-elite-ui](../designing-elite-ui/SKILL.md): the bar the page is built to.
-- [thrill-design](../thrill-design/SKILL.md): "decide, then ship"; this is how
-  options reach the decider.
+- [thrill-design](../thrill-design/SKILL.md): "decide, then ship".
 - [session-heartbeat](../session-heartbeat/SKILL.md): owns the checkpoint.
 - [retiring-a-superseded-decision](../retiring-a-superseded-decision/SKILL.md): landing
   the ruling wherever the old value still stands.

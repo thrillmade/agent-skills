@@ -1,6 +1,6 @@
 ---
-version: "1.0.1"
-digest: "439932705292"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+version: "1.0.2"
+digest: "eed659f38ba4"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/thrill-skills"
 name: unattended-operation
 description: |
@@ -118,4 +118,4 @@ A chronological narration of beats is the wrong output: it hands the reader the 
 
 - Policy shape as proposed and field-reported: thrillmade/thrill-skills#174, with #173 as the mechanism it layers on.
 - Unattended usage-limit hazards (mid-write kills, owned-files recovery, resumable structures): thrillmade/thrill-skills#169, discipline 6.
-- Work that outlives its producer and must be swept: thrillmade/protocol `SPEC.md` §6.2; thrillmade/protocol#44.
+- Work that outlives its producer and must be swept: from practice.

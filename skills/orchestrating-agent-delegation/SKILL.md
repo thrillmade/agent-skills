@@ -1,6 +1,6 @@
 ---
-version: "1.0.3"
-digest: "ad31d9a4e927"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+version: "1.0.4"
+digest: "243890029b28"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/thrill-skills"
 name: orchestrating-agent-delegation
 description: |
@@ -78,7 +78,7 @@ verification evidence (numeric before/after) · contradictions found · files to
 
 ## Roles are files, not prose
 
-A dispatch names a **role** on disk at `.claude/agents/<name>.md` (SPEC §2.4), carrying its instructions, `tools`, `model` and `effort`; discovery is reading that directory. A brief says which role and what this job is, not what the role is for — framing pasted into every dispatch belongs in the role file. A review pass is a dispatched role too (SPEC §4).
+A dispatch names a **role** on disk at `.claude/agents/<name>.md`, carrying its instructions, `tools`, `model` and `effort`; discovery is reading that directory. A brief says which role and what this job is, not what the role is for — framing pasted into every dispatch belongs in the role file. A review pass is a dispatched role too.
 
 **`model` and `effort` are separate knobs:** a strong model thinking briefly and a cheap one thinking hard are different trades. Raise `effort` where being wrong is expensive *and hard to notice* (an audit, a safety claim); not for mechanical work. **Silent failure:** a role that omits `model` inherits the dispatching session's, with nothing to report it — pin `model` where the tier matters.
 
