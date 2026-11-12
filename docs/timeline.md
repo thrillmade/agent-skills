@@ -13,10 +13,10 @@ PR's CI run, so this file is always coherent with current `main`.
 ---
 
 
-## 2026-11 (17 decisions)
+## 2026-11 (18 decisions)
 
-- **2026-11-11** — The repository is thrill-skills: every live reference to the old name is updated *(chore/repo-rename-thrill-skills)* — [decisions-branches/chore__repo-rename-thrill-skills.md](decisions-branches/chore__repo-rename-thrill-skills.md)
-- *... 15 more decisions ...*
+- **2026-11-11** — Three follow-ups: the ungated-row count is computed from the rows, a lock sourced under the catalog's former name stays drift-checkable, and the decision-artifacts description describes the page its body describes *(fix/followups-308-311-312)* — [decisions-branches/fix__followups-308-311-312.md](decisions-branches/fix__followups-308-311-312.md)
+- *... 16 more decisions ...*
 - **2026-11-02** — Design skills: thrill-design house principles, motion-continuity, ios-safari-surfaces; designing-elite-ui and orchestrating-elite-agent-qa amended *(feat/design-skills-nov)* — [decisions-branches/feat__design-skills-nov.md](decisions-branches/feat__design-skills-nov.md)
 
 ## 2026-10

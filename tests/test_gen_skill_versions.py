@@ -662,3 +662,36 @@ def test_check_refuses_a_shallow_clone(
     monkeypatch.chdir(shallow)
     with pytest.raises(SystemExit, match="shallow clone"):
         gen_skill_versions.main(["--check"])
+
+
+# --- the header count of rows CI cannot recompute --------------------------
+
+
+def test_ungated_rows_is_not_negative_when_live_skills_outnumber_rows(repo: Repo) -> None:
+    """A small catalog's index said -3: it subtracted the live-skill count,
+    but only skills with a row for their current digest gate anything."""
+    repo.skill("alpha")
+    repo.commit("add alpha")
+    repo.publish("main")
+    for name in ("beta", "gamma", "delta"):
+        repo.skill(name)  # in the tree, on no publishing ref: live, no row
+
+    index = build(repo)
+    assert index["versions_enumerated"] == 1  # control: 4 live skills, 1 row
+    assert index["verification"]["history_rows_ungated"] == 0  # alpha's one row is gated
+
+
+def test_ungated_rows_counts_a_live_skill_that_has_no_row(repo: Repo) -> None:
+    """Wrong without being negative: 2 rows - 2 live skills said 0, but beta
+    gates nothing, so alpha's superseded row is 1 row CI cannot recompute."""
+    repo.skill("alpha", body="v1")
+    repo.commit("alpha v1")
+    repo.skill("alpha", body="v2")
+    repo.commit("alpha v2")
+    repo.publish("main")
+    repo.skill("beta")  # live, no row
+
+    index = build(repo)
+    assert index["versions_enumerated"] == 2  # control
+    assert len(index["skills"]) == 2  # control: two live skills
+    assert index["verification"]["history_rows_ungated"] == 1

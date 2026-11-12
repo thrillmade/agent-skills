@@ -5,14 +5,14 @@
  "enumeration": {
   "refs": "refs/remotes/origin/*",
   "publishing_ref": "origin/main",
-  "commits": 135,
-  "blobs": 335
+  "commits": 137,
+  "blobs": 400
  },
- "versions_enumerated": 247,
+ "versions_enumerated": 256,
  "verification": {
   "current": "GATED. validate_skills.py recomputes every `current` from skills/<slug>/SKILL.md on every pull request. Needs no git history, so it holds at the depth-1 checkout CI uses.",
   "history": "NOT GATED. History content is derived from git and CI cannot recompute these rows; only that every row's `commit` is an ancestor of the checked revision is gated (`gen_skill_versions.py --check`). Regenerate them in a full clone with `.github/scripts/gen_skill_versions.py --write`.",
-  "history_rows_ungated": 182
+  "history_rows_ungated": 192
  },
  "skills": {
   "apca-contrast": {
@@ -179,6 +179,12 @@
      "version": "1.0.2",
      "commit": "8a77c44",
      "date": "2026-09-15"
+    },
+    {
+     "v": "1f4f09dfe73f",
+     "version": "1.0.3",
+     "commit": "4554bfd",
+     "date": "2026-11-11"
     }
    ]
   },
@@ -378,6 +384,12 @@
      "version": "1.0.1",
      "commit": "8a77c44",
      "date": "2026-09-15"
+    },
+    {
+     "v": "40a77e631003",
+     "version": "1.0.2",
+     "commit": "4554bfd",
+     "date": "2026-11-11"
     }
    ]
   },
@@ -476,6 +488,12 @@
      "v": "7e9df5a37a55",
      "version": "1.0.2",
      "commit": "6056f8e",
+     "date": "2026-11-11"
+    },
+    {
+     "v": "bfbad874a415",
+     "version": "1.0.3",
+     "commit": "4554bfd",
      "date": "2026-11-11"
     }
    ]
@@ -668,6 +686,12 @@
      "v": "f5f92f771470",
      "version": "1.0.7",
      "commit": "d60ef2d",
+     "date": "2026-11-11"
+    },
+    {
+     "v": "a1020f100a06",
+     "version": "1.0.9",
+     "commit": "4554bfd",
      "date": "2026-11-11"
     }
    ]
@@ -894,8 +918,8 @@
    ]
   },
   "making-decision-artifacts": {
-   "current": "608788c2b9df",
-   "version": "1.0.6",
+   "current": "b981895c363a",
+   "version": "1.0.7",
    "authoring_home": "catalog",
    "history": [
     {
@@ -984,6 +1008,12 @@
      "version": "1.0.1",
      "commit": "8a77c44",
      "date": "2026-08-24"
+    },
+    {
+     "v": "33f6ecf8dc38",
+     "version": "1.0.2",
+     "commit": "4554bfd",
+     "date": "2026-11-11"
     }
    ]
   },
@@ -1015,6 +1045,12 @@
      "version": "1.0.2",
      "commit": "8f47937",
      "date": "2026-10-28"
+    },
+    {
+     "v": "ad31d9a4e927",
+     "version": "1.0.3",
+     "commit": "4554bfd",
+     "date": "2026-11-11"
     }
    ]
   },
@@ -1270,6 +1306,12 @@
      "version": null,
      "commit": "afe8461",
      "date": "2026-08-14"
+    },
+    {
+     "v": "4cf9fd345913",
+     "version": "1.0.1",
+     "commit": "4554bfd",
+     "date": "2026-11-11"
     }
    ]
   },
@@ -1750,6 +1792,12 @@
      "version": null,
      "commit": "b7b5a7e",
      "date": "2026-08-15"
+    },
+    {
+     "v": "439932705292",
+     "version": "1.0.1",
+     "commit": "4554bfd",
+     "date": "2026-11-11"
     }
    ]
   },
@@ -1825,6 +1873,12 @@
      "version": "1.0.1",
      "commit": "9807626",
      "date": "2026-11-06"
+    },
+    {
+     "v": "61e0306e7f65",
+     "version": "1.0.2",
+     "commit": "4554bfd",
+     "date": "2026-11-11"
     }
    ]
   },
