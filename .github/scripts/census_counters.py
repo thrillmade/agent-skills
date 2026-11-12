@@ -8,8 +8,8 @@ locally-authored skills have converged across repos (the strongest promotion
 signal). The *judgment* half — gap/placement/promotion verdicts — is Mode B
 (`census_panel.py`), which reads this script's `census.json`.
 
-Stdlib ONLY (base64, hashlib, json, os, re, subprocess, sys, urllib, datetime).
-No pip, so the counters step runs on a bare runner before the panel step
+Stdlib ONLY (base64, hashlib, http.client, json, os, re, subprocess, sys,
+urllib, datetime). No pip, so the counters step runs on a bare runner before the panel step
 installs the Anthropic SDK. If the panel step is skipped (no
 ANTHROPIC_API_KEY), this file's `digest.md` still ships as the cycle's
 deliverable. `subprocess` is used narrowly (git plumbing only — `log`/`show`
@@ -59,6 +59,7 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import http.client
 import json
 import os
 import re
@@ -359,8 +360,10 @@ def _request(path: str, token: str) -> object | None:
         raise RuntimeError(f"HTTP {exc.code} on {path}") from None
     except urllib.error.URLError as exc:
         raise RuntimeError(f"network error on {path}: {exc.reason}") from None
-    except (TimeoutError, OSError) as exc:
-        # A read timeout arrives as TimeoutError, not URLError.
+    except (TimeoutError, OSError, http.client.HTTPException) as exc:
+        # A read timeout arrives as TimeoutError, not URLError; a truncated or
+        # garbled response as http.client.IncompleteRead / BadStatusLine,
+        # which is neither OSError nor ValueError.
         raise RuntimeError(f"{type(exc).__name__} on {path}") from None
     except ValueError:
         # Covers UnicodeDecodeError and json.JSONDecodeError alike.
@@ -368,9 +371,12 @@ def _request(path: str, token: str) -> object | None:
 
 
 def _revoke(token: str) -> None:
-    """Revoke an installation token now (DELETE /installation/token) rather
-    than at the end of the job. Best effort: a failure is a warning, never
-    fatal, and never names the token."""
+    """Try to revoke an installation token now (DELETE /installation/token)
+    rather than at the end of the job. BEST EFFORT: if the DELETE fails or
+    times out — or the process dies before this runs — the token stays valid
+    until it expires (up to an hour), and the workflow skips the action's own
+    end-of-job revoke for this token, so nothing else removes it. A failure is
+    one warning, never fatal, and never names the token."""
     req = urllib.request.Request(f"{_api_base()}/installation/token", method="DELETE")
     req.add_header("Authorization", f"Bearer {token}")
     req.add_header("Accept", "application/vnd.github+json")
@@ -379,8 +385,11 @@ def _revoke(token: str) -> None:
     try:
         with urllib.request.urlopen(req, timeout=API_TIMEOUT):
             pass
-    except Exception as exc:  # noqa: BLE001 — the token expires within the hour regardless
-        print(f"::warning::could not revoke the repository-lookup token ({type(exc).__name__}); it expires within the hour.")
+    except Exception as exc:  # noqa: BLE001 — never fatal; see the docstring
+        print(
+            f"::warning::could not revoke the repository-lookup token ({type(exc).__name__}); "
+            "it stays valid until it expires, up to an hour."
+        )
 
 
 def _get_file_json(repo: str, path: str, token: str) -> object | None:
@@ -739,13 +748,23 @@ def survey_repo(repo: str, token: str) -> dict:
         return {**_empty_record(), "error": str(exc)}
 
 
+def is_read(record: dict) -> bool:
+    """THE definition of "this repository was read", used by every consumer of
+    the per-repo records. Conservative: only a record that says `read: True`
+    (survey_repo sets it only after the repo answered under its own name and
+    every fetch succeeded). A record without the key was not read. An unread
+    record holds no evidence either way, so no finding — a subscription, a
+    missing subscription, a local skill, usage — is ever drawn from it."""
+    return record.get("read") is True
+
+
 def compute_coverage(repos: dict[str, dict]) -> dict:
     """How many consumers this census actually read, and why each other one
-    was not. A record without `read: True` is never counted as read."""
+    was not."""
     not_read: dict[str, str] = {}
     for name in CONSUMER_REPOS:
         record = repos.get(name, {})
-        if record.get("read") is True:
+        if is_read(record):
             continue
         if record.get("not_read"):
             not_read[name] = record["not_read"]
@@ -787,19 +806,13 @@ def _grace_reason(skill: str) -> str | None:
     return None
 
 
-def _unread(record: dict) -> bool:
-    """A record the census could not read. It holds no evidence either way,
-    so no finding — a missing subscription, a local skill — is drawn from it."""
-    return record.get("read") is False
-
-
 def compute_signals(catalog: list[str], repos: dict[str, dict]) -> dict:
     """Derive the org-wide promotion/coverage signals from the per-repo
     records and the local catalog listing. Counts come from READ repos only;
     an unread repo's errors are still reported.
     """
     all_repos = repos
-    repos = {name: record for name, record in repos.items() if not _unread(record)}
+    repos = {name: record for name, record in repos.items() if is_read(record)}
 
     # subscriber count per catalog skill
     subscriber_count: dict[str, int] = {skill: 0 for skill in catalog}
@@ -881,6 +894,8 @@ def compute_subscription_drift(
     algo = CATALOG_HASH_ALGO if algo is _USE_DEFAULT_ALGO else algo
     records: list[dict] = []
     for repo in sorted(repos):
+        if not is_read(repos[repo]):
+            continue
         subs = repos[repo].get("lock_subscriptions") or []
         unscoped = repos[repo].get("unscoped_subscriptions") or []
 
@@ -996,6 +1011,8 @@ def aggregate_usage(repos: dict[str, dict]) -> dict:
     skills: dict[str, dict] = {}
     rejected: dict[str, list[str]] = {}
     for repo in sorted(repos):
+        if not is_read(repos[repo]):
+            continue
         usage = repos[repo].get("usage") or {}
         for slug, stats in usage.items():
             agg = skills.setdefault(
@@ -1072,7 +1089,7 @@ def compute_placement_divergence(
     # A repo the census did not read is never "declared-but-not-observed":
     # nothing was observed there either way. It is reported once, as not
     # read, at the top of the digest.
-    unread = {repo for repo, record in repos.items() if _unread(record)}
+    unread = {repo for repo, record in repos.items() if not is_read(record)}
 
     # Observed subscribers per skill: repo names whose live `subscribed` carries it.
     observed: dict[str, set[str]] = {}
@@ -1228,8 +1245,9 @@ def render_digest(census: dict) -> str:
         if record.get("error"):
             lines.append(f"| `{name}` | — | — | ⚠️ not read — error: {record['error']} |")
             continue
-        if record.get("not_read"):
-            lines.append(f"| `{name}` | — | — | ⚠️ not read — {record['not_read']} |")
+        if not is_read(record):
+            reason = record.get("not_read") or "not surveyed"
+            lines.append(f"| `{name}` | — | — | ⚠️ not read — {reason} |")
             continue
         subscribed = record.get("subscribed", [])
         untracked = record.get("untracked", [])
@@ -1390,16 +1408,26 @@ def render_digest(census: dict) -> str:
     # Placement-map cross-check — declared subscribers vs. live observation.
     lines.append("## Placement divergence")
     lines.append("")
-    if partial_note:
-        lines.append(partial_note + " Declared subscribers among them are not checked.")
-        lines.append("")
     placement = signals.get("placement_divergence", {"available": False, "divergences": []})
     if not placement.get("available"):
         lines.append(f"_{placement.get('note', 'placement cross-check unavailable')}._")
         lines.append("")
     else:
         divs = placement.get("divergences", [])
-        if not divs:
+        if partial:
+            # Never an unqualified all-clear on a partial census: name the
+            # repositories whose declared subscriptions went unchecked.
+            unchecked = ", ".join(f"`{n}`" for n in coverage.get("not_read", {}))
+            lines.append(
+                f"> Partial census — read {coverage['read']} of {coverage['consumers']} "
+                "consumer repositories. Declared subscriptions of these repositories were "
+                f"NOT checked, because they were not read: {unchecked}."
+            )
+            lines.append("")
+        if not divs and partial:
+            lines.append(f"_No divergence found among the {coverage['read']} repositories read._")
+            lines.append("")
+        elif not divs:
             lines.append("_Placement map agrees with live subscriptions — no divergence._")
             lines.append("")
         else:
@@ -1636,9 +1664,9 @@ def resolve() -> int:
         print("::error::LOOKUP_TOKEN is empty — cannot look up which repositories the census can read; the census examined nothing.")
         return 1
     # The lookup token can name every repository in the installation, and
-    # later steps in the job install third-party code: revoke it the moment
-    # the listing is done, on every path. (The workflow skips the action's own
-    # end-of-job revoke for this token accordingly.)
+    # later steps in the job install third-party code: try to revoke it the
+    # moment the listing is done, on every path that reaches the `finally`.
+    # Best effort — see _revoke for what happens when it fails.
     try:
         listing = _installation_repositories(token)
     except Exception as exc:  # noqa: BLE001 — every failed lookup ends the same way
@@ -1751,6 +1779,7 @@ def local_selftest(argv: list[str]) -> int:
     if subs or unscoped:
         pseudo = {
             "selftest-lock": {
+                "read": True,
                 "subscribed": [],
                 "lock_subscriptions": subs,
                 "unscoped_subscriptions": unscoped,

@@ -65,8 +65,9 @@ class _FakeApi:
     is the Location). Anything unrouted is a 404, which is also what GitHub
     answers for a file a repository does not carry."""
 
-    def __init__(self, routes: dict):
+    def __init__(self, routes: dict, delete_status: int | str = 204):
         self.routes = routes
+        self.delete_status = delete_status  # an int, or "drop" to hang up unanswered
         self.seen: list[str] = []
         self.deleted: list[tuple[str, str]] = []  # (path, Authorization)
         api = self
@@ -93,7 +94,11 @@ class _FakeApi:
 
             def do_DELETE(self):  # noqa: N802 -- stdlib name
                 api.deleted.append((self.path, self.headers.get("Authorization", "")))
-                self.send_response(204)
+                if api.delete_status == "drop":
+                    self.close_connection = True
+                    return
+                self.send_response(api.delete_status)
+                self.send_header("Content-Length", "0")
                 self.end_headers()
 
             def log_message(self, *args):  # silence the server
@@ -309,8 +314,8 @@ def _installation(*full_names: str, per_page_split: int | None = None) -> dict:
 LOOKUP_TOKEN = "fake-lookup-token-value"
 
 
-def _resolve(routes: dict, *, self_name: str = SELF) -> dict:
-    with _FakeApi(routes) as api:
+def _resolve(routes: dict, *, self_name: str = SELF, delete_status: int | str = 204) -> dict:
+    with _FakeApi(routes, delete_status) as api:
         out = _run(["--resolve"], api, {"LOOKUP_TOKEN": LOOKUP_TOKEN, "GITHUB_REPOSITORY": self_name})
         out["deleted"] = list(api.deleted)
         return out
@@ -520,10 +525,12 @@ def test_placement_never_reports_an_unread_repo_as_missing():
     assert out["rc"] == 0, out["log"]
     [div] = out["census"]["signals"]["placement_divergence"]["divergences"]
     assert div["missing"] == ["skdd"], div
-    section = "\n".join(_section(out["digest"], "## Placement divergence"))
-    assert "declared-but-not-observed: `skdd`" in section
-    # Reported once, as not read, at the top of the digest — never here.
-    assert "rezgen" not in section, section
+    section = _section(out["digest"], "## Placement divergence")
+    [finding] = [l for l in section if l.startswith("- `invented-skill`")]
+    assert finding == "- `invented-skill` — declared-but-not-observed: `skdd`", finding
+    # Named once, as NOT checked because not read — never as a finding.
+    [not_checked] = [l for l in section if "rezgen" in l]
+    assert "NOT checked" in not_checked and "not read" in not_checked, not_checked
 
 
 def test_placement_control_lists_both_when_both_are_read():
@@ -586,3 +593,159 @@ def test_a_non_json_body_is_reported_as_a_request_failure(monkeypatch):
         assert "secret-token" not in str(exc) and "repos/thrillmade/invented-consumer" in str(exc)
     else:
         raise AssertionError("a non-JSON body was not raised as RuntimeError")
+
+
+# --- a failed revoke costs one warning, never the run, never the token -------
+
+
+def _assert_failed_revoke_is_harmless(out: dict) -> None:
+    assert out["rc"] == 0, out["log"]
+    assert _revoked(out), "the revoke was not attempted"
+    assert _repositories_output(out["github_output"]) == [SELF] + [f"{ORG}/{c}" for c in CONSUMERS]
+    warnings = [l for l in out["log"].splitlines() if l.startswith("::warning::")]
+    assert len(warnings) == 1 and "revoke" in warnings[0], out["log"]
+    assert "Traceback" not in out["log"]
+    assert LOOKUP_TOKEN not in out["log"]
+
+
+def test_a_revoke_answered_500_is_one_warning():
+    out = _resolve(_installation(SELF, *(f"{ORG}/{c}" for c in CONSUMERS)), delete_status=500)
+    _assert_failed_revoke_is_harmless(out)
+
+
+def test_a_revoke_left_unanswered_is_one_warning():
+    """The server hangs up without answering -- the cheap stand-in for a
+    revoke that never completes (a real timeout would cost API_TIMEOUT)."""
+    out = _resolve(_installation(SELF, *(f"{ORG}/{c}" for c in CONSUMERS)), delete_status="drop")
+    _assert_failed_revoke_is_harmless(out)
+
+
+def test_an_http_protocol_error_is_reported_as_a_request_failure(monkeypatch):
+    """http.client errors (IncompleteRead, BadStatusLine) are neither OSError
+    nor ValueError; they too must become the token-free RuntimeError."""
+    import http.client
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("census_counters_httpexc", SCRIPT)
+    cc = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(cc)
+
+    def incomplete(*args, **kwargs):
+        raise http.client.IncompleteRead(b"partial")
+
+    monkeypatch.setattr(cc.urllib.request, "urlopen", incomplete)
+    try:
+        cc._request("repos/thrillmade/invented-consumer", "secret-token")
+    except RuntimeError as exc:
+        assert "secret-token" not in str(exc) and "repos/thrillmade/invented-consumer" in str(exc)
+    else:
+        raise AssertionError("IncompleteRead escaped _request unwrapped")
+
+
+# --- one definition of "read" ------------------------------------------------
+
+
+def _module(tag: str):
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(f"census_counters_{tag}", SCRIPT)
+    cc = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(cc)
+    return cc
+
+
+def test_a_record_without_a_read_key_is_unread_everywhere():
+    """Coverage and the signals use one definition, the conservative one: a
+    record that does not say `read: True` was not read, so it is neither
+    counted as covered nor as a subscriber, local skill or usage source."""
+    cc = _module("readkey")
+    repos = {
+        "skdd": {
+            "subscribed": ["invented-skill"],
+            "local": ["shared"],
+            "usage": {"invented-skill": {"loads": 3, "citations": 2, "last_cited": None}},
+        },
+        "rezgen": {"read": True, "subscribed": [], "local": ["shared"]},
+    }
+    assert "skdd" in cc.compute_coverage(repos)["not_read"]
+    signals = cc.compute_signals(["invented-skill"], repos)
+    assert [s["name"] for s in signals["unsubscribed_catalog_skills"]] == ["invented-skill"]
+    assert signals["convergent_local"] == []
+    assert cc.aggregate_usage(repos)["present"] is False
+
+
+def _placement_digest(cc, repos: dict, placement: dict, coverage: dict) -> str:
+    signals = cc.compute_signals([], repos)
+    signals["placement_divergence"] = cc.compute_placement_divergence(placement, repos)
+    census = {
+        "cycle": "census-2026-W47",
+        "generated_at": "2026-11-16T12:00:00+00:00",
+        "coverage": coverage,
+        "repos": repos,
+        "signals": signals,
+        "stale_docket": {"open_count": 0, "stale_count": 0, "stale": []},
+    }
+    return "\n".join(_section(cc.render_digest(census), "## Placement divergence"))
+
+
+def test_an_unread_record_is_never_observed_as_a_subscriber():
+    """An unread record carries no evidence even if it carries data: it must
+    not turn up as observed-but-not-declared."""
+    cc = _module("observed")
+    repos = {
+        "skdd": {"read": True, "subscribed": ["invented-skill"]},
+        "rezgen": {"read": False, "not_read": "x", "subscribed": ["invented-skill"]},
+    }
+    placement = {"skills": {"invented-skill": {"subscribers": ["skdd"]}}}
+    coverage = {"consumers": 2, "read": 1, "complete": False, "not_read": {"rezgen": "x"}}
+    section = _placement_digest(cc, repos, placement, coverage)
+    assert "observed-but-not-declared" not in section, section
+
+
+# --- the placement section never gives a partial census an all-clear --------
+
+ALL_CLEAR = "_Placement map agrees with live subscriptions — no divergence._"
+
+
+def _consumers_read(read_names: set, subscribed: dict) -> dict:
+    repos = {}
+    for name in CONSUMERS:
+        if name in read_names:
+            repos[name] = {"read": True, "subscribed": subscribed.get(name, [])}
+        else:
+            repos[name] = {"read": False, "not_read": "x", "subscribed": []}
+    return repos
+
+
+def _coverage(repos: dict) -> dict:
+    not_read = {n: "x" for n, r in repos.items() if not r["read"]}
+    return {"consumers": len(repos), "read": len(repos) - len(not_read), "complete": not not_read, "not_read": not_read}
+
+
+def test_partial_placement_with_no_divergence_is_qualified_and_names_what_was_not_checked():
+    cc = _module("placement_partial")
+    read = set(CONSUMERS) - {"rezgen"}
+    repos = _consumers_read(read, {"skdd": ["invented-skill"]})
+    placement = {"skills": {"invented-skill": {"subscribers": ["skdd", "rezgen"]}}}
+    section = _placement_digest(cc, repos, placement, _coverage(repos))
+    assert ALL_CLEAR not in section, section
+    assert "_No divergence found among the 7 repositories read._" in section, section
+    [not_checked] = [l for l in section.splitlines() if "NOT checked" in l]
+    assert "`rezgen`" in not_checked
+    assert "declared-but-not-observed" not in section
+
+
+def test_full_placement_section_is_unchanged():
+    """Byte-identical to the section as it was before partial coverage
+    existed: the all-clear, and a finding line, exactly."""
+    cc = _module("placement_full")
+    repos = _consumers_read(set(CONSUMERS), {"skdd": ["invented-skill"]})
+    agree = {"skills": {"invented-skill": {"subscribers": ["skdd"]}}}
+    assert _placement_digest(cc, repos, agree, _coverage(repos)) == (
+        "## Placement divergence\n\n" + ALL_CLEAR + "\n"
+    )
+    diverge = {"skills": {"invented-skill": {"subscribers": ["rezgen"]}}}
+    assert _placement_digest(cc, repos, diverge, _coverage(repos)) == (
+        "## Placement divergence\n\n"
+        "- `invented-skill` — declared-but-not-observed: `rezgen`; observed-but-not-declared: `skdd`\n"
+    )

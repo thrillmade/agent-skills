@@ -62,6 +62,9 @@ def _digest_for(lock: dict, module=None) -> tuple[list[dict], str]:
     checkable, unscoped = cc_.parse_lock_hashes(lock)
     repos = {
         "fake-subscriber": {
+            # A repo the census read: survey_repo sets this on every record it
+            # read, and drift is only checked for records that were read.
+            "read": True,
             "subscribed": [],
             "local": [],
             "untracked": [],

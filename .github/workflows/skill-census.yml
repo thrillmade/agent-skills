@@ -120,10 +120,15 @@ jobs:
           private-key: ${{ secrets.THRILLMADE_ORCHESTRATOR_PRIVATE_KEY }}
           owner: thrillmade
           permission-metadata: read
-          # --resolve revokes this token itself the moment the listing is done
-          # (it can name every repository in the installation, and later steps
-          # install third-party code), so the action's end-of-job revoke would
-          # only warn about a token that is already gone.
+          # This token can name every repository in the installation, and later
+          # steps install third-party code. --resolve tries to revoke it the
+          # moment the listing is done. That is best effort: if the DELETE fails
+          # or times out, or the job dies before it, the token lives until it
+          # expires (up to an hour), and with the revoke below skipped nothing
+          # else removes it. The end-of-job revoke is skipped anyway: the
+          # third-party install it would protect against runs BEFORE the end of
+          # the job, so revoking then adds nothing there, and on every healthy
+          # run it would only warn about a token already gone.
           skip-token-revoke: "true"
 
       # Writes `repositories=<this repo>,<each visible consumer>` from

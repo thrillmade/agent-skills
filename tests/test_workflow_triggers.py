@@ -204,28 +204,38 @@ def test_census_token_scope_comes_from_the_resolve_step():
     assert lookup_with.get("owner"), "the lookup token must cover the installation"
 
     # The lookup token can name every repository in the installation and
-    # later steps install third-party code: --resolve revokes it as soon as
-    # the listing is done, so the action's own end-of-job revoke is skipped
-    # (it would only warn about a token that is already gone).
+    # later steps install third-party code. --resolve TRIES to revoke it as
+    # soon as the listing is done; if that DELETE fails or times out, or the
+    # job dies first, the token lives until it expires (up to an hour) and
+    # nothing else removes it. The action's own end-of-job revoke is skipped
+    # anyway: the install it would guard against runs before the end of the
+    # job, so a late revoke adds nothing there, and on a healthy run it would
+    # only warn about a token already gone.
     assert str(lookup_with.get("skip-token-revoke")).lower() == "true"
     assert "skip-token-revoke" not in token["with"], "the steward token keeps its end-of-job revoke"
 
 
 def _executable_values(doc):
-    """Every value a run actually uses: each job's and step's `env:` values,
-    each step's `with:` values, and each step's `run:` script. Comments and
-    step names are prose, where an ordinary word such as "protocol" is not a
-    repository name."""
+    """Every value a run actually uses: the top-level `env:`; each job's
+    `env:`, `if:` and `outputs:`; each step's `with:`, `env:`, `if:` and
+    `run:`. Comments and step names are prose, where an ordinary word such as
+    "protocol" is not a repository name."""
+    for key, value in (doc.get("env") or {}).items():
+        yield f"env.{key}", str(value)
     for job_id, job in doc["jobs"].items():
-        for key, value in (job.get("env") or {}).items():
-            yield f"jobs.{job_id}.env.{key}", str(value)
+        for block in ("env", "outputs"):
+            for key, value in (job.get(block) or {}).items():
+                yield f"jobs.{job_id}.{block}.{key}", str(value)
+        if "if" in job:
+            yield f"jobs.{job_id}.if", str(job["if"])
         for i, step in enumerate(job.get("steps") or []):
             where = f"jobs.{job_id}.steps[{i}]"
             for block in ("with", "env"):
                 for key, value in (step.get(block) or {}).items():
                     yield f"{where}.{block}.{key}", str(value)
-            if "run" in step:
-                yield f"{where}.run", str(step["run"])
+            for key in ("if", "run"):
+                if key in step:
+                    yield f"{where}.{key}", str(step[key])
 
 
 def test_census_workflow_names_no_repository_literally():
