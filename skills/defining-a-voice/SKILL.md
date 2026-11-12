@@ -1,7 +1,7 @@
 ---
 version: "1.0.2"
-digest: "25e825b3cc5a"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
-origin: "https://github.com/thrillmade/agent-skills"
+digest: "25e825b3cc5a"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/thrill-skills"
 name: defining-a-voice
 description: >-
   Use when a brand needs its voice written down, or when copy is being written

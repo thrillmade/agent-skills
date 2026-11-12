@@ -1,7 +1,7 @@
 ---
 version: "1.1.3"
-digest: "14e5f0314e5e"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
-origin: "https://github.com/thrillmade/agent-skills"
+digest: "14e5f0314e5e"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/thrill-skills"
 name: designing-elite-ui
 description: Visual review — hold the rendered UI to a concrete elite/Figma-grade bar (one-axis color, APCA-gated contrast, subtraction with a test, one source per primitive, on-grid and derived sizes, distinct and consistent copy, floating stable chrome, every theme verified) instead of a vague "looks fine." The STANDARD a design-critic measures against, for tools and content-led pages alike.
 kind: design

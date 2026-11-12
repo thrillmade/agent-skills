@@ -12,6 +12,12 @@ What #250 asks for is not a behaviour change but an annotation: the same
 label, so a run that quietly could not check GitHub reads differently from a
 run that checked and found nothing.
 
+#264 extends this to the other two sites, the per-verdict `KEY_MATCH` and
+`EXISTS` lookups. There a failure read as "absent" IS dangerous -- it falls
+through to `gh issue create` and re-files an open verdict -- so the behaviour
+does change: the verdict is held back for the cycle, with a warning. See the
+section at the bottom.
+
 Executes the real embedded bash from the "File issues" step, same harness as
 test_skill_census_digest_closure.py -- these are additions to that file's
 `FAKE_GH`, not a reimplementation of the step's logic.
@@ -69,10 +75,20 @@ if len(argv) >= 2 and argv[0] == "label" and argv[1] == "create":
 if len(argv) >= 2 and argv[0] == "issue" and argv[1] == "list":
     rest = argv[2:]
     if "--search" in rest:
-        if os.environ.get("GH_SEARCH_DIGEST_FAILS") == "1":
+        query = rest[rest.index("--search") + 1]
+        # #264: the per-verdict lookups (census_key, then exact title) are
+        # routed separately from the digest lookup so each can fail alone.
+        if "census-key" in query:
+            kind = "KEY"
+        elif query.endswith(" digest in:title"):
+            kind = "DIGEST"
+        else:
+            kind = "TITLE"
+        log({"cmd": "search", "kind": kind, "query": query})
+        if os.environ.get(f"GH_SEARCH_{kind}_FAILS") == "1":
             print("HTTP 502: transient error", file=sys.stderr)
             sys.exit(1)
-        sys.stdout.write(os.environ.get("GH_SEARCH_DIGEST_JSON", "[]"))
+        sys.stdout.write(os.environ.get(f"GH_SEARCH_{kind}_JSON", "[]"))
         sys.exit(0)
     if "--label" in rest:
         if os.environ.get("GH_LABEL_CENSUS_FAILS") == "1":
@@ -113,7 +129,7 @@ if len(argv) >= 2 and argv[0] == "issue" and argv[1] == "create":
             i += 1
     new_num = os.environ.get("GH_NEW_ISSUE_NUM", "9999")
     log({"cmd": "create", "number": new_num, "title": title})
-    print(f"https://github.com/thrillmade/agent-skills/issues/{new_num}")
+    print(f"https://github.com/thrillmade/thrill-skills/issues/{new_num}")
     sys.exit(0)
 
 if len(argv) >= 2 and argv[0] == "issue" and argv[1] == "close":
@@ -158,6 +174,10 @@ def _run_file_issues(
     search_digest_json: list | None = None,
     label_census_json: list | None = None,
     new_issue_num: str = "500",
+    verdicts: list | None = None,
+    search_key_fails: bool = False,
+    search_title_fails: bool = False,
+    dry_run: bool = False,
 ) -> dict:
     script = _file_issues_script()
 
@@ -178,6 +198,10 @@ def _run_file_issues(
         (census_dir / "digest.md").write_text(
             "# Skill census digest\n\nbody\n", encoding="utf-8"
         )
+        if verdicts is not None:
+            (census_dir / "verdicts.json").write_text(
+                json.dumps({"verdicts": verdicts}), encoding="utf-8"
+            )
 
         call_log = tdp / "gh_calls.jsonl"
 
@@ -189,11 +213,13 @@ def _run_file_issues(
         env["GH_LABEL_CENSUS_JSON"] = json.dumps(label_census_json or [])
         env["GH_SEARCH_DIGEST_FAILS"] = "1" if search_digest_fails else "0"
         env["GH_LABEL_CENSUS_FAILS"] = "1" if label_census_fails else "0"
+        env["GH_SEARCH_KEY_FAILS"] = "1" if search_key_fails else "0"
+        env["GH_SEARCH_TITLE_FAILS"] = "1" if search_title_fails else "0"
         env["GH_NEW_ISSUE_NUM"] = new_issue_num
         env["GH_TOKEN"] = "dummy-token"
-        env["GH_REPO"] = "thrillmade/agent-skills"
+        env["GH_REPO"] = "thrillmade/thrill-skills"
         env["CENSUS_DIR"] = str(census_dir)
-        env["DRY_RUN"] = "false"
+        env["DRY_RUN"] = "true" if dry_run else "false"
 
         proc = subprocess.run(
             ["bash", "-c", script],
@@ -257,3 +283,71 @@ def test_a_successful_run_prints_no_warning_for_either_site():
     out = _run_file_issues(search_digest_json=[], label_census_json=PRIOR_DIGESTS)
     assert out["returncode"] == 0
     assert "::warning::" not in out["stdout"], out["stdout"]
+
+
+# --- #264: the per-verdict lookups (KEY_MATCH, EXISTS) -----------------------
+#
+# Same shape as the two sites above, but on the per-verdict path a lookup
+# that fails and is read as "nothing filed" falls through to `gh issue
+# create` — an unwarned duplicate of a verdict that is already open. A failed
+# lookup is not "nothing filed": the verdict is held back this cycle, with a
+# warning naming it, and the step still succeeds (the digest has filed; the
+# panel proposes the same census_key again next cycle).
+
+VERDICT_TITLE = "[gap] census-2026-W35: gap: invented-fixture-skill"
+VERDICT = {
+    "title": VERDICT_TITLE,
+    "body": "reasoning",
+    "labels": ["gap"],
+    "census_key": "gap:invented-fixture-skill",
+}
+
+
+def _verdict_creates(out: dict) -> list[dict]:
+    return [c for c in out["calls"] if c["cmd"] == "create" and c["title"] == VERDICT_TITLE]
+
+
+def _warnings(out: dict) -> list[str]:
+    return [l for l in out["stdout"].splitlines() if l.startswith("::warning::")]
+
+
+def test_key_lookup_failure_holds_back_the_verdict_and_warns():
+    out = _run_file_issues(verdicts=[VERDICT], search_key_fails=True)
+    assert out["returncode"] == 0, out["stdout"] + out["stderr"]
+    assert _verdict_creates(out) == [], "a failed census_key lookup was read as 'nothing filed'"
+    [warning] = _warnings(out)
+    assert VERDICT["census_key"] in warning and "held back" in warning
+
+
+def test_title_lookup_failure_holds_back_the_verdict_and_warns():
+    out = _run_file_issues(verdicts=[VERDICT], search_title_fails=True)
+    assert out["returncode"] == 0, out["stdout"] + out["stderr"]
+    assert _verdict_creates(out) == [], "a failed title lookup was read as 'nothing filed'"
+    [warning] = _warnings(out)
+    assert VERDICT_TITLE in warning and "held back" in warning
+
+
+def test_title_lookup_failure_without_a_key_holds_back_too():
+    keyless = {k: v for k, v in VERDICT.items() if k != "census_key"}
+    out = _run_file_issues(verdicts=[keyless], search_title_fails=True)
+    assert out["returncode"] == 0
+    assert _verdict_creates(out) == []
+    assert any("held back" in w for w in _warnings(out))
+
+
+def test_dry_run_reports_a_held_back_verdict():
+    out = _run_file_issues(verdicts=[VERDICT], search_key_fails=True, dry_run=True)
+    assert out["returncode"] == 0
+    assert "Would HOLD BACK" in out["stdout"]
+    assert "Would CREATE '" + VERDICT_TITLE not in out["stdout"]
+
+
+def test_working_verdict_lookups_create_and_print_no_warning():
+    """Control: both lookups answer, nothing matches, the verdict is filed
+    once and nothing warns."""
+    out = _run_file_issues(verdicts=[VERDICT])
+    assert out["returncode"] == 0
+    assert len(_verdict_creates(out)) == 1
+    assert _warnings(out) == [], out["stdout"]
+    kinds = [c["kind"] for c in out["calls"] if c["cmd"] == "search"]
+    assert kinds == ["DIGEST", "KEY", "TITLE"]

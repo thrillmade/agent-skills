@@ -13,10 +13,10 @@ PR's CI run, so this file is always coherent with current `main`.
 ---
 
 
-## 2026-11 (16 decisions)
+## 2026-11 (20 decisions)
 
-- **2026-11-11** — The catalog calls the design-token project udts: every live mention of tokenomics is renamed *(fix/tokenomics-to-udts)* — [decisions-branches/fix__tokenomics-to-udts.md](decisions-branches/fix__tokenomics-to-udts.md)
-- *... 14 more decisions ...*
+- **2026-11-11** — Review round on the census change: the alarm cannot be captured, the token fails closed, and a partial census reports nothing about repositories it did not read *(fix/census-fails-loudly-313)* — [decisions-branches/fix__census-fails-loudly-313.md](decisions-branches/fix__census-fails-loudly-313.md)
+- *... 18 more decisions ...*
 - **2026-11-02** — Design skills: thrill-design house principles, motion-continuity, ios-safari-surfaces; designing-elite-ui and orchestrating-elite-agent-qa amended *(feat/design-skills-nov)* — [decisions-branches/feat__design-skills-nov.md](decisions-branches/feat__design-skills-nov.md)
 
 ## 2026-10

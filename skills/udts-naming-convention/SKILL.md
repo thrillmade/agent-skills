@@ -1,7 +1,7 @@
 ---
 version: "1.0.1"
-digest: "dcad12aa1dac"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
-origin: "https://github.com/thrillmade/agent-skills"
+digest: "dcad12aa1dac"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/thrill-skills"
 name: udts-naming-convention
 description: "[L2 stub — incubating] UDTS's concrete token-naming convention — its opinionated instantiation of the universal principles in token-naming-conventions. Full content is being authored in thrillmade/udts and lands here via an upstream PR once the UDTS spec stabilizes; do not treat this stub as guidance yet."
 ---

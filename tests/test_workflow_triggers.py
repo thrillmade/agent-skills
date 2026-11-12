@@ -138,3 +138,161 @@ def test_validate_skills_checks_out_full_history_for_the_ancestry_gate():
     )
     assert any("gen_skill_versions.py" in str(s.get("run", "")) and "--check" in str(s.get("run", ""))
                for s in steps), "validate-skills.yml no longer runs the ancestry check."
+
+
+# --- skill-census: token scope, own name, alarms (#313) ---------------------
+#
+# The census stopped four Mondays running because its token request named a
+# repository by a stale literal, and nothing alarmed. These pin the shape that
+# fixes both: the token's scope comes from `census_counters.py --resolve`
+# (CONSUMER_REPOS is the only list), no repository name is typed into the
+# workflow, and two alarms — one on the day, one that does not depend on the
+# census running at all — file into the same issue.
+
+import re  # noqa: E402 -- grouped with the tests that use it
+
+import census_counters  # noqa: E402 -- conftest puts .github/scripts on sys.path
+
+CENSUS = "skill-census.yml"
+WATCHDOG = "census-watchdog.yml"
+APP_TOKEN_ACTION = "actions/create-github-app-token@"
+
+
+def _census_steps():
+    doc, _ = _load(CENSUS)
+    return doc, doc["jobs"]["census"]["steps"]
+
+
+def _step(steps, step_id):
+    matches = [s for s in steps if s.get("id") == step_id]
+    assert len(matches) == 1, f"expected one step with id {step_id!r}"
+    return steps.index(matches[0]), matches[0]
+
+
+def test_census_token_scope_comes_from_the_resolve_step():
+    _, steps = _census_steps()
+    i_lookup, lookup = _step(steps, "lookup_token")
+    i_resolve, resolve = _step(steps, "resolve")
+    i_token, token = _step(steps, "app_token")
+    i_counters, _ = _step(steps, "counters")
+    assert i_lookup < i_resolve < i_token < i_counters
+
+    # The lookup token can list the installation and do nothing else.
+    assert str(lookup["uses"]).startswith(APP_TOKEN_ACTION)
+    lookup_with = lookup["with"]
+    assert lookup_with.get("permission-metadata") == "read"
+    assert not [k for k in lookup_with if k.startswith("permission-") and k != "permission-metadata"]
+    assert "repositories" not in lookup_with
+
+    assert "census_counters.py --resolve" in resolve["run"]
+    assert resolve["env"]["LOOKUP_TOKEN"] == "${{ steps.lookup_token.outputs.token }}"
+
+    # The steward token's scope is exactly what --resolve wrote, and the step
+    # does not run on an empty list: an empty `repositories` input with
+    # `owner` set is a token for every repository the App can see.
+    assert str(token["uses"]).startswith(APP_TOKEN_ACTION)
+    assert token["with"]["repositories"] == "${{ steps.resolve.outputs.repositories }}"
+    assert token.get("if") == "${{ steps.resolve.outputs.repositories != '' }}"
+
+    # Fail CLOSED on an empty list. With `owner` set, the pinned action reads an
+    # empty, whitespace-only or separator-only `repositories` as "every
+    # repository the owner's installation can see"; without `owner` it reads
+    # it as this repository alone. The `if:` above only stops a literally
+    # empty string, so the steward step must not carry `owner`. The lookup
+    # step must: listing the whole installation is its job.
+    assert "owner" not in token["with"]
+    assert lookup_with.get("owner"), "the lookup token must cover the installation"
+
+    # The lookup token can name every repository in the installation and
+    # later steps install third-party code. --resolve TRIES to revoke it as
+    # soon as the listing is done; if that DELETE fails or times out, or the
+    # job dies first, the token lives until it expires (up to an hour) and
+    # nothing else removes it. The action's own end-of-job revoke is skipped
+    # anyway: the install it would guard against runs before the end of the
+    # job, so a late revoke adds nothing there, and on a healthy run it would
+    # only warn about a token already gone.
+    assert str(lookup_with.get("skip-token-revoke")).lower() == "true"
+    assert "skip-token-revoke" not in token["with"], "the steward token keeps its end-of-job revoke"
+
+
+def _executable_values(doc):
+    """Every value a run actually uses: the top-level `env:`; each job's
+    `env:`, `if:` and `outputs:`; each step's `with:`, `env:`, `if:` and
+    `run:`. Comments and step names are prose, where an ordinary word such as
+    "protocol" is not a repository name."""
+    for key, value in (doc.get("env") or {}).items():
+        yield f"env.{key}", str(value)
+    for job_id, job in doc["jobs"].items():
+        for block in ("env", "outputs"):
+            for key, value in (job.get(block) or {}).items():
+                yield f"jobs.{job_id}.{block}.{key}", str(value)
+        if "if" in job:
+            yield f"jobs.{job_id}.if", str(job["if"])
+        for i, step in enumerate(job.get("steps") or []):
+            where = f"jobs.{job_id}.steps[{i}]"
+            for block in ("with", "env"):
+                for key, value in (step.get(block) or {}).items():
+                    yield f"{where}.{block}.{key}", str(value)
+            for key in ("if", "run"):
+                if key in step:
+                    yield f"{where}.{key}", str(step[key])
+
+
+def test_census_workflow_names_no_repository_literally():
+    """CONSUMER_REPOS is the only list, and this repo's own name comes from
+    the run context — so no repository name appears in any value the
+    workflow runs with."""
+    doc, _ = _load(CENSUS)
+    names = list(census_counters.CONSUMER_REPOS) + [
+        known.split("/", 1)[1] for known in census_counters.CATALOG_NAMES
+    ]
+    values = list(_executable_values(doc))
+    assert any(where.endswith(".run") for where, _ in values), "found no run: scripts to check"
+    for name in names:
+        pattern = re.compile(rf"(?<![\w-]){re.escape(name)}(?![\w-])")
+        hits = [where for where, value in values if pattern.search(value)]
+        assert not hits, f"{CENSUS} names {name!r} literally in: {hits}"
+    _, steps = _census_steps()
+    _, file_issues = _step(steps, "file_issues")
+    assert file_issues["env"]["GH_REPO"] == "${{ github.repository }}"
+
+
+def test_census_alarm_job_runs_on_any_non_success_with_its_own_issues_write():
+    doc, _ = _load(CENSUS)
+    assert doc["permissions"] == {"contents": "read"}, (
+        "workflow-level permissions widened; the alarm job carries its own"
+    )
+    alarm = doc["jobs"]["alarm"]
+    assert alarm["needs"] == "census"
+    # EXACT, not substrings: `&& false` appended, or an `||` that changes the
+    # precedence, keeps every substring present and silences the alarm. Any
+    # change to this condition has to be made here too, on purpose.
+    assert alarm["if"] == (
+        "${{ always() && github.event_name == 'schedule' && needs.census.result != 'success' }}"
+    )
+    assert alarm["permissions"] == {"issues": "write"}
+    body = yaml.safe_dump(alarm)
+    assert "secrets." not in body, "the alarm must not depend on the App secrets the census needs"
+    assert "workflow-failure-key: skill-census" in body
+
+
+def test_watchdog_lives_outside_the_census_failure_domain():
+    doc, triggers = _load(WATCHDOG)
+    assert triggers["schedule"] == [{"cron": "0 12 * * 2"}]
+    assert "workflow_dispatch" in triggers
+    assert "workflow_run" not in triggers
+    text = (WORKFLOWS / WATCHDOG).read_text(encoding="utf-8")
+    assert "secrets." not in text
+    assert APP_TOKEN_ACTION not in text
+    for job in doc["jobs"].values():
+        assert "needs" not in job
+    assert doc["permissions"] == {"actions": "read", "issues": "write"}
+
+    env = doc["jobs"]["watchdog"]["steps"][0]["env"]
+    assert env["CENSUS_WORKFLOW"] == CENSUS
+    assert (WORKFLOWS / env["CENSUS_WORKFLOW"]).exists()
+    # Two weekly cadences, while the census is weekly.
+    _, census_triggers = _load(CENSUS)
+    assert census_triggers["schedule"] == [{"cron": "0 12 * * 1"}]
+    assert int(env["MAX_AGE_DAYS"]) == 2 * 7
+    assert "workflow-failure-key: skill-census" in text

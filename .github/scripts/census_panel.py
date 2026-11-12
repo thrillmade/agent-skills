@@ -36,8 +36,10 @@ Outputs (written to CENSUS_DIR):
                      workflow treats the panel as skipped (Mode B) on this.
 
 Exit codes:
-  0  Success, Mode B (no API key), OR a handled API/validation failure
-     (panel_failed.marker written). Every API/model problem is exit 0.
+  0  Success, Mode B (no API key), a partial census (census.json
+     `coverage.complete` is false: nothing written, verdicts held back), OR a
+     handled API/validation failure (panel_failed.marker written). Every
+     API/model problem is exit 0.
   1  RESERVED for a wiring bug: CENSUS_DIR unset, or census.json missing /
      unreadable / corrupt. Never used for an API problem.
 
@@ -108,15 +110,22 @@ DIGEST_PROMPT_LIMIT = 20000
 SKILLS_CATALOG_DIR = "skills"  # cwd-relative, mirrors RUBRIC_PATH
 CATALOG_DESC_LIMIT = 400
 
-# READ-ONLY docket fetch. gh reads GH_TOKEN from the environment itself.
-GH_ISSUE_LIST_CMD = [
-    "gh", "issue", "list",
-    "-R", "thrillmade/agent-skills",
-    "--state", "open",
-    "--label", "census",
-    "--json", "number,title,body,labels,updatedAt",
-    "--limit", "50",
-]
+# READ-ONLY docket fetch. gh reads GH_TOKEN from the environment itself. The
+# repo is the one this run belongs to (GITHUB_REPOSITORY), so a rename needs no
+# edit here; the literal is only the fallback for a local run.
+_SELF_REPO_FALLBACK = "thrillmade/thrill-skills"
+
+
+def gh_issue_list_cmd() -> list[str]:
+    repo = os.environ.get("GITHUB_REPOSITORY", "").strip() or _SELF_REPO_FALLBACK
+    return [
+        "gh", "issue", "list",
+        "-R", repo,
+        "--state", "open",
+        "--label", "census",
+        "--json", "number,title,body,labels,updatedAt",
+        "--limit", "50",
+    ]
 
 SYSTEM_PROMPT = """\
 You are the CENSUS PANEL — an adversarial reviewer for the thrillmade skill
@@ -299,7 +308,7 @@ def fetch_docket() -> tuple[list[dict], str | None]:
     failure returns ([], error_string) rather than aborting the panel."""
     try:
         proc = subprocess.run(
-            GH_ISSUE_LIST_CMD,
+            gh_issue_list_cmd(),
             capture_output=True,
             text=True,
             timeout=45,
@@ -830,6 +839,22 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 1
     cycle = cycle.strip()
+
+    # A partial census is not judged. The panel would read an unread
+    # consumer's empty record as "subscribes nothing" and could propose a gap
+    # or a demotion about a repository nobody looked at. Writing nothing sends
+    # the File issues step down its existing digest-only path (no
+    # verdicts.json), so the digest still files. A census.json from before
+    # coverage was recorded has no `coverage` and is judged as before.
+    coverage = census.get("coverage")
+    if isinstance(coverage, dict) and coverage.get("complete") is False:
+        print(
+            "::warning::census panel skipped: coverage is partial (read "
+            f"{coverage.get('read')} of {coverage.get('consumers')} consumer repositories) — "
+            "verdicts held back this cycle; the digest is filed alone.",
+            file=sys.stderr,
+        )
+        return 0
 
     verdicts_path = os.path.join(census_dir, "verdicts.json")
     marker_path = os.path.join(census_dir, "panel_failed.marker")

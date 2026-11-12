@@ -1,7 +1,7 @@
 ---
 version: "1.0.2"
-digest: "682367fb898d"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
-origin: "https://github.com/thrillmade/agent-skills"
+digest: "682367fb898d"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/thrill-skills"
 name: brand-voice-review
 description: SUPERSEDED — split three ways, one owner per rule. Interface wording (dead phrases, "click here", "just"/"simply", filler verbs, title-case drift, verb-first calls to action) is writing-interface-copy; voice and tone (accidental shouting, ALL CAPS, we/you drift, deferring to a project's own voice guide) is defining-a-voice; buzzwords and marketing copy are writing-marketing-copy. Kept as a pointer, with its applies_to trigger, so a subscriber that loads it is routed to the successors. Load those, not this.
 applies_to:

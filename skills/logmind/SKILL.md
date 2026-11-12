@@ -1,7 +1,7 @@
 ---
 version: "1.0.2"
-digest: "6ca852acf9bf"  # is your copy current? github.com/thrillmade/agent-skills/blob/main/docs/skill-versions.json
-origin: "https://github.com/thrillmade/agent-skills"
+digest: "6ca852acf9bf"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+origin: "https://github.com/thrillmade/thrill-skills"
 name: logmind
 description: |
   MUST be loaded for any task in a project that uses logmind (detect by:

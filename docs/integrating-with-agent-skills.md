@@ -1,15 +1,15 @@
-# Integrating a repo with agent-skills
+# Integrating a repo with thrill-skills
 
 Every thrillmade repo where agents work integrates with this catalog. This guide is the canonical how-to: what a new repo does, how an existing repo adjusts, which parts are automatic today, and which arrive with the steward. The normative wire-format contracts graduate to the protocol SPEC ([protocol#39](https://github.com/thrillmade/protocol/issues/39)); this doc is the operator's manual.
 
 ## The model in one minute
 
-`thrillmade/agent-skills` is the org's **skill reservoir** and its **editor**. Relative to it, every repo holds each of its skills in exactly one **posture**:
+`thrillmade/thrill-skills` is the org's **skill reservoir** and its **editor**. Relative to it, every repo holds each of its skills in exactly one **posture**:
 
 | Posture | Meaning | Mechanism |
 |---|---|---|
 | **Subscribed** | Pulled from the catalog; updates flow in as PRs | `skills-lock.json` (hash-pinned, `npx skills add`) or clud-bug's pinned-ref fetch |
-| **Published** | Born in your repo, promoted to the catalog | Nomination PR to agent-skills; the editor gate accepts or rejects |
+| **Published** | Born in your repo, promoted to the catalog | Nomination PR to thrill-skills; the editor gate accepts or rejects |
 | **Local** | Repo-specific; never leaves | Lives in `.claude/skills/`, marked local-only in your census |
 
 A fourth posture exists but isn't a choice a repo makes — it's what happens when a subscribed repo **leaves the org**:
@@ -27,10 +27,10 @@ A departed repo is not Subscribed, Published, or Local — it was Subscribed and
 
 What a departed repo **can** still do, unaided: verify currency for itself — but **via the `version:` stamp, not via `computedHash`.**
 
-Each skill's frontmatter carries a `version:` line holding a content digest of that file, computed with the line itself elided so the stamp is a fixed point. It is reproducible from bytes with nothing beyond the Python standard library, and `thrillmade/agent-skills` is public, so both the checker and the index it reads are fetchable with `curl` alone — no org membership, no token, no install:
+Each skill's frontmatter carries a `version:` line holding a content digest of that file, computed with the line itself elided so the stamp is a fixed point. It is reproducible from bytes with nothing beyond the Python standard library, and `thrillmade/thrill-skills` is public, so both the checker and the index it reads are fetchable with `curl` alone — no org membership, no token, no install:
 
 ```bash
-curl -fsSLO https://raw.githubusercontent.com/thrillmade/agent-skills/main/.github/scripts/skills_current.py
+curl -fsSLO https://raw.githubusercontent.com/thrillmade/thrill-skills/main/.github/scripts/skills_current.py
 python3 skills_current.py            # from the repo root
 ```
 
@@ -66,9 +66,9 @@ logmind init
 npx clud-bug init
 
 # 2. Subscribe to the catalog skills this repo needs (per-skill opt-in):
-npx skills add https://github.com/thrillmade/agent-skills --skill logmind
-npx skills add https://github.com/thrillmade/agent-skills --skill writing-interface-copy   # + defining-a-voice, writing-marketing-copy
-# ...whatever fits the repo. Browse: https://www.skills.sh/thrillmade/agent-skills
+npx skills add https://github.com/thrillmade/thrill-skills --skill logmind
+npx skills add https://github.com/thrillmade/thrill-skills --skill writing-interface-copy   # + defining-a-voice, writing-marketing-copy
+# ...whatever fits the repo. Browse: https://github.com/thrillmade/thrill-skills
 
 # 3. Commit the manifests (skills-lock.json + .clud-bug.json). Do not gitignore them.
 
@@ -128,7 +128,7 @@ Every `SKILL.md` here now opens with three fields, each answering a question the
 ```yaml
 version: "1.4.2"                                     # ordered, human -- which revision
 digest:  "c894961136c7"                               # exact, recomputable -- which bytes
-origin:  "https://github.com/thrillmade/agent-skills"   # where to check -- a real field, not a comment
+origin:  "https://github.com/thrillmade/thrill-skills"   # where to check -- a real field, not a comment
 ```
 
 `version` used to be all there was, and it held a digest — it could answer "same or different," never "newer." `origin` used to be a YAML *comment* trailing that line: readable by a human who opened the file, discarded by `yaml.safe_load` before any program saw it. Both are fixed the same way: give the fact its own field.
@@ -142,7 +142,7 @@ The quotes on `version` and `digest` are not decoration. Unquoted, an all-digit 
 **[`docs/skill-versions.json`](skill-versions.json)** publishes `current`/`version` plus the full history for every slug — each history row null for `version` if it predates this field, since there is nothing true to say about a commit before semver existed. One GET, no auth:
 
 ```bash
-curl -fsSLO https://raw.githubusercontent.com/thrillmade/agent-skills/main/.github/scripts/skills_current.py
+curl -fsSLO https://raw.githubusercontent.com/thrillmade/thrill-skills/main/.github/scripts/skills_current.py
 python3 skills_current.py           # run from your repo root
 ```
 
@@ -154,7 +154,7 @@ Verdicts are `current`, `STALE n`, `DIVERGED`, `unpublished` (a version this cat
 
 `version:`/`digest:`/`origin:` are **enforced when present, not required**, and none is in the SPEC's frontmatter table at all. That is the sanctioned way to add them: protocol SPEC §2.1 says an unrecognised key "MUST NOT cause a failure" and MUST round-trip unchanged, "so the schema can grow without every consumer being upgraded first". Requiring any of the three would be the unsanctioned half. The same table already marks `source` REQUIRED against **0 of 49** adopters in this catalog (control: `kind` has 5) — the catalog already diverges from the owner it cites, and declaring a required key from inside it would widen that rather than close it. Ratification is [protocol#39](https://github.com/thrillmade/protocol/issues/39)'s to grant. The three ARE gated *together*, though: a file naming one without the other two is rejected — an index carrying `current`/`version` for a skill whose file only bothered to claim a digest is exactly the half-true state this format exists to make unrepresentable.
 
-**Pinning, if you want an exact answer instead of a comparison.** `npx skills add thrillmade/agent-skills#<sha>` records the ref in your lock, so a later install is reproducible. That works today and costs this catalog nothing — but it reaches only repos that have a lock (four of the twenty here), which is why the index exists rather than a lock convention.
+**Pinning, if you want an exact answer instead of a comparison.** `npx skills add thrillmade/thrill-skills#<sha>` records the ref in your lock, so a later install is reproducible. That works today and costs this catalog nothing — but it reaches only repos that have a lock (four of the twenty here), which is why the index exists rather than a lock convention.
 
 **This is pull-only.** It makes staleness *knowable*, not *known*: nothing here opens a PR in your repo, and this catalog still does not know who its subscribers are — [`placement-map.json`](placement-map.json) carries an empty `subscribers` list on most entries. Run the checker, or wire it into your own CI.
 
@@ -164,7 +164,7 @@ Verdicts are `current`, `STALE n`, `DIVERGED`, `unpublished` (a version this cat
 
 Divergence from live state — a repo's `skills-lock.json` or `.clud-bug.json` subscribing to something the map marks `catalog-only`, or authoring a copy of something the map homes at `catalog` — isn't silently reconciled. It *files* a placement verdict: the census raises it as a `placement:` issue for a human to resolve, either by correcting the repo or by updating the map.
 
-It also carries the two editorial fields the catalog directory is generated from: `family` (which group the skill is listed under, an id declared in the map's top-level `families` array) and `owns` (a ≤32-byte fragment naming what that skill owns, as it appears in the directory line). Both are **required on every entry**, and that is deliberate: the map is already reconciled 1:1 against `skills/`, so requiring them here means a skill cannot be added without saying where it belongs and what it is for ([#229](https://github.com/thrillmade/agent-skills/issues/229)).
+It also carries the two editorial fields the catalog directory is generated from: `family` (which group the skill is listed under, an id declared in the map's top-level `families` array) and `owns` (a ≤32-byte fragment naming what that skill owns, as it appears in the directory line). Both are **required on every entry**, and that is deliberate: the map is already reconciled 1:1 against `skills/`, so requiring them here means a skill cannot be added without saying where it belongs and what it is for ([#229](https://github.com/thrillmade/thrill-skills/issues/229)).
 
 That the catalog publishes a directory **at all** is owned by one test, `tests/test_gen_skill_directory.py::test_this_catalog_publishes_a_directory`, and not by the gate: `validate_skills` has to hold for any tree it is pointed at, so it tolerates a tree that publishes none. Deleting the skill alone is red at the gate (the map still has an entry for the missing dir); deleting the entry too used to be green everywhere, and is now red in the suite CI runs alongside it.
 

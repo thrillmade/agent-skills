@@ -1,4 +1,4 @@
-# Consuming agent-skills as an npm dependency
+# Consuming thrill-skills as an npm dependency
 
 Every posture in [integrating-with-agent-skills.md](integrating-with-agent-skills.md) — Subscribed, Published, Local — needs something to *notice* a catalog change: a weekly cron, the steward's future watcher, or a human running `npx skills update` by hand. `thrill-skills` on npm gives a fourth option that needs none of that built: **Dependabot**, which every `package.json`-carrying repo already has wired to open a PR on a version bump, gated by whatever review your reporulez ruleset already requires.
 

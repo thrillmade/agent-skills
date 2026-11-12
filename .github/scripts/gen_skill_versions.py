@@ -87,9 +87,9 @@ README = (
     "copy was edited locally. `version` and each row's `version` are the "
     "skill's own semver, null for anything published before that field "
     "existed. To check a whole repo at once, run "
-    "https://raw.githubusercontent.com/thrillmade/agent-skills/main/"
+    "https://raw.githubusercontent.com/thrillmade/thrill-skills/main/"
     ".github/scripts/skills_current.py -- stdlib only, no install. Update "
-    "with `npx skills add thrillmade/agent-skills --skill <slug>`. The "
+    "with `npx skills add thrillmade/thrill-skills --skill <slug>`. The "
     "`history` rows are not gated by CI and the `current` values are: see "
     "`verification` below."
 )
@@ -408,6 +408,23 @@ def prune_unreachable(
     return history
 
 
+def rows_ungated(skills: dict[str, dict]) -> int:
+    """History rows CI cannot recompute: every row except a live skill's
+    current one, which validate_skills.py recomputes from the tree.
+
+    Counted from the rows, not as `rows - live skills`: a live skill with no
+    row for its current digest (an in-flight edit, a skill not yet on main)
+    gates nothing, so subtracting it per skill went negative on a small
+    catalog and undercounted on this one.
+    """
+    gated = sum(
+        1
+        for e in skills.values()
+        if e["current"] is not None and any(r["v"] == e["current"] for r in e["history"])
+    )
+    return sum(len(e["history"]) for e in skills.values()) - gated
+
+
 def build(
     root: Path,
     pruned: list[tuple[str, str, str]] | None = None,
@@ -478,7 +495,7 @@ def build(
                 "(`gen_skill_versions.py --check`). Regenerate them in a full "
                 "clone with `.github/scripts/gen_skill_versions.py --write`."
             ),
-            "history_rows_ungated": rows_total - len(live),
+            "history_rows_ungated": rows_ungated(skills),
         },
         "skills": skills,
     }

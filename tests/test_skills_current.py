@@ -331,7 +331,7 @@ def test_a_stale_install_reports_it_and_exits_1(tmp_path: Path) -> None:
     r = run("--repo", str(tmp_path), "--index", str(index))
     assert r.returncode == 1, r.stdout
     assert "STALE 1" in r.stdout
-    assert "npx skills add thrillmade/agent-skills --skill alpha" in r.stdout
+    assert "npx skills add thrillmade/thrill-skills --skill alpha" in r.stdout
 
 
 def test_the_catalog_answers_its_own_checker_as_current(tmp_path: Path) -> None:
