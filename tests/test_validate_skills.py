@@ -230,20 +230,22 @@ def test_valid_kinds(tree: SkillTree, kind: str) -> None:
     assert tree.validate() == []
 
 
-def test_invalid_source(tree: SkillTree) -> None:
-    tree.frontmatter(extra="source: hand-written\n")
-    assert only(tree.validate()) == (
-        ALPHA + "`source: 'hand-written'` is not one of "
-        "['clud-bug-baseline', 'logmind-derived', 'manual', 'skills-sh'] (SPEC §1.10.1)"
-    )
-
-
 @pytest.mark.parametrize(
-    "source", ["manual", "logmind-derived", "skills-sh", "clud-bug-baseline"]
+    "source", ["manual", "logmind-derived", "skills-sh", "clud-bug-baseline", "hand-written"]
 )
-def test_valid_sources(tree: SkillTree, source: str) -> None:
+def test_source_value_is_not_enforced(tree: SkillTree, source: str) -> None:
+    # The spec no longer defines `source`, so any value is an unknown key,
+    # tolerated like the others (formerly "hand-written" was rejected).
     tree.frontmatter(extra=f"source: {source}\n")
     assert tree.validate() == []
+
+
+def test_dropping_source_enforcement_leaves_other_keys_checked(tree: SkillTree) -> None:
+    # Control: the same skill with a bad `kind` still fails.
+    tree.frontmatter(extra="source: hand-written\nkind: policy\n")
+    assert only(tree.validate()) == (
+        ALPHA + "`kind: 'policy'` is not one of ['design', 'rule', 'writing'] (SPEC §1.10.1)"
+    )
 
 
 def test_unknown_frontmatter_keys_are_tolerated(tree: SkillTree) -> None:
