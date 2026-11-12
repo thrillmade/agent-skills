@@ -1,0 +1,115 @@
+name: census-watchdog
+
+# Alarms when the weekly skill census has stopped succeeding — including when
+# it never started at all.
+#
+# The census failed four scheduled Mondays running and nothing reported it
+# (#313). skill-census.yml's own `alarm` job now files on the day a scheduled
+# run fails, but it lives in the census's failure domain: a disabled schedule,
+# a workflow file that no longer parses, or a run that never starts files
+# nothing. This workflow shares only the repository and the Actions scheduler
+# with the census. It needs no secrets, no App token and no census output: it
+# asks Actions for the newest SUCCESSFUL SCHEDULED census run, and alarms if
+# that is more than two weekly cadences old (MAX_AGE_DAYS), if there is none,
+# or if the lookup itself fails. A manual run does not reset the clock — only
+# the schedule proves the schedule works.
+#
+# It files into the SAME issue as the census's alarm job (same marker, title,
+# label and author filter as logmind-self-update.yml's "Notify on failure"),
+# so one incident is one issue, and then exits 1 so this run is red too. When
+# the census is fresh it prints one `ok` line and touches nothing.
+#
+# Known limit: GitHub disables scheduled workflows in a public repository
+# after 60 days without activity, and that would stop this workflow along with
+# the census.
+
+on:
+  schedule:
+    # Tuesdays 12:00 UTC — the day after the census (Mondays 12:00 UTC).
+    - cron: "0 12 * * 2"
+  workflow_dispatch:
+
+permissions:
+  actions: read   # gh run list
+  issues: write   # file or comment on the failure issue
+
+jobs:
+  watchdog:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check the newest successful scheduled census
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          CENSUS_WORKFLOW: skill-census.yml
+          MAX_AGE_DAYS: "14"
+        run: |
+          set -euo pipefail
+          MARKER="<!-- workflow-failure-key: skill-census -->"
+          TITLE="Scheduled workflow failing: skill-census"
+          RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          MAX_AGE_SECONDS=$(( MAX_AGE_DAYS * 86400 ))
+          NOW=$(date -u +%s)
+
+          # Any answer other than "a scheduled success at most MAX_AGE_DAYS
+          # old" is a PROBLEM: a lookup that fails cannot prove the census is
+          # running, so it alarms rather than passing quietly.
+          PROBLEM=""
+          if ! RUNS=$(gh run list --workflow "$CENSUS_WORKFLOW" --event schedule --status success \
+              --limit 1 --json createdAt,url,databaseId); then
+            PROBLEM="the lookup of ${CENSUS_WORKFLOW}'s successful scheduled runs failed, so the watchdog cannot tell whether the census is running"
+          else
+            COUNT=$(printf '%s' "$RUNS" | jq 'length' 2>/dev/null) || COUNT=""
+            NEWEST_EPOCH=$(printf '%s' "$RUNS" | jq -r '.[0].createdAt | fromdateiso8601' 2>/dev/null) || NEWEST_EPOCH=""
+            NEWEST_URL=$(printf '%s' "$RUNS" | jq -r '.[0].url // ""' 2>/dev/null) || NEWEST_URL=""
+            if [ "$COUNT" = "0" ]; then
+              PROBLEM="no successful scheduled run of ${CENSUS_WORKFLOW} was found"
+            elif [ -z "$COUNT" ] || [ -z "$NEWEST_EPOCH" ]; then
+              PROBLEM="the answer listing ${CENSUS_WORKFLOW}'s successful scheduled runs could not be read"
+            else
+              AGE=$(( NOW - NEWEST_EPOCH ))
+              AGE_DAYS=$(( AGE / 86400 ))
+              if [ "$AGE" -gt "$MAX_AGE_SECONDS" ]; then
+                PROBLEM="the newest successful scheduled census (${NEWEST_URL}) is ${AGE_DAYS} days old, over the ${MAX_AGE_DAYS}-day threshold (two weekly cadences)"
+              fi
+            fi
+          fi
+
+          if [ -z "$PROBLEM" ]; then
+            echo "ok newest successful scheduled census is ${AGE_DAYS} day(s) old (threshold ${MAX_AGE_DAYS} days): ${NEWEST_URL}"
+            exit 0
+          fi
+
+          echo "::error::skill-census watchdog: ${PROBLEM}."
+
+          gh label create automation-failure --color B60205 --force >/dev/null 2>&1 || true
+
+          # CAPTURE FILTER, NOT OPTIONAL — the same three conditions as
+          # skill-census.yml's alarm job, for the same reason: bodies only, authored
+          # by github-actions, and exactly the alarm's title, so no issue or comment
+          # a stranger writes can capture the alarm. A failed lookup files a new
+          # issue: a duplicate alarm beats a silent one.
+          EXISTING=$(gh issue list --state open --search "\"${MARKER}\" in:body" \
+            --json number,author,title 2>/dev/null \
+            | jq -r --arg t "$TITLE" '[.[] | select(.author.is_bot == true and (.author.login | test("^(app/)?github-actions$")) and .title == $t)][0].number // empty') \
+            || { EXISTING=""; echo "::warning::gh issue list failed while looking for an open skill-census failure issue — filing a new one."; }
+
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" --body "Still failing as of $(date -u +%Y-%m-%dT%H:%MZ) (watchdog): ${PROBLEM}. Watchdog run: ${RUN_URL}"
+            echo "::notice::Commented on existing failure issue #${EXISTING}."
+          else
+            BODY_FILE="$(mktemp)"
+            {
+              echo "The **skill-census** watchdog (\`.github/workflows/census-watchdog.yml\`) found that the weekly census is not succeeding: ${PROBLEM}."
+              echo ""
+              echo "Watchdog run: ${RUN_URL}"
+              echo ""
+              echo "This issue is commented on (not re-filed) on every subsequent failure, by this watchdog and by skill-census.yml's alarm job — see the marker below."
+              echo ""
+              echo "$MARKER"
+            } > "$BODY_FILE"
+            gh issue create --title "$TITLE" --label automation-failure --body-file "$BODY_FILE"
+            echo "::notice::Filed new failure issue."
+          fi
+          exit 1
