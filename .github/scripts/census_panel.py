@@ -36,8 +36,10 @@ Outputs (written to CENSUS_DIR):
                      workflow treats the panel as skipped (Mode B) on this.
 
 Exit codes:
-  0  Success, Mode B (no API key), OR a handled API/validation failure
-     (panel_failed.marker written). Every API/model problem is exit 0.
+  0  Success, Mode B (no API key), a partial census (census.json
+     `coverage.complete` is false: nothing written, verdicts held back), OR a
+     handled API/validation failure (panel_failed.marker written). Every
+     API/model problem is exit 0.
   1  RESERVED for a wiring bug: CENSUS_DIR unset, or census.json missing /
      unreadable / corrupt. Never used for an API problem.
 
@@ -837,6 +839,22 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 1
     cycle = cycle.strip()
+
+    # A partial census is not judged. The panel would read an unread
+    # consumer's empty record as "subscribes nothing" and could propose a gap
+    # or a demotion about a repository nobody looked at. Writing nothing sends
+    # the File issues step down its existing digest-only path (no
+    # verdicts.json), so the digest still files. A census.json from before
+    # coverage was recorded has no `coverage` and is judged as before.
+    coverage = census.get("coverage")
+    if isinstance(coverage, dict) and coverage.get("complete") is False:
+        print(
+            "::warning::census panel skipped: coverage is partial (read "
+            f"{coverage.get('read')} of {coverage.get('consumers')} consumer repositories) — "
+            "verdicts held back this cycle; the digest is filed alone.",
+            file=sys.stderr,
+        )
+        return 0
 
     verdicts_path = os.path.join(census_dir, "verdicts.json")
     marker_path = os.path.join(census_dir, "panel_failed.marker")

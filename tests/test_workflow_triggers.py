@@ -194,23 +194,54 @@ def test_census_token_scope_comes_from_the_resolve_step():
     assert token["with"]["repositories"] == "${{ steps.resolve.outputs.repositories }}"
     assert token.get("if") == "${{ steps.resolve.outputs.repositories != '' }}"
 
+    # Fail CLOSED on an empty list. With `owner` set, the pinned action reads an
+    # empty, whitespace-only or separator-only `repositories` as "every
+    # repository the owner's installation can see"; without `owner` it reads
+    # it as this repository alone. The `if:` above only stops a literally
+    # empty string, so the steward step must not carry `owner`. The lookup
+    # step must: listing the whole installation is its job.
+    assert "owner" not in token["with"]
+    assert lookup_with.get("owner"), "the lookup token must cover the installation"
+
+    # The lookup token can name every repository in the installation and
+    # later steps install third-party code: --resolve revokes it as soon as
+    # the listing is done, so the action's own end-of-job revoke is skipped
+    # (it would only warn about a token that is already gone).
+    assert str(lookup_with.get("skip-token-revoke")).lower() == "true"
+    assert "skip-token-revoke" not in token["with"], "the steward token keeps its end-of-job revoke"
+
+
+def _executable_values(doc):
+    """Every value a run actually uses: each job's and step's `env:` values,
+    each step's `with:` values, and each step's `run:` script. Comments and
+    step names are prose, where an ordinary word such as "protocol" is not a
+    repository name."""
+    for job_id, job in doc["jobs"].items():
+        for key, value in (job.get("env") or {}).items():
+            yield f"jobs.{job_id}.env.{key}", str(value)
+        for i, step in enumerate(job.get("steps") or []):
+            where = f"jobs.{job_id}.steps[{i}]"
+            for block in ("with", "env"):
+                for key, value in (step.get(block) or {}).items():
+                    yield f"{where}.{block}.{key}", str(value)
+            if "run" in step:
+                yield f"{where}.run", str(step["run"])
+
 
 def test_census_workflow_names_no_repository_literally():
     """CONSUMER_REPOS is the only list, and this repo's own name comes from
-    the run context — so no repository name appears anywhere in the file,
-    comments included."""
-    text = (WORKFLOWS / CENSUS).read_text(encoding="utf-8")
+    the run context — so no repository name appears in any value the
+    workflow runs with."""
+    doc, _ = _load(CENSUS)
     names = list(census_counters.CONSUMER_REPOS) + [
-        census_counters._SELF_REPO_FALLBACK.split("/", 1)[1],
-        "agent-skills",
+        known.split("/", 1)[1] for known in census_counters.CATALOG_NAMES
     ]
+    values = list(_executable_values(doc))
+    assert any(where.endswith(".run") for where, _ in values), "found no run: scripts to check"
     for name in names:
-        hits = [
-            line.strip()
-            for line in text.splitlines()
-            if re.search(rf"(?<![\w-]){re.escape(name)}(?![\w-])", line)
-        ]
-        assert not hits, f"{CENSUS} names {name!r} literally: {hits}"
+        pattern = re.compile(rf"(?<![\w-]){re.escape(name)}(?![\w-])")
+        hits = [where for where, value in values if pattern.search(value)]
+        assert not hits, f"{CENSUS} names {name!r} literally in: {hits}"
     _, steps = _census_steps()
     _, file_issues = _step(steps, "file_issues")
     assert file_issues["env"]["GH_REPO"] == "${{ github.repository }}"
@@ -223,10 +254,12 @@ def test_census_alarm_job_runs_on_any_non_success_with_its_own_issues_write():
     )
     alarm = doc["jobs"]["alarm"]
     assert alarm["needs"] == "census"
-    cond = alarm["if"]
-    assert "always()" in cond
-    assert "needs.census.result != 'success'" in cond
-    assert "github.event_name == 'schedule'" in cond
+    # EXACT, not substrings: `&& false` appended, or an `||` that changes the
+    # precedence, keeps every substring present and silences the alarm. Any
+    # change to this condition has to be made here too, on purpose.
+    assert alarm["if"] == (
+        "${{ always() && github.event_name == 'schedule' && needs.census.result != 'success' }}"
+    )
     assert alarm["permissions"] == {"issues": "write"}
     body = yaml.safe_dump(alarm)
     assert "secrets." not in body, "the alarm must not depend on the App secrets the census needs"

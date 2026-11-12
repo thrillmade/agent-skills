@@ -85,12 +85,14 @@ jobs:
 
           gh label create automation-failure --color B60205 --force >/dev/null 2>&1 || true
 
-          # AUTHOR FILTER, NOT OPTIONAL — see skill-census.yml's alarm job: an
-          # outsider's issue carrying the marker must not capture the alarm. A
-          # failed lookup files a new issue: a duplicate alarm beats a silent one.
-          EXISTING=$(gh issue list --state open --search "\"${MARKER}\" in:body,comments" \
-            --json number,author 2>/dev/null \
-            | jq -r '[.[] | select(.author.is_bot == true and (.author.login | test("^(app/)?github-actions$")))][0].number // empty') \
+          # CAPTURE FILTER, NOT OPTIONAL — the same three conditions as
+          # skill-census.yml's alarm job, for the same reason: bodies only, authored
+          # by github-actions, and exactly the alarm's title, so no issue or comment
+          # a stranger writes can capture the alarm. A failed lookup files a new
+          # issue: a duplicate alarm beats a silent one.
+          EXISTING=$(gh issue list --state open --search "\"${MARKER}\" in:body" \
+            --json number,author,title 2>/dev/null \
+            | jq -r --arg t "$TITLE" '[.[] | select(.author.is_bot == true and (.author.login | test("^(app/)?github-actions$")) and .title == $t)][0].number // empty') \
             || { EXISTING=""; echo "::warning::gh issue list failed while looking for an open skill-census failure issue — filing a new one."; }
 
           if [ -n "$EXISTING" ]; then

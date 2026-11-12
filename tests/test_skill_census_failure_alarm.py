@@ -159,6 +159,17 @@ def _issue_calls(out: dict) -> list[dict]:
 GH_ACTIONS = {"login": "app/github-actions", "is_bot": True}
 OUTSIDER = {"login": "someone-else", "is_bot": False}
 
+# The genuine alarm issue: bot-authored AND carrying the alarm's exact title.
+GENUINE = {"number": 900, "author": GH_ACTIONS, "title": TITLE}
+# Another bot-authored issue (a digest, a verdict) on which a stranger has
+# left the marker. It must never capture the alarm: the repo is public, and
+# several such issues are open at any time.
+DECOY = {"number": 284, "author": GH_ACTIONS, "title": "census 2026-W42 digest"}
+
+
+def _alarm_lookups(out: dict) -> list[str]:
+    return [c["search"] for c in out["calls"] if c["cmd"] == "issue list"]
+
 
 # --- the alarm job, on the day ---------------------------------------------
 
@@ -181,7 +192,7 @@ def test_census_failure_files_one_issue_then_comments():
     assert MARKER in create["body"]
     assert RUN_URL in create["body"]
 
-    second = _alarm([{"number": 900, "author": GH_ACTIONS}])
+    second = _alarm([GENUINE])
     assert second["rc"] == 0, second["stderr"]
     [comment] = _issue_calls(second)
     assert comment["cmd"] == "comment" and comment["number"] == "900"
@@ -191,7 +202,7 @@ def test_census_failure_files_one_issue_then_comments():
 
 
 def test_marker_on_an_issue_not_by_github_actions_is_ignored():
-    out = _alarm([{"number": 13, "author": OUTSIDER}])
+    out = _alarm([{"number": 13, "author": OUTSIDER, "title": TITLE}])
     assert out["rc"] == 0, out["stderr"]
     [call] = _issue_calls(out)
     assert call["cmd"] == "create", "an outsider's issue carrying the marker must not capture the alarm"
@@ -264,7 +275,7 @@ def test_watchdog_threshold_is_exactly_two_cadences():
 
 
 def test_watchdog_comments_on_the_open_alarm_instead_of_refiling():
-    out = _watchdog(age_seconds=20 * DAY, existing=[{"number": 900, "author": GH_ACTIONS}])
+    out = _watchdog(age_seconds=20 * DAY, existing=[GENUINE])
     assert out["rc"] == 1
     [comment] = _issue_calls(out)
     assert comment["cmd"] == "comment" and comment["number"] == "900"
@@ -292,3 +303,48 @@ def test_watchdog_alarms_on_an_unreadable_answer():
     assert out["rc"] == 1
     assert len(_errors(out)) == 1
     assert [c["cmd"] for c in _issue_calls(out)] == ["create"]
+
+
+# --- the alarm issue cannot be captured (both alarms) -----------------------
+
+
+def test_alarm_job_ignores_a_bot_issue_with_another_title():
+    out = _alarm([DECOY])
+    assert out["rc"] == 0, out["stderr"]
+    [call] = _issue_calls(out)
+    assert call["cmd"] == "create", "a bot-authored issue with another title captured the alarm"
+
+
+def test_alarm_job_searches_bodies_only():
+    out = _alarm([GENUINE])
+    [search] = _alarm_lookups(out)
+    assert search.endswith(" in:body"), search
+    assert "comments" not in search
+
+
+def test_alarm_job_still_finds_the_genuine_issue_beside_a_decoy():
+    out = _alarm([DECOY, GENUINE])
+    [call] = _issue_calls(out)
+    assert call == {**call, "cmd": "comment", "number": "900"}
+
+
+def test_watchdog_ignores_a_bot_issue_with_another_title():
+    out = _watchdog(age_seconds=20 * DAY, existing=[DECOY])
+    assert out["rc"] == 1
+    [call] = _issue_calls(out)
+    assert call["cmd"] == "create"
+
+
+def test_watchdog_ignores_an_outsider_issue_with_the_right_title():
+    out = _watchdog(age_seconds=20 * DAY, existing=[{"number": 13, "author": OUTSIDER, "title": TITLE}])
+    assert out["rc"] == 1
+    [call] = _issue_calls(out)
+    assert call["cmd"] == "create", "an outsider's issue captured the watchdog's alarm"
+
+
+def test_watchdog_searches_bodies_only_and_finds_the_genuine_issue():
+    out = _watchdog(age_seconds=20 * DAY, existing=[DECOY, GENUINE])
+    [call] = _issue_calls(out)
+    assert call["cmd"] == "comment" and call["number"] == "900"
+    [search] = _alarm_lookups(out)
+    assert search.endswith(" in:body") and "comments" not in search

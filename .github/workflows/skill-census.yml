@@ -120,6 +120,11 @@ jobs:
           private-key: ${{ secrets.THRILLMADE_ORCHESTRATOR_PRIVATE_KEY }}
           owner: thrillmade
           permission-metadata: read
+          # --resolve revokes this token itself the moment the listing is done
+          # (it can name every repository in the installation, and later steps
+          # install third-party code), so the action's end-of-job revoke would
+          # only warn about a token that is already gone.
+          skip-token-revoke: "true"
 
       # Writes `repositories=<this repo>,<each visible consumer>` from
       # CONSUMER_REPOS (the only list). A consumer the installation cannot see
@@ -136,10 +141,16 @@ jobs:
       # Scoped to exactly the resolved list. The App has held Issues:
       # read/write since 2026-07-17 (#183) — the panel and File issues steps
       # below file under this token, as the steward identity, which is why
-      # this repository leads the list. The `if:` is belt and braces on top of
-      # --resolve never writing an empty list: an EMPTY `repositories` input
-      # together with `owner` makes create-github-app-token mint a token for
-      # every repository the App can see.
+      # this repository leads the list.
+      #
+      # Fails CLOSED. No `owner:` here, deliberately: with `owner` set, the
+      # pinned action reads an empty `repositories` (or one that is only
+      # whitespace or commas) as "every repository the installation can see";
+      # without it, as this repository alone. The `owner/name` entries
+      # --resolve writes carry the owner themselves, and the action checks it
+      # against this repository's owner. --resolve never writes an empty list,
+      # and the `if:` skips the step on a literally empty one; this is the
+      # layer that holds if both are ever wrong.
       - name: Mint steward App token
         id: app_token
         if: ${{ steps.resolve.outputs.repositories != '' }}
@@ -147,7 +158,6 @@ jobs:
         with:
           app-id: ${{ secrets.THRILLMADE_ORCHESTRATOR_APP_ID }}
           private-key: ${{ secrets.THRILLMADE_ORCHESTRATOR_PRIVATE_KEY }}
-          owner: thrillmade
           repositories: ${{ steps.resolve.outputs.repositories }}
 
       # Mode A — deterministic counters. Stdlib only; runs on the bare runner
@@ -168,7 +178,9 @@ jobs:
       # dry_run (we gate FILING, not judgment). continue-on-error stays false:
       # the script owns its own failure handling and exits 0 on API failure
       # after writing a Mode-B marker, so an infra hiccup inside it degrades
-      # to digest-only rather than killing the run.
+      # to digest-only rather than killing the run. On a PARTIAL census the
+      # script writes nothing and warns that verdicts were held back, so the
+      # digest files alone: no verdict about a repository nobody read.
       - name: Set up Python (panel)
         if: steps.guard.outputs.panel_enabled == 'true'
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
@@ -539,16 +551,18 @@ jobs:
 
           gh label create automation-failure --color B60205 --force >/dev/null 2>&1 || true
 
-          # AUTHOR FILTER, NOT OPTIONAL. `--search` matches any issue whose body
-          # carries the marker, and anyone can open an issue containing it. Without
-          # this filter an outsider redirects every future failure notice onto an
-          # issue they control, silently defeating the visibility this step exists
-          # to provide. Only a workflow in THIS repo can author as github-actions,
-          # and changing a workflow requires a merged PR through the gate. A failed
+          # CAPTURE FILTER, NOT OPTIONAL — three conditions, all required. Anyone
+          # can put the marker in an issue or a comment, and this repo is public.
+          # (1) Bodies only, never comments: a stranger's comment carrying the
+          # marker on any open issue would otherwise match. (2) Authored by
+          # github-actions: only a workflow in THIS repo can author as it, and
+          # changing a workflow takes a merged PR. (3) Exactly the alarm's title:
+          # other bot-authored issues (digests, other workflows' alarms) are
+          # open too, and (1)+(2) alone would still accept one of them. A failed
           # lookup files a new issue: a duplicate alarm beats a silent one.
-          EXISTING=$(gh issue list --state open --search "\"${MARKER}\" in:body,comments" \
-            --json number,author 2>/dev/null \
-            | jq -r '[.[] | select(.author.is_bot == true and (.author.login | test("^(app/)?github-actions$")))][0].number // empty') \
+          EXISTING=$(gh issue list --state open --search "\"${MARKER}\" in:body" \
+            --json number,author,title 2>/dev/null \
+            | jq -r --arg t "$TITLE" '[.[] | select(.author.is_bot == true and (.author.login | test("^(app/)?github-actions$")) and .title == $t)][0].number // empty') \
             || { EXISTING=""; echo "::warning::gh issue list failed while looking for an open skill-census failure issue — filing a new one."; }
 
           if [ -n "$EXISTING" ]; then

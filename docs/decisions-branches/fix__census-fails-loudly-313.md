@@ -11,3 +11,14 @@
 
 ---
 
+## 2026-11-11 23:44 - Review round on the census change: the alarm cannot be captured, the token fails closed, and a partial census reports nothing about repositories it did not read
+
+**Reasoning:** An independent review found that a stranger's comment carrying the alarm's marker on another bot-filed issue would capture both alarms; that the guard on the token step stopped only a literally empty list, while the pinned action reads whitespace or a lone separator as every repository; and that an unread repository's missing data still surfaced as coverage gaps and missing subscriptions, which the panel could turn into filed verdicts.
+
+**Alternatives considered:** Keep searching comments for the marker and filter harder: rejected, the genuine marker is only ever in the issue body. Keep the owner input on the token step and validate the list in bash: rejected, without that input the action itself falls back to this repository alone. Run the panel on a partial census with a caveat in its prompt: rejected, a verdict about data nobody read would still be filed in public.
+
+**Implications:**
+- The alarm issue is matched by bot author, exact title and the marker in the body. The lookup token is revoked by the script as soon as the listing is done, and the action's end-of-job revoke is skipped for it. Every name this catalog has had is listed in CATALOG_NAMES, and a test fails in CI while the repository's current name is missing from it, so the next rename cannot forget it. On a partial census the panel does not run and the digest is filed alone.
+
+---
+

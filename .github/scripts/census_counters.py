@@ -86,10 +86,27 @@ CONSUMER_REPOS = (
 )
 
 ORG = "thrillmade"
+
+# Every name this catalog repo has had, oldest first, the present one last.
+# Subscriber locks name their `source` by whatever the catalog was called when
+# they were written, and nobody rewrites them on a rename, so each of these
+# stays a catalog source for good — drop one and every lock written under it
+# silently stops being drift-checkable (the failure #308 fixed for the first
+# rename). These are matched as literals; a name is NOT recognised just
+# because GitHub redirects it.
+#
+# On the next rename, append the new name here in the same change. The run
+# context supplies the current name anyway (CATALOG_SOURCE), so lock matching
+# keeps working on the day of the rename either way; listing it here is what
+# keeps it recognised after the rename AFTER that.
+# tests/test_skill_census_catalog_names.py fails in CI while the repository's
+# own name is missing from this list, so the append cannot be forgotten.
+CATALOG_NAMES = (f"{ORG}/agent-skills", f"{ORG}/thrill-skills")
+
 # Fallback ONLY for a local run with no GITHUB_REPOSITORY. In Actions this
-# repo's name comes from the run context, so renaming it needs no edit here —
-# a stale literal of exactly this kind is what stopped the census in #313.
-_SELF_REPO_FALLBACK = f"{ORG}/thrill-skills"
+# repo's name comes from the run context — a stale literal of exactly this
+# kind is what stopped the census in #313.
+_SELF_REPO_FALLBACK = CATALOG_NAMES[-1]
 
 
 def self_repository() -> str:
@@ -98,17 +115,14 @@ def self_repository() -> str:
 
 
 CATALOG_DIR = "skills"  # read locally from the checkout cwd
-CATALOG_SOURCE = self_repository()  # lock `source` value for catalog subs
-# The catalog's former repo name. Every subscriber lock written before the
-# rename says this, and GitHub redirects it; a repo of that name will never be
-# recreated, so it is an alias for good — not dead code, do not delete it.
-CATALOG_SOURCE_ALIASES = (f"{ORG}/agent-skills",)
+CATALOG_SOURCE = self_repository()  # the current name: lock `source` for new subs
 
 
 def is_catalog_source(src: object) -> bool:
-    """True iff a lock `source` attributes the pin to this catalog (current
-    name or a permanent alias). The one definition every check routes through."""
-    return isinstance(src, str) and (src == CATALOG_SOURCE or src in CATALOG_SOURCE_ALIASES)
+    """True iff a lock `source` attributes the pin to this catalog: its current
+    name (from the run context) or any name in CATALOG_NAMES. The one
+    definition every check routes through."""
+    return isinstance(src, str) and (src == CATALOG_SOURCE or src in CATALOG_NAMES)
 
 
 # Contents API paths probed per consumer repo.
@@ -324,8 +338,10 @@ def _api_base() -> str:
 
 def _request(path: str, token: str) -> object | None:
     """GET an absolute-or-relative API path. Returns parsed JSON, or None on
-    HTTP 404 (tolerated "not present"). Raises on any other HTTP/URL error so
-    the caller can attribute it to a specific repo. Never logs the token.
+    HTTP 404 (tolerated "not present"). Every other failure — HTTP error,
+    network error, timeout, a body that will not decode or parse — raises
+    RuntimeError naming the path, so the caller can attribute it to a specific
+    repo and never prints a traceback. Never logs the token.
     """
     url = path if path.startswith("http") else f"{_api_base()}/{path.lstrip('/')}"
     req = urllib.request.Request(url, method="GET")
@@ -343,6 +359,28 @@ def _request(path: str, token: str) -> object | None:
         raise RuntimeError(f"HTTP {exc.code} on {path}") from None
     except urllib.error.URLError as exc:
         raise RuntimeError(f"network error on {path}: {exc.reason}") from None
+    except (TimeoutError, OSError) as exc:
+        # A read timeout arrives as TimeoutError, not URLError.
+        raise RuntimeError(f"{type(exc).__name__} on {path}") from None
+    except ValueError:
+        # Covers UnicodeDecodeError and json.JSONDecodeError alike.
+        raise RuntimeError(f"unreadable answer (not UTF-8 JSON) on {path}") from None
+
+
+def _revoke(token: str) -> None:
+    """Revoke an installation token now (DELETE /installation/token) rather
+    than at the end of the job. Best effort: a failure is a warning, never
+    fatal, and never names the token."""
+    req = urllib.request.Request(f"{_api_base()}/installation/token", method="DELETE")
+    req.add_header("Authorization", f"Bearer {token}")
+    req.add_header("Accept", "application/vnd.github+json")
+    req.add_header("X-GitHub-Api-Version", "2022-11-28")
+    req.add_header("User-Agent", "thrillmade-skill-census")
+    try:
+        with urllib.request.urlopen(req, timeout=API_TIMEOUT):
+            pass
+    except Exception as exc:  # noqa: BLE001 — the token expires within the hour regardless
+        print(f"::warning::could not revoke the repository-lookup token ({type(exc).__name__}); it expires within the hour.")
 
 
 def _get_file_json(repo: str, path: str, token: str) -> object | None:
@@ -460,8 +498,8 @@ def parse_lock_hashes(lock: object) -> tuple[list[dict], list[str]]:
 
     A subscription is drift-*checkable* iff, in addition to carrying a
     non-empty `computedHash` and a `skillPath` under the catalog dir, its
-    `source` is this catalog's (`is_catalog_source`: `CATALOG_SOURCE`, i.e.
-    `thrillmade/thrill-skills`, or its permanent former-name alias) — i.e. the
+    `source` is this catalog's (`is_catalog_source`: the current name from
+    the run context, or any name in `CATALOG_NAMES`) — i.e. the
     lock itself attributes the pin to this catalog. Three-way scoping:
 
       - `is_catalog_source(source)` -> checkable (appended to `checkable`).
@@ -749,10 +787,20 @@ def _grace_reason(skill: str) -> str | None:
     return None
 
 
+def _unread(record: dict) -> bool:
+    """A record the census could not read. It holds no evidence either way,
+    so no finding — a missing subscription, a local skill — is drawn from it."""
+    return record.get("read") is False
+
+
 def compute_signals(catalog: list[str], repos: dict[str, dict]) -> dict:
     """Derive the org-wide promotion/coverage signals from the per-repo
-    records and the local catalog listing.
+    records and the local catalog listing. Counts come from READ repos only;
+    an unread repo's errors are still reported.
     """
+    all_repos = repos
+    repos = {name: record for name, record in repos.items() if not _unread(record)}
+
     # subscriber count per catalog skill
     subscriber_count: dict[str, int] = {skill: 0 for skill in catalog}
     for record in repos.values():
@@ -785,7 +833,7 @@ def compute_signals(catalog: list[str], repos: dict[str, dict]) -> dict:
     untracked_total = sum(len(record.get("untracked", [])) for record in repos.values())
 
     per_repo_errors = {
-        name: record["error"] for name, record in repos.items() if record.get("error")
+        name: record["error"] for name, record in all_repos.items() if record.get("error")
     }
 
     return {
@@ -1021,9 +1069,16 @@ def compute_placement_divergence(
             "divergences": [],
         }
 
+    # A repo the census did not read is never "declared-but-not-observed":
+    # nothing was observed there either way. It is reported once, as not
+    # read, at the top of the digest.
+    unread = {repo for repo, record in repos.items() if _unread(record)}
+
     # Observed subscribers per skill: repo names whose live `subscribed` carries it.
     observed: dict[str, set[str]] = {}
     for repo, record in repos.items():
+        if repo in unread:
+            continue
         for skill in record.get("subscribed", []):
             observed.setdefault(skill, set()).add(repo)
 
@@ -1032,7 +1087,7 @@ def compute_placement_divergence(
         declared_raw = meta.get("subscribers") if isinstance(meta, dict) else None
         declared = {r for r in declared_raw if isinstance(r, str)} if isinstance(declared_raw, list) else set()
         observed_set = observed.get(slug, set())
-        missing = declared - observed_set
+        missing = declared - observed_set - unread
         extra = observed_set - declared
         if missing or extra:
             divergences.append(
@@ -1140,7 +1195,16 @@ def render_digest(census: dict) -> str:
     # A partial census opens by saying so, before any number a reader might
     # take as covering every consumer.
     coverage = census.get("coverage")
-    if coverage and not coverage.get("complete", True):
+    partial = bool(coverage) and not coverage.get("complete", True)
+    # Repeated as the first line of each section that counts across repos,
+    # for a reader who jumps straight to it past the banner.
+    partial_note = (
+        f"> Partial census — read {coverage['read']} of {coverage['consumers']} consumer "
+        "repositories; counted across those only (see the top of this digest)."
+        if partial
+        else ""
+    )
+    if partial:
         not_read = coverage.get("not_read", {})
         named = "; ".join(f"`{name}` ({reason})" for name, reason in not_read.items())
         lead = "Census examined nothing" if coverage["read"] == 0 else "Partial census"
@@ -1193,6 +1257,9 @@ def render_digest(census: dict) -> str:
     unsub = signals["unsubscribed_catalog_skills"]
     lines.append("### Unsubscribed catalog skills (subscribed by zero repos)")
     lines.append("")
+    if partial_note:
+        lines.append(partial_note + " A skill subscribed only by an unread repository is listed here.")
+        lines.append("")
     real_gaps = [s for s in unsub if not s["grace"]]
     graced = [s for s in unsub if s["grace"]]
     if real_gaps:
@@ -1323,6 +1390,9 @@ def render_digest(census: dict) -> str:
     # Placement-map cross-check — declared subscribers vs. live observation.
     lines.append("## Placement divergence")
     lines.append("")
+    if partial_note:
+        lines.append(partial_note + " Declared subscribers among them are not checked.")
+        lines.append("")
     placement = signals.get("placement_divergence", {"available": False, "divergences": []})
     if not placement.get("available"):
         lines.append(f"_{placement.get('note', 'placement cross-check unavailable')}._")
@@ -1529,6 +1599,13 @@ def _installation_repositories(token: str) -> list[str]:
         ]
         total = payload.get("total_count")
         if not batch:
+            # The listing ended. Short of total_count it is TRUNCATED, and a
+            # truncated list read as complete would report live consumers as
+            # stale names — so it is a failed lookup, not a list.
+            if isinstance(total, int) and len(names) < total:
+                raise RuntimeError(
+                    f"installation listing ended at {len(names)} of {total} repositories"
+                )
             return names
         if isinstance(total, int):
             if len(names) >= total:
@@ -1558,14 +1635,22 @@ def resolve() -> int:
     if not token:
         print("::error::LOOKUP_TOKEN is empty — cannot look up which repositories the census can read; the census examined nothing.")
         return 1
+    # The lookup token can name every repository in the installation, and
+    # later steps in the job install third-party code: revoke it the moment
+    # the listing is done, on every path. (The workflow skips the action's own
+    # end-of-job revoke for this token accordingly.)
     try:
-        visible = {name.lower() for name in _installation_repositories(token)}
-    except RuntimeError as exc:
+        listing = _installation_repositories(token)
+    except Exception as exc:  # noqa: BLE001 — every failed lookup ends the same way
+        reason = str(exc) if isinstance(exc, RuntimeError) else type(exc).__name__
         print(
             "::error::could not list the repositories the census App installation can see "
-            f"({exc}); the census examined nothing."
+            f"({reason}); the census examined nothing."
         )
         return 1
+    finally:
+        _revoke(token)
+    visible = {name.lower() for name in listing}
 
     if self_repo.lower() not in visible:
         print(

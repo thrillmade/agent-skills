@@ -68,6 +68,7 @@ class _FakeApi:
     def __init__(self, routes: dict):
         self.routes = routes
         self.seen: list[str] = []
+        self.deleted: list[tuple[str, str]] = []  # (path, Authorization)
         api = self
 
         class Handler(BaseHTTPRequestHandler):
@@ -82,12 +83,18 @@ class _FakeApi:
                     self.send_header("Location", payload)
                     self.end_headers()
                     return
-                body = json.dumps(payload).encode("utf-8")
+                # bytes = a raw body, for answers that are not JSON at all
+                body = payload if isinstance(payload, bytes) else json.dumps(payload).encode("utf-8")
                 self.send_response(status)
                 self.send_header("Content-Type", "application/json")
                 self.send_header("Content-Length", str(len(body)))
                 self.end_headers()
                 self.wfile.write(body)
+
+            def do_DELETE(self):  # noqa: N802 -- stdlib name
+                api.deleted.append((self.path, self.headers.get("Authorization", "")))
+                self.send_response(204)
+                self.end_headers()
 
             def log_message(self, *args):  # silence the server
                 pass
@@ -125,9 +132,12 @@ def _counter_routes(*, unreadable=(), renamed=(), self_name=SELF) -> dict:
     return routes
 
 
-def _run(args: list[str], api: _FakeApi, env_extra: dict) -> dict:
+def _run(args: list[str], api: _FakeApi, env_extra: dict, files: dict | None = None) -> dict:
     with tempfile.TemporaryDirectory() as td:
         tdp = Path(td)
+        for rel, content in (files or {}).items():
+            (tdp / rel).parent.mkdir(parents=True, exist_ok=True)
+            (tdp / rel).write_text(content, encoding="utf-8")
         out_dir = tdp / "out"
         gh_output = tdp / "github_output"
         gh_output.write_text("", encoding="utf-8")
@@ -169,9 +179,9 @@ def _run(args: list[str], api: _FakeApi, env_extra: dict) -> dict:
         }
 
 
-def _count(routes: dict) -> dict:
+def _count(routes: dict, files: dict | None = None) -> dict:
     with _FakeApi(routes) as api:
-        return _run([], api, {"STEWARD_TOKEN": "fake-token"})
+        return _run([], api, {"STEWARD_TOKEN": "fake-token"}, files)
 
 
 def _summary_line(stdout: str) -> str:
@@ -296,9 +306,14 @@ def _installation(*full_names: str, per_page_split: int | None = None) -> dict:
     }
 
 
+LOOKUP_TOKEN = "fake-lookup-token-value"
+
+
 def _resolve(routes: dict, *, self_name: str = SELF) -> dict:
     with _FakeApi(routes) as api:
-        return _run(["--resolve"], api, {"LOOKUP_TOKEN": "fake-lookup", "GITHUB_REPOSITORY": self_name})
+        out = _run(["--resolve"], api, {"LOOKUP_TOKEN": LOOKUP_TOKEN, "GITHUB_REPOSITORY": self_name})
+        out["deleted"] = list(api.deleted)
+        return out
 
 
 def _repositories_output(github_output: str) -> list[str] | None:
@@ -391,3 +406,183 @@ def test_counters_read_the_docket_of_the_repo_they_run_in():
     assert out["rc"] == 0, out["log"]
     assert any(p.startswith(f"/repos/{RENAMED_SELF}/issues") for p in seen), seen
     assert not any(p.startswith(f"/repos/{SELF}/") for p in seen), seen
+
+
+# --- a failed lookup is a failed lookup, whatever shape it takes -------------
+
+
+def _assert_failed_lookup(out: dict) -> None:
+    """The documented ending of every failed lookup: one ::error::, exit 1,
+    nothing written for the token step, no traceback, the token never shown."""
+    assert out["rc"] == 1, out["log"]
+    errors = [l for l in out["log"].splitlines() if l.startswith("::error::")]
+    assert len(errors) == 1 and "examined nothing" in errors[0], out["log"]
+    assert out["github_output"] == ""
+    assert "Traceback" not in out["log"], out["log"]
+    assert LOOKUP_TOKEN not in out["log"]
+
+
+def test_truncated_installation_listing_is_a_failed_lookup():
+    """The listing stopped (an empty page) before total_count names arrived.
+    Reading that as "these consumers are gone" would drop live repositories
+    with a stale-name warning; it is a lookup that failed."""
+    names = [SELF] + [f"{ORG}/{c}" for c in CONSUMERS]
+    routes = {
+        "/installation/repositories?per_page=100&page=1": (
+            200,
+            {"total_count": len(names), "repositories": [{"full_name": n} for n in names[:4]]},
+        ),
+        "/installation/repositories?per_page=100&page=2": (
+            200,
+            {"total_count": len(names), "repositories": []},
+        ),
+    }
+    out = _resolve(routes)
+    _assert_failed_lookup(out)
+    assert "::warning::" not in out["log"], "a truncated listing must not read as stale names"
+
+
+def test_non_json_listing_is_a_failed_lookup():
+    out = _resolve({"/installation/repositories?per_page=100&page=1": (200, b"<html>bad gateway</html>")})
+    _assert_failed_lookup(out)
+
+
+def test_undecodable_listing_is_a_failed_lookup():
+    out = _resolve({"/installation/repositories?per_page=100&page=1": (200, b"\xff\xfe\xfa not utf-8")})
+    _assert_failed_lookup(out)
+
+
+def test_a_timeout_is_reported_as_a_lookup_failure(monkeypatch):
+    """A read timeout surfaces from urlopen as TimeoutError, which is neither
+    an HTTPError nor a URLError; it must still reach the caller as the
+    token-free RuntimeError every failed request becomes."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("census_counters_timeout", SCRIPT)
+    cc = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(cc)
+
+    def timeout(*args, **kwargs):
+        raise TimeoutError("The read operation timed out")
+
+    monkeypatch.setattr(cc.urllib.request, "urlopen", timeout)
+    try:
+        cc._request("installation/repositories?per_page=100&page=1", "secret-token")
+    except RuntimeError as exc:
+        assert "secret-token" not in str(exc)
+        assert "installation/repositories" in str(exc)
+    else:
+        raise AssertionError("a timeout was not raised as RuntimeError")
+
+
+# --- the lookup token is revoked as soon as the listing is done -------------
+
+
+def _revoked(out: dict) -> bool:
+    return ("/installation/token", f"Bearer {LOOKUP_TOKEN}") in out["deleted"]
+
+
+def test_lookup_token_is_revoked_after_a_successful_listing():
+    out = _resolve(_installation(SELF, *(f"{ORG}/{c}" for c in CONSUMERS)))
+    assert out["rc"] == 0, out["log"]
+    assert _revoked(out), out["deleted"]
+
+
+def test_lookup_token_is_revoked_after_a_failed_listing():
+    out = _resolve({})
+    assert out["rc"] == 1
+    assert _revoked(out), out["deleted"]
+
+
+def test_lookup_token_is_revoked_when_nothing_is_visible():
+    out = _resolve(_installation(SELF))
+    assert out["rc"] == 1
+    assert _revoked(out), out["deleted"]
+
+
+# --- a partial census makes no finding about what it did not read ------------
+
+PLACEMENT = json.dumps(
+    {"skills": {"invented-skill": {"subscribers": ["rezgen", "skdd"]}}}
+)
+CATALOG_FILES = {"skills/invented-skill/SKILL.md": "x", "docs/placement-map.json": PLACEMENT}
+
+
+def _section(digest: str, heading: str) -> list[str]:
+    lines = digest.splitlines()
+    start = next(i for i, l in enumerate(lines) if l.startswith(heading))
+    end = next((i for i in range(start + 1, len(lines)) if lines[i].startswith("#")), len(lines))
+    return lines[start:end]
+
+
+def test_placement_never_reports_an_unread_repo_as_missing():
+    out = _count(_counter_routes(unreadable=("rezgen",)), CATALOG_FILES)
+    assert out["rc"] == 0, out["log"]
+    [div] = out["census"]["signals"]["placement_divergence"]["divergences"]
+    assert div["missing"] == ["skdd"], div
+    section = "\n".join(_section(out["digest"], "## Placement divergence"))
+    assert "declared-but-not-observed: `skdd`" in section
+    # Reported once, as not read, at the top of the digest — never here.
+    assert "rezgen" not in section, section
+
+
+def test_placement_control_lists_both_when_both_are_read():
+    out = _count(_counter_routes(), CATALOG_FILES)
+    [div] = out["census"]["signals"]["placement_divergence"]["divergences"]
+    assert div["missing"] == ["rezgen", "skdd"]
+
+
+def test_unsubscribed_section_says_it_is_partial_in_its_own_first_line():
+    out = _count(_counter_routes(unreadable=("rezgen",)), CATALOG_FILES)
+    section = [l for l in _section(out["digest"], "### Unsubscribed catalog skills") if l.strip()]
+    assert "read 7 of 8" in section[1] and "partial" in section[1].lower(), section[:3]
+
+
+def test_unsubscribed_section_has_no_partial_note_on_a_full_read():
+    out = _count(_counter_routes(), CATALOG_FILES)
+    section = "\n".join(_section(out["digest"], "### Unsubscribed catalog skills"))
+    assert "partial" not in section.lower()
+
+
+def test_unsubscribed_counts_come_only_from_read_repos():
+    """An unread record is never a subscriber, even if it carries data."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("census_counters_signals", SCRIPT)
+    cc = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(cc)
+    repos = {
+        "skdd": {"read": True, "subscribed": [], "local": ["shared"]},
+        "rezgen": {"read": False, "subscribed": ["invented-skill"], "local": ["shared"]},
+    }
+    signals = cc.compute_signals(["invented-skill"], repos)
+    assert [s["name"] for s in signals["unsubscribed_catalog_skills"]] == ["invented-skill"]
+    assert signals["convergent_local"] == []
+
+
+def test_a_non_json_body_is_reported_as_a_request_failure(monkeypatch):
+    """The request layer on its own (resolve() also catches everything, so the
+    end-to-end tests above hold if either layer does): a body that is not
+    JSON becomes the same token-free RuntimeError, which the counters'
+    per-repo collection reports as that repo's error."""
+    import importlib.util
+    import io
+
+    spec = importlib.util.spec_from_file_location("census_counters_nonjson", SCRIPT)
+    cc = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(cc)
+
+    class _Resp(io.BytesIO):
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+    monkeypatch.setattr(cc.urllib.request, "urlopen", lambda *a, **k: _Resp(b"<html>bad gateway</html>"))
+    try:
+        cc._request("repos/thrillmade/invented-consumer", "secret-token")
+    except RuntimeError as exc:
+        assert "secret-token" not in str(exc) and "repos/thrillmade/invented-consumer" in str(exc)
+    else:
+        raise AssertionError("a non-JSON body was not raised as RuntimeError")
