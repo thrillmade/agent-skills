@@ -28,6 +28,7 @@ import sys
 from pathlib import Path
 
 import pytest
+import gen_skill_versions
 import skill_version
 import stamp_versions
 import validate_skills
@@ -496,4 +497,8 @@ def test_the_index_states_which_half_of_it_is_gated() -> None:
     index = json.loads((repo / "docs" / "skill-versions.json").read_text())
     assert index["verification"]["current"].startswith("GATED.")
     assert index["verification"]["history"].startswith("NOT GATED.")
-    assert index["verification"]["history_rows_ungated"] > 0
+    # Exact, not "> 0": the field is derived from the rows next to it, so the
+    # test re-derives it and a miscount cannot hide behind a positive number.
+    ungated = index["verification"]["history_rows_ungated"]
+    assert ungated == gen_skill_versions.rows_ungated(index["skills"])
+    assert ungated > 0  # control: this catalog has superseded rows

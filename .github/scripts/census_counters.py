@@ -68,6 +68,17 @@ ORG = "thrillmade"
 CATALOG_REPO = "thrill-skills"
 CATALOG_DIR = "skills"  # read locally from the checkout cwd
 CATALOG_SOURCE = f"{ORG}/{CATALOG_REPO}"  # lock `source` value for catalog subs
+# The catalog's former repo name. Every subscriber lock written before the
+# rename says this, and GitHub redirects it; a repo of that name will never be
+# recreated, so it is an alias for good — not dead code, do not delete it.
+CATALOG_SOURCE_ALIASES = (f"{ORG}/agent-skills",)
+
+
+def is_catalog_source(src: object) -> bool:
+    """True iff a lock `source` attributes the pin to this catalog (current
+    name or a permanent alias). The one definition every check routes through."""
+    return isinstance(src, str) and (src == CATALOG_SOURCE or src in CATALOG_SOURCE_ALIASES)
+
 
 # Contents API paths probed per consumer repo.
 LOCK_PATH = "skills-lock.json"
@@ -418,10 +429,11 @@ def parse_lock_hashes(lock: object) -> tuple[list[dict], list[str]]:
 
     A subscription is drift-*checkable* iff, in addition to carrying a
     non-empty `computedHash` and a `skillPath` under the catalog dir, its
-    `source` equals `CATALOG_SOURCE` (`thrillmade/thrill-skills`) — i.e. the
+    `source` is this catalog's (`is_catalog_source`: `CATALOG_SOURCE`, i.e.
+    `thrillmade/thrill-skills`, or its permanent former-name alias) — i.e. the
     lock itself attributes the pin to this catalog. Three-way scoping:
 
-      - `source == CATALOG_SOURCE`  -> checkable (appended to `checkable`).
+      - `is_catalog_source(source)` -> checkable (appended to `checkable`).
       - missing/None/falsy `source` -> NOT checkable, but still catalog-
         scoped (has a real computedHash + in-catalog skillPath) — surfaced
         distinctly via `unscoped` rather than silently dropped or miscounted
@@ -457,7 +469,7 @@ def parse_lock_hashes(lock: object) -> tuple[list[dict], list[str]]:
             # drift-checkable — bucketed separately, never dropped silently.
             unscoped.append(resolved_name)
             return
-        if not (isinstance(src, str) and src == CATALOG_SOURCE):
+        if not is_catalog_source(src):
             # Foreign source — not a thrill-skills subscription; excluded
             # entirely from catalog-subscription counting (neither bucket).
             return

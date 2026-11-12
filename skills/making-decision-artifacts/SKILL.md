@@ -1,10 +1,10 @@
 ---
-version: "1.0.6"
-digest: "608788c2b9df"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+version: "1.0.7"
+digest: "b981895c363a"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/thrill-skills"
 name: making-decision-artifacts
 description: |
-  Use before putting anything to the owner as a page: a taste call between candidates (how a part looks, a default the owner picks), an output-moving landing whose moves the owner reads before the merge, or a page to republish after a sign-in change. Holds the triage (a defect or a law question is ruled, never asked; a config question never blocks a lane; a reference page is not a decision; the owner's sketch is the idea, not the spec), the call page (one decision per screen, large same-scale candidates rendered from the real build, each a block with light beside dark, the exact token names, the reply words and nothing else), the moves page (every move since the tip the owner last read, printed from the comparison data by one grammar), and the mechanics: one designer lane builds it, published privately from a kept source, the answer recorded as a ruling. Cite when a page asks for a word before its picture, offers lettered options as text, puts all light then all dark, paraphrases a token name, or hand-writes a row.
+  Use before putting anything to the owner as a page: a taste call between candidates (how a part looks, a default the owner picks), an output-moving landing whose moves the owner reads before the merge, or a page to republish after a sign-in change. Holds the triage (a defect or a law question is ruled, never asked; a config question never blocks a lane; a reference page is not a decision; the owner's sketch is the idea, not the spec), the call page (one decision per screen, large same-scale candidates rendered from the real build, each a block with light beside dark, the exact token names, the reply words and nothing else), the moves page (since the tip the owner last read: pictures of the parts that moved first, a digest of at most twenty lines, one ask, the rows only linked), and the mechanics: one designer lane builds it, published privately from a kept source, the answer recorded as a ruling. Cite when a page asks for a word before its picture, offers lettered options as text, puts all light then all dark, paraphrases a token name, hand-writes a row, or hands the owner the row table to read.
 ---
 
 # Making decision artifacts
