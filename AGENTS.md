@@ -38,7 +38,7 @@ python3 .github/scripts/gen_skill_versions.py --check   # every version-history 
 python3 .github/scripts/stamp_versions.py --check       # every version/digest/origin stamp matches
 python3 .github/scripts/check_prose_retention.py        # no undeclared prose removal
 logmind check-links                                     # every markdown link resolves
-logmind check-decisions                                 # 20+ changed non-markdown lines need a decision entry
+logmind check-decisions                                 # changed code needs a decision entry (the check prints its own rule)
 pytest tests/ -q                                        # the gates' own regression guard
 logmind log "…" -r "…" -a "…" -i "…"                    # the commit primitive (see above)
 ```
