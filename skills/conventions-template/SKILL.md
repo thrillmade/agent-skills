@@ -1,9 +1,9 @@
 ---
-version: "1.0.0"
-digest: "6963f02bb4bd"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+version: "1.0.1"
+digest: "ce439283491f"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/thrill-skills"
 name: conventions-template
-description: Template for a "review like me" skill - captures one maintainer's review conventions (formatting, what to flag, what to ignore). Copy + customize per SPEC v0.5.1 applies_to.author.
+description: Template for a "review like me" skill - captures one maintainer's review conventions (formatting, what to flag, what to ignore). Copy + customize, setting applies_to.author to your GitHub login.
 kind: rule
 applies_to:
   author: _REPLACE_ME_
@@ -12,16 +12,16 @@ applies_to:
 # Conventions: <YOUR NAME>
 
 This skill captures how I review pull requests when they're opened by
-me. The bot loads this skill ONLY on my PRs (per the
-`applies_to.author` filter above — SPEC v0.5.1 §1.10.1). Other PRs
+me. The bot loads this skill ONLY on my PRs (the `applies_to.author`
+filter above matches the PR author's GitHub login, ignoring case). Other PRs
 go through the org defaults without my personal preferences applied.
 
 ## How to use this template
 
 1. **Rename the directory**: `.claude/skills/conventions-<your-gh-login>/SKILL.md`
 2. **Set `applies_to.author`** to your GitHub login (replace `_REPLACE_ME_`).
-   The placeholder fails the SPEC slug check on purpose — if you forget
-   this step, the skill won't load and the bot's log will tell you why.
+   The placeholder matches no GitHub login on purpose — if you forget
+   this step, the skill never loads.
 3. **Fill in the sections below** with YOUR actual preferences
 4. **Commit + push** — the bot picks up the skill on its next review of your PR
 

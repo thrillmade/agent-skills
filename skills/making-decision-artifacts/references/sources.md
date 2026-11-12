@@ -58,4 +58,4 @@ Two entries are neither. A **catalog boundary** names the skill that owns a neig
 
 ## Anti-patterns
 
-Each is an incident named above, stated by its failure: lettered text options (rule 1), the dense page (rules 2, 3 and 7), a defect asked as taste (the triage), building the sketch (the triage), a paraphrased name (rule 5), hand-written rows (the moves page), black text in dark mode (the page contract), a rebuild that reverts (Building, publishing, recording), a reference deleted as decided (the triage), merging unseen moves (the moves page), and the row table as the reading page (the moves page).
+Each is an incident named above, stated by its failure and what it costs: lettered text options (rule 1), the dense page (rules 2, 3 and 7), a defect asked as taste (the triage), building the sketch (the triage), a paraphrased name (rule 5), hand-written rows (the moves page), black text in dark mode (the page contract), a rebuild that reverts (Building, publishing, recording), a reference deleted as decided (the triage), merging unseen moves (the moves page), and the row table as the reading page (the moves page).
