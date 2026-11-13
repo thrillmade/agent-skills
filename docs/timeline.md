@@ -13,10 +13,10 @@ PR's CI run, so this file is always coherent with current `main`.
 ---
 
 
-## 2026-11 (24 decisions)
+## 2026-11 (25 decisions)
 
-- **2026-11-12** — Review fixes to the content tranche: colour claims checked against the libraries and recomputed, one more private-spec citation removed, apca-contrast says one thing *(fix/skill-content-tranche)* — [decisions-branches/fix__skill-content-tranche.md](decisions-branches/fix__skill-content-tranche.md)
-- *... 22 more decisions ...*
+- **2026-11-12** — The version index stays complete without a bot, and publishes the catalog's own names *(feat/index-catalog-block-292)* — [decisions-branches/feat__index-catalog-block-292.md](decisions-branches/feat__index-catalog-block-292.md)
+- *... 23 more decisions ...*
 - **2026-11-02** — Design skills: thrill-design house principles, motion-continuity, ios-safari-surfaces; designing-elite-ui and orchestrating-elite-agent-qa amended *(feat/design-skills-nov)* — [decisions-branches/feat__design-skills-nov.md](decisions-branches/feat__design-skills-nov.md)
 
 ## 2026-10
