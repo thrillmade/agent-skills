@@ -1,6 +1,6 @@
 ---
-version: "1.0.3"
-digest: "1f4f09dfe73f"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+version: "1.0.4"
+digest: "d7d6a17419a4"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/thrill-skills"
 name: clud-bug-collaboration
 description: How Claude Code agents working in a clud-bug-installed repo should interact with the bot's review threads, strict-mode gate, and skill set. Use this skill whenever you're about to push a commit, address a clud-bug PR review comment, edit anything under .claude/skills/, modify .github/workflows/clud-bug-*.yml, or wonder why a PR check is red. Also use when planning work in a repo that has a `clud-bug-review` workflow installed — even if the user didn't mention clud-bug by name.
@@ -40,7 +40,7 @@ the gate judging it — a change takes effect for PRs opened after it merges to
 base.
 
 **An agent MUST NOT change this setting** — not via the config command, not
-by editing the file. SPEC §1.6 makes that class of setting a person's to set.
+by editing the file. That class of setting is a person's to set.
 Ask; don't switch it off to get unblocked. A person runs
 `clud-bug config set review.strict_mode false`.
 
@@ -157,11 +157,11 @@ version, leaves custom and skills.sh skills untouched.
 The `clud-bug-review` check status is how you know the flow worked — read
 its color, don't just push and move on.
 
-- **Green** = ran, found no critical issues, notary-certified (SPEC §4.5); a
+- **Green** = ran, found no critical issues, notary-certified; a
   green with no certification is not conformant.
 - **Red** = strict mode is on and a critical issue was flagged.
 - **Grey (neutral)** = it could not verify what it examined, strict mode is
-  off, or it could not run — commonly a fork PR (SPEC §6.5: a fork check is
+  off, or it could not run — commonly a fork PR (a fork check is
   neutral, never green). Grey never blocks and never claims a real review —
   read the diff yourself.
 - A same-repo bot PR (Dependabot, Renovate) is reviewed too, on a cheaper

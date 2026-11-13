@@ -1,6 +1,6 @@
 # Sources: writing-interface-copy
 
-Why [writing-interface-copy](../SKILL.md) holds what it holds: the research trail for maintainers. The skill states each rule as the catalog's own opinion and quotes nobody; this file records which guides informed which rule, verbatim, so a rule can be re-checked against its page. All were read in November 2026. Rule numbers refer to the skill. The before/after examples in the skill are written for it; where one was adapted from a guide's own example, the guide is named below.
+Why [writing-interface-copy](../SKILL.md) holds what it holds: the research trail for maintainers. The skill states each rule as the catalog's own opinion and quotes nobody; this file records which guides informed which rule, verbatim, so a rule can be re-checked against its page. All were read in November 2026. Rule numbers refer to the skill. The before/after examples in the skill are written for it; where one was adapted from a guide's own example, the guide is named below. Supplementary reading, which no rule depends on: [further-reading.md](further-reading.md).
 
 ## Where the guides disagreed, and the ruling the skill states
 
@@ -9,6 +9,8 @@ Why [writing-interface-copy](../SKILL.md) holds what it holds: the research trai
 - **Blame words (rule 10).** GOV.UK's Service Manual says "Say ‘Wrong password’"; its Design System avoids "‘valid’ and ‘invalid’"; NN/g avoids "invalid, illegal, or incorrect". Ruling: the words go; a short inline statement of the fact on its field stays.
 - **"You"/"your" in labels (rule 2).** Apple: "“Favorites” conveys the same message as “Your Favorites”"; Material prefers second person. Ruling: no possessive on a noun label; actions and sentences may say "your".
 - **Navigation labels (rule 9).** Apple: "When labeling buttons and links, it’s almost always best to use a verb"; Polaris: verbs like "View" or "Go" are "often unnecessary". Ruling: a data-changing control leads with its verb; a navigating one may name its destination.
+
+- **Parallel form beyond lists (rules 11 and 3).** Microsoft and Google state parallel structure for the items of a list, Google with "if possible". Ruling: the same holds for any strings that share a role on screen (tabs, a row's second line, a tag set), and a role's tags are all states or all things. Building a role's strings in one function is the skill's own advice and sits outside the rule's test.
 
 - **Terms of art (rule 4).** Heuristic 2's own test is "familiar to the user", so a term the domain's users already use ("Action items" in a meeting tool) is their word, not internal jargon. The skill's ruling, derived from that line.
 
@@ -39,6 +41,7 @@ brand-voice-review carried these as catalog opinion without a cited source. They
 - [Top 10 tips for Microsoft style and voice](https://learn.microsoft.com/en-us/style-guide/top-10-tips-style-voice): rule 1 ("Edit out *you can* when it isn't necessary").
 - [Verbs](https://learn.microsoft.com/en-us/style-guide/grammar/verbs): rule 6 ("Keep it active whenever you can"; passive for "Avoiding condescending text or blaming the customer").
 - [Use simple words, concise sentences](https://learn.microsoft.com/en-us/style-guide/word-choice/use-simple-words-concise-sentences): rule 8 ("Omit unnecessary adverbs—words that describe how, when, or where. Unless they're important to the meaning of a statement, leave them out." — hence "Renew automatically" stays; "use", not "utilize").
+- [Lists](https://learn.microsoft.com/en-us/style-guide/scannable-content/lists): rule 11 ("Make all the items in a list consistent in structure. For example, each item should be a noun or a phrase that starts with a verb."). Advisory; its "In UI" section treats radio buttons and checkboxes as lists.
 - [please](https://learn.microsoft.com/en-us/style-guide/a-z-word-list-term-collections/p/please): rule 8 ("in situations where the customer is asked to do something inconvenient or the application or site is to blame").
 
 ### Apple Human Interface Guidelines
@@ -61,6 +64,7 @@ brand-voice-review carried these as catalog opinion without a cited source. They
 
 ### Others
 
+- Google developer documentation style guide, [Lists](https://developers.google.com/style/lists), "Parallel syntax": rule 11 ("Use the same syntax/structure for all list items in a given list, if possible."). Advisory.
 - Material Design 3, [Word choice](https://m3.material.io/foundations/content-design/style-guide/word-choice): rule 2 (second-person "you" and "your").
 - Mailchimp Content Style Guide, [Grammar and mechanics](https://styleguide.mailchimp.com/grammar-and-mechanics/): rule 6 (passive to "emphasize the action over the subject").
 - Atlassian Design System, [Error messages](https://atlassian.design/foundations/content/designing-messages/error-messages): rule 8 (avoid "please"); rule 10 ("Use we instead of you"; "If you don’t know the reason for an error, don’t make one up").

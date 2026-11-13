@@ -13,10 +13,10 @@ PR's CI run, so this file is always coherent with current `main`.
 ---
 
 
-## 2026-11 (22 decisions)
+## 2026-11 (24 decisions)
 
-- **2026-11-12** — Follow-ups from making skill-smith generic: say who owns house rules, stop restating a threshold, and five clarity fixes in the agent definition *(fix/skill-smith-followups-306)* — [decisions-branches/fix__skill-smith-followups-306.md](decisions-branches/fix__skill-smith-followups-306.md)
-- *... 20 more decisions ...*
+- **2026-11-12** — Review fixes to the content tranche: colour claims checked against the libraries and recomputed, one more private-spec citation removed, apca-contrast says one thing *(fix/skill-content-tranche)* — [decisions-branches/fix__skill-content-tranche.md](decisions-branches/fix__skill-content-tranche.md)
+- *... 22 more decisions ...*
 - **2026-11-02** — Design skills: thrill-design house principles, motion-continuity, ios-safari-surfaces; designing-elite-ui and orchestrating-elite-agent-qa amended *(feat/design-skills-nov)* — [decisions-branches/feat__design-skills-nov.md](decisions-branches/feat__design-skills-nov.md)
 
 ## 2026-10
