@@ -14,11 +14,14 @@ this script re-validates the whole payload in Python before writing it.
 
 Inputs (env):
   ANTHROPIC_API_KEY  If unset/empty, the panel is intentionally OFF ("Mode B"):
-                     print a warning, write NOTHING, exit 0. The workflow's
-                     always-on `digest.md` from Mode A is the cycle deliverable.
+                     print a warning, write panel_status.json (state "off"),
+                     exit 0. The workflow's always-on `digest.md` from Mode A
+                     is the cycle deliverable. A key that is set but blank
+                     is not "unset": it is recorded as failed (key_blank),
+                     which fails the run.
   CENSUS_DIR         Directory holding census.json (required) and digest.md
-                     (optional). verdicts.json / panel_failed.marker are
-                     written here too.
+                     (optional). verdicts.json / panel_status.json are written
+                     here too.
   GH_TOKEN           Consumed by the `gh` CLI subprocess used ONLY to READ the
                      open `census` docket issues. This script never creates or
                      comments on issues — filing is the workflow's bash step.
@@ -32,16 +35,55 @@ Outputs (written to CENSUS_DIR):
                      issue across cycles instead of re-filing an identical
                      verdict under a new per-cycle title. See RULING 5 below
                      `validate_and_build`.
-  panel_failed.marker  On any API/validation failure — a reason string. The
-                     workflow treats the panel as skipped (Mode B) on this.
+  panel_status.json  On every handled path: {state, reason_code, reason, stage,
+                     exc_class, background_error_class, http_status,
+                     verdicts, keeps}. state is ran | off | held_back | failed.
+                     An exit before the census file is read, a crash or a kill
+                     leaves no record, and a missing record fails the run.
+                     The digest's panel line and the workflow's "Panel health"
+                     step read it. A failure is classified from the HTTP
+                     status and the exception's class name ONLY
+                     (`classify_failure`): no exception text, request id,
+                     header or key fragment is ever written to the record.
+
+THE BOUNDARY IS THE WORKFLOW STEP, NOT THIS PROCESS. This runs in a public
+repository's Actions next to a third-party SDK that holds an API key, and a
+process cannot police everything written to its own streams (the SDK's
+logging, warnings, asyncio's reporter, a plain print, code that restores the
+stock hooks, code that runs before this file's first line). So the workflow
+step that runs this file sends stdout and stderr to /dev/null and removes the
+runner's file-command variables (GITHUB_STEP_SUMMARY, GITHUB_ENV, ...) from its
+environment. Only panel_status.json crosses, and every step that prints or
+uploads from it first runs the workflow's own shell check of every field
+against a closed vocabulary (`.github/scripts/panel_record.sh`) and reads from
+that check's output.
+
+THE GUARANTEE, AND ITS LIMIT. Against an honest or buggy dependency, whatever
+it raises, logs, warns or prints never reaches the public Actions log, the job
+summary, an issue or an uploaded file, and a failure is reported from a
+validated record. It does not claim to contain a deliberately malicious
+dependency: code that holds the API key and can open a network connection
+cannot be contained by anything in this workflow. Pinning the dependency by
+hash answers that threat; it is a separate change and out of scope here. The
+record is not the only panel information a reader sees: verdicts.json and the
+digest carry the model's answer by design and are filed and uploaded; this
+script writes no exception text to them.
+
+The messages below are for a local run. Class-only reporters, the lazy SDK
+import and a record with no exception text remain as a second layer: defence
+in depth, not the guarantee.
 
 Exit codes:
   0  Success, Mode B (no API key), a partial census (census.json
-     `coverage.complete` is false: nothing written, verdicts held back), OR a
-     handled API/validation failure (panel_failed.marker written). Every
-     API/model problem is exit 0.
+     `coverage.complete` is false: no verdicts, state held_back), OR a handled
+     API/validation failure (state failed). Every API/model problem is exit 0
+     HERE: the run is failed, when it should be, by the workflow's "Panel
+     health" step, which runs after the digest is filed and the artifacts are
+     uploaded.
   1  RESERVED for a wiring bug: CENSUS_DIR unset, or census.json missing /
-     unreadable / corrupt. Never used for an API problem.
+     unreadable / corrupt. Never used for an API problem. Also the exit for
+     anything raised that nothing above handled (see `main`): the record
+     names the class only.
 
 Spend/runtime posture: exactly ONE messages.create call, 120s client timeout,
 no retries beyond the SDK default.
@@ -49,19 +91,98 @@ no retries beyond the SDK default.
 
 from __future__ import annotations
 
-import json
-import os
-import re
-import subprocess
+# SECOND LAYER (the workflow step's redirect is the guarantee; see the
+# docstring). The interpreter's own reporters (the uncaught-exception hook, the
+# unraisable hook that prints "Exception ignored in", the thread hook) are
+# replaced BEFORE any other import runs, `warnings` and `logging` are silenced,
+# and the SDK is not imported until `call_claude`, inside the guarded region.
+# Each reporter names the exception's class and nothing else. They are
+# installed only when this file is the program (`__main__`), so importing it
+# from a test leaves the interpreter's hooks alone.
 import sys
-from datetime import datetime, timezone
 
-# `anthropic` is pip-installed in the workflow's Python step. Local pytest can
-# mock the client, so a deferred import is tolerated in test environments.
+# Where the run has got to, recorded as `stage` so an operator can tell where it
+# failed without any exception text. A closed list, checked by the workflow.
+_STAGE = "startup"
+# Class names of errors in finalisers and threads. They do not fail a run that
+# otherwise completed; the record names the first one and the workflow warns.
+_BACKGROUND: list[str] = []
+
+
+def _class_name_of(exc_type: object, default: str) -> str:
+    """The class name, reduced to identifier characters. Never raises."""
+    try:
+        name = str(getattr(exc_type, "__name__", ""))
+        name = "".join(c for c in name if c.isascii() and (c.isalnum() or c == "_"))[:60]
+    except BaseException:  # noqa: BLE001 - a hostile class must not break the reporter
+        name = ""
+    return name or default
+
+
+def _say(line: str) -> None:
+    try:
+        sys.stderr.write(line + "\n")
+        sys.stderr.flush()
+    except BaseException:  # noqa: BLE001 - a closed stderr is not worth a traceback
+        pass
+
+
+def _report_uncaught(exc_type, exc, tb) -> None:  # noqa: ANN001
+    _say(f"::error::census panel did not run: an uncaught {_class_name_of(exc_type, 'BaseException')}")
+
+
+def _report_unraisable(unraisable) -> None:  # noqa: ANN001
+    # Not `unraisable.object` or `err_msg`: either can carry text.
+    name = _class_name_of(getattr(unraisable, "exc_type", None), "Exception")
+    _BACKGROUND.append(name)
+    _say(f"::warning::census panel: an exception of class {name} was ignored in a finaliser or callback")
+
+
+def _report_thread(args) -> None:  # noqa: ANN001
+    name = _class_name_of(getattr(args, "exc_type", None), "BaseException")
+    _BACKGROUND.append(name)
+    _say(f"::warning::census panel: an exception of class {name} was ignored in a thread")
+
+
+def _install_reporters() -> None:
+    try:
+        import logging
+        import warnings
+
+        warnings.simplefilter("ignore")
+        warnings.showwarning = lambda *a, **k: None
+        logging.disable(logging.CRITICAL)
+        logging.lastResort = None
+    except BaseException:  # noqa: BLE001
+        pass
+    sys.excepthook = _report_uncaught
+    sys.unraisablehook = _report_unraisable
+    try:
+        import threading
+
+        threading.excepthook = _report_thread
+    except BaseException:  # noqa: BLE001
+        pass
+
+
+if __name__ == "__main__":
+    _install_reporters()
+
 try:
-    from anthropic import Anthropic
-except ImportError:  # pragma: no cover - exercised in CI install
-    Anthropic = None  # type: ignore[assignment]
+    import json
+    import os
+    import re
+    import subprocess
+    from datetime import datetime, timezone
+except BaseException as _import_exc:  # noqa: BLE001 - even a standard module may fail
+    # Too early to write a record: the exit is non-zero and the workflow's
+    # "the panel step ended without reporting" path turns the run red.
+    _say(f"::error::census panel did not run: an unexpected {_class_name_of(type(_import_exc), 'BaseException')}")
+    sys.exit(1)
+
+# `anthropic` is pip-installed in the workflow's Python step and imported
+# lazily by `_anthropic_client_class`; a test can set this to a fake client.
+Anthropic = None  # type: ignore[assignment]
 
 
 # --- Constants -------------------------------------------------------------
@@ -185,7 +306,7 @@ The census measures subscription state and convergence, NOT usage. Weigh it so:
     prosecutor win → keep.
   - gap: an entry in `signals.unsubscribed_catalog_skills[]` with grace=false
     MAY be a coverage gap. Entries with grace=true (udts-* stubs, structural L0
-    primitives, design-critic lenses) are expected-zero by design — never a gap.
+    primitives, catalog-only skills, design-critic lenses) are expected-zero by design — never a gap.
     A real gap is a recurring, un-graced need with no catalog skill.
   - demote: a catalog skill unsubscribed (grace=false), not converging locally,
     and flagged stale on the docket may be a demotion/retirement candidate — but
@@ -260,6 +381,75 @@ class PanelValidationError(Exception):
     """Raised when the model's response fails structural validation."""
 
 
+class PanelSdkMissing(Exception):
+    """The `anthropic` package is not importable."""
+
+
+class PanelNoText(Exception):
+    """The model answered with no text block."""
+
+
+# Exact class names, from the anthropic SDK's public exception hierarchy
+# (APITimeoutError, APIConnectionError: the SDK wraps every transport timeout
+# and connection failure in these two) and from the standard library's own
+# timeout and connection errors. A name that merely contains "Timeout" or
+# "Connection" is NOT on this list: with no HTTP status it is 'unexpected'.
+TIMEOUT_CLASS_NAMES = frozenset({"APITimeoutError", "TimeoutError"})
+CONNECTION_CLASS_NAMES = frozenset(
+    {
+        "APIConnectionError",
+        "ConnectionError",
+        "ConnectionResetError",
+        "ConnectionAbortedError",
+        "ConnectionRefusedError",
+    }
+)
+
+
+def classify_failure(exc: BaseException) -> tuple[str, str, int | None]:
+    """(reason_code, reason, http_status) for a panel failure.
+
+    Uses the exception's HTTP status and class name ONLY. The exception text
+    is never read: provider errors carry request ids and echo request
+    fragments, and this repository's Actions logs are public.
+    """
+    raw = getattr(exc, "status_code", None)
+    http = raw if isinstance(raw, int) and not isinstance(raw, bool) else None
+    name = _class_name_of(type(exc), "Exception")
+    if isinstance(exc, PanelSdkMissing):
+        return "sdk_missing", "the anthropic package is not installed", None
+    if isinstance(exc, (PanelValidationError, PanelNoText)):
+        return "invalid_answer", "the model's answer could not be used", None
+    if http == 401:
+        return "authentication", "the API key was refused (HTTP 401)", 401
+    if http == 403:
+        return "permission", "the API key lacks permission for this request (HTTP 403)", 403
+    if http == 404:
+        return "model_unavailable", "the model was not found or is not available to this key (HTTP 404)", 404
+    if http == 429:
+        return "rate_limited", "the API rate limit was hit (HTTP 429)", 429
+    if http is not None and http >= 500:
+        return "service_error", f"the API service failed (HTTP {http})", http
+    if http is not None and 400 <= http < 500:
+        # Any 4xx not named above, 400 included (an exhausted credit balance
+        # arrives as one): only a person can fix it.
+        return "client_error", f"the API refused the request (HTTP {http})", http
+    if name in TIMEOUT_CLASS_NAMES:
+        return "timeout", "the API call timed out", http
+    if name in CONNECTION_CLASS_NAMES:
+        return "connection", "the API could not be reached", http
+    return "unexpected", f"an unexpected {name}", http
+
+
+# Failures known to pass by themselves. The run stays green for these and for
+# nothing else that fails: every other code, and a record that is missing or
+# unreadable, fails the run (fail closed). The workflow's "Panel health" step
+# repeats this list; a test pins the two together.
+TRANSIENT_CODES = frozenset(
+    {"rate_limited", "service_error", "timeout", "connection", "invalid_answer"}
+)
+
+
 # --- IO helpers ------------------------------------------------------------
 
 
@@ -282,13 +472,35 @@ def _write_json(path: str, obj: object) -> None:
         fh.write("\n")
 
 
-def _write_marker(path: str, reason: str) -> None:
+def _write_status(
+    census_dir: str,
+    state: str,
+    code: str | None = None,
+    reason: str | None = None,
+    http: int | None = None,
+    verdicts: int = 0,
+    keeps: int = 0,
+    exc_class: str | None = None,
+) -> None:
+    """The panel's machine-readable record. Written on every handled path (a
+    missing record fails the run in the workflow's last step); carries
+    only fixed strings, counts, the HTTP status, the stage and a class name.
+    The workflow re-checks every field (panel_record.sh) and trusts none."""
+    record = {
+        "state": state,
+        "reason_code": code,
+        "reason": reason,
+        "stage": _STAGE,
+        "exc_class": exc_class,
+        "background_error_class": _BACKGROUND[0] if _BACKGROUND else None,
+        "http_status": http,
+        "verdicts": verdicts,
+        "keeps": keeps,
+    }
     try:
-        with open(path, "w", encoding="utf-8") as fh:
-            fh.write(f"census panel failed at {datetime.now(timezone.utc).isoformat()}\n")
-            fh.write(reason.strip() + "\n")
+        _write_json(os.path.join(census_dir, "panel_status.json"), record)
     except OSError as exc:  # pragma: no cover - disk failure is unrecoverable here
-        print(f"::error::could not write panel marker {path}: {exc}", file=sys.stderr)
+        print(f"::error::could not write panel_status.json: {type(exc).__name__}", file=sys.stderr)
 
 
 # --- Inputs ----------------------------------------------------------------
@@ -319,19 +531,20 @@ def fetch_docket() -> tuple[list[dict], str | None]:
     except subprocess.TimeoutExpired:
         return [], "gh issue list timed out"
     except Exception as exc:  # noqa: BLE001 - docket is best-effort
-        return [], f"gh invocation error: {exc}"
+        return [], f"gh invocation error: {_class_name_of(type(exc), 'Exception')}"
 
     if proc.returncode != 0:
-        tail = (proc.stderr or "").strip().splitlines()
-        return [], f"gh exited {proc.returncode}: {tail[-1] if tail else 'unknown error'}"
+        # The exit status only: gh's stderr is the one text here a token or a
+        # request id could ride in, and it reaches the prompt and verdicts.json.
+        return [], f"gh exited {proc.returncode}"
 
     out = (proc.stdout or "").strip()
     if not out:
         return [], None
     try:
         data = json.loads(out)
-    except json.JSONDecodeError as exc:
-        return [], f"gh output was not JSON: {exc}"
+    except json.JSONDecodeError:
+        return [], "gh output was not JSON"
     if not isinstance(data, list):
         return [], "gh output was not a JSON array"
     return data, None
@@ -504,15 +717,31 @@ def build_user_message(
 # --- API call --------------------------------------------------------------
 
 
+def _anthropic_client_class():  # noqa: ANN202
+    """The SDK's client class, imported here and not at module level so that
+    whatever the import raises (not only ImportError) is raised inside `main`'s
+    guard, after the interpreter's reporters are replaced."""
+    if Anthropic is not None:
+        return Anthropic
+    try:
+        from anthropic import Anthropic as client_class
+    except ImportError:
+        raise PanelSdkMissing("anthropic package not installed — pip install anthropic") from None
+    return client_class
+
+
 def call_claude(system_prompt: str, user_message: str) -> str:
     """Run exactly one Anthropic messages.create call. Returns concatenated text
     blocks. Raises on any infrastructure failure (no client, no key, empty)."""
-    if Anthropic is None:
-        raise RuntimeError("anthropic package not installed — pip install anthropic")
+    global _STAGE
+    _STAGE = "sdk_import"
+    client_class = _anthropic_client_class()
+    _STAGE = "client"
     if not os.environ.get("ANTHROPIC_API_KEY"):
         raise RuntimeError("ANTHROPIC_API_KEY not set")
 
-    client = Anthropic(timeout=CLIENT_TIMEOUT)  # SDK default max_retries (no extra retries)
+    client = client_class(timeout=CLIENT_TIMEOUT)  # SDK default max_retries (no extra retries)
+    _STAGE = "call"
     request = dict(
         model=MODEL,
         max_tokens=MAX_TOKENS,
@@ -537,6 +766,7 @@ def call_claude(system_prompt: str, user_message: str) -> str:
         else:
             raise
 
+    _STAGE = "parse"
     parts: list[str] = []
     for block in msg.content:
         text = getattr(block, "text", None)
@@ -544,7 +774,7 @@ def call_claude(system_prompt: str, user_message: str) -> str:
             parts.append(text)
     if not parts:
         block_types = [getattr(b, "type", "?") for b in msg.content]
-        raise RuntimeError(
+        raise PanelNoText(
             "no text blocks in Anthropic API response "
             f"(stop_reason={getattr(msg, 'stop_reason', '?')}, "
             f"block_types={block_types or 'none'})"
@@ -740,9 +970,10 @@ def validate_and_build(
             amend_target = verdict.get("amend_target")
             target = amend_target.strip() if isinstance(amend_target, str) else ""
             if not target or target not in catalog_slugs:
+                # Model output is not echoed into the public log.
                 print(
-                    f"::warning::census panel: gap verdict amend_target={amend_target!r} "
-                    "not found in skill catalog — dropping verdict.",
+                    "::warning::census panel: a gap verdict's amend_target is not "
+                    "in the skill catalog — dropping verdict.",
                     file=sys.stderr,
                 )
                 dropped += 1
@@ -800,14 +1031,33 @@ def validate_and_build(
 # --- Main ------------------------------------------------------------------
 
 
-def main(argv: list[str] | None = None) -> int:
+def _set_stage(stage: str) -> None:
+    global _STAGE
+    _STAGE = stage
+
+
+def _run(argv: list[str] | None = None) -> int:
+    # A key that is set but blank (a pasted newline) is a misconfiguration, not
+    # the deliberate no-key mode: fail so a person looks.
+    raw_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    if raw_key and not raw_key.strip():
+        reason = "the API key is set but blank"
+        print(f"::error::census panel did not run: {reason}", file=sys.stderr)
+        blank_dir = os.environ.get("CENSUS_DIR", "").strip()
+        if blank_dir and os.path.isdir(blank_dir):
+            _write_status(blank_dir, "failed", "key_blank", reason)
+        return 0
+
     # RULING 1: no API key => the panel is intentionally OFF (Mode B).
-    if not os.environ.get("ANTHROPIC_API_KEY", "").strip():
+    if not raw_key.strip():
         print(
             "::warning::ANTHROPIC_API_KEY not set — census panel skipped (Mode B); "
-            "writing nothing.",
+            "no verdicts.",
             file=sys.stderr,
         )
+        off_dir = os.environ.get("CENSUS_DIR", "").strip()
+        if off_dir and os.path.isdir(off_dir):
+            _write_status(off_dir, "off", "no_key", "no API key is configured")
         return 0
 
     # Wiring gate: exit 1 is reserved for a missing/corrupt census.json.
@@ -826,7 +1076,10 @@ def main(argv: list[str] | None = None) -> int:
         census_raw = _read_text(census_path)
         census = json.loads(census_raw)
     except (OSError, json.JSONDecodeError) as exc:
-        print(f"::error::{census_path} is unreadable or not valid JSON: {exc}", file=sys.stderr)
+        print(
+            f"::error::{census_path} is unreadable or not valid JSON: {_class_name_of(type(exc), 'Exception')}",
+            file=sys.stderr,
+        )
         return 1
     if not isinstance(census, dict):
         print(f"::error::{census_path} is not a JSON object.", file=sys.stderr)
@@ -854,12 +1107,13 @@ def main(argv: list[str] | None = None) -> int:
             "verdicts held back this cycle; the digest is filed alone.",
             file=sys.stderr,
         )
+        _write_status(census_dir, "held_back", "partial_census", "the census is partial")
+        print(f"held_back cycle={cycle} panel=partial_census")
         return 0
 
     verdicts_path = os.path.join(census_dir, "verdicts.json")
-    marker_path = os.path.join(census_dir, "panel_failed.marker")
 
-    # From here on, every failure is Mode-B territory: marker + exit 0.
+    # From here on, every failure is Mode-B territory: a status record + exit 0.
     try:
         digest_text = _maybe_read(os.path.join(census_dir, "digest.md"))
         rubric_text, rubric_source = load_rubric()
@@ -883,14 +1137,25 @@ def main(argv: list[str] | None = None) -> int:
         verdicts_obj = validate_and_build(
             response_text, cycle, rubric_source, docket_meta, catalog_slugs
         )
+        _set_stage("write")
         _write_json(verdicts_path, verdicts_obj)
     except Exception as exc:  # noqa: BLE001 - API/validation failure => Mode B, not a crash
-        reason = f"{type(exc).__name__}: {exc}"
-        print(f"::error::census panel failed: {reason}", file=sys.stderr)
-        _write_marker(marker_path, reason)
+        # Classified from the status and class name only; the exception text
+        # (request id, echoed fragments) is never read.
+        code, reason, http = classify_failure(exc)
+        level = "warning" if code in TRANSIENT_CODES else "error"
+        print(f"::{level}::census panel did not run: {reason}", file=sys.stderr)
+        _write_status(census_dir, "failed", code, reason, http, exc_class=_class_name_of(type(exc), "Exception"))
+        print(f"failed cycle={cycle} panel={code} http={http if http is not None else 'none'} verdicts=0")
         return 0
 
     meta = verdicts_obj["meta"]
+    _write_status(
+        census_dir,
+        "ran",
+        verdicts=len(verdicts_obj["verdicts"]),
+        keeps=verdicts_obj["keep_count"],
+    )
     print(
         "ok "
         f"cycle={cycle} "
@@ -903,6 +1168,27 @@ def main(argv: list[str] | None = None) -> int:
         f"out={verdicts_path}"
     )
     return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Outermost guard. Whatever is raised, BaseException subclasses included
+    (SystemExit with a message, GeneratorExit, KeyboardInterrupt), no message
+    and no traceback reaches the public log: the record gets the class name
+    only, one line names the class, and the exit is non-zero. A deliberate
+    SystemExit with an integer code keeps that code."""
+    try:
+        return _run(argv)
+    except BaseException as exc:  # noqa: BLE001 - nothing raised may print its text
+        name = _class_name_of(type(exc), "BaseException")
+        census_dir = os.environ.get("CENSUS_DIR", "").strip()
+        if census_dir and os.path.isdir(census_dir):
+            _write_status(census_dir, "failed", "unexpected", f"an unexpected {name}", exc_class=name)
+        print(f"::error::census panel did not run: an unexpected {name}", file=sys.stderr)
+        print(f"failed panel=unexpected class={name} verdicts=0")
+        code = getattr(exc, "code", None) if isinstance(exc, SystemExit) else None
+        if isinstance(code, int) and not isinstance(code, bool):
+            return code
+        return 130 if isinstance(exc, KeyboardInterrupt) else 1
 
 
 if __name__ == "__main__":
