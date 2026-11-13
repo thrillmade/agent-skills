@@ -13,10 +13,10 @@ PR's CI run, so this file is always coherent with current `main`.
 ---
 
 
-## 2026-11 (25 decisions)
+## 2026-11 (26 decisions)
 
-- **2026-11-12** — The version index stays complete without a bot, and publishes the catalog's own names *(feat/index-catalog-block-292)* — [decisions-branches/feat__index-catalog-block-292.md](decisions-branches/feat__index-catalog-block-292.md)
-- *... 23 more decisions ...*
+- **2026-11-13** — Census: catalog-only skills are graced, the digest says what the model review did, a failure that needs a person fails the run, and nothing the SDK emits reaches the public log (#191) *(fix/census-panel-status-191)* — [decisions-branches/fix__census-panel-status-191.md](decisions-branches/fix__census-panel-status-191.md)
+- *... 24 more decisions ...*
 - **2026-11-02** — Design skills: thrill-design house principles, motion-continuity, ios-safari-surfaces; designing-elite-ui and orchestrating-elite-agent-qa amended *(feat/design-skills-nov)* — [decisions-branches/feat__design-skills-nov.md](decisions-branches/feat__design-skills-nov.md)
 
 ## 2026-10
