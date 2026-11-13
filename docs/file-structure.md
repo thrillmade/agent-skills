@@ -107,7 +107,10 @@ thrill-skills
 │   ├── test_skill_census_digest_closure.py
 │   ├── test_skill_census_failure_alarm.py
 │   ├── test_skill_census_gh_list_failure.py
+│   ├── test_skill_census_grace.py
 │   ├── test_skill_census_lock_source.py
+│   ├── test_skill_census_panel_boundary.py
+│   ├── test_skill_census_panel_no_leak.py
 │   ├── test_skill_census_panel_repo.py
 │   ├── test_skill_census_partial_panel.py
 │   ├── test_skill_census_repo_coverage.py

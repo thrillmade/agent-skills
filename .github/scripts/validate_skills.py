@@ -77,6 +77,7 @@ except ImportError as _import_error:
     )
     sys.exit(1)
 import skill_version
+from gen_skill_versions import catalog_block
 
 ROOT = Path("skills")
 FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---(?=\n|\Z)", re.DOTALL)
@@ -88,8 +89,6 @@ FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---(?=\n|\Z)", re.DOTALL)
 # and never validated -- only the fields below are checked, and
 # only when present.
 NAME_SLUG_RE = re.compile(r"^[a-z][a-z0-9-]{0,62}$")
-# SPEC §1.10.1: `source: manual | logmind-derived | skills-sh | clud-bug-baseline`
-SOURCE_VALUES = {"manual", "logmind-derived", "skills-sh", "clud-bug-baseline"}
 # SPEC: `kind: rule | writing | design`
 KIND_VALUES = {"rule", "writing", "design"}
 
@@ -1043,12 +1042,9 @@ def run(root: Path) -> list[str]:
         # Unrecognised keys round-trip untouched (SPEC §2.1), so a stale
         # one is ignored rather than rejected.
 
-        source = meta.get("source")
-        if source is not None and source not in SOURCE_VALUES:
-            errors.append(
-                f"::error file={prefix}::`source: {source!r}` is not one of "
-                f"{sorted(SOURCE_VALUES)} (SPEC §1.10.1)"
-            )
+        # `source` is likewise not validated: the spec section that once
+        # enumerated its values no longer defines the field, so any value
+        # is an unknown key like any other and is tolerated.
 
         applies_to = meta.get("applies_to")
         if applies_to is not None:
@@ -1418,6 +1414,18 @@ def run(root: Path) -> list[str]:
             "skill name -> {current, history}"
         )
     elif index is not None:
+        # The `catalog` block is generated from CATALOG_NAMES (the one list of
+        # this catalog's own names, in census_counters.py); another repository's
+        # tool reads it to recognise a copy that came from here, so a block that
+        # has fallen behind the list silently stops recognising a name.
+        want_block = catalog_block()
+        if index.get("catalog") != want_block:
+            errors.append(
+                f"::error file={sv_prefix}::docs/skill-versions.json names its "
+                f"catalog as {index.get('catalog')!r} but CATALOG_NAMES says "
+                f"{want_block!r}. Run "
+                "`python3 .github/scripts/gen_skill_versions.py --write`."
+            )
         published = index["skills"]
         for slug, want in sorted(digests.items()):
             entry = published.get(slug)

@@ -208,6 +208,8 @@ Whichever pattern applies, prefer the **collection layout** (`skills/<name>/SKIL
 
 The rest — placement, frontmatter, size, every gate — is in [AGENTS.md](AGENTS.md#changing-a-skill-here).
 
+Maintainers promoting `dev` to `main`: the procedure, including regenerating the version index, is in [AGENTS.md](AGENTS.md#promoting-dev-to-main).
+
 ## Editing an existing skill
 
 Two gates apply on every PR, and the second one surprises people:

@@ -795,18 +795,30 @@ def read_catalog() -> list[str]:
     )
 
 
-def _grace_reason(skill: str) -> str | None:
+def _grace_reason(skill: str, placement_map: dict | None = None) -> str | None:
     """Return a grace annotation for an unsubscribed catalog skill, or None
-    if its zero-subscription state is a genuine coverage gap.
+    if its zero-subscription state is a genuine coverage gap. A skill the
+    placement map marks `distribution: "catalog-only"` is offered to nobody, so
+    zero subscribers is its declared state (#191). An absent or unreadable map
+    graces nothing: the skill shows as a gap, which keeps the failure visible.
     """
     if skill.startswith(UDTS_STUB_PREFIX):
         return "udts-* L2 stub (incubating in udts — parity marker, not yet guidance)"
     if skill in STRUCTURAL_L0:
         return "structural L0 (composed by L1 dispatchers, not subscribed directly)"
+    skills = placement_map.get("skills") if isinstance(placement_map, dict) else None
+    entry = skills.get(skill) if isinstance(skills, dict) else None
+    if isinstance(entry, dict) and entry.get("distribution") == "catalog-only":
+        return (
+            "catalog-only in docs/placement-map.json "
+            "(offered to no subscriber, so zero subscriptions is the declared state)"
+        )
     return None
 
 
-def compute_signals(catalog: list[str], repos: dict[str, dict]) -> dict:
+def compute_signals(
+    catalog: list[str], repos: dict[str, dict], placement_map: dict | None = None
+) -> dict:
     """Derive the org-wide promotion/coverage signals from the per-repo
     records and the local catalog listing. Counts come from READ repos only;
     an unread repo's errors are still reported.
@@ -824,8 +836,8 @@ def compute_signals(catalog: list[str], repos: dict[str, dict]) -> dict:
     unsubscribed_catalog_skills = [
         {
             "name": skill,
-            "grace": _grace_reason(skill) is not None,
-            "grace_reason": _grace_reason(skill),
+            "grace": _grace_reason(skill, placement_map) is not None,
+            "grace_reason": _grace_reason(skill, placement_map),
         }
         for skill in catalog
         if subscriber_count.get(skill, 0) == 0
@@ -1528,12 +1540,13 @@ def main() -> int:
     for repo in CONSUMER_REPOS:
         repos[repo] = survey_repo(repo, token)
 
-    signals = compute_signals(catalog, repos)
+    placement_map = read_placement_map()
+    signals = compute_signals(catalog, repos, placement_map)
     # Additive signals (never mutate compute_signals' existing contract).
     signals["subscription_drift"] = compute_subscription_drift(repos)
     signals["usage"] = aggregate_usage(repos)
     signals["placement_divergence"] = compute_placement_divergence(
-        read_placement_map(), repos
+        placement_map, repos
     )
     stale_docket = survey_docket(token, now)
     coverage = compute_coverage(repos)

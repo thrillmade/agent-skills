@@ -1,6 +1,6 @@
 ---
-version: "1.0.0"
-digest: "13e8b85d472a"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+version: "1.0.1"
+digest: "6c13727cf30d"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/thrill-skills"
 name: technical-writing
 description: Flag a PR that ships a new env var, CLI flag, config key, exported function/type, or endpoint with no matching doc or changelog entry — working and undocumented, not broken. Apply to any addition, a new capability with no removal or behavior change to existing surface. Not for a reversed or superseded value (see retiring-a-superseded-decision) or a breaking API change (see api-contract-enforcement); pairs with the latter when a finding also touches behavior.
@@ -41,7 +41,7 @@ time, independently. Two occurrences is a pattern, not a one-off.
   removal or behavior change to existing surface,"* which is precisely this
   skill's territory, not its own.
 - **The finding is about the diff's behavior, not its documentation.** This is
-  a `kind: writing` skill; per SPEC §2.2 it must not be the sole citation for
+  a `kind: writing` skill, so it must not be the sole citation for
   a claim about code behavior — pair it with the `rule` skill that owns that
   surface (often `api-contract-enforcement`) when the code itself, not only
   its coverage, is in question.
@@ -90,7 +90,7 @@ states it; which mechanism enforces that is the repo's own choice.
   the new one.
 - [api-contract-enforcement](../api-contract-enforcement/SKILL.md) — the
   breaking-change case this skill excludes; pair with it when a finding also
-  touches behavior, per SPEC §2.2.
+  touches behavior.
 - [proving-an-absence](../proving-an-absence/SKILL.md) — control-testing the
   "no doc found" grep before reporting it.
 
@@ -103,6 +103,5 @@ states it; which mechanism enforces that is the repo's own choice.
 - Changesets, github.com/changesets/changesets `docs/automating-changesets.md`
   — `changeset status --since` as a merge-time gate.
 - towncrier, github.com/twisted/towncrier — one newsfragment file per PR.
-- protocol SPEC §2.2, github.com/thrillmade/protocol `SPEC.md` — `kind`
-  routes a skill to a pass; the pairing rule this skill's `kind: writing`
-  is bound by.
+- `kind` routes a skill to a review pass, and a `kind: writing` skill is
+  never the sole citation for a finding about code behavior: from practice.

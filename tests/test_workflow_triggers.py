@@ -257,7 +257,7 @@ def test_census_workflow_names_no_repository_literally():
     assert file_issues["env"]["GH_REPO"] == "${{ github.repository }}"
 
 
-def test_census_alarm_job_runs_on_any_non_success_with_its_own_issues_write():
+def test_census_alarm_job_runs_on_every_scheduled_run_with_its_own_issues_write():
     doc, _ = _load(CENSUS)
     assert doc["permissions"] == {"contents": "read"}, (
         "workflow-level permissions widened; the alarm job carries its own"
@@ -266,14 +266,32 @@ def test_census_alarm_job_runs_on_any_non_success_with_its_own_issues_write():
     assert alarm["needs"] == "census"
     # EXACT, not substrings: `&& false` appended, or an `||` that changes the
     # precedence, keeps every substring present and silences the alarm. Any
-    # change to this condition has to be made here too, on purpose.
-    assert alarm["if"] == (
-        "${{ always() && github.event_name == 'schedule' && needs.census.result != 'success' }}"
-    )
+    # change to this condition has to be made here too, on purpose. The job
+    # runs on EVERY scheduled run (it files on failure and closes the alarm on
+    # success, branching on the census result in its script); the schedule
+    # clause is what keeps a manual run from ever closing it.
+    assert alarm["if"] == "${{ always() && github.event_name == 'schedule' }}"
     assert alarm["permissions"] == {"issues": "write"}
     body = yaml.safe_dump(alarm)
     assert "secrets." not in body, "the alarm must not depend on the App secrets the census needs"
     assert "workflow-failure-key: skill-census" in body
+
+
+def test_panel_health_is_the_last_census_step_and_can_fail_the_run():
+    """The panel exits 0 on an API failure so the digest still files; this step
+    is what turns a failure that needs a person into a failed run, and it must
+    come after both the digest and the artifact upload."""
+    _, steps = _census_steps()
+    i_health, health = _step(steps, "panel_health")
+    i_file, _ = _step(steps, "file_issues")
+    upload = [i for i, s in enumerate(steps) if str(s.get("uses", "")).startswith("actions/upload-artifact@")]
+    assert upload and i_health > i_file and i_health > max(upload)
+    assert i_health == len(steps) - 1
+    assert "continue-on-error" not in health, "a step that cannot fail the run cannot raise the alarm"
+    assert health["if"] == "${{ !cancelled() && steps.guard.outputs.panel_enabled == 'true' }}"
+    uploaded = [s for s in steps if str(s.get("uses", "")).startswith("actions/upload-artifact@")][0]
+    assert "panel_status.json" in uploaded["with"]["path"]
+    assert "panel_failed.marker" not in uploaded["with"]["path"]
 
 
 def test_watchdog_lives_outside_the_census_failure_domain():
@@ -296,3 +314,50 @@ def test_watchdog_lives_outside_the_census_failure_domain():
     assert census_triggers["schedule"] == [{"cron": "0 12 * * 1"}]
     assert int(env["MAX_AGE_DAYS"]) == 2 * 7
     assert "workflow-failure-key: skill-census" in text
+
+
+# --- notify-clud-bug targets the org's `dev`, not the other repo's default ---
+
+
+def _clud_bug_steps():
+    doc, _ = _load("notify-clud-bug.yml")
+    return doc["jobs"]["sync"]["steps"] if "sync" in doc["jobs"] else next(
+        j["steps"] for j in doc["jobs"].values() if any(
+            "thrillmade/clud-bug" in str(s.get("with", {}).get("repository", ""))
+            for s in j.get("steps", [])
+        )
+    )
+
+
+def test_clud_bug_sync_checks_out_dev():
+    # Omitting `ref:` checks out the default branch (`main`), which would cut
+    # the sync branch from the wrong base.
+    steps = [s for s in _clud_bug_steps()
+             if s.get("with", {}).get("repository") == "thrillmade/clud-bug"]
+    assert len(steps) == 1
+    assert steps[0]["with"].get("ref") == "dev"
+
+
+def test_clud_bug_sync_pr_targets_dev():
+    pr_steps = [s for s in _clud_bug_steps() if "gh pr create" in s.get("run", "")]
+    assert len(pr_steps) == 1
+    run = pr_steps[0]["run"]
+    m = re.search(r"gh pr create.*?--base\s+(\S+)", run, re.DOTALL)
+    assert m, "gh pr create names no --base"
+    assert m.group(1) == "dev"
+
+
+# --- the history-lag gate belongs to the promotion, not to every PR ----------
+
+
+def test_history_lag_gate_runs_only_on_pull_requests_into_main():
+    """dev's index lags by design (#292), so a lag check on a PR into dev
+    would fail every skill change. Exact, not substrings: dropping the
+    base_ref clause turns the gate on for dev."""
+    doc, _ = _load("validate-skills.yml")
+    steps = [
+        s for s in doc["jobs"]["validate"]["steps"]
+        if "gen_skill_versions.py --lag" in str(s.get("run", ""))
+    ]
+    assert len(steps) == 1, "expected exactly one --lag step"
+    assert steps[0]["if"] == "github.event_name == 'pull_request' && github.base_ref == 'main'"

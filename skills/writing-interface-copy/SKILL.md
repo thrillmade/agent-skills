@@ -1,6 +1,6 @@
 ---
-version: "1.0.3"
-digest: "2d2d0dc59dad"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+version: "1.0.4"
+digest: "4bd70d23c3e8"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/thrill-skills"
 name: writing-interface-copy
 description: >-
@@ -39,19 +39,19 @@ kind: writing
 
 ## The rules
 
-**1. Name it; don't narrate it.** A screen that needs explaining needs fixing. Cut "here you can", "you can now", "you are now viewing". *Holds when:* no label, heading or caption describes the screen or what the user does on it.
+**1. Name it; don't narrate it.** A screen that needs explaining needs fixing. *Holds when:* no label, heading or caption describes the screen or what the user does on it.
 
 **2. A label is the noun, not a frame.** "Favorites", not "Your favorites". Action labels and sentences may say "your". *Holds when:* cutting a noun label to its noun phrase loses nothing.
 
-**3. Status is a state word.** One word; two only for a state one word cannot hold; past tense for a finished action ("Shipped", not "Ship"). No pronouns. *Holds when:* each status is one or two words, and every finished action reads as done.
+**3. Status is a state word.** One word; two only for a state one word cannot hold; past tense for a finished action ("Shipped", not "Ship"). No pronouns. One role's tags are all states or all things. *Holds when:* each status is one or two words, and every finished action reads as done.
 
-**4. Name the user's situation, not the system's category.** Use the words users already have, not the team's; name a service by the task, not the technology. Keep a domain's term of art ("Action items" in a meeting tool). *Holds when:* each heading answers "what is this to me?" and keeps one name everywhere (rule 7).
+**4. Name the user's situation, not the system's category.** Use the words users already have, not the team's; name a service by the task, not the technology. Keep a domain's term of art ("Action items" in a meeting tool). *Holds when:* each heading answers "what is this to me?"
 
 **5. Say it once.** No subtitle restating its title, no page heading repeating the title bar. Every field keeps a visible label; a placeholder vanishes on typing, so it carries only a hint ("name@example.com"). Exempt: an error naming its field ("Enter an email address" under "Email"), and a dialog naming an object nothing else on screen names. *Holds when:* no child string repeats its parent's entity, bar those, and no field relies on a placeholder for its label.
 
 **6. Active voice; name the actor.** A passive with no actor is the hardest sentence to parse. Passive is allowed to avoid blaming the user, to stress the action over the actor, or to put the keyword first. *Holds when:* each `be`- or `get`-passive names its actor or meets one of those three.
 
-**7. One name per thing, one case style.** Two words must never leave a user wondering if they mean one thing. Follow the project's case pattern for buttons and labels — sentence case unless the project consistently uses title case — and flag a new label that drifts. *Holds when:* clustering the nouns in headings, buttons and errors leaves one term per cluster, and no label breaks the case pattern.
+**7. One name per thing, one case style.** Two words must never leave a user wondering if they mean one thing. Follow the project's case pattern (sentence case unless it consistently uses title case) and flag a label that drifts. *Holds when:* clustering the nouns in headings, buttons and errors leaves one term per cluster, and no label breaks the case pattern.
 
 **8. Cut filler.** By class, with the fix:
 - *Empty adverbs* — "successfully", "quickly", "automatically" where nothing manual was expected: delete. Keep one that is the meaning ("Renew automatically").
@@ -63,9 +63,11 @@ kind: writing
 
 *Holds when:* the quick pass finds no unexplained hit.
 
-**9. Buttons and links say what they do.** A control that changes data starts with the verb naming the change ("Send invitation", "Save profile"); one that only navigates may name its destination ("Settings"). OK belongs only on a purely informational alert. A radio "No" or a status "OK" is not an action. No emoji in a button or link label; a screen reader reads its name aloud. *Holds when:* no button or link reads OK, Submit, Yes or No outside an informational alert, each predicts its result, and the emoji check finds none.
+**9. Buttons and links say what they do.** A control that changes data starts with the verb naming the change ("Send invitation", "Save profile"); one that only navigates may name its destination ("Settings"). OK belongs only on an informational alert. A radio "No" or a status "OK" is not an action. No emoji in a button or link label; a screen reader reads its name aloud. *Holds when:* no button or link reads OK, Submit, Yes or No outside an informational alert, each predicts its result, and the emoji check finds none.
 
-**10. Errors: what happened, what to do, no blame.** The thing is the subject, never the person. "We" only when the product failed. Never invent a cause or a requirement; state a real one plainly ("Your card was declined", "The file must be a PNG", not "Make sure…"). No "invalid", "illegal" or "incorrect"; no "Please try again later" — give the next step or the live state ("Connection lost. Reconnecting…"). *Holds when:* each error has a next step, or sits inline on the field it names ("Wrong password"), and never makes "you" the cause.
+**10. Errors: what happened, what to do, no blame.** The thing is the subject, never the person. "We" only when the product failed. Never invent a cause or a requirement; state a real one plainly ("Your card was declined", "The file must be a PNG"). No "invalid", "illegal" or "incorrect"; no "Please try again later" — give the next step or the live state ("Connection lost. Reconnecting…"). *Holds when:* each error has a next step, or sits inline on the field it names ("Wrong password"), and never makes "you" the cause.
+
+**11. Siblings take one shape.** Strings in one role (tabs, a row's second line, a tag set) share one grammatical form; a variant reads as a different thing. Build them in one function so no screen invents one. *Holds when:* listing a role's instances finds one pattern.
 
 ## Before and after
 
@@ -80,10 +82,10 @@ kind: writing
 | 7 | Workspace, Team, Org (one object) | Workspace |
 | 7 | "Edit Profile Settings" in a sentence-case app | Edit profile settings |
 | 8 | Simply drag files here to easily upload them | Drag files here to upload |
-| 9 | Submit | Send invoice |
 | 9 | OK (deleting a project) | Delete project |
 | 10 | Upload failed | Couldn't upload: the file is over 10 MB. Choose a smaller one |
 | 10 | Oops! Something went wrong | Couldn't save. Retry, or contact support if it keeps failing |
+| 11 | Profile · Team · Manage billing | Profile · Team · Billing |
 
 ## Quick pass
 
@@ -96,7 +98,7 @@ grep -nEi "(^|[\"'>])[[:space:]]*(ok|okay|submit|yes|no|more)[.!?…]?[[:space:]
 perl -CSD -ne 'print "$.: $_" if /\p{Extended_Pictographic}/' labels
 ```
 
-Then list together and read: statuses (3), headings (4), titles and subtitles (5), nouns and case (7), errors (10).
+Then list together and read: statuses (3), headings (4), titles and subtitles (5), nouns and case (7), errors (10), siblings (11).
 
 ## Reviewing copy
 
@@ -114,9 +116,8 @@ One finding per string: the file and line, the string quoted, the rule number, a
 
 ## Cross-references
 
-- **Voice:** [defining-a-voice](../defining-a-voice/SKILL.md). **Marketing:** [writing-marketing-copy](../writing-marketing-copy/SKILL.md).
 - [designing-elite-ui](../designing-elite-ui/SKILL.md) 12; [web-interface-guidelines-review](../web-interface-guidelines-review/SKILL.md) §4; [reviewing-design-work](../reviewing-design-work/SKILL.md) runs this as its copy lens.
 
 ## Sources
 
-Why we hold these, rule by rule, with the guides behind each: [references/sources.md](references/sources.md). [Further reading](references/further-reading.md).
+Rule by rule, with the guides behind each: [references/sources.md](references/sources.md).

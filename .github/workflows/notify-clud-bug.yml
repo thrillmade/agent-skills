@@ -151,6 +151,9 @@ jobs:
         with:
           repository: thrillmade/clud-bug
           path: clud-bug
+          # Every PR in the org targets `dev`; the sync branch is cut from it
+          # and the PR below is opened against it (default branch is `main`).
+          ref: dev
           token: ${{ secrets.CLUD_BUG_NOTIFY_PAT }}
 
       - name: Verify CLUD_BUG_NOTIFY_PAT has push + PR scope
@@ -339,7 +342,7 @@ jobs:
 
           gh pr create \
             --repo thrillmade/clud-bug \
-            --base main \
+            --base dev \
             --head "${BRANCH}" \
             --title "chore(skills): refresh bundled ${SKILL} from thrill-skills@${SHORT}" \
             --body "${PR_BODY}"

@@ -258,7 +258,7 @@
       "authoring_home": "catalog",
       "distribution": "catalog-only",
       "subscribers": [],
-      "notes": "SUPERSEDED (#203) -- skill authoring split three ways: skill-creator owns measurement, superpowers:writing-skills owns wording form, the skill-smith agent owns house rules. Vendored, author: zakelfassi; kept unchanged during the migration window"
+      "notes": "SUPERSEDED (#203) -- skill authoring split three ways: skill-creator owns measurement, superpowers:writing-skills owns wording form, the skill-smith agent owns the authoring craft, and this catalog's house rules live in AGENTS.md. Vendored, author: zakelfassi; kept unchanged during the migration window"
     },
     "spacing-system": {
       "family": "design-primitives",
@@ -530,7 +530,7 @@
       "authoring_home": "catalog",
       "distribution": "opt-in",
       "subscribers": [],
-      "notes": "House method, not a design primitive: the triage (defects and law ruled, never asked), the call page and the moves page, and how a designer lane builds, the orchestrator publishes and the answer becomes a ruling. Research trail in references/sources.md (house rulings and the orchestrator's incident record). orchestrating-a-multi-agent-run does not route to it yet."
+      "notes": "House method, not a design primitive: the triage (defects and law ruled, never asked), the call page and the moves page, and how a designer lane builds, the orchestrator publishes and the answer becomes a ruling. Research trail in references/sources.md (house rulings and the orchestrator's incident record). orchestrating-a-multi-agent-run routes to it."
     },
     "agents/builder": {"authoring_home": "catalog", "distribution": "catalog-only", "subscribers": []},
     "agents/citation-verifier": {"authoring_home": "catalog", "distribution": "catalog-only", "subscribers": []},

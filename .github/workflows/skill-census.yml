@@ -12,7 +12,16 @@ name: skill-census
 #     Reads census.json and produces verdicts.json (gap / placement / revise /
 #     promotion-candidate / demotion-candidate proposals). The panel step is
 #     JUDGMENT; filing those verdicts as issues is the FILING step below —
-#     dry_run suppresses filing, never judgment.
+#     dry_run suppresses filing, never judgment. The panel leaves
+#     panel_status.json on every handled path (a crash or a kill leaves none,
+#     and that fails the run), and the digest opens with one line saying what the
+#     panel did: ran, off (no key), held back (partial census) or did not run
+#     and why. Only a failure known to pass by itself (timeout, connection,
+#     rate limit, 5xx, an unusable answer) leaves the run green; any other
+#     failure, and a missing or unreadable record, fails the run in the
+#     last step, "Panel health", AFTER the digest and artifacts are written, so
+#     the scheduled-run alarm fires; a transient one prints a warning
+#     and stays green, and the digest line says so.
 #
 # Auth: two thrillmade-orchestrator App installation tokens, minted per run.
 # A metadata-only lookup token lets `census_counters.py --resolve` check which
@@ -26,7 +35,8 @@ name: skill-census
 # secret-guard step fails loudly with remediation if they are not.
 #
 # Alarms: the `alarm` job files (or comments on) one "Scheduled workflow
-# failing: skill-census" issue when a scheduled run does not succeed, and
+# failing: skill-census" issue when a scheduled run does not succeed, closes it
+# again when a scheduled run succeeds, and
 # census-watchdog.yml files into the same issue when no scheduled run has
 # succeeded for two weekly cadences — which also catches a census that never
 # started. This repo's own name comes from the run context everywhere.
@@ -182,10 +192,12 @@ jobs:
       # Mode B — LLM judgment. Runs whenever the panel is enabled, INCLUDING
       # dry_run (we gate FILING, not judgment). continue-on-error stays false:
       # the script owns its own failure handling and exits 0 on API failure
-      # after writing a Mode-B marker, so an infra hiccup inside it degrades
-      # to digest-only rather than killing the run. On a PARTIAL census the
-      # script writes nothing and warns that verdicts were held back, so the
-      # digest files alone: no verdict about a repository nobody read.
+      # after writing panel_status.json, so an infra hiccup inside it degrades
+      # to digest-only rather than killing the run before the digest is filed;
+      # the "Panel health" step at the end decides whether the failure is one
+      # a person has to fix. On a PARTIAL census the script writes no verdicts
+      # and records held_back, so the digest files alone: no verdict about a
+      # repository nobody read.
       - name: Set up Python (panel)
         if: steps.guard.outputs.panel_enabled == 'true'
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
@@ -210,8 +222,38 @@ jobs:
           # this repository, which the resolved list above always leads with.
           GH_TOKEN: ${{ steps.app_token.outputs.token }}
         run: |
-          set -euo pipefail
-          python3 .github/scripts/census_panel.py
+          # THE BOUNDARY, AND ITS LIMIT. census_panel.py runs next to a
+          # third-party SDK that holds the API key, and this log is public.
+          # The guarantee is against an honest or buggy dependency: whatever
+          # it raises, logs, warns or prints never reaches the log, the job
+          # summary, an issue or an uploaded file, and a failure is reported
+          # from a validated record. It does NOT claim to contain a
+          # deliberately malicious dependency: code that holds the key and can
+          # open a network connection cannot be contained by anything in this
+          # workflow. Pinning the dependency by hash answers that threat, and
+          # is a separate change, out of scope here.
+          #
+          # How: both streams go to /dev/null; the runner's file-command
+          # variables are removed from the script's environment, so a library
+          # that writes to them by mistake cannot; and what crosses is
+          # panel_status.json, which panel_record.sh checks against a closed
+          # vocabulary and rewrites from fixed phrases. Every step that prints
+          # or uploads from the record runs that check itself, immediately
+          # before, and reads from its output. verdicts.json and the digest
+          # carry the model's answer by design and are filed and uploaded; the
+          # script writes no exception text to them. Anything in the census
+          # directory that is not a regular file is removed after the script
+          # exits. The script's exit status is kept and re-raised.
+          set -uo pipefail
+          rc=0
+          env -u GITHUB_STEP_SUMMARY -u GITHUB_ENV -u GITHUB_OUTPUT -u GITHUB_PATH -u GITHUB_STATE \
+            python3 .github/scripts/census_panel.py >/dev/null 2>&1 || rc=$?
+          if ! bash .github/scripts/panel_record.sh "$CENSUS_DIR" "$rc" >/dev/null 2>&1; then
+            # Could not check the record: it is not trusted, so it is not kept.
+            rm -f "${CENSUS_DIR}/panel_status.json"
+            [ "$rc" -ne 0 ] || rc=1
+          fi
+          exit "$rc"
 
       # File the digest (always, if counters produced one) and any verdict
       # issues (Mode B). Runs even if the panel step failed unexpectedly, so
@@ -229,6 +271,8 @@ jobs:
           GH_REPO: ${{ github.repository }}
           CENSUS_DIR: ${{ runner.temp }}/census
           DRY_RUN: ${{ inputs.dry_run }}
+          PANEL_ENABLED: ${{ steps.guard.outputs.panel_enabled }}
+          PANEL_OUTCOME: ${{ steps.panel.outcome }}
         run: |
           set -euo pipefail
 
@@ -282,8 +326,55 @@ jobs:
 
           # Digest body = digest.md, plus an overflow note when the panel
           # produced more than the 5-issue cap.
+          #
+          # One line under the title says what the panel did this cycle, in
+          # every state, so a silent panel cannot read as a quiet census. It is
+          # built from the record panel_record.sh has just checked, which
+          # carries only fixed strings and counts (never provider error text),
+          # and goes in before any early exit below. The record is read once,
+          # from the checker's own output; the file is never opened again.
+          P_STATE=""
+          P_CODE=""
+          P_REASON=""
+          P_N=0
+          P_K=0
+          if [ "${PANEL_ENABLED:-}" != "true" ]; then
+            P_STATE="off"
+          elif REC="$(bash .github/scripts/panel_record.sh "$CENSUS_DIR" 2>/dev/null)" && [ -n "$REC" ]; then
+            P_STATE=$(jq -r '.state // ""' <<<"$REC" 2>/dev/null || echo "")
+            P_CODE=$(jq -r '.reason_code // ""' <<<"$REC" 2>/dev/null || echo "")
+            P_REASON=$(jq -r '.reason // ""' <<<"$REC" 2>/dev/null || echo "")
+            P_N=$(jq -r '.verdicts // 0' <<<"$REC" 2>/dev/null || echo 0)
+            P_K=$(jq -r '.keeps // 0' <<<"$REC" 2>/dev/null || echo 0)
+          fi
+          case "$P_STATE" in
+            ran)
+              PANEL_LINE="> **Panel:** ran: ${P_N} verdict(s), ${P_K} kept."
+              PANEL_PLAIN="ran: ${P_N} verdict(s), ${P_K} kept." ;;
+            off)
+              PANEL_LINE="> **Panel:** off: no API key is visible to this repository, so this digest carries no verdicts."
+              PANEL_PLAIN="off: no API key is visible to this repository." ;;
+            held_back)
+              PANEL_LINE="> **Panel:** held back: the census is partial, so there are no verdicts about repositories it did not read."
+              PANEL_PLAIN="held back: the census is partial." ;;
+            failed)
+              PANEL_LINE="> **Panel did not run this cycle:** ${P_REASON}. This digest carries no verdicts."
+              PANEL_PLAIN="did not run: ${P_REASON}." ;;
+            *)
+              P_STATE="no_record"
+              PANEL_LINE="> **Panel did not run this cycle:** the panel step ended without reporting (step outcome: ${PANEL_OUTCOME:-unknown}). See the run log."
+              PANEL_PLAIN="did not run: the panel step ended without reporting (step outcome: ${PANEL_OUTCOME:-unknown})." ;;
+          esac
+          echo "Panel: ${PANEL_PLAIN}"
+          echo "panel=${P_STATE}${P_CODE:+:${P_CODE}} ${PANEL_PLAIN}" >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
+
           DIGEST_BODY_FILE="$(mktemp)"
-          cp "$DIGEST_FILE" "$DIGEST_BODY_FILE"
+          {
+            head -n 1 "$DIGEST_FILE"
+            echo ""
+            echo "$PANEL_LINE"
+            tail -n +2 "$DIGEST_FILE"
+          } > "$DIGEST_BODY_FILE"
           if [ "$OVERFLOW" -gt 0 ]; then
             {
               echo ""
@@ -512,18 +603,104 @@ jobs:
             i=$((i + 1))
           done
 
+      # Stages exactly four regular files for the upload, so the upload never
+      # expands a directory or follows a link: the record comes from the
+      # checker's own output (checked again here, immediately before), the other
+      # three are copied only if they are regular files.
+      - name: Stage census artifacts
+        id: stage_upload
+        if: ${{ !cancelled() }}
+        env:
+          CENSUS_DIR: ${{ runner.temp }}/census
+          STAGE_DIR: ${{ runner.temp }}/census-upload
+        run: |
+          set -uo pipefail
+          rm -rf "$STAGE_DIR"
+          mkdir -p "$STAGE_DIR"
+          if REC="$(bash .github/scripts/panel_record.sh "$CENSUS_DIR" 2>/dev/null)" && [ -n "$REC" ]; then
+            printf '%s\n' "$REC" > "${STAGE_DIR}/panel_status.json"
+          fi
+          for f in census.json digest.md verdicts.json; do
+            src="${CENSUS_DIR}/${f}"
+            if [ -f "$src" ] && [ ! -L "$src" ]; then
+              cp -P -- "$src" "${STAGE_DIR}/${f}" 2>/dev/null || true
+              if [ ! -f "${STAGE_DIR}/${f}" ] || [ -L "${STAGE_DIR}/${f}" ]; then
+                rm -rf "${STAGE_DIR:?}/${f}"
+              fi
+            fi
+          done
+
       - name: Upload census artifacts
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: skill-census-${{ github.run_id }}
           path: |
-            ${{ runner.temp }}/census/census.json
-            ${{ runner.temp }}/census/digest.md
-            ${{ runner.temp }}/census/verdicts.json
-            ${{ runner.temp }}/census/panel_failed.marker
+            ${{ runner.temp }}/census-upload/census.json
+            ${{ runner.temp }}/census-upload/digest.md
+            ${{ runner.temp }}/census-upload/verdicts.json
+            ${{ runner.temp }}/census-upload/panel_status.json
           if-no-files-found: ignore
           retention-days: 30
+
+      # Fails the run when the panel failed in a way a person has to fix, or
+      # left no record at all. Last on purpose: the digest is filed and the
+      # artifacts are uploaded by now, and a failed census job is what makes
+      # the scheduled-run alarm below fire. A transient failure (timeout, rate
+      # limit, 5xx, an unusable answer) and the deliberate no-key mode stay
+      # green; the digest line already said so. The panel's own output is
+      # never printed (see the panel step): every value on these lines is a
+      # checked field of the record the checker has just rewritten, or a fixed
+      # phrase.
+      - name: Panel health
+        id: panel_health
+        if: ${{ !cancelled() && steps.guard.outputs.panel_enabled == 'true' }}
+        env:
+          CENSUS_DIR: ${{ runner.temp }}/census
+        run: |
+          set -euo pipefail
+          # The record is checked here, immediately before it is read, and read
+          # once, from the checker's own output; the file is never opened again.
+          if ! REC="$(bash .github/scripts/panel_record.sh "$CENSUS_DIR" 2>/dev/null)"; then
+            echo "::error::census panel needs attention: panel_status.json could not be checked."
+            exit 1
+          fi
+          if [ -z "$REC" ]; then
+            echo "::error::census panel needs attention: the panel step left no record (panel_status.json missing)."
+            exit 1
+          fi
+          STATE=$(jq -r '.state // ""' <<<"$REC")
+          CODE=$(jq -r '.reason_code // ""' <<<"$REC")
+          REASON=$(jq -r '.reason // ""' <<<"$REC")
+          STAGE=$(jq -r '.stage // "unknown"' <<<"$REC")
+          HTTP=$(jq -r '.http_status // "none"' <<<"$REC")
+          CLS=$(jq -r '.exc_class // "none"' <<<"$REC")
+          BG=$(jq -r '.background_error_class // ""' <<<"$REC")
+          EXS=$(jq -r '.exit_status // ""' <<<"$REC")
+          [ "$CLS" != unrecognised ] || CLS="an unrecognised exception class"
+          [ "$BG" != unrecognised ] || BG="an unrecognised exception class"
+          DETAIL="state=${STATE} reason=${REASON:-none} code=${CODE:-none} stage=${STAGE} http=${HTTP} class=${CLS}${EXS:+ exit=${EXS}}."
+          WITHHELD="The panel's raw output was withheld on purpose (this log is public and the step runs next to the API key). To reproduce, run .github/scripts/census_panel.py locally with ANTHROPIC_API_KEY and CENSUS_DIR set."
+          case "$STATE" in
+            ran|off|held_back)
+              echo "Panel health: ${STATE}."
+              if [ -n "$BG" ]; then
+                echo "::warning::census panel: a background error of class ${BG} was ignored (the run itself completed). ${WITHHELD}"
+              fi ;;
+            failed)
+              # Fail closed: green only for a code known to pass by itself.
+              # Keep in step with TRANSIENT_CODES in census_panel.py.
+              case "$CODE" in
+                rate_limited|service_error|timeout|connection|invalid_answer)
+                  echo "::warning::Panel did not run: ${DETAIL} Known to pass by itself; the run stays green. ${WITHHELD}" ;;
+                *)
+                  echo "::error::census panel needs attention: ${DETAIL} ${WITHHELD}"
+                  exit 1 ;;
+              esac ;;
+            *)
+              echo "::error::census panel needs attention: panel_status.json is unreadable or has no state."
+              exit 1 ;;
+          esac
 
   # The census failed four scheduled Mondays running and nobody noticed: it is
   # the thing that files issues, so a census that stops files nothing (#313).
@@ -534,16 +711,18 @@ jobs:
   # and files into this same issue. Same pattern as logmind-self-update.yml's
   # "Notify on failure": one issue per workflow, found by its marker, then
   # commented on rather than re-filed. Scheduled runs only — a failed manual
-  # run already has someone watching it.
+  # run already has someone watching it. The same job closes the issue when a
+  # scheduled run succeeds: only the schedule proves the schedule works, so a
+  # manual run never closes it.
   alarm:
     needs: census
-    if: ${{ always() && github.event_name == 'schedule' && needs.census.result != 'success' }}
+    if: ${{ always() && github.event_name == 'schedule' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
       issues: write
     steps:
-      - name: Notify on failure
+      - name: Notify on failure, close on recovery
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
@@ -565,10 +744,34 @@ jobs:
           # other bot-authored issues (digests, other workflows' alarms) are
           # open too, and (1)+(2) alone would still accept one of them. A failed
           # lookup files a new issue: a duplicate alarm beats a silent one.
-          EXISTING=$(gh issue list --state open --search "\"${MARKER}\" in:body" \
+          LOOKUP_OK=1
+          EXISTING_ALL=$(gh issue list --state open --search "\"${MARKER}\" in:body" \
             --json number,author,title 2>/dev/null \
-            | jq -r --arg t "$TITLE" '[.[] | select(.author.is_bot == true and (.author.login | test("^(app/)?github-actions$")) and .title == $t)][0].number // empty') \
-            || { EXISTING=""; echo "::warning::gh issue list failed while looking for an open skill-census failure issue — filing a new one."; }
+            | jq -r --arg t "$TITLE" '[.[] | select(.author.is_bot == true and (.author.login | test("^(app/)?github-actions$")) and .title == $t)] | .[].number') \
+            || { EXISTING_ALL=""; LOOKUP_OK=0; echo "::warning::gh issue list failed while looking for an open skill-census failure issue."; }
+          # The first match takes the "still failing" comment; recovery closes all.
+          EXISTING=$(printf '%s\n' "$EXISTING_ALL" | head -n 1)
+
+          # Recovery: only a scheduled run that succeeded closes the alarm (this
+          # job never runs on a manual one). A failed lookup closes nothing.
+          if [ "$CENSUS_RESULT" = "success" ]; then
+            if [ -n "$EXISTING_ALL" ]; then
+              for N in $EXISTING_ALL; do
+                gh issue comment "$N" --body "Recovered: the scheduled census succeeded at $(date -u +%Y-%m-%dT%H:%MZ): ${RUN_URL}. Closing; the next failure files a new issue."
+                gh issue close "$N" --reason completed
+                echo "::notice::Closed failure issue #${N}: the scheduled census recovered."
+              done
+            elif [ "$LOOKUP_OK" -eq 0 ]; then
+              echo "::warning::Could not check for an open failure issue; leaving any open one as it is."
+            else
+              echo "No open failure issue to close."
+            fi
+            exit 0
+          fi
+
+          if [ "$LOOKUP_OK" -eq 0 ]; then
+            echo "::warning::Filing a new failure issue: a duplicate alarm beats a silent one."
+          fi
 
           if [ -n "$EXISTING" ]; then
             gh issue comment "$EXISTING" --body "Still failing as of $(date -u +%Y-%m-%dT%H:%MZ) (census job: ${CENSUS_RESULT}): ${RUN_URL}"

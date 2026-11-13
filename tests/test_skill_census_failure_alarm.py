@@ -70,6 +70,9 @@ if argv[:2] == ["run", "list"]:
 
 if argv[:2] == ["issue", "list"]:
     log({"cmd": "issue list", "search": flag("--search", argv)})
+    if os.environ.get("GH_ISSUE_LIST_FAILS") == "1":
+        print("HTTP 502: transient error", file=sys.stderr)
+        sys.exit(1)
     sys.stdout.write(os.environ.get("GH_ISSUE_LIST_JSON", "[]"))
     sys.exit(0)
 
@@ -79,6 +82,10 @@ if argv[:2] == ["issue", "comment"]:
     if body is None and "--body-file" in rest:
         body = open(flag("--body-file", rest), encoding="utf-8").read()
     log({"cmd": "comment", "number": argv[2], "body": body})
+    sys.exit(0)
+
+if argv[:2] == ["issue", "close"]:
+    log({"cmd": "close", "number": argv[2], "reason": flag("--reason", argv[3:])})
     sys.exit(0)
 
 if argv[:2] == ["issue", "create"]:
@@ -153,7 +160,7 @@ def _execute(workflow: str, job: str, env_extra: dict) -> dict:
 
 
 def _issue_calls(out: dict) -> list[dict]:
-    return [c for c in out["calls"] if c["cmd"] in ("create", "comment")]
+    return [c for c in out["calls"] if c["cmd"] in ("create", "comment", "close")]
 
 
 GH_ACTIONS = {"login": "app/github-actions", "is_bot": True}
@@ -174,11 +181,15 @@ def _alarm_lookups(out: dict) -> list[str]:
 # --- the alarm job, on the day ---------------------------------------------
 
 
-def _alarm(existing: list | None = None) -> dict:
+def _alarm(existing: list | None = None, result: str = "failure", lookup_fails: bool = False) -> dict:
     return _execute(
         "skill-census.yml",
         "alarm",
-        {"GH_ISSUE_LIST_JSON": json.dumps(existing or []), "CENSUS_RESULT": "failure"},
+        {
+            "GH_ISSUE_LIST_JSON": json.dumps(existing or []),
+            "GH_ISSUE_LIST_FAILS": "1" if lookup_fails else "0",
+            "CENSUS_RESULT": result,
+        },
     )
 
 
@@ -206,6 +217,63 @@ def test_marker_on_an_issue_not_by_github_actions_is_ignored():
     assert out["rc"] == 0, out["stderr"]
     [call] = _issue_calls(out)
     assert call["cmd"] == "create", "an outsider's issue carrying the marker must not capture the alarm"
+
+
+# --- the alarm job, on recovery ----------------------------------------------
+
+
+def test_a_succeeding_scheduled_run_comments_then_closes_the_alarm():
+    out = _alarm([GENUINE], result="success")
+    assert out["rc"] == 0, out["stderr"]
+    comment, close = _issue_calls(out)
+    assert comment["cmd"] == "comment" and comment["number"] == "900"
+    assert comment["body"].startswith("Recovered:") and RUN_URL in comment["body"]
+    assert close == {"cmd": "close", "number": "900", "reason": "completed"}
+
+
+def test_recovery_closes_every_open_alarm_and_comments_on_each_first():
+    second = {"number": 901, "author": GH_ACTIONS, "title": TITLE}
+    out = _alarm([GENUINE, DECOY, second], result="success")
+    assert out["rc"] == 0, out["stderr"]
+    calls = _issue_calls(out)
+    assert [(c["cmd"], c["number"]) for c in calls] == [
+        ("comment", "900"), ("close", "900"), ("comment", "901"), ("close", "901"),
+    ], calls
+    assert all(c["body"].startswith("Recovered:") for c in calls if c["cmd"] == "comment")
+    assert all(c["reason"] == "completed" for c in calls if c["cmd"] == "close")
+
+
+def test_recovery_never_closes_an_issue_that_is_not_the_alarm():
+    for decoy in (DECOY, {"number": 13, "author": OUTSIDER, "title": TITLE}):
+        out = _alarm([decoy], result="success")
+        assert out["rc"] == 0, out["stderr"]
+        assert _issue_calls(out) == [], f"closed or commented on a non-alarm issue: {decoy}"
+
+
+def test_recovery_with_no_alarm_open_makes_no_issue_calls():
+    out = _alarm([], result="success")
+    assert out["rc"] == 0, out["stderr"]
+    assert _issue_calls(out) == []
+    assert len(_alarm_lookups(out)) == 1
+
+
+def test_recovery_closes_nothing_when_the_lookup_fails():
+    out = _alarm([GENUINE], result="success", lookup_fails=True)
+    assert out["rc"] == 0, out["stdout"] + out["stderr"]
+    assert _issue_calls(out) == []
+    assert "leaving any open one as it is" in out["stdout"]
+
+
+def test_a_failing_run_never_closes_the_alarm():
+    for result in ("failure", "cancelled", "skipped"):
+        out = _alarm([GENUINE], result=result)
+        assert [c["cmd"] for c in _issue_calls(out)] == ["comment"], result
+
+
+def test_a_failing_run_with_two_open_alarms_comments_once_and_closes_none():
+    second = {"number": 901, "author": GH_ACTIONS, "title": TITLE}
+    out = _alarm([GENUINE, second], result="failure")
+    assert [(c["cmd"], c["number"]) for c in _issue_calls(out)] == [("comment", "900")]
 
 
 # --- the watchdog, when the census never ran --------------------------------

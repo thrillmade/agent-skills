@@ -1,6 +1,6 @@
 ---
-version: "1.0.2"
-digest: "33f6ecf8dc38"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+version: "1.0.3"
+digest: "f1f2d3b55611"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/thrill-skills"
 name: orchestrating-a-multi-agent-run
 description: |
@@ -140,7 +140,9 @@ On the run, not on any one station.
 obligation 2's rendered-surface gate ·
 [curating-a-skill-catalog](../curating-a-skill-catalog/SKILL.md) — the catalog, not the
 run · [skill-frontmatter-quality](../skill-frontmatter-quality/SKILL.md) — the trigger
-surface of the skills your agents load.
+surface of the skills your agents load ·
+[making-decision-artifacts](../making-decision-artifacts/SKILL.md) — a call that is the
+owner's, or moves they must see before a merge, put to them as a page.
 ## Sources
 
 This dispatcher owns no threshold of its own — every number lives in the station that
@@ -150,6 +152,6 @@ owns it. Routing and the four axioms are practitioner-derived:
   reference-graph and reference-syntax findings under it (#200, #197).
 - Run-continuity practice — pacing, limit hazards, mid-write kills, owned-files recovery:
   thrillmade/thrill-skills#169, #173, #174.
-- Roles as files on disk; work outliving its producer needing a survivor:
-  thrillmade/protocol `SPEC.md` §2.4, §6.2.
+- Roles as files on disk; work outliving its producer needing a survivor: from
+  practice.
 
