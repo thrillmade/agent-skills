@@ -327,3 +327,19 @@ def test_clud_bug_sync_pr_targets_dev():
     m = re.search(r"gh pr create.*?--base\s+(\S+)", run, re.DOTALL)
     assert m, "gh pr create names no --base"
     assert m.group(1) == "dev"
+
+
+# --- the history-lag gate belongs to the promotion, not to every PR ----------
+
+
+def test_history_lag_gate_runs_only_on_pull_requests_into_main():
+    """dev's index lags by design (#292), so a lag check on a PR into dev
+    would fail every skill change. Exact, not substrings: dropping the
+    base_ref clause turns the gate on for dev."""
+    doc, _ = _load("validate-skills.yml")
+    steps = [
+        s for s in doc["jobs"]["validate"]["steps"]
+        if "gen_skill_versions.py --lag" in str(s.get("run", ""))
+    ]
+    assert len(steps) == 1, "expected exactly one --lag step"
+    assert steps[0]["if"] == "github.event_name == 'pull_request' && github.base_ref == 'main'"

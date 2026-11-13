@@ -77,6 +77,7 @@ except ImportError as _import_error:
     )
     sys.exit(1)
 import skill_version
+from gen_skill_versions import catalog_block
 
 ROOT = Path("skills")
 FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---(?=\n|\Z)", re.DOTALL)
@@ -1413,6 +1414,18 @@ def run(root: Path) -> list[str]:
             "skill name -> {current, history}"
         )
     elif index is not None:
+        # The `catalog` block is generated from CATALOG_NAMES (the one list of
+        # this catalog's own names, in census_counters.py); another repository's
+        # tool reads it to recognise a copy that came from here, so a block that
+        # has fallen behind the list silently stops recognising a name.
+        want_block = catalog_block()
+        if index.get("catalog") != want_block:
+            errors.append(
+                f"::error file={sv_prefix}::docs/skill-versions.json names its "
+                f"catalog as {index.get('catalog')!r} but CATALOG_NAMES says "
+                f"{want_block!r}. Run "
+                "`python3 .github/scripts/gen_skill_versions.py --write`."
+            )
         published = index["skills"]
         for slug, want in sorted(digests.items()):
             entry = published.get(slug)
