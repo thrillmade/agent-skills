@@ -79,10 +79,20 @@ jobs:
       - name: Check every version-history row names a published version
         # Pull requests only, against the checked-out HEAD: on pull_request
         # that is the merge ref, which reaches both the base's commits and the
-        # branch's. FAILS a row whose digest no commit reachable from HEAD or
-        # origin/main carries (a fabricated or never-published version). Only
-        # WARNS about a row whose commit a squash merge removed but whose
-        # digest a reachable commit still carries; the next PR author repairs
-        # those with `gen_skill_versions.py --write`.
+        # branch's. FAILS a row whose digest no commit reachable from HEAD,
+        # origin/dev or origin/main carries (a fabricated or never-published
+        # version). Only WARNS about a row whose commit a squash merge removed
+        # but whose digest a reachable commit still carries; the promotion
+        # branch repairs those with `gen_skill_versions.py --write`.
         if: github.event_name == 'pull_request'
         run: python .github/scripts/gen_skill_versions.py --check
+
+      - name: Check the version history is complete before promotion
+        # Pull requests into main only -- the promotion. History rows are
+        # added by a regeneration after a squash lands on dev, and nothing
+        # pushes to dev, so dev's index lags by design (#292). The promotion
+        # branch is where it is completed; this fails while a row is missing
+        # and the message gives the one command that repairs it. It costs
+        # nothing on a pull request into dev.
+        if: github.event_name == 'pull_request' && github.base_ref == 'main'
+        run: python .github/scripts/gen_skill_versions.py --lag

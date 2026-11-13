@@ -71,7 +71,7 @@ def index_for(tree: SkillTree, *paths: Path, current: dict | None = None, versio
     d = tree.base / "docs"
     d.mkdir(parents=True, exist_ok=True)
     out = d / "skill-versions.json"
-    out.write_text(json.dumps({"version": 1, "skills": skills}), encoding="utf-8")
+    out.write_text(json.dumps({"version": 1, "catalog": gen_skill_versions.catalog_block(), "skills": skills}), encoding="utf-8")
     return out
 
 
@@ -401,9 +401,31 @@ def test_a_never_stamped_skill_is_clean_against_a_null_version_entry(tree: Skill
     raw = (path / "SKILL.md").read_bytes()
     (d / "skill-versions.json").write_text(json.dumps({
         "version": 1,
+        "catalog": gen_skill_versions.catalog_block(),
         "skills": {"alpha": {"current": skill_version.digest(raw), "version": None, "history": []}},
     }), encoding="utf-8")
     assert tree.validate() == []
+
+
+def test_a_missing_catalog_block_is_rejected(tree: SkillTree) -> None:
+    path = stamped(tree)
+    index = index_for(tree, path)
+    data = json.loads(index.read_text())
+    del data["catalog"]
+    index.write_text(json.dumps(data), encoding="utf-8")
+    error = only(tree.validate())
+    assert error.startswith(INDEX + "docs/skill-versions.json names its catalog as None")
+    assert "CATALOG_NAMES says" in error and "gen_skill_versions.py --write" in error
+
+
+def test_a_catalog_block_that_disagrees_with_the_list_is_rejected(
+    tree: SkillTree, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = stamped(tree)
+    index_for(tree, path)
+    assert tree.validate() == []
+    monkeypatch.setattr(gen_skill_versions, "CATALOG_NAMES", ("o/old", "o/new"))
+    assert "names its catalog as" in only(tree.validate())
 
 
 def test_a_skill_missing_from_the_index_is_rejected(tree: SkillTree) -> None:

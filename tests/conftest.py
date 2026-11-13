@@ -19,6 +19,7 @@ if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
 import skill_version  # noqa: E402  -- import needs the sys.path line above
+import gen_skill_versions  # noqa: E402  -- same
 import validate_skills  # noqa: E402  -- import needs the sys.path line above
 import gen_skill_directory  # noqa: E402  -- same
 
@@ -172,7 +173,10 @@ class SkillTree:
             }
             for md in sorted((self.base / "skills").glob("*/SKILL.md"))
         }
-        payload = json.dumps({"version": 1, "skills": current}, sort_keys=True)
+        payload = json.dumps(
+            {"version": 1, "catalog": gen_skill_versions.catalog_block(), "skills": current},
+            sort_keys=True,
+        )
 
         # Refresh only what WE wrote. A test that writes its own index must keep
         # it -- that is how the currency gate gets exercised at all -- so
