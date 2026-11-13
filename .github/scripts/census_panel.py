@@ -38,8 +38,9 @@ Outputs (written to CENSUS_DIR):
   panel_status.json  On every handled path: {state, reason_code, reason, stage,
                      exc_class, background_error_class, http_status,
                      verdicts, keeps}. state is ran | off | held_back | failed.
-                     An exit before the census file is read, a crash or a kill
-                     leaves no record, and a missing record fails the run.
+                     An exit because the census file is missing or unusable,
+                     a hard crash or a kill leaves no record, and a missing
+                     record fails the run.
                      The digest's panel line and the workflow's "Panel health"
                      step read it. A failure is classified from the HTTP
                      status and the exception's class name ONLY

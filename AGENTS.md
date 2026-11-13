@@ -203,11 +203,13 @@ check on this repo has had five eras (the first four measured 2026-11-03, the fi
   two carry `neutral` (#320 a coverage-gap notice, #324 *"review unavailable"*). #295's
   head, checked in the same pass, still has no check-run.
 
-So a `success` here is a real review, and a `neutral` or a missing check-run is no review
-at all. The per-change review gate above is carried by a local panel every time; a
-clud-bug review is extra evidence when it arrives, never the gate. Re-check before
-relying on it, and control-test an empty result against #274's head SHA (the cleanest
-known hit) before reading absence as fact:
+So a `success` here is a real review of the head. A `neutral` means the head was not
+certified: a review may still be attached, but it can sit on an earlier commit (#324's
+does) or carry a coverage gap (#320's check says so). A missing check-run is no review at
+all. The per-change review gate above is carried by a local panel every time; a clud-bug
+review is extra evidence when it arrives, never the gate. Re-check before relying on it,
+and control-test an empty result against #274's head SHA (the cleanest known hit) before
+reading absence as fact:
 
 ```bash
 gh api repos/thrillmade/thrill-skills/commits/<sha>/check-runs \

@@ -7,7 +7,7 @@
 **Alternatives considered:** Sanitise exception text inside the Python process. Tried for four review rounds; each round found another channel (output at import, a finaliser, the logging module, asyncio)., Fail the run on every model-review failure. A provider timeout, rate limit or 5xx passes by itself and would page a person for nothing., Keep catalog-only skills in the coverage-gap list. They reappeared every week with nothing to act on (#191).
 
 **Implications:**
-- Green only for: ran, off (no key), held back (partial census), timeout, connection error, 429, 5xx, an unusable answer, and a background error in a run that completed (with a warning). Red for any other HTTP 4xx, an unlisted exception class, a blank key, a non-zero exit, and a missing, non-regular or malformed record.
+- Green only for: ran, off (no key), held back (partial census), timeout, connection error, 429, 5xx, an unusable answer, and a background error in a run that completed (with a warning). Red for any other HTTP 4xx, an unlisted exception class, a blank key, a missing SDK package, a non-zero exit, and a missing, non-regular or malformed record. When the guard step finds no key at all, the model-review step and the health step are skipped and no record is written.
 - The digest and artifacts are written before the red exit, so a failed run still files its digest.
 - A scheduled census that succeeds closes every open alarm issue it filed.
 - A catalog-only skill is listed under grace with its reason and is no longer a coverage gap.
