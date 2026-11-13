@@ -2,6 +2,10 @@ version: 2
 updates:
   - package-ecosystem: github-actions
     directory: /
+    # Version bumps open against staging: every change reaches `main`
+    # through a promotion from `dev`. Security updates are the exception;
+    # GitHub always opens those against the default branch.
+    target-branch: dev
     schedule:
       interval: weekly
     groups:

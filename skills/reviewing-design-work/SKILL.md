@@ -1,6 +1,6 @@
 ---
-version: "1.2.2"
-digest: "33d849ca81f8"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+version: "1.2.3"
+digest: "25c17cc88e7b"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/thrill-skills"
 name: reviewing-design-work
 description: |
@@ -35,7 +35,7 @@ the station's own skill to actually run it.
 ## Lens order
 
 Run the lenses in this order **within a review session**. (In clud-bug's pipeline the
-code and design lenses are *independently gated passes* — SPEC §2.2 — so this order
+code and design lenses are *independently gated passes*, so this order
 sequences a reviewer's work and findings, not the passes.)
 
 1. **Code + markup lens — [web-interface-guidelines-review](../web-interface-guidelines-review/SKILL.md).** The opinionated rule set
@@ -79,8 +79,8 @@ Shneiderman, where the gate is source and edition rather than prediction.
 | PR touches UI code, **no** visual surface change (routing, state wiring, refactor) | Code lens only; the rendered lenses stay silent. |
 | PR changes a visual surface (component, layout, styles, theme) | Code lens **and** rendered lenses, with [designing-elite-ui](../designing-elite-ui/SKILL.md), then any house stance, after the objective lenses; the rendered pass is browser-driven — screenshots in every mode, states exercised — per [orchestrating-elite-agent-qa](../orchestrating-elite-agent-qa/SKILL.md) (**REQUIRED BACKGROUND** for orchestrating that gate). |
 | Design spec / Figma handoff, **no code yet** | [web-interface-guidelines-review](../web-interface-guidelines-review/SKILL.md) applies to the spec; [designing-elite-ui](../designing-elite-ui/SKILL.md) sets the bar the build must hit; the rendered lenses defer to post-build review. |
-| PR ships user-facing strings | The copy lens. In clud-bug all three are `kind: writing`, so they run in the **prose pass**, which always runs (SPEC §2.2), and never in the design pass. |
-| clud-bug-installed repo | The 5 `kind: design` skills (four lenses and the house stance: [design-system-consistency](../design-system-consistency/SKILL.md), [frontend-a11y](../frontend-a11y/SKILL.md), [visual-polish](../visual-polish/SKILL.md), [designing-elite-ui](../designing-elite-ui/SKILL.md), [thrill-design](../thrill-design/SKILL.md)) run as the separate **design pass** (SPEC §4.8), never inline with the code review, and **only when the repo opts in**: the design pass is listed in `review.passes` in `.clud-bug.json`, at least one design skill applies to the diff, and the trigger is a pull request. Installation alone never fires the pass, and design findings are advisory unless the repo marks that pass blocking. |
+| PR ships user-facing strings | The copy lens. In clud-bug all three are `kind: writing`, so they run in the **prose pass**, which always runs, and never in the design pass. |
+| clud-bug-installed repo | The 5 `kind: design` skills (four lenses and the house stance: [design-system-consistency](../design-system-consistency/SKILL.md), [frontend-a11y](../frontend-a11y/SKILL.md), [visual-polish](../visual-polish/SKILL.md), [designing-elite-ui](../designing-elite-ui/SKILL.md), [thrill-design](../thrill-design/SKILL.md)) run as the separate **design pass**, never inline with the code review, and **only when the repo opts in**: the design pass is listed in `review.passes` in `.clud-bug.json`, at least one design skill applies to the diff, and the trigger is a pull request. Installation alone never fires the pass, and design findings are advisory unless the repo marks that pass blocking. |
 
 ## System-specific layers
 

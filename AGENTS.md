@@ -134,6 +134,33 @@ is in the diff, so one entry clears a whole batch. Every change still logs its o
 approving-review rule is bypassed in practice; nothing there tells an agent from a person. That
 a rule is not enforced is a property of the forge, not a permission.
 
+## Promoting `dev` to `main`
+
+A person merges the promotion; an agent prepares the branch. The promotion is opened from a
+`promote/<date>` branch, never with `dev` as the head: squash-only merging keeps `dev` and `main`
+from sharing a recent merge base, so a `dev` head conflicts. Cut `promote/<date>` from `dev`'s tip,
+then take `main` in by ancestry only:
+
+```bash
+git fetch origin
+git checkout -b promote/<date> origin/dev
+git merge -s ours origin/main
+python3 .github/scripts/gen_skill_versions.py --write   # full clone, origin fetched
+git add docs/skill-versions.json && git commit -m "Regenerate the version index"
+```
+
+The last two lines exist because a version gets its history row in
+`docs/skill-versions.json` only after a squash lands it on `dev`, and nothing pushes to `dev`:
+`dev`'s copy of the index lags by the newest row of each skill changed since the last promotion.
+The tool subscribers run to check their copies reads `main`, so that lag is harmless until the
+promotion. The `validate-skills` workflow's `--lag` step runs only on pull requests whose base is `main` and fails
+while a row is still missing; its message repeats the repair. Once regenerated, the promotion
+branch differs from `dev` in `docs/skill-versions.json` only.
+A version committed on the promotion branch itself, or on a pull request into `main` that skips
+`dev`, cannot get a row yet, because a row may cite only a commit on `dev` or `main` (a squash
+leaves a pull request branch's commits unreachable): `--lag` warns by name and does not fail, and
+the next promotion's regeneration adds the row. So do not change a skill on the promotion branch.
+
 <!-- clud-bug-start -->
 <!-- clud-bug-block-version: v2 -->
 ## clud-bug — Claude PR review

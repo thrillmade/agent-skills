@@ -695,3 +695,171 @@ def test_ungated_rows_counts_a_live_skill_that_has_no_row(repo: Repo) -> None:
     assert index["versions_enumerated"] == 2  # control
     assert len(index["skills"]) == 2  # control: two live skills
     assert index["verification"]["history_rows_ungated"] == 1
+
+
+# --- --lag: the promotion branch is where history is completed (#292) -------
+
+LAG_ROW = "::error file=docs/skill-versions.json::alpha {v}: published at {commit} ({date}) but has no history row"
+
+
+def promotion_branch_after_a_squash(repo: Repo) -> tuple[str, str]:
+    """dev's squash landed v2 but its committed index was written on the PR
+    branch, so the v2 row is missing. Returns (squash sha, v2 digest)."""
+    branch_with_a_new_version(repo)
+    squashed = squash_merge(repo, "feat")
+    repo.publish("main")
+    return squashed, skill_version.digest(SKILL.format(name="alpha", body="v2").encode())
+
+
+def test_lag_names_the_row_a_squash_left_missing(
+    repo: Repo, capsys: pytest.CaptureFixture[str]
+) -> None:
+    squashed, v2 = promotion_branch_after_a_squash(repo)
+    capsys.readouterr()
+    assert gen_skill_versions.main(["--lag"]) == 1
+    out = capsys.readouterr().out
+    date = repo.git("show", "-s", "--format=%cI", squashed)[:10]
+    assert LAG_ROW.format(v=v2, commit=squashed[:7], date=date) in out
+    assert (
+        "1 history row(s) missing. Repair on this branch: python3 "
+        ".github/scripts/gen_skill_versions.py --write, then commit "
+        "docs/skill-versions.json." in out
+    )
+
+
+def test_lag_is_clean_after_write_on_the_promotion_branch(
+    repo: Repo, capsys: pytest.CaptureFixture[str]
+) -> None:
+    promotion_branch_after_a_squash(repo)
+    write_index(repo)
+    repo.commit("regenerate the index")
+    capsys.readouterr()
+    assert gen_skill_versions.main(["--lag"]) == 0
+    assert "OK: history is complete for HEAD: compared 2 history row(s) across 1 skill(s)" in capsys.readouterr().out
+
+
+def test_lag_does_not_demand_a_version_the_head_does_not_carry(
+    repo: Repo, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A version merged into dev after the promotion branch was cut is on a
+    publishing ref but not in the branch's history."""
+    repo.skill("alpha", body="v1")
+    repo.commit("v1")
+    repo.publish("main")
+    write_index(repo)
+    cut = repo.commit("index")
+    repo.publish("main")
+    repo.git("checkout", "-q", "-b", "promote")
+    repo.git("checkout", "-q", "-b", "later", "main")
+    repo.skill("alpha", body="v2")
+    later = repo.commit("v2 lands on dev after the cut")
+    repo.publish("dev", later)
+    repo.git("checkout", "-q", "promote")
+    assert repo.git("rev-parse", "HEAD") == cut
+    capsys.readouterr()
+    assert gen_skill_versions.main(["--lag"]) == 0
+    assert "OK: history is complete for HEAD: compared 2 history row(s) across 1 skill(s)" in capsys.readouterr().out
+
+
+def test_lag_warns_by_name_of_a_version_no_publishing_ref_carries(
+    repo: Repo, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A skill changed on the promotion branch itself: no row can be built
+    (admission cites only origin/dev and origin/main), so --lag says so by
+    name and passes. Once the change is on dev, the same version FAILS with the
+    repair -- the warning is not a way to wave a missing row through."""
+    repo.skill("alpha", body="v1")
+    repo.commit("v1")
+    repo.publish("main")
+    write_index(repo)
+    repo.commit("index")
+    repo.publish("main")
+    repo.git("checkout", "-q", "-b", "promote")
+    repo.skill("alpha", body="v2")
+    changed = repo.commit("v2 on the promotion branch")
+    capsys.readouterr()
+    assert gen_skill_versions.main(["--lag"]) == 0
+    out = capsys.readouterr().out
+    v2 = skill_version.digest(SKILL.format(name="alpha", body="v2").encode())
+    assert (
+        f"::warning file=docs/skill-versions.json::alpha {v2}: carried by {changed[:7]}, "
+        "which is on neither origin/dev nor origin/main, so no history row can be built "
+        "for it yet; the next promotion's regeneration adds it once the change is on dev "
+        "or main"
+    ) in out
+    assert "OK: history is complete for HEAD: compared 1 history row(s) across 1 skill(s)" in out
+
+    repo.publish("dev")
+    assert gen_skill_versions.main(["--lag"]) == 1
+    out = capsys.readouterr().out
+    assert "alpha" in out and "but has no history row" in out
+    assert "Repair on this branch: python3 .github/scripts/gen_skill_versions.py --write" in out
+
+
+def test_lag_names_only_the_live_version_of_a_branch_only_skill(
+    repo: Repo, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Two versions committed only on the promotion branch: the superseded one
+    is not named, since the live content is what the promotion would publish."""
+    repo.skill("alpha", body="v1")
+    repo.commit("v1")
+    repo.publish("main")
+    write_index(repo)
+    repo.commit("index")
+    repo.publish("main")
+    repo.git("checkout", "-q", "-b", "promote")
+    repo.skill("alpha", body="s1")
+    repo.commit("s1 on the promotion branch")
+    repo.skill("alpha", body="s2")
+    repo.commit("s2 on the promotion branch")
+    capsys.readouterr()
+    assert gen_skill_versions.main(["--lag"]) == 0
+    out = capsys.readouterr().out
+    s1 = skill_version.digest(SKILL.format(name="alpha", body="s1").encode())
+    s2 = skill_version.digest(SKILL.format(name="alpha", body="s2").encode())
+    assert out.count("::warning") == 1
+    assert f"alpha {s2}: carried by" in out
+    assert s1 not in out
+
+
+def test_lag_fails_when_it_examined_nothing(
+    repo: Repo, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repo.skill("alpha")
+    repo.commit("v1")
+    repo.publish("main")
+    monkeypatch.setattr(
+        gen_skill_versions, "missing_rows", lambda root, head: gen_skill_versions.LagReport([], [], [], 0, 0)
+    )
+    capsys.readouterr()
+    assert gen_skill_versions.main(["--lag"]) == 1
+    assert "examined 0 skill(s) and 0 version(s)" in capsys.readouterr().out
+
+
+def test_lag_never_writes(repo: Repo) -> None:
+    promotion_branch_after_a_squash(repo)
+    path = repo.base / "docs" / "skill-versions.json"
+    before = path.read_bytes()
+    assert gen_skill_versions.main(["--lag"]) == 1
+    assert path.read_bytes() == before
+    assert repo.git("status", "--porcelain") == ""
+
+
+def test_the_index_names_its_catalog_from_the_one_list(repo: Repo) -> None:
+    repo.skill("alpha")
+    repo.commit("v1")
+    repo.publish("main")
+    assert build(repo)["catalog"] == {
+        "repository": "thrillmade/thrill-skills",
+        "former_names": ["thrillmade/agent-skills"],
+    }
+
+
+def test_the_catalog_block_follows_the_list(
+    repo: Repo, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repo.skill("alpha")
+    repo.commit("v1")
+    repo.publish("main")
+    monkeypatch.setattr(gen_skill_versions, "CATALOG_NAMES", ("o/old", "o/mid", "o/new"))
+    assert build(repo)["catalog"] == {"repository": "o/new", "former_names": ["o/old", "o/mid"]}

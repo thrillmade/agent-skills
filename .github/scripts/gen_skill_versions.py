@@ -52,6 +52,14 @@ carries (a branch-only intermediate a squash did not keep); see
 `prune_unreachable`. Admission is stricter than the check: `--write` lets a row
 in only if origin/dev or origin/main carries its digest, so a branch regen
 records no in-flight row and the squash orphans cannot enter the file at all.
+
+THE PROMOTION BRANCH IS WHERE HISTORY IS COMPLETED (#292). Admission means a
+version gets its row only after a squash lands it on origin/dev, and nothing
+pushes to dev, so dev's committed file lags by the newest row of every skill
+changed since the last promotion. That is harmless -- subscribers read
+main -- so the index is regenerated on the `promote/<date>` branch and
+`--lag` fails a pull request into main while a row is still missing. It is
+never run against dev.
 """
 
 from __future__ import annotations
@@ -61,8 +69,12 @@ import json
 import subprocess
 import sys
 from pathlib import Path
+from typing import NamedTuple
 
 import skill_version
+
+# The catalog's own list of its names has one owner, and it is not this file.
+from census_counters import CATALOG_NAMES
 
 # `--remotes=<pattern>` is matched RELATIVE to refs/remotes/, so this is
 # `refs/remotes/origin/*`. Spelling it out in full silently matches nothing:
@@ -91,8 +103,17 @@ README = (
     ".github/scripts/skills_current.py -- stdlib only, no install. Update "
     "with `npx skills add thrillmade/thrill-skills --skill <slug>`. The "
     "`history` rows are not gated by CI and the `current` values are: see "
-    "`verification` below."
+    "`verification` below. `catalog` names this catalog's repository and "
+    "every name it had before; a copy whose `origin:` names any of them "
+    "came from here."
 )
+
+
+def catalog_block() -> dict:
+    """The published `catalog` block: the repository's current name and every
+    name it had before, both read from `CATALOG_NAMES` (oldest first, the
+    present name last) so there is no second list to drift."""
+    return {"repository": CATALOG_NAMES[-1], "former_names": list(CATALOG_NAMES[:-1])}
 
 
 def git(*args: str, check: bool = True) -> str:
@@ -478,6 +499,7 @@ def build(
     rows_total = sum(len(s["history"]) for s in skills.values())
     return {
         "version": 1,
+        "catalog": catalog_block(),
         "_readme": README,
         "generated_from": "remotes-exhaustive",
         "enumeration": provenance,
@@ -578,6 +600,98 @@ def check(root: Path, head: str) -> int:
     return 0
 
 
+class LagReport(NamedTuple):
+    missing: list[tuple[str, str, str, str]]  # (slug, digest, commit, date)
+    repointed: list[tuple[str, str, str, str]]  # (slug, digest, new commit, old commit)
+    unpublished: list[tuple[str, str, str]]  # (slug, version, commit)
+    skills: int
+    versions: int
+
+
+def missing_rows(root: Path, head: str) -> LagReport:
+    """What a fresh build would change in the committed file, restricted to
+    commits reachable from `head` (those are the versions this branch promotes;
+    one merged into dev after the branch was cut is not demanded of it):
+    `missing` rows it would add, `repointed` rows whose commit it would change,
+    and `unpublished` versions the live tree carries that no publishing ref
+    does -- the admission rule keeps those out of the index, so no row can be
+    built for them yet. `skills` and `versions` count what was examined.
+    Nothing is written."""
+    path = root / OUT
+    committed = json.loads(path.read_text(encoding="utf-8")).get("skills", {}) if path.exists() else {}
+    reach7 = {c[:7] for c in reachable_commits(head)}
+    missing, repointed = [], []
+    skipped: list[tuple[str, str, str]] = []
+    index = build(root, skipped=skipped)
+    for slug, entry in index["skills"].items():
+        had = {r["v"]: r for r in committed.get(slug, {}).get("history", [])}
+        for row in entry["history"]:
+            old = had.get(row["v"])
+            if old is None:
+                if row["commit"] in reach7:
+                    missing.append((slug, row["v"], row["commit"], row["date"]))
+            elif old["commit"] != row["commit"]:
+                repointed.append((slug, row["v"], row["commit"], old["commit"]))
+    unpublished = []
+    for slug, digest, commit in skipped:
+        live = root / "skills" / slug / "SKILL.md"
+        if commit in reach7 and live.exists():
+            raw = live.read_bytes()
+            if skill_version.digest(raw) == digest:
+                unpublished.append((slug, skill_version.stamped_version(raw) or digest, commit))
+    return LagReport(
+        missing,
+        repointed,
+        sorted(set(unpublished)),
+        len(index["skills"]),
+        index["versions_enumerated"],
+    )
+
+
+def lag(root: Path, head: str) -> int:
+    """Fail while this branch carries a version whose history row is missing.
+
+    A version whose commit is on neither origin/dev nor origin/main (made on
+    the promotion branch itself, or on a pull request into main that skips dev)
+    cannot get a row: admission cites only those two refs, because a squash
+    leaves a pull request branch's commits unreachable. That is a warning, not
+    a failure -- the next promotion's regeneration adds the row once the change
+    is on dev or main -- so a skill is not changed on the promotion branch."""
+    if git("rev-parse", "--is-shallow-repository").strip() == "true":
+        raise SystemExit(
+            "error: shallow clone. The history cannot be rebuilt without the "
+            "full history; fetch with depth 0 before running --lag."
+        )
+    if subprocess.run(
+        ["git", "rev-parse", "--verify", "-q", f"{head}^{{commit}}"],
+        capture_output=True,
+    ).returncode != 0:
+        raise SystemExit(f"error: `{head}` does not resolve to a commit.")
+    missing, repointed, unpublished, skills, versions = missing_rows(root, head)
+    if skills == 0 or versions == 0:
+        print(f"::error file={OUT}::--lag examined {skills} skill(s) and {versions} version(s); a check that examined nothing is not a pass")
+        return 1
+    for slug, v, new, old in repointed:
+        print(f"::warning file={OUT}::{slug} {v}: a fresh build cites commit {new}, the committed row cites {old}")
+    for slug, version, commit in unpublished:
+        print(
+            f"::warning file={OUT}::{slug} {version}: carried by {commit}, which is on neither "
+            "origin/dev nor origin/main, so no history row can be built for it yet; the next "
+            "promotion's regeneration adds it once the change is on dev or main"
+        )
+    for slug, v, commit, date in missing:
+        print(f"::error file={OUT}::{slug} {v}: published at {commit} ({date}) but has no history row")
+    if missing:
+        print(
+            f"{len(missing)} history row(s) missing. Repair on this branch: "
+            "python3 .github/scripts/gen_skill_versions.py --write, then "
+            f"commit {OUT}."
+        )
+        return 1
+    print(f"OK: history is complete for {head}: compared {versions} history row(s) across {skills} skill(s) in a fresh build; that is the whole catalog, not the versions this branch promotes.")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--write", action="store_true")
@@ -586,13 +700,20 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="fail if any history row names a digest no commit reachable from --head or a publishing ref (origin/dev, origin/main) carries; warn on stale pointers",
     )
-    ap.add_argument("--head", default="HEAD", help="revision --check measures against")
+    ap.add_argument(
+        "--lag",
+        action="store_true",
+        help="fail if a fresh build would add a history row for a version --head carries (run on the promotion into main); writes nothing",
+    )
+    ap.add_argument("--head", default="HEAD", help="revision --check and --lag measure against")
     ap.add_argument("--root", default=".")
     args = ap.parse_args(argv)
 
     root = Path(args.root)
     if args.check:
         return check(root, args.head)
+    if args.lag:
+        return lag(root, args.head)
     pruned: list[tuple[str, str, str]] = []
     skipped: list[tuple[str, str, str]] = []
     index = build(root, pruned, skipped)

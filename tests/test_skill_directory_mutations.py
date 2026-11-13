@@ -39,6 +39,12 @@ VALIDATOR = REPO_ROOT / ".github" / "scripts" / "validate_skills.py"
 # dies at conftest import and every mutation below goes red for the wrong
 # reason -- which the control caught rather than the mutations.
 SKILL_VERSION = REPO_ROOT / ".github" / "scripts" / "skill_version.py"
+# conftest.py and the validator import these, so the scratch tree needs them:
+# gen_skill_versions for `catalog_block`, which reads the one list in
+# census_counters. Missing, the control is red on ModuleNotFoundError and every
+# mutation below is red for that and not for the mutation.
+GEN_VERSIONS = REPO_ROOT / ".github" / "scripts" / "gen_skill_versions.py"
+CENSUS_COUNTERS = REPO_ROOT / ".github" / "scripts" / "census_counters.py"
 VERSIONS_INDEX = REPO_ROOT / "docs" / "skill-versions.json"
 CONFTEST = Path(__file__).parent / "conftest.py"
 SUITES = [
@@ -442,6 +448,54 @@ MUTATIONS = [
     ),
 ]
 
+# The test each mutation is meant to turn red, as `file::test` (parameters
+# dropped). A bare "the suites exited non-zero" is also what a scratch tree
+# missing a copied script produces, so the mutation test below requires pytest
+# to report THIS test as FAILED: a collection or import error never does.
+EXPECTED_FAILURE = {
+    "the_directory_probes_itself": "test_gen_skill_directory.py::test_the_directory_does_not_probe_itself",
+    "the_not_here_control_is_dropped": "test_gen_skill_directory.py::test_the_not_here_section_refuses_when_its_control_matches_nothing",
+    "a_filled_gap_is_still_advertised": "test_gen_skill_directory.py::test_the_not_here_section_refuses_when_a_gap_has_been_filled",
+    "a_skill_in_no_family_is_dropped_silently": "test_gen_skill_directory.py::test_a_skill_in_no_family_is_fatal",
+    "an_empty_tree_renders_an_empty_directory": "test_gen_skill_directory.py::test_zero_skills_is_fatal",
+    "a_missing_source_degrades_instead_of_refusing": "test_gen_skill_directory.py::test_a_missing_placement_map_is_fatal",
+    "the_size_reserve_is_disabled": "test_gen_skill_directory.py::test_the_reserve_sits_under_the_skill_cap",
+    "the_size_reserve_is_off_by_one": "test_gen_skill_directory.py::test_size_error_fires_one_byte_over_the_reserve",
+    "the_body_is_measured_in_characters": "test_gen_skill_directory.py::test_size_error_measures_bytes_not_characters",
+    "check_passes_on_a_stale_directory": "test_gen_skill_directory.py::test_check_fails_on_a_stale_directory",
+    "write_discards_the_frontmatter": "test_gen_skill_directory.py::test_write_makes_check_pass",
+    "the_staleness_comparison_is_deleted": "test_validate_skills.py::test_a_skill_added_without_regenerating_fails",
+    "the_directory_gate_never_runs": "test_validate_skills.py::test_a_skill_added_without_regenerating_fails",
+    "an_unverifiable_directory_passes": "test_validate_skills.py::test_a_directory_with_no_source_cannot_be_verified",
+    "the_rendered_size_is_not_gated": "test_validate_skills.py::test_an_oversized_directory_is_reported_by_the_gate",
+    "family_is_no_longer_required": "test_validate_skills.py::test_family_is_required_on_every_entry",
+    "a_family_id_need_not_exist": "test_validate_skills.py::test_families_must_be_a_non_empty_list",
+    "owns_is_no_longer_required": "test_validate_skills.py::test_owns_is_required_on_every_entry",
+    "the_owns_cap_is_disabled": "test_validate_skills.py::test_owns_one_byte_over_the_cap_is_rejected",
+    "the_owns_cap_is_off_by_one": "test_validate_skills.py::test_owns_one_byte_over_the_cap_is_rejected",
+    "the_owns_cap_counts_characters": "test_validate_skills.py::test_owns_is_measured_in_bytes_not_characters",
+    "a_dead_family_survives": "test_validate_skills.py::test_no_family_may_be_declared_without_a_skill",
+    "families_is_no_longer_required": "test_validate_skills.py::test_families_must_be_a_non_empty_list",
+    "a_family_id_may_be_declared_twice": "test_validate_skills.py::test_a_family_id_declared_twice_is_rejected",
+    "a_family_id_need_not_be_a_slug": "test_validate_skills.py::test_family_id_must_match_the_slug_regex",
+    "an_unhashable_family_crashes_the_gate": "test_validate_skills.py::test_family_is_required_on_every_entry",
+    "the_probe_scan_reads_whole_bodies": "test_gen_skill_directory.py::test_a_probe_phrase_in_a_body_is_not_coverage",
+    "the_ceiling_gets_new_families_for_free": "test_gen_skill_directory.py::test_the_ceiling_is_where_the_reserve_actually_binds",
+    "the_ceiling_is_off_by_one": "test_gen_skill_directory.py::test_the_ceiling_is_where_the_reserve_actually_binds",
+    "growth_prices_owns_below_the_cap": "test_gen_skill_directory.py::test_the_ceiling_matches_an_independent_arithmetic_model",
+    "the_size_refusal_recites_a_measured_number": "test_gen_skill_directory.py::test_size_error_recites_no_measured_number",
+    "a_retired_skill_may_be_filed_as_live": "test_validate_skills.py::test_a_superseded_skill_filed_as_live_is_reported",
+    "the_retirement_marker_is_matched_anywhere": "test_validate_skills.py::test_the_word_superseded_mid_sentence_is_not_a_retirement",
+    "the_reserved_retirement_key_is_ignored": "test_validate_skills.py::test_the_reserved_retirement_keys_count_too",
+    "a_skill_may_be_missing_from_the_readme": "test_validate_skills.py::test_a_skill_missing_from_the_readme_is_reported",
+    "a_readme_row_may_outlive_its_skill": "test_validate_skills.py::test_a_readme_row_outliving_its_skill_is_reported",
+    "the_readme_gate_never_runs": "test_validate_skills.py::test_a_skill_missing_from_the_readme_is_reported",
+    "the_house_structure_gate_never_runs": "test_validate_skills.py::test_missing_house_sections_are_reported",
+    "a_missing_house_section_is_not_reported": "test_validate_skills.py::test_missing_house_sections_are_reported",
+    "house_sections_out_of_order_are_not_reported": "test_validate_skills.py::test_sections_present_but_out_of_order_are_reported",
+    "the_house_structure_exemptions_are_ignored": "test_validate_skills.py::test_a_current_directory_passes",
+}
+
 
 def _scratch(tmp_path: Path, script: Path, source: str) -> Path:
     """A runnable copy of the repo with `script` replaced by `source`.
@@ -454,7 +508,7 @@ def _scratch(tmp_path: Path, script: Path, source: str) -> Path:
     """
     scripts = tmp_path / ".github" / "scripts"
     scripts.mkdir(parents=True)
-    for real in (GEN, VALIDATOR, SKILL_VERSION):
+    for real in (GEN, VALIDATOR, SKILL_VERSION, GEN_VERSIONS, CENSUS_COUNTERS):
         shutil.copy(real, scripts / real.name)
     (scripts / script.name).write_text(source, encoding="utf-8")
 
@@ -524,3 +578,18 @@ def test_mutation_turns_the_suites_red(
         f"mutation {name!r} was applied and the suites still passed, so nothing "
         f"in them constrains that behaviour:\n{result.stdout}"
     )
+    wanted = EXPECTED_FAILURE[name]
+    failed = [
+        line for line in result.stdout.splitlines()
+        if line.startswith("FAILED ") and f"tests/{wanted}" in line
+    ]
+    assert failed, (
+        f"mutation {name!r} turned the suites red, but not through {wanted}: a "
+        "setup or import failure also exits non-zero, and is not evidence that "
+        f"the guard works:\n{result.stdout}\n{result.stderr}"
+    )
+
+
+def test_every_mutation_names_the_test_it_must_turn_red() -> None:
+    names = {m[1] for m in MUTATIONS}
+    assert names == set(EXPECTED_FAILURE), sorted(names ^ set(EXPECTED_FAILURE))

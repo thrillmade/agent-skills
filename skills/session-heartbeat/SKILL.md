@@ -1,6 +1,6 @@
 ---
-version: "1.0.1"
-digest: "4cf9fd345913"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
+version: "1.0.2"
+digest: "df41921a1df2"  # is your copy current? github.com/thrillmade/thrill-skills/blob/main/docs/skill-versions.json
 origin: "https://github.com/thrillmade/thrill-skills"
 name: session-heartbeat
 description: |
@@ -74,7 +74,7 @@ Write it to a durable file the project already reads — the plan doc. Not sessi
 
 ## Resume: you are the survivor
 
-A check MUST NOT be left pending, and a producer that dies cannot honour that — the rule needs a survivor that does not depend on the producer being alive (protocol SPEC §6.2). The resumed session is that survivor.
+A check must always reach a final state, and a producer that dies cannot get it there, so that falls to a survivor that does not need the producer alive. The resumed session is that survivor.
 
 1. Read the checkpoint before anything else.
 2. **Verify it against the tree; do not trust it.** It was written before the last writes landed.
@@ -112,5 +112,5 @@ Each of these leaves a green tree and reports nothing.
 ## Sources
 
 - Cache lifetime/refresh: Anthropic prompt-caching docs — 5-minute default TTL, 1-hour option at 2× write price, refreshed free on use, measured from request start.
-- Pending-work survivor rule: thrillmade/protocol `SPEC.md` §6.2 — "A check MUST NOT be left pending… the rule needs a survivor."
-- Cadence and threshold practice as reported: thrillmade/thrill-skills#173. Mid-write kill hazards, owned-files recovery: #169 (discipline 6). The review lifecycle a resume re-fires: thrillmade/protocol#44, thrillmade/clud-bug#239.
+- Pending-work survivor rule: from practice.
+- Cadence and threshold practice as reported: thrillmade/thrill-skills#173. Mid-write kill hazards, owned-files recovery: #169 (discipline 6). The review lifecycle a resume re-fires: from practice, and thrillmade/clud-bug#239.
