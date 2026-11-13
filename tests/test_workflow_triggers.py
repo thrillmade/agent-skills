@@ -257,7 +257,7 @@ def test_census_workflow_names_no_repository_literally():
     assert file_issues["env"]["GH_REPO"] == "${{ github.repository }}"
 
 
-def test_census_alarm_job_runs_on_any_non_success_with_its_own_issues_write():
+def test_census_alarm_job_runs_on_every_scheduled_run_with_its_own_issues_write():
     doc, _ = _load(CENSUS)
     assert doc["permissions"] == {"contents": "read"}, (
         "workflow-level permissions widened; the alarm job carries its own"
@@ -266,14 +266,32 @@ def test_census_alarm_job_runs_on_any_non_success_with_its_own_issues_write():
     assert alarm["needs"] == "census"
     # EXACT, not substrings: `&& false` appended, or an `||` that changes the
     # precedence, keeps every substring present and silences the alarm. Any
-    # change to this condition has to be made here too, on purpose.
-    assert alarm["if"] == (
-        "${{ always() && github.event_name == 'schedule' && needs.census.result != 'success' }}"
-    )
+    # change to this condition has to be made here too, on purpose. The job
+    # runs on EVERY scheduled run (it files on failure and closes the alarm on
+    # success, branching on the census result in its script); the schedule
+    # clause is what keeps a manual run from ever closing it.
+    assert alarm["if"] == "${{ always() && github.event_name == 'schedule' }}"
     assert alarm["permissions"] == {"issues": "write"}
     body = yaml.safe_dump(alarm)
     assert "secrets." not in body, "the alarm must not depend on the App secrets the census needs"
     assert "workflow-failure-key: skill-census" in body
+
+
+def test_panel_health_is_the_last_census_step_and_can_fail_the_run():
+    """The panel exits 0 on an API failure so the digest still files; this step
+    is what turns a failure that needs a person into a failed run, and it must
+    come after both the digest and the artifact upload."""
+    _, steps = _census_steps()
+    i_health, health = _step(steps, "panel_health")
+    i_file, _ = _step(steps, "file_issues")
+    upload = [i for i, s in enumerate(steps) if str(s.get("uses", "")).startswith("actions/upload-artifact@")]
+    assert upload and i_health > i_file and i_health > max(upload)
+    assert i_health == len(steps) - 1
+    assert "continue-on-error" not in health, "a step that cannot fail the run cannot raise the alarm"
+    assert health["if"] == "${{ !cancelled() && steps.guard.outputs.panel_enabled == 'true' }}"
+    uploaded = [s for s in steps if str(s.get("uses", "")).startswith("actions/upload-artifact@")][0]
+    assert "panel_status.json" in uploaded["with"]["path"]
+    assert "panel_failed.marker" not in uploaded["with"]["path"]
 
 
 def test_watchdog_lives_outside_the_census_failure_domain():
